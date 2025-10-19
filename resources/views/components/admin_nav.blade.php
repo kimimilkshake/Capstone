@@ -13,15 +13,15 @@
     </li>
 
     <li class="anav-item">
-      <a class="anav-link" href="{{ url('/') }}"><i class="fa-solid fa-route me-1"></i>
+      <a class="anav-link" href="#"><i class="fa-solid fa-water"></i>
         <span class="anav-label">Create Voyage</span>
       </a>
     </li>
 
     <li class="anav-item">
-      <a class="anav-link" href="{{ url('/') }}">
-        <i class="fa-solid fa-magnifying-glass me-1"></i>
-        <span class="anav-label">Search Voyage</span>
+      <a class="anav-link" href="#">
+        <i class="fa-solid fa-route me-1"></i>
+        <span class="anav-label">View Voyages</span>
       </a>
     </li>
 
@@ -31,21 +31,21 @@
     </li>
 
     <li class="anav-item">
-      <a class="anav-link" href="{{ url('/') }}">
+      <a class="anav-link" href="#">
         <i class="fa-solid fa-cubes me-1"></i>
         <span class="anav-label">Auto Placement</span>
       </a>
     </li>
 
     <li class="anav-item">
-      <a class="anav-link" href="{{ url('/') }}">
+      <a class="anav-link" href="#">
         <i class="fa-solid fa-boxes-stacked me-1"></i>
         <span class="anav-label">Create Cargo Item</span>
       </a>
     </li>
 
     <li class="anav-item">
-      <a class="anav-link" href="{{ url('/') }}">
+      <a class="anav-link" href="#">
         <i class="fa-solid fa-tags me-1"></i>
         <span class="anav-label">View Rates</span>
       </a>
@@ -57,7 +57,7 @@
     </li>
 
     <li class="anav-item">
-      <a class="anav-link" href="{{ url('/') }}">
+      <a class="anav-link" href="#">
         <i class="fa-solid fa-ferry me-1"></i>
         <span class="anav-label">View Vessels</span>
       </a>
@@ -69,7 +69,7 @@
     </li>
 
     <li class="anav-item">
-      <a class="anav-link" href="{{ url('/') }}">
+      <a class="anav-link" href="#">
         <i class="fa-solid fa-tags me-1"></i>
         <span class="anav-label">View Promos</span>
       </a>
@@ -81,14 +81,14 @@
     </li>
 
     <li class="anav-item">
-      <a class="anav-link" href="{{ url('/') }}">
+      <a class="anav-link" href="#">
         <i class="fa-solid fa-user-plus me-1"></i>
         <span class="anav-label">Create Staff</span>
       </a>
     </li>
 
     <li class="anav-item">
-      <a class="anav-link" href="{{ url('/') }}">
+      <a class="anav-link" href="#">
         <i class="fa-solid fa-users me-1"></i>
         <span class="anav-label">Staff List</span>
       </a>
