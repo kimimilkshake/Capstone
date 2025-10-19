@@ -4,7 +4,7 @@
   </div>
 
   <div class="auheader-title header-title text-center">
-    <h3 class="m-0 fw-bold">@yield('page-title')</h3>
+    <h2 class="m-0 fw-bold">@yield('page-title')</h2>
   </div>
 
   <div class="auheader-user d-flex align-items-center gap-3 position-relative">
