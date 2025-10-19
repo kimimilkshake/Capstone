@@ -33,6 +33,7 @@ class AuthController extends Controller
             Session::put('user_id', $admin->admin_id);
             Session::put('user_role', 'admin');
             Session::put('username', $admin->admin_user);
+            Session::put('user_name', $admin->admin_name);
             return redirect()->route('admin.dashboard');
         }
 
@@ -43,6 +44,7 @@ class AuthController extends Controller
             Session::put('user_id', $staff->staff_id);
             Session::put('user_role', 'staff');
             Session::put('username', $staff->staff_user);
+            Session::put('user_name', $staff->staff_name);
             return redirect()->route('staff.dashboard');
         }
 

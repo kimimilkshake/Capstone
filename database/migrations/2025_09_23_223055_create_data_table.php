@@ -50,10 +50,10 @@ return new class extends Migration {
             $table->string('staff_name', 50);
             $table->string('staff_user', 10);
             $table->string('staff_password');
-            $table->integer('staff_age');
+            $table->date('staff_dob')->nullable();
             $table->enum('staff_gender', ['M', 'F']);
             $table->string('staff_email');
-            $table->enum('staff_status', ['active', 'inactive']);
+            $table->enum('staff_status', ['Active', 'Inactive']);
             $table->timestamps();
         });
 

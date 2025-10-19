@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\VesselRouteController;
 use App\Http\Controllers\AuthController;
-
+use App\Http\Controllers\Admin\StaffController;
 
 Route::get('/', function () {
     return view('passenger.homepage');
@@ -46,11 +46,30 @@ Route::post('/authorized/login', [AuthController::class, 'login'])->name('login'
 // Dashboard (protected)
 //Route::get('/authorized/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 
+//ADMIN PAGES
 // Admin Dashboard
+/*
 Route::get('/authorized/admin/dashboard', function () {
     return view('authorized.admin.dashboard');
 })->name('admin.dashboard');
+*/
 
+Route::prefix('authorized/admin')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('authorized.admin.dashboard');
+    })->name('admin.dashboard');
+
+    Route::get('/create_staff', [StaffController::class, 'create'])->name('admin.create_staff');
+    Route::post('/create_staff', [StaffController::class, 'store'])->name('admin.storeStaff');
+    Route::get('/staff_list', [StaffController::class, 'index'])->name('admin.staff_list');
+    Route::get('/staff/{id}/edit', [StaffController::class, 'edit'])->name('admin.staff_edit');
+    Route::put('/staff/{id}', [StaffController::class, 'update'])->name('admin.staff_update');
+});
+
+
+
+
+//STAFF PAGES
 // Staff Dashboard
 Route::get('/authorized/staff/dashboard', function () {
     return view('authorized.staff.dashboard');

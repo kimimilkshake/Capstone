@@ -10,22 +10,24 @@
         </div>
         <div class="astat-boxes-row">
             <div class="astat-boxes-col">
-                <p>XX</p>
+                <span class="anumberStat">XX</span>
                 <p>Passengers</p>
-
             </div>
             <div class="astat-boxes-col">
-                <p>XX</p>
+                <span class="anumberStat">XX</span>
                 <p>Cargo Bookings</p>
             </div>
             <div class="astat-boxes-col">
-                <p>PHP XXXX</p>
+                <span class="anumberStat">PHP XXXX</span>
                 <p>Total Sales</p>
             </div>
         </div>
         <div class="astat-voyage">
             <p>Today's Voyages</p>
-            <p>Table goes down here, mahina ang kalaban.</p>
+            <p>Voyage Table goes down here, mahina ang kalaban.</p>
+            <p>Joke lang, wala pa ang vessels, promos, and cargo</p>
+            <p>Pls bear with me</p>
+            <p>also pls help me plssss huehuehueh</p>
         </div>
     </div>
     

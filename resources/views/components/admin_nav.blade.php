@@ -21,7 +21,7 @@
     <li class="anav-item">
       <a class="anav-link" href="#">
         <i class="fa-solid fa-route me-1"></i>
-        <span class="anav-label">View Voyages</span>
+        <span class="anav-label">Voyage List</span>
       </a>
     </li>
 
@@ -46,8 +46,8 @@
 
     <li class="anav-item">
       <a class="anav-link" href="#">
-        <i class="fa-solid fa-tags me-1"></i>
-        <span class="anav-label">View Rates</span>
+        <i class="fa-solid fa-rectangle-list me-1"></i>
+        <span class="anav-label">Rates List</span>
       </a>
     </li>
 
@@ -59,19 +59,19 @@
     <li class="anav-item">
       <a class="anav-link" href="#">
         <i class="fa-solid fa-ferry me-1"></i>
-        <span class="anav-label">View Vessels</span>
+        <span class="anav-label">Vessel List</span>
       </a>
     </li>
 
     <li class="anav-item">
-      <i class="fa-solid fa-tag me-3"></i>
+      <i class="fa-solid fa-percent me-3"></i>
       <span class="anav-label">Promos</span>
     </li>
 
     <li class="anav-item">
       <a class="anav-link" href="#">
         <i class="fa-solid fa-tags me-1"></i>
-        <span class="anav-label">View Promos</span>
+        <span class="anav-label">Promo List</span>
       </a>
     </li>
 
@@ -81,14 +81,14 @@
     </li>
 
     <li class="anav-item">
-      <a class="anav-link" href="#">
+      <a class="anav-link" href="{{ route('admin.create_staff') }}">
         <i class="fa-solid fa-user-plus me-1"></i>
         <span class="anav-label">Create Staff</span>
       </a>
     </li>
 
     <li class="anav-item">
-      <a class="anav-link" href="#">
+      <a class="anav-link" href="{{ route('admin.staff_list') }}">
         <i class="fa-solid fa-users me-1"></i>
         <span class="anav-label">Staff List</span>
       </a>
