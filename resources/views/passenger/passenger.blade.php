@@ -53,7 +53,7 @@
                             <option value="{{ $origin }}">{{ $origin }}</option>
                         @endforeach
                     </select>
-
+                    <h1>-</h1>
                     <!-- Route To -->
                     <select id="routeTo" class="form-select" disabled>
                         <option value="">Select Destination</option>
@@ -70,9 +70,10 @@
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-center my-3">
-                    <button class="proceed-btn" type="button">PROCEED</button>
-                </div>
+                <button id="proceedBtn" class="proceed-btn btn btn-primary" type="button"
+                    data-url="{{ route('passengerbooking') }}" disabled>
+                    PROCEED
+                </button>
             </div>
 
         </div>

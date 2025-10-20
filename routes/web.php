@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\VesselRouteController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PassengerController;
+use App\Http\Controllers\BookingController;
 
 
 Route::get('/', function () {
@@ -18,7 +20,21 @@ Route::get('/passenger/book', function () {
 })->name('book');
 
 //passenger booking route
+// Show the available routes and selection page
 Route::get('/passenger/passenger', [VesselRouteController::class, 'index'])->name('passenger');
+
+// Booking page (form)
+Route::get('/passenger/passengerbooking', [PassengerController::class, 'index'])->name('passengerbooking');
+
+// Form submission
+Route::post('/passenger/store', [PassengerController::class, 'store'])->name('passenger.store');
+Route::post('/booking/submit', [BookingController::class, 'store'])->name('booking.submit');
+
+//Confirm booking
+Route::get('/passenger/confirmbooking', function () {
+    return view('passenger.confirmbooking');
+})->name('passenger.confirmbooking');
+
 
 Route::get('/passenger/schedules', function () {
     return view('passenger.schedules');

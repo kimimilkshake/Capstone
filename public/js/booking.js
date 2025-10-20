@@ -2,16 +2,27 @@
 const routeFromSelect = document.getElementById("routeFrom");
 const routeToSelect = document.getElementById("routeTo");
 const tripDateInput = document.getElementById("tripDate");
+const proceedBtn = document.getElementById("proceedBtn");
 
 // Parse routes data from Blade
 const routes = JSON.parse(document.getElementById("routes-data").textContent);
 
 let allowedDays = [];
 
+// Initially disable proceed button
+proceedBtn.disabled = true;
+
 // Event listeners
 routeFromSelect.addEventListener("change", updateDestinations);
 routeToSelect.addEventListener("change", updateAllowedDays);
 tripDateInput.addEventListener("input", validateDate);
+
+// Check all fields to enable/disable proceed button
+function checkProceedButton() {
+    const isValid =
+        routeFromSelect.value && routeToSelect.value && tripDateInput.value;
+    proceedBtn.disabled = !isValid;
+}
 
 // Update destinations based on selected origin
 function updateDestinations() {
@@ -23,6 +34,7 @@ function updateDestinations() {
 
     if (!origin) {
         routeToSelect.disabled = true;
+        checkProceedButton();
         return;
     }
 
@@ -40,6 +52,7 @@ function updateDestinations() {
     });
 
     routeToSelect.disabled = false;
+    checkProceedButton();
 }
 
 // Update allowed days for the selected route
@@ -51,6 +64,7 @@ function updateAllowedDays() {
     if (!origin || !destination) {
         tripDateInput.disabled = true;
         allowedDays = [];
+        checkProceedButton();
         return;
     }
 
@@ -78,6 +92,7 @@ function updateAllowedDays() {
     allowedDays = JSON.parse(route.operating_days).map((d) => dayMap[d]);
     tripDateInput.disabled = false;
     tripDateInput.min = new Date().toISOString().split("T")[0]; // prevent past dates
+    checkProceedButton();
 }
 
 // Validate selected date
@@ -92,6 +107,7 @@ function validateDate() {
     if (selectedDate < today) {
         alert("You cannot select a past date.");
         this.value = "";
+        checkProceedButton();
         return;
     }
 
@@ -100,6 +116,8 @@ function validateDate() {
         alert("Selected date is not available for this route.");
         this.value = "";
     }
+
+    checkProceedButton();
 }
 
 // Reset selection
@@ -110,4 +128,26 @@ function resetSelection() {
     tripDateInput.value = "";
     tripDateInput.disabled = true;
     allowedDays = [];
+    checkProceedButton();
 }
+
+// Proceed button click handler
+proceedBtn.addEventListener("click", function () {
+    if (proceedBtn.disabled) {
+        alert("Please select origin, destination, and date before proceeding.");
+        return;
+    }
+
+    const routeFrom = routeFromSelect.value;
+    const routeTo = routeToSelect.value;
+    const tripDate = tripDateInput.value;
+
+    const url = `${proceedBtn.getAttribute(
+        "data-url"
+    )}?route_from=${encodeURIComponent(
+        routeFrom
+    )}&route_to=${encodeURIComponent(
+        routeTo
+    )}&departure_date=${encodeURIComponent(tripDate)}`;
+    window.location.href = url;
+});
