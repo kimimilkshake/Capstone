@@ -68,7 +68,7 @@
       </div>
 
       <div class="form-actions">
-        <button type="submit" class="acs-add-btn">Add Staff</button>
+        <button type="submit" class="acs-add-btn"><i class="fa-solid fa-plus me-2"></i>Add Staff</button>
       </div>
     </form>
   </div>

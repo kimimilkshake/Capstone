@@ -63,7 +63,7 @@ body {
 }
 
 .anav-link:hover {
-  background-color: #3a4a75;
+  background-color: #2a364f;
   color: #ffffff;
 }
 
@@ -108,9 +108,9 @@ body {
 /* === DASHBOARD CONTENT === */
 .admin-body {
   margin-left: 240px;
-  margin-top: 80px; /* ⬅️ add this */
+  margin-top: 80px;
   padding: 20px;
-  min-height: calc(100vh - 80px); /* so it fits under the header */
+  min-height: calc(100vh - 80px);
   background-color: #f8f9fa;
   transition: margin-left 0.3s ease;
 }
@@ -136,7 +136,7 @@ body {
 }
 
 #collapseBtn:hover {
-  background-color: #3b4a73;
+  background-color: #2a364f;
   color: #ffffff;
 }
 
@@ -169,7 +169,7 @@ body {
 }
 
 //CREATE STAFF
-.acs-title, .asl-title{
+.acs-title, .asl-title, .apl-title{
   text-align: center;
 }
 
@@ -223,7 +223,7 @@ body {
 
 .acs-add-btn {
   padding: 10px 25px;
-  background-color: #303c6c;
+  background-color: #485b8c;
   color: white;
   border: none;
   border-radius: 8px;
@@ -250,7 +250,7 @@ body {
 }
 
 .staff-table th {
-    background-color: #50588f; /* match your screenshot */
+    background-color: #485b8c; /* match your screenshot */
     color: white;
 }
 
@@ -266,9 +266,81 @@ body {
     background-color: #f2f2f2;
 }
 
+/* Container row */
+.search-filter-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+}
 
+/* Search bar */
+.search-bar {
+    display: flex;
+    flex: 1;
+}
 
-.filter-container {
-  float: right;
-  margin-bottom: 1rem;
+.search-bar input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px 0 0 5px;
+    font-size: 14px;
+}
+
+.search-bar button {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-left: none;
+    border-radius: 0 5px 5px 0;
+    background-color: #485b8c;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.search-bar button:hover {
+    background-color: #2a364f;
+}
+
+/* Filter form */
+.search-filter-row form select {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    background-color: #fff;
+    transition: all 0.2s;
+}
+
+/* Optional: add a hover effect for filter */
+.search-filter-row form select:hover,
+.search-filter-row form select:focus {
+    border-color: #2a364f;
+    outline: none;
+}
+
+//PROMOS
+
+.search-add-row{
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.add-promo a {
+    display: inline-block;        /* make it behave like a button */
+    text-decoration: none;        /* remove underline */
+    color: #fff;                  /* white text */
+    background-color: #485b8c;   /* dark indigo, matches your theme */
+    padding: 8px 16px;            /* space inside the button */
+    border-radius: 5px;           /* rounded corners */
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.add-promo a:hover {
+    background-color: #2a364f;    /* darker on hover */
 }

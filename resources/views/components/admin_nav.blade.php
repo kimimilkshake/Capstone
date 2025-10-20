@@ -69,7 +69,7 @@
     </li>
 
     <li class="anav-item">
-      <a class="anav-link" href="#">
+      <a class="anav-link" href="{{ route('admin.promo_list') }}">
         <i class="fa-solid fa-tags me-1"></i>
         <span class="anav-label">Promo List</span>
       </a>

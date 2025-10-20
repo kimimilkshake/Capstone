@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\PromoController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\VesselRouteController;
 use App\Http\Controllers\AuthController;
@@ -64,6 +65,8 @@ Route::prefix('authorized/admin')->group(function () {
     Route::get('/staff_list', [StaffController::class, 'index'])->name('admin.staff_list');
     Route::get('/staff/{id}/edit', [StaffController::class, 'edit'])->name('admin.staff_edit');
     Route::put('/staff/{id}', [StaffController::class, 'update'])->name('admin.staff_update');
+    Route::get('/promo_list', [PromoController::class, 'index'])->name('admin.promo_list');
+    Route::get('/create_promo', [PromoController::class, 'create'])->name('admin.create_promo');
 });
 
 

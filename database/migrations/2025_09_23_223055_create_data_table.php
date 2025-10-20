@@ -59,12 +59,12 @@ return new class extends Migration {
 
         Schema::create('promo', function (Blueprint $table) {
             $table->id('promo_id');
-            $table->enum('promo_type', ['discount', 'freebie']);
+            $table->enum('promo_type', ['Discount', 'Freebie']);
             $table->string('promo_code');
             $table->string('promo_description', 255);
             $table->date('promo_start_date');
             $table->date('promo_end_date');
-            $table->enum('promo_status', ['active', 'inactive']);
+            $table->enum('promo_status', ['Active', 'Inactive']);
             $table->decimal('promo_discount_rate', 5, 2);
             $table->timestamps();
         });
@@ -133,14 +133,14 @@ return new class extends Migration {
         Schema::create('booking', function (Blueprint $table) {
             $table->id('booking_ref_no');
             $table->timestamp('booking_date');
-            $table->enum('booking_status', ['Confirmed', 'pending', 'canceled', 'refunded']);
+            $table->enum('booking_status', ['Confirmed', 'Pending', 'Canceled', 'Refunded']);
             $table->timestamps();
         });
 
         Schema::create('payment', function (Blueprint $table) {
             $table->id('payment_id');
             $table->foreignId('booking_ref_no')->nullable()->constrained('booking', 'booking_ref_no');
-            $table->enum('mode_of_payment', ['cash', 'Gcash']);
+            $table->enum('mode_of_payment', ['Cash', 'Gcash']);
             $table->timestamp('payment_date');
             $table->decimal('total_amount', 10, 2);
             $table->enum('payment_status', ['Completed', 'Pending', 'Canceled']);
@@ -240,8 +240,8 @@ return new class extends Migration {
             $table->foreignId('cargo_receipt_id')->nullable()->constrained('cargo_receipt', 'cargo_receipt_id');
             $table->foreignId('payment_id')->nullable()->constrained('payment', 'payment_id');
             $table->string('notification_message', 255);
-            $table->enum('notification_type', ['cargo booking approval', 'payment received']);
-            $table->enum('notification_status', ['approved', 'rejected', 'read', 'archived']);
+            $table->enum('notification_type', ['Cargo Booking Approval', 'Payment Received']);
+            $table->enum('notification_status', ['Approved', 'Rejected', 'Read', 'Archived']);
             $table->timestamp('notification_created');
             $table->timestamps();
         });

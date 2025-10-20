@@ -10,9 +10,22 @@ use Illuminate\Support\Facades\Auth;
 
 class StaffController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $staff = Staff::all();
+        $query = Staff::query();
+
+        // Search by name
+        if ($request->has('search') && $request->search != '') {
+            $query->where('staff_name', 'like', '%' . $request->search . '%');
+        }
+
+        // Filter by status
+        if ($request->has('status') && $request->status != '') {
+            $query->where('staff_status', $request->status);
+        }
+
+        $staff = $query->get();
+
         return view('authorized.admin.staff_list', compact('staff'));
     }
 
