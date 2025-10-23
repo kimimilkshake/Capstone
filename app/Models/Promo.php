@@ -14,6 +14,7 @@ class Promo extends Model
 
     protected $fillable = [
         'promo_type',
+        'promo_name',
         'promo_code',
         'promo_description',
         'promo_start_date',

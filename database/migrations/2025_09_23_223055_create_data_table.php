@@ -60,6 +60,7 @@ return new class extends Migration {
         Schema::create('promo', function (Blueprint $table) {
             $table->id('promo_id');
             $table->enum('promo_type', ['Discount', 'Freebie']);
+            $table->string('promo_name', 50);
             $table->string('promo_code');
             $table->string('promo_description', 255);
             $table->date('promo_start_date');

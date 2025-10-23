@@ -67,6 +67,9 @@ Route::prefix('authorized/admin')->group(function () {
     Route::put('/staff/{id}', [StaffController::class, 'update'])->name('admin.staff_update');
     Route::get('/promo_list', [PromoController::class, 'index'])->name('admin.promo_list');
     Route::get('/create_promo', [PromoController::class, 'create'])->name('admin.create_promo');
+    Route::post('/create_promo', [PromoController::class, 'store'])->name('admin.storePromo');
+    Route::get('/promo/{id}/edit', [PromoController::class, 'edit'])->name('admin.promo_edit');
+    Route::put('/promo/{id}', [PromoController::class, 'update'])->name('admin.promo_update');
 });
 
 

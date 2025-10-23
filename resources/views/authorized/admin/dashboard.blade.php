@@ -25,9 +25,9 @@
         <div class="astat-voyage">
             <p>Today's Voyages</p>
             <p>Voyage Table goes down here, mahina ang kalaban.</p>
-            <p>Joke lang, wala pa ang vessels, promos, and cargo</p>
-            <p>Pls bear with me</p>
-            <p>also pls help me plssss huehuehueh</p>
+            <p>staff list, done</p>
+            <p>promos, done</p>
+            <p>vessel nalang para naay voyage yehey</p>
         </div>
     </div>
     
