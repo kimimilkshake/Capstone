@@ -16,8 +16,10 @@ document.addEventListener("DOMContentLoaded", function () {
                             <select class="form-select passenger-type" name="type" required>
                                 <option value="">Select Type</option>
                                 <option value="Adult">Adult</option>
-                                <option value="Child">Child</option>
-                                <option value="Infant">Infant</option>
+                                <option value="Student">Student</option>
+                                <option value="SeniorCitizen">Senior Citizen</option>
+                                <option value="PWD">PWD</option>
+                                <option value="UniformedPerson">Uniformed Personnel</option>
                             </select>
                         </div>
                         <div class="col-md-6">
