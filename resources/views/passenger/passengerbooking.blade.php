@@ -70,7 +70,7 @@
         style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
                background:rgba(0,0,0,0.7); z-index:1050; justify-content:center; align-items:center; flex-direction:column;">
         <div class="spinner-border text-light" style="width:3rem; height:3rem;" role="status"></div>
-        <p class="text-white mt-3 fw-bold">Scanning ID... Please wait</p>
+        <p class="text-white mt-3 fw-bold">Loading... Please wait</p>
     </div>
 
     <!-- JS -->
