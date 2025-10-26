@@ -2,8 +2,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const numPassengersSelect = document.getElementById("numPassengers");
     const passengerSections = document.getElementById("passengerSections");
     const bookingForm = document.getElementById("bookingForm");
+    const loader = document.getElementById("ocrLoader");
 
-    // Generate passenger forms dynamically
     function generatePassengerForms(count) {
         passengerSections.innerHTML = "";
         for (let i = 1; i <= count; i++) {
@@ -13,11 +13,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Type</label>
-                            <select class="form-select" name="type" required>
+                            <select class="form-select passenger-type" name="type" required>
                                 <option value="">Select Type</option>
-                                <option>Adult</option>
-                                <option>Child</option>
-                                <option>Infant</option>
+                                <option value="Adult">Adult</option>
+                                <option value="Child">Child</option>
+                                <option value="Infant">Infant</option>
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -26,11 +26,11 @@ document.addEventListener("DOMContentLoaded", function () {
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">First Name</label>
-                            <input type="text" class="form-control" name="first_name" required>
+                            <input type="text" class="form-control first-name" name="first_name" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Last Name</label>
-                            <input type="text" class="form-control" name="last_name" required>
+                            <input type="text" class="form-control last-name" name="last_name" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Middle Initial</label>
@@ -59,6 +59,17 @@ document.addEventListener("DOMContentLoaded", function () {
                         <div class="col-md-6">
                             <label class="form-label">Email Address</label>
                             <input type="email" class="form-control" name="email" placeholder="name@email.com" required>
+                        </div>
+
+                        <div class="id-fields mt-3" style="display:none;">
+                            <div class="col-md-6 mt-2">
+                                <label class="form-label">ID Number</label>
+                                <input type="text" class="form-control id-number" name="id_number">
+                            </div>
+                            <div class="col-md-6 mt-2">
+                                <label class="form-label">Upload ID Image</label>
+                                <input type="file" class="form-control id-upload" accept="image/*">
+                            </div>
                         </div>
                     </div>
 
@@ -89,62 +100,85 @@ document.addEventListener("DOMContentLoaded", function () {
             `;
             passengerSections.insertAdjacentHTML("beforeend", passengerHTML);
         }
-    }
 
-    // Initialize form with default number of passengers
-    if (numPassengersSelect) {
-        generatePassengerForms(parseInt(numPassengersSelect.value));
-        numPassengersSelect.addEventListener("change", function () {
-            generatePassengerForms(parseInt(this.value));
+        document.querySelectorAll(".passenger-type").forEach((select) => {
+            select.addEventListener("change", function () {
+                const idFields =
+                    this.closest(".passenger-form").querySelector(".id-fields");
+                idFields.style.display =
+                    this.value === "Adult" ? "none" : "block";
+            });
         });
     }
 
-    // Handle booking form submission
+    generatePassengerForms(parseInt(numPassengersSelect.value));
+    numPassengersSelect.addEventListener("change", function () {
+        generatePassengerForms(parseInt(this.value));
+    });
+
     bookingForm.addEventListener("submit", async function (e) {
         e.preventDefault();
-
-        const passengers = [];
-        document.querySelectorAll(".passenger-form").forEach((form) => {
-            const data = {};
-            form.querySelectorAll("input, select").forEach((input) => {
-                data[input.name] = input.value;
-            });
-            passengers.push(data);
-        });
-
-        const bookingData = {
-            vesselName: bookingForm.dataset.vesselName,
-            routeFrom: bookingForm.dataset.routeFrom,
-            routeTo: bookingForm.dataset.routeTo,
-            departureDate: bookingForm.dataset.departureDate,
-            departureTime: bookingForm.dataset.departureTime,
-            portOfOrigin: bookingForm.dataset.portOfOrigin,
-            passengers: passengers,
-        };
+        loader.style.display = "flex";
 
         try {
-            const response = await fetch(bookingForm.dataset.submitUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": bookingForm.dataset.csrf,
-                },
-                body: JSON.stringify(bookingData),
-            });
+            const passengerForms = document.querySelectorAll(".passenger-form");
 
-            const result = await response.json();
+            for (const form of passengerForms) {
+                const type = form.querySelector(".passenger-type").value;
+                if (type === "Adult") continue;
 
-            // Instead of alert — just redirect
-            if (result.success) {
-                window.location.href =
-                    result.payment_url ?? "/passenger/confirmbooking";
-            } else {
-                window.location.href = "/passenger/confirmbooking";
+                const firstName = form
+                    .querySelector(".first-name")
+                    .value.trim()
+                    .toLowerCase();
+                const lastName = form
+                    .querySelector(".last-name")
+                    .value.trim()
+                    .toLowerCase();
+                const idNumber = form.querySelector(".id-number").value.trim();
+                const idFile = form.querySelector(".id-upload").files[0];
+
+                if (!idFile) {
+                    loader.style.display = "none";
+                    alert(
+                        "Please upload an ID image for discount verification."
+                    );
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append("file", idFile);
+
+                const response = await fetch("/ocr/parse", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": bookingForm.dataset.csrf,
+                    },
+                    body: formData,
+                });
+
+                const data = await response.json();
+                if (!data.text) throw new Error("OCR failed");
+
+                const scanned = data.text.toLowerCase().replace(/_/g, "");
+                if (
+                    !scanned.includes(firstName) ||
+                    !scanned.includes(lastName) ||
+                    !scanned.includes(idNumber.toLowerCase())
+                ) {
+                    loader.style.display = "none";
+                    alert(
+                        "ID does not match. Please check your input or upload a clearer photo."
+                    );
+                    return;
+                }
             }
-        } catch (error) {
-            console.error("Error submitting booking:", error);
-            // Even if there’s an error, still redirect (optional)
+
             window.location.href = "/passenger/confirmbooking";
+        } catch (err) {
+            loader.style.display = "none";
+            console.error(err);
+            alert("Error during ID verification. Please try again.");
         }
     });
 });

@@ -21,13 +21,8 @@
                     </div>
                     <div class="card-body bg-light">
 
-                        <!-- Passenger Booking Form -->
-                        <form id="bookingForm" data-vessel-name="{{ $vesselName ?? 'MV Rosalia - 3' }}"
-                            data-route-from="{{ $routeFrom ?? 'Cebu' }}" data-route-to="{{ $routeTo ?? 'Baybay, Leyte' }}"
-                            data-departure-date="{{ $departureDate ?? 'July 1, 2025' }}"
-                            data-departure-time="{{ $departureTime ?? '8:00 PM' }}"
-                            data-port-of-origin="{{ $portOfOrigin ?? 'Port of Cebu Passenger Terminal 2 (Pier 3)' }}"
-                            data-submit-url="{{ route('booking.submit') }}" data-csrf="{{ csrf_token() }}">
+                        <form id="bookingForm" data-submit-url="{{ route('booking.submit') }}"
+                            data-csrf="{{ csrf_token() }}">
                             <!-- Number of Passengers -->
                             <div class="mb-4">
                                 <label for="numPassengers" class="form-label fw-bold">Number of Passengers</label>
@@ -49,16 +44,11 @@
                             <h6 class="fw-bold mb-3">Voyage Information</h6>
                             <div class="bg-white p-3 rounded shadow-sm small">
                                 <p class="mb-1"><strong>Vessel Name:</strong> {{ $vesselName }}</p>
-                                <p class="mb-1"><strong>Route:</strong> {{ $routeFrom }} -
-                                    {{ $routeTo }}</p>
-                                <p class="mb-1"><strong>Departure Date:</strong> {{ $departureDate }}
-                                </p>
-                                <p class="mb-1">
-                                    <strong>Departure Time:</strong>
-                                    {{ \Carbon\Carbon::parse($departureTime)->format('g:i A') }}
-                                </p>
-                                <p class="mb-0"><strong>Port of Origin:</strong>
-                                    {{ $portOfOrigin }}</p>
+                                <p class="mb-1"><strong>Route:</strong> {{ $routeFrom }} - {{ $routeTo }}</p>
+                                <p class="mb-1"><strong>Departure Date:</strong> {{ $departureDate }}</p>
+                                <p class="mb-1"><strong>Departure Time:</strong>
+                                    {{ \Carbon\Carbon::parse($departureTime)->format('g:i A') }}</p>
+                                <p class="mb-0"><strong>Port of Origin:</strong> {{ $portOfOrigin }}</p>
                             </div>
 
                             <div class="d-flex justify-content-between mt-4">
@@ -74,6 +64,15 @@
         </div>
     </div>
 
-    <!-- Script -->
+    <!-- Fullscreen Loader -->
+    <!-- OCR Loader -->
+    <div id="ocrLoader"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+               background:rgba(0,0,0,0.7); z-index:1050; justify-content:center; align-items:center; flex-direction:column;">
+        <div class="spinner-border text-light" style="width:3rem; height:3rem;" role="status"></div>
+        <p class="text-white mt-3 fw-bold">Scanning ID... Please wait</p>
+    </div>
+
+    <!-- JS -->
     <script src="{{ asset('js/bookingform.js') }}"></script>
 @endsection

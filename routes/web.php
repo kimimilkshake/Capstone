@@ -6,6 +6,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PassengerController;
 use App\Http\Controllers\BookingController;
 
+use App\Http\Controllers\OcrController;
+
+Route::post('/ocr/parse', [OcrController::class, 'parseImage'])->name('ocr.parse');
 
 Route::get('/', function () {
     return view('passenger.homepage');
