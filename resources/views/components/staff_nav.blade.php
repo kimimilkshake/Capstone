@@ -21,7 +21,7 @@
     </li>
 
     <li class="snav-item">
-      <a class="snav-link" href="{{ url('/') }}">
+      <a class="snav-link" href="{{ url('/staff/cargobooking') }}">
         <i class="fa-solid fa-truck-ramp-box me-1"></i>
         <span class="snav-label">Cargo Booking</span>
       </a>

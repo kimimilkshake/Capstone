@@ -81,4 +81,8 @@ Route::get('/authorized/staff/dashboard', function () {
 
 Route::post('/authorized/logout', [AuthController::class, 'logout'])->name('logout');
 
+Route::get('/staff/cargobooking', function () {
+    return view('authorized.staff.cargobooking');
+});
+
 
