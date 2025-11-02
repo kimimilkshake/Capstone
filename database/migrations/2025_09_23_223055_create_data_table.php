@@ -106,9 +106,11 @@ return new class extends Migration {
         Schema::create('vessel', function (Blueprint $table) {
             $table->id('vessel_id');
             $table->foreignId('admin_id')->constrained('admin', 'admin_id');
+            $table->text('vessel_code');
             $table->string('vessel_name');
             $table->integer('vessel_total_passenger_capacity');
             $table->text('vessel_cot_plan_url')->nullable();
+            $table->enum('vessel_status', ['Active', 'Inactive']);
             $table->timestamps();
         });
 
@@ -152,16 +154,36 @@ return new class extends Migration {
         // ==========================
         // VOYAGES & TICKETS
         // ==========================
+        Schema::create('route', function (Blueprint $table) {
+            $table->id('route_id');
+            $table->string('route_origin');
+            $table->string('route_destination');
+            $table->timestamps();
+        });
+
+        Schema::create('port', function (Blueprint $table) {
+            $table->id('port_id');
+            $table->string('port_name');
+            $table->string('port_city');
+            $table->string('port_province');
+            $table->timestamps();
+        });
+
         Schema::create('voyage', function (Blueprint $table) {
             $table->id('voyage_id');
             $table->foreignId('vessel_id')->constrained('vessel', 'vessel_id');
-            $table->enum('voyage_routefrom', ['Cebu', 'Manila', 'Davao', 'Other']);
-            $table->enum('voyage_routeto', ['Cebu', 'Manila', 'Davao', 'Other']);
-            $table->date('voyage_departuredate');
-            $table->time('voyage_etd');
-            $table->time('voyage_eta');
-            $table->timestamp('voyage_arrival_time')->nullable();
-            $table->enum('voyage_status', ['Enabled', 'Ongoing', 'Completed', 'Cancelled', 'Disabled']);
+            $table->foreignId('route_id')->constrained('route', 'route_id');
+            $table->foreignId('port_id')->constrained('port', 'port_id');
+            $table->date('voyage_departure_date');
+            $table->date('voyage_arrival_date');
+            $table->string('voyage_code')->unique();
+            $table->time('voyage_estimated_TD');
+            $table->time('voyage_estimated_TA');
+            $table->time('voyage_actual_TD')->nullable();
+            $table->time('voyage_actual_TA')->nullable();
+            $table->enum('voyage_status', ['Scheduled', 'At Sea', 'Completed', 'Cancelled', 'Archived'])
+                ->default('Scheduled');
+            $table->string('voyage_description', 255)->nullable();
             $table->timestamps();
         });
 

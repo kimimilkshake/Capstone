@@ -13,14 +13,15 @@
     </li>
 
     <li class="anav-item">
-      <a class="anav-link" href="#"><i class="fa-solid fa-water"></i>
-        <span class="anav-label">Create Voyage</span>
+      <a class="anav-link" href="{{ route('admin.route_list') }}">
+        <i class="fa-solid fa-route"></i>
+        <span class="anav-label">Routes and Ports</span>
       </a>
     </li>
 
     <li class="anav-item">
-      <a class="anav-link" href="#">
-        <i class="fa-solid fa-route me-1"></i>
+      <a class="anav-link" href="{{ route('admin.voyage_list') }}">
+        <i class="fa-solid fa-map-location-dot"></i>
         <span class="anav-label">Voyage List</span>
       </a>
     </li>
@@ -57,7 +58,7 @@
     </li>
 
     <li class="anav-item">
-      <a class="anav-link" href="#">
+      <a class="anav-link" href="{{ route('admin.vessel_list') }}">
         <i class="fa-solid fa-ferry me-1"></i>
         <span class="anav-label">Vessel List</span>
       </a>

@@ -8,7 +8,7 @@ use App\Models\Promo;
 
 class PromoController extends Controller
 {
-    // ✅ Show list of promos with optional search
+    //Show list of promos with optional search
     public function index(Request $request)
     {
         $query = Promo::query();
@@ -21,7 +21,10 @@ class PromoController extends Controller
             });
         }
 
-        $promos = $query->orderBy('promo_id', 'asc')->get();
+        $promos = $query
+            ->orderBy('promo_id', 'asc')
+            ->paginate(10);
+
 
         return view('authorized.admin.promo_list', compact('promos'));
     }

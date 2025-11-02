@@ -1,0 +1,125 @@
+@extends('layouts.app')
+@section('page-title', 'VOYAGES')
+@section('content')
+  @include('components.authHeader')
+  @include('components.admin_nav')
+
+  <div class="admin-body">
+    <div class="avl-title">
+      <h3>CREATE VOYAGE</h3>
+    </div>
+
+    <div class="acs-form_container">
+      {{-- Validation Errors --}}
+      @if ($errors->any())
+        <div class="alert alert-danger" style="color: red; text-align: center;">
+          <strong>All fields are required.</strong><br>
+          @foreach ($errors->all() as $error)
+            {{ $error }}<br>
+          @endforeach
+        </div>
+      @endif
+
+      {{-- Success Message --}}
+      @if (session('success'))
+        <div class="alert alert-success" style="color: green; text-align: center; margin-bottom: 1rem;">
+          {{ session('success') }}
+        </div>
+      @endif
+
+      {{-- FORM START --}}
+      <form action="{{ route('voyages.store') }}" method="POST">
+        @csrf
+
+        <!--ROW 1: ROUTE, PORT, AND VESSEL-->
+        <div class="form-row">
+          {{-- Route Dropdown --}}
+          <div class="form-col">
+            <div class="form-group">
+              <label for="route_id">Route</label>
+              <select id="route_id" name="route_id" required>
+                <option value="" disabled selected>Select Route</option>
+                @foreach($routes as $route)
+                  <option value="{{ $route->route_id }}">
+                    {{ $route->route_origin }} → {{ $route->route_destination }}
+                  </option>
+                @endforeach
+              </select>
+            </div>
+          </div>
+
+          {{-- Port Dropdown --}}
+          <div class="form-col">
+            <div class="form-group">
+              <label for="port_id">Port</label>
+              <select id="port_id" name="port_id" required>
+                <option value="" disabled selected>Select Port</option>
+                @foreach($ports as $port)
+                  <option value="{{ $port->port_id }}">{{ $port->port_name }}</option>
+                @endforeach
+              </select>
+            </div>
+          </div>
+
+          {{-- Vessel Dropdown --}}
+          <div class="form-col">
+            <div class="form-group">
+              <label for="vessel_id">Vessel</label>
+              <select id="vessel_id" name="vessel_id" required>
+                <option value="" disabled selected>Select Vessel</option>
+                @foreach($vessels as $vessel)
+                  <option value="{{ $vessel->vessel_id }}">{{ $vessel->vessel_name }}</option>
+                @endforeach
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!--ROW 2: DEPARTURE DATE AND ARRIVAL DATE-->
+        <div class="form-row">
+          <div class="form-col">
+            <div class="form-group">
+              <label for="voyage_departure_date">Departure Date</label>
+              <input id="voyage_departure_date" type="date" name="voyage_departure_date" required>
+            </div>
+          </div>
+
+          <div class="form-col">
+            <div class="form-group">
+              <label for="voyage_arrival_date">Arrival Date</label>
+              <input id="voyage_arrival_date" type="date" name="voyage_arrival_date">
+            </div>
+          </div>
+        </div>
+
+        <!--ROW 3: ESTIMATED TD AND ESTIMATED TA-->
+        <div class="form-row">
+          <div class="form-col">
+            <div class="form-group">
+              <label for="voyage_estimated_TD">Estimated Time of Departure (ETD)</label>
+              <input id="voyage_estimated_TD" type="time" name="voyage_estimated_TD" required>
+            </div>
+          </div>
+
+          <div class="form-col">
+            <div class="form-group">
+              <label for="voyage_estimated_TA">Estimated Time of Arrival (ETA)</label>
+              <input id="voyage_estimated_TA" type="time" name="voyage_estimated_TA" required>
+            </div>
+          </div>
+        </div>
+
+        <!--ACTIONS-->
+        <div class="form-actions" style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+          <button type="submit" class="acs-add-btn">
+            <i class="fa-solid fa-plus me-2"></i>ADD
+          </button>
+          <a href="{{ route('voyages.index') }}" class="acs-add-btn acs-cancel-btn">
+            <i class="fa-solid fa-xmark me-2"></i>CANCEL
+          </a>
+        </div>
+      </form>
+      {{-- FORM END --}}
+    </div>
+  </div>
+@endsection

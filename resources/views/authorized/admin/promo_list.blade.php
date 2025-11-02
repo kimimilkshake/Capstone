@@ -9,14 +9,14 @@
         <h3>PROMO LIST</h3>
       </div>
       <div class="search-add-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
-          <form class="search-bar" action="{{ route('admin.promo_list') }}" method="GET" style="flex: 1;">
-              <input type="text" name="search" placeholder="Search by name..." value="{{ request('search') }}">
-              <button type="submit"><i class="fa-solid fa-magnifying-glass me-2"></i>Search</button>
-          </form>
+        <form class="search-bar" action="{{ route('admin.promo_list') }}" method="GET" style="flex: 1;">
+          <input type="text" name="search" placeholder="Search by name..." value="{{ request('search') }}">
+          <button type="submit"><i class="fa-solid fa-magnifying-glass me-2"></i>Search</button>
+        </form>
 
-          <div class="add-promo">
-            <a href="{{ route('admin.create_promo') }}"><i class="fa-solid fa-plus me-2"></i>Add Promo</a>
-          </div>
+        <div class="add-promo">
+          <a href="{{ route('admin.create_promo') }}"><i class="fa-solid fa-plus me-2"></i>Add Promo</a>
+        </div>
       </div>
       <table class="promo-table">
         <thead>
@@ -50,6 +50,9 @@
           @endforeach
         </tbody>
       </table>
+      <div class="pagination-container">
+        {{ $promos->appends(request()->query())->links('pagination::bootstrap-5') }}
+      </div>
     </div>
 
 @endsection
