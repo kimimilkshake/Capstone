@@ -1,10 +1,20 @@
 <?php
 
-use App\Http\Controllers\Admin\PromoController;
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\VesselRouteController;
 use App\Http\Controllers\AuthController;
+
+//ADMIN CONTROLLERS
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Admin\PromoController;
+use App\Http\Controllers\Admin\VesselController;
+use App\Http\Controllers\Admin\RouteController;
+use App\Http\Controllers\Admin\PortController;
+
+//SHARED CONTOLLERS
+use App\Http\Controllers\VoyageController;
 
 Route::get('/', function () {
     return view('passenger.homepage');
@@ -44,6 +54,12 @@ Route::get('/authorized/login', [AuthController::class, 'showLoginForm'])->name(
 // Process login
 Route::post('/authorized/login', [AuthController::class, 'login'])->name('login');
 
+//Forgot password
+Route::get('/authorized/forgot_password', function () {
+    return view('authorized.forgot_password');
+})->name('authorized.forgot_password');
+
+
 // Dashboard (protected)
 //Route::get('/authorized/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 
@@ -56,20 +72,64 @@ Route::get('/authorized/admin/dashboard', function () {
 */
 
 Route::prefix('authorized/admin')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('authorized.admin.dashboard');
-    })->name('admin.dashboard');
+    
+    //DASHBOARD
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
 
+
+    //STAFF
     Route::get('/create_staff', [StaffController::class, 'create'])->name('admin.create_staff');
     Route::post('/create_staff', [StaffController::class, 'store'])->name('admin.storeStaff');
     Route::get('/staff_list', [StaffController::class, 'index'])->name('admin.staff_list');
     Route::get('/staff/{id}/edit', [StaffController::class, 'edit'])->name('admin.staff_edit');
     Route::put('/staff/{id}', [StaffController::class, 'update'])->name('admin.staff_update');
+
+    //PROMO
     Route::get('/promo_list', [PromoController::class, 'index'])->name('admin.promo_list');
     Route::get('/create_promo', [PromoController::class, 'create'])->name('admin.create_promo');
+    Route::post('/create_promo', [PromoController::class, 'store'])->name('admin.storePromo');
+    Route::get('/promo/{id}/edit', [PromoController::class, 'edit'])->name('admin.promo_edit');
+    Route::put('/promo/{id}', [PromoController::class, 'update'])->name('admin.promo_update');
+
+    //VESSEL
+    Route::get('/vessels', [VesselController::class, 'index'])->name('admin.vessel_list');
+    Route::get('/vessels/create', [VesselController::class, 'create'])->name('admin.create_vessel');
+    Route::post('/vessels/store', [VesselController::class, 'store'])->name('admin.store_vessel');
+    Route::get('/vessels/{id}/edit', [VesselController::class, 'edit'])->name('admin.vessel_edit');
+    Route::post('/vessels/{id}/update', [VesselController::class, 'update'])->name('admin.vessel_update');
+
+    //VOYAGE
+    Route::get('/voyages', [VoyageController::class, 'index'])->name('admin.voyage_list');
+    Route::get('/voyages/create', [VoyageController::class, 'create'])->name('admin.create_voyage');
+    Route::post('/voyages/store', [VoyageController::class, 'store'])->name('admin.store_voyage');
+    Route::get('/voyages/{id}/edit', [VoyageController::class, 'edit'])->name('admin.voyage_edit');
+    Route::put('/voyages/{id}/update', [VoyageController::class, 'update'])->name('admin.voyage_update');
+
+    //ROUTE
+    Route::get('/routes', [RouteController::class, 'index'])->name('admin.route_list');
+    Route::post('/routes', [RouteController::class, 'store'])->name('admin.route_store');
+    Route::put('/routes/{id}', [RouteController::class, 'update'])->name('admin.route_update');
+    Route::delete('/routes/{id}', [RouteController::class, 'destroy'])->name('admin.route_destroy');
+
+    //PORT
+    Route::get('/ports', [PortController::class, 'index'])->name('admin.port_list');
+    Route::post('/ports', [PortController::class, 'store'])->name('admin.port_store');
+    Route::put('/ports/{id}', [PortController::class, 'update'])->name('admin.port_update');
+    Route::delete('/ports/{id}', [PortController::class, 'destroy'])->name('admin.port_destroy');
+
+});
+
+Route::middleware(['auth:admin'])->group(function () {
+    Route::resource('routes', RouteController::class);
+    Route::resource('ports', PortController::class);
 });
 
 
+
+//BOTH ADMIN AND STAFF
+Route::middleware(['auth:admin,auth:staff'])->group(function () {
+    Route::resource('voyages', VoyageController::class);
+});
 
 
 //STAFF PAGES
@@ -85,4 +145,15 @@ Route::get('/staff/cargobooking', function () {
     return view('authorized.staff.cargobooking');
 });
 
+/*
+Route::prefix('authorized/staff')->group(function () {
+    Route::get('/dashboard', fn() => view('authorized.staff.dashboard'))->name('staff.dashboard');
 
+    // Shared voyage access for staff
+    Route::get('/voyages', [VoyageController::class, 'index'])->name('staff.voyage_list');
+    Route::get('/voyages/create', [VoyageController::class, 'create'])->name('staff.create_voyage');
+    Route::post('/voyages/store', [VoyageController::class, 'store'])->name('staff.store_voyage');
+    Route::get('/voyages/{id}/edit', [VoyageController::class, 'edit'])->name('staff.voyage_edit');
+    Route::post('/voyages/{id}/update', [VoyageController::class, 'update'])->name('staff.voyage_update');
+});
+*/

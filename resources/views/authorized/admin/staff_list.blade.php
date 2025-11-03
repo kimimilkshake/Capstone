@@ -61,6 +61,9 @@
                 @endforeach
             </tbody>
         </table>
+        <div class="pagination-container">
+            {{ $staff->appends(request()->query())->links('pagination::bootstrap-5') }}
+        </div>
     </div>
 
 @endsection

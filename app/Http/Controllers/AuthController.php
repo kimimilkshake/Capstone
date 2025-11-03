@@ -29,13 +29,19 @@ class AuthController extends Controller
         // Check admin
         $admin = DB::table('admin')->where('admin_user', $username)->first();
         if ($admin && Hash::check($password, $admin->admin_password)) {
-            // Store session
+
+            // Log in using Auth guard so controllers like VesselController recognize it
+            auth()->guard('admin')->loginUsingId($admin->admin_id);
+
+            // (Optional) Still store session vars if you use them elsewhere
             Session::put('user_id', $admin->admin_id);
             Session::put('user_role', 'admin');
             Session::put('username', $admin->admin_user);
             Session::put('user_name', $admin->admin_name);
+
             return redirect()->route('admin.dashboard');
         }
+
 
         // Check staff
         $staff = DB::table('staff')->where('staff_user', $username)->first();
@@ -76,7 +82,10 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        auth()->guard('admin')->logout(); // Logout admin guard
+        auth()->guard('web')->logout();   // Logout default guard (if any)
         Session::flush(); // clears all session data
-        return redirect()->route('login.form'); // redirect to login page
+        return redirect()->route('login.form');
     }
+
 }

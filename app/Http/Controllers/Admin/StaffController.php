@@ -24,7 +24,10 @@ class StaffController extends Controller
             $query->where('staff_status', $request->status);
         }
 
-        $staff = $query->get();
+        $staff = $query
+            ->orderBy('staff_id', 'asc')
+            ->paginate(10);
+
 
         return view('authorized.admin.staff_list', compact('staff'));
     }

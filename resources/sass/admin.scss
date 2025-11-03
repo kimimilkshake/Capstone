@@ -154,22 +154,27 @@ body {
 .astat-boxes-col{
   flex: 1;
   padding: 15px;
-  border-radius: 12px;
+  border-radius: 15px;
   background-color: whitesmoke;
   box-shadow: 2px 2px 6px 2px rgba(0, 0, 0, 0.5);
 }
 
 .anumberStat{
-  size: 150px;
+  font-size: 40px;
   font-weight: bold;
+  color: #485b8c;
+}
+
+.astat-boxes-row p{
+  font-size: 20px;
 }
 
 .astat-voyage{
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
 //CREATE STAFF
-.acs-title, .asl-title, .apl-title{
+.acs-title, .asl-title, .apl-title, .avl-title{
   text-align: center;
 }
 
@@ -210,7 +215,8 @@ body {
 }
 
 .form-group input,
-.form-group select {
+.form-group select, 
+.form-group textarea {
   width: 100%;
   padding: 8px;
   border: 1px solid #ddd;
@@ -238,23 +244,22 @@ body {
 }
 
 //STAFF LIST
-
-.staff-table {
+.staff-table, .promo-table, .vessel-table, .voyage-table, .rp-table{
     width: 100%;
     border-collapse: collapse;
 }
 
-.staff-table th, .staff-table td {
+.staff-table th, .staff-table td, .promo-table th, .promo-table td, .vessel-table th, .vessel-table td, .voyage-table th, .voyage-table td, .rp-table th, .rp-table td{
     padding: 10px;
     text-align: center;
 }
 
-.staff-table th {
-    background-color: #485b8c; /* match your screenshot */
+.staff-table th, .promo-table th, .vessel-table th, .voyage-table th, .rp-table th{
+    background-color: #485b8c;
     color: white;
 }
 
-.staff-table tr{
+.staff-table tr, .promo-table tr, .vessel-table tr, .voyage-table tr, .rp-table tr {
   border-style: solid;
   border-color: rgba(0,0,0,0.1);
   border-width: 1px;
@@ -262,11 +267,10 @@ body {
   margin: 10px;
 }
 
-.staff-table tr:nth-child(even) {
+.staff-table tr:nth-child(even), .promo-table tr:nth-child(even), .vessel-table tr:nth-child(even), .voyage-table tr:nth-child(even), .rp-table tr:nth-child(even) {
     background-color: #f2f2f2;
 }
 
-/* Container row */
 .search-filter-row {
     display: flex;
     gap: 10px;
@@ -274,7 +278,6 @@ body {
     align-items: center;
 }
 
-/* Search bar */
 .search-bar {
     display: flex;
     flex: 1;
@@ -304,7 +307,6 @@ body {
     background-color: #2a364f;
 }
 
-/* Filter form */
 .search-filter-row form select {
     padding: 8px 12px;
     border: 1px solid #ccc;
@@ -315,7 +317,6 @@ body {
     transition: all 0.2s;
 }
 
-/* Optional: add a hover effect for filter */
 .search-filter-row form select:hover,
 .search-filter-row form select:focus {
     border-color: #2a364f;
@@ -323,24 +324,348 @@ body {
 }
 
 //PROMOS
-
 .search-add-row{
   margin-top: 20px;
   margin-bottom: 20px;
 }
 
 .add-promo a {
-    display: inline-block;        /* make it behave like a button */
-    text-decoration: none;        /* remove underline */
-    color: #fff;                  /* white text */
-    background-color: #485b8c;   /* dark indigo, matches your theme */
-    padding: 8px 16px;            /* space inside the button */
-    border-radius: 5px;           /* rounded corners */
+    display: inline-block;        
+    text-decoration: none;   
+    color: #fff;           
+    background-color: #485b8c; 
+    padding: 8px 16px; 
+    border-radius: 5px;
     font-size: 14px;
     font-weight: 500;
     transition: background-color 0.2s;
 }
 
 .add-promo a:hover {
-    background-color: #2a364f;    /* darker on hover */
+    background-color: #2a364f;
+}
+
+#promo_desc{
+  width: 100%;
+}
+
+#promo_description {
+  width: 100%;
+  height: 70px;
+}
+
+.acs-cancel-btn {
+  background-color: #b03a48;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.acs-cancel-btn:hover {
+  background-color: #8b2635;
+  color: #ffffff;
+  text-decoration: none; 
+}
+
+//VESSEL
+.add-vessel a {
+    display: inline-block;        
+    text-decoration: none;   
+    color: #fff;           
+    background-color: #485b8c; 
+    padding: 8px 16px; 
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.add-vessel a:hover {
+    background-color: #2a364f;
+}
+
+.hatch-row, .accommodation-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.hatch-row input, .accommodation-row input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.hatch-btn, .accommodation-btn {
+  background-color: #5ba270;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.hatch-btn:hover, .accommodation-btn:hover {
+  background-color: #3e885b;
+}
+
+.ha-label {
+  display: inline-block;
+  margin-bottom: 0;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+}
+
+#hatch-container, #accommodation-container {
+  margin-top: 0;
+}
+
+.vcot-plan {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1.5rem auto;
+  width: fit-content;
+}
+
+.vcot-plan label {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.vcot-plan input[type="file"] {
+  border: 1px solid #ccc;
+  padding: 8px;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+  cursor: pointer;
+}
+
+.dynamic-add {
+  background-color: #5ba270;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+}
+.dynamic-add:hover { background-color: #3e885b; }
+
+.dynamic-remove {
+  background-color: #b03a48;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+  text-decoration: none;
+}
+.dynamic-remove:hover {
+  background-color: #8b2635;
+  color: #ffffff;
+}
+
+.hatch-row, .accommodation-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.hatch-row input, .accommodation-row input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+//ROUTES AND PORTS
+.rp-row {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid #ddd;
+  margin-bottom: 20px;
+  padding-bottom: 5px;
+}
+
+.rp-col {
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  padding: 10px 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rp-col a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.rp-col:hover {
+  background-color: #eaeaea;
+}
+
+.active-tab {
+  background-color: #485b8c !important;
+  border-color: #485b8c !important;
+}
+
+.active-tab a {
+  color: white !important;
+}
+
+//ROUTE AND PORTS
+.add-link-btn {
+  background-color: #485b8c;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  display: inline-block;        
+  text-decoration: none;   
+  color: #fff;           
+  padding: 8px 16px; 
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.link-btn{
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 25px;
+  border-radius: 10px;
+  width: 400px;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.close-btn {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.modal-content h3 {
+  margin-bottom: 15px;
+  color: #1b3b8b;
+}
+
+.modal-content label {
+  display: block;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.modal-content button {
+  margin-top: 15px;
+  padding: 8px 14px;
+  border: none;
+  background: #1b3b8b;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.modal-content button:hover {
+  background: #2546a3;
+}
+
+
+//PAGINATION 
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  list-style: none;
+  gap: 6px;
+}
+
+.pagination {
+  margin: 0;
+}
+
+.pagination .page-item .page-link {
+  color: #333;
+  border-radius: 8px;
+  margin: 0 3px;
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  transition: all 0.2s ease-in-out;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #485b8c;
+  color: white;
+  border-color: #485b8c;
+}
+
+.pagination .page-item .page-link:hover {
+  background-color: #e6f0ff;
+  border-color: #b3d1ff;
+}
+
+.pagination li {
+  display: inline-block;
+}
+
+.pagination li a,
+.pagination li span {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  text-decoration: none;
+  color: #333;
+  transition: all 0.2s ease-in-out;
+}
+
+.pagination li.active span {
+  background-color: #485b8c;
+  color: #fff;
+  border-color: #485b8c;
+}
+
+.pagination li a:hover {
+  background-color: #f0f0f0;
 }
