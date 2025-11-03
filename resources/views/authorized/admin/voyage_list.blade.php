@@ -50,10 +50,10 @@
               {{ $voyage->route->route_origin }} → 
               {{ $voyage->route->route_destination }}
             </td>
-            <td>{{ $voyage->voyage_departure_date }}</td>
-            <td>{{ $voyage->voyage_arrival_date }}</td>
-            <td>{{ $voyage->voyage_estimated_TD }}</td>
-            <td>{{ $voyage->voyage_estimated_TA }}</td>
+            <td>{{ \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('F j, Y, D') }}</td>
+            <td>{{ \Carbon\Carbon::parse($voyage->voyage_arrival_date)->format('F j, Y, D') }}</td>
+            <td>{{ \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:iA') }}</td>
+            <td>{{ \Carbon\Carbon::parse($voyage->voyage_estimated_TA)->format('g:iA') }}</td>
             <td>{{ $voyage->vessel->vessel_name}}</td>
             <td>{{ $voyage->voyage_status }}</td>
             <td>

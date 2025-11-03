@@ -1,13 +1,19 @@
 <?php
 
-use App\Http\Controllers\Admin\PromoController;
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\VesselRouteController;
 use App\Http\Controllers\AuthController;
+
+//ADMIN CONTROLLERS
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Admin\PromoController;
 use App\Http\Controllers\Admin\VesselController;
 use App\Http\Controllers\Admin\RouteController;
 use App\Http\Controllers\Admin\PortController;
+
+//SHARED CONTOLLERS
 use App\Http\Controllers\VoyageController;
 
 Route::get('/', function () {
@@ -48,6 +54,12 @@ Route::get('/authorized/login', [AuthController::class, 'showLoginForm'])->name(
 // Process login
 Route::post('/authorized/login', [AuthController::class, 'login'])->name('login');
 
+//Forgot password
+Route::get('/authorized/forgot_password', function () {
+    return view('authorized.forgot_password');
+})->name('authorized.forgot_password');
+
+
 // Dashboard (protected)
 //Route::get('/authorized/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 
@@ -60,9 +72,10 @@ Route::get('/authorized/admin/dashboard', function () {
 */
 
 Route::prefix('authorized/admin')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('authorized.admin.dashboard');
-    })->name('admin.dashboard');
+    
+    //DASHBOARD
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+
 
     //STAFF
     Route::get('/create_staff', [StaffController::class, 'create'])->name('admin.create_staff');
