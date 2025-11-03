@@ -669,3 +669,95 @@ body {
 .pagination li a:hover {
   background-color: #f0f0f0;
 }
+
+//MANIFEST
+
+.manifest-header {
+    margin-bottom: 1.5rem;
+    color: #000;
+     padding-top: 120px;
+     margin-bottom: -3rem;
+
+    .manifest-title {
+        font-weight: bold;
+        font-size: 1.6rem;
+        margin-bottom: 0.5rem;
+        color: #000;
+    }
+
+    p {
+        margin: 0;
+        font-size: 0.95rem;
+        color: #000;
+    }
+
+    strong {
+        font-weight: 600;
+    }
+}
+
+.manifest-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    font-family: 'Segoe UI', sans-serif;
+    color: #333;
+     padding-top: 80px;
+}
+
+.manifest-header h2 {
+    font-weight: bold;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.manifest-header p {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.passenger-manifest,
+.cargo-manifest {
+    margin-top: 2rem;
+    margin:5rem;
+}
+
+.passenger-manifest h4,
+.cargo-manifest h4 {
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.manifest-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    background-color: #fff;
+
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    thead {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+
+    tbody tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    tbody td[colspan] {
+        font-style: italic;
+        color: #888;
+    }
+}
+
+
+
+

@@ -117,7 +117,16 @@ Route::prefix('authorized/admin')->group(function () {
     Route::put('/ports/{id}', [PortController::class, 'update'])->name('admin.port_update');
     Route::delete('/ports/{id}', [PortController::class, 'destroy'])->name('admin.port_destroy');
 
+//MANIFEST
+    Route::get('/manifest', function () {
+    return view('authorized.admin.manifest');
+})->name('admin.manifest');
+
 });
+
+
+
+
 
 Route::middleware(['auth:admin'])->group(function () {
     Route::resource('routes', RouteController::class);
@@ -141,6 +150,7 @@ Route::get('/authorized/staff/dashboard', function () {
 
 Route::post('/authorized/logout', [AuthController::class, 'logout'])->name('logout');
 
+// CARGO BOOKING
 Route::get('/staff/cargobooking', function () {
     return view('authorized.staff.cargobooking');
 });

@@ -58,7 +58,7 @@
             <td>{{ $voyage->voyage_status }}</td>
             <td>
               <a href="{{ route('admin.voyage_edit', $voyage->voyage_id) }}" title="Edit Voyage"><i class="fa fa-pencil me-2" ></i></a>
-              <a href="#" title="View Manifest"><i class="fa-solid fa-file"></i></a>
+              <a href="{{ route('admin.manifest') }}" title="View Manifest"><i class="fa-solid fa-file"></i></a>
             </td>
           </tr>
         @empty
