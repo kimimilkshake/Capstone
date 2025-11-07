@@ -108,7 +108,7 @@ class DatabaseSeeder extends Seeder
             'staff_name' => 'Staff User',
             'staff_user' => 'staff',
             'staff_password' => Hash::make('12345'), // hashed password
-            'staff_age' => 25,
+            'staff_dob' => '1990-01-10',
             'staff_gender' => 'M',
             'staff_email' => 'staff@example.com',
             'staff_status' => 'active',

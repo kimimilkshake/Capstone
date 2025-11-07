@@ -34,7 +34,7 @@
                                     </div>
 
                                     <!-- Password -->
-                                    <div class="form-floating mb-5">
+                                    <div class="form-floating mb-4">
                                         <input type="password" name="password" id="typePasswordX"class="form-control form-control-lg"
                                             class="form-control form-control-lg text-white bg-dark border-light"
                                             placeholder="Password" />
@@ -47,6 +47,8 @@
                                     </button>
 
                                 </form>
+
+                                <a href="{{route ('authorized.forgot_password') }}" class="forgot-password">Forgot Password?</a>
 
                             </div> <!-- mb-md-5 mt-md-4 py-5 -->
 

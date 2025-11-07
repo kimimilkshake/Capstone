@@ -28,3 +28,28 @@ h2, p{
   color: white; 
   border: none;
 }
+
+.forgot-password{
+  text-decoration: none;
+  color: #A0A0A0;
+}
+
+.back-icon {
+  position: absolute;
+  top: 20px;     // distance from top of card
+  left: 20px;    // distance from left of card
+  color: #485B8C;
+  font-size: 1.2rem;
+
+  &:hover {
+    color: darken(#485B8C, 10%);
+    text-decoration: none;
+  }
+}
+
+.card {
+  position: relative; // important so the icon positions inside the card
+  border-radius: 1rem; 
+  background-color: #ffffff; 
+  color: #485B8C;
+}

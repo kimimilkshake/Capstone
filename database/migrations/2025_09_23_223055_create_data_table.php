@@ -50,21 +50,22 @@ return new class extends Migration {
             $table->string('staff_name', 50);
             $table->string('staff_user', 10);
             $table->string('staff_password');
-            $table->integer('staff_age');
+            $table->date('staff_dob')->nullable();
             $table->enum('staff_gender', ['M', 'F']);
             $table->string('staff_email');
-            $table->enum('staff_status', ['active', 'inactive']);
+            $table->enum('staff_status', ['Active', 'Inactive']);
             $table->timestamps();
         });
 
         Schema::create('promo', function (Blueprint $table) {
             $table->id('promo_id');
-            $table->enum('promo_type', ['discount', 'freebie']);
+            $table->enum('promo_type', ['Discount', 'Freebie']);
+            $table->string('promo_name', 50);
             $table->string('promo_code');
             $table->string('promo_description', 255);
             $table->date('promo_start_date');
             $table->date('promo_end_date');
-            $table->enum('promo_status', ['active', 'inactive']);
+            $table->enum('promo_status', ['Active', 'Inactive']);
             $table->decimal('promo_discount_rate', 5, 2);
             $table->timestamps();
         });
@@ -105,9 +106,11 @@ return new class extends Migration {
         Schema::create('vessel', function (Blueprint $table) {
             $table->id('vessel_id');
             $table->foreignId('admin_id')->constrained('admin', 'admin_id');
+            $table->text('vessel_code');
             $table->string('vessel_name');
             $table->integer('vessel_total_passenger_capacity');
             $table->text('vessel_cot_plan_url')->nullable();
+            $table->enum('vessel_status', ['Active', 'Inactive']);
             $table->timestamps();
         });
 
@@ -133,14 +136,14 @@ return new class extends Migration {
         Schema::create('booking', function (Blueprint $table) {
             $table->id('booking_ref_no');
             $table->timestamp('booking_date');
-            $table->enum('booking_status', ['Confirmed', 'pending', 'canceled', 'refunded']);
+            $table->enum('booking_status', ['Confirmed', 'Pending', 'Canceled', 'Refunded']);
             $table->timestamps();
         });
 
         Schema::create('payment', function (Blueprint $table) {
             $table->id('payment_id');
             $table->foreignId('booking_ref_no')->nullable()->constrained('booking', 'booking_ref_no');
-            $table->enum('mode_of_payment', ['cash', 'Gcash']);
+            $table->enum('mode_of_payment', ['Cash', 'Gcash']);
             $table->timestamp('payment_date');
             $table->decimal('total_amount', 10, 2);
             $table->enum('payment_status', ['Completed', 'Pending', 'Canceled']);
@@ -151,16 +154,36 @@ return new class extends Migration {
         // ==========================
         // VOYAGES & TICKETS
         // ==========================
+        Schema::create('route', function (Blueprint $table) {
+            $table->id('route_id');
+            $table->string('route_origin');
+            $table->string('route_destination');
+            $table->timestamps();
+        });
+
+        Schema::create('port', function (Blueprint $table) {
+            $table->id('port_id');
+            $table->string('port_name');
+            $table->string('port_city');
+            $table->string('port_province');
+            $table->timestamps();
+        });
+
         Schema::create('voyage', function (Blueprint $table) {
             $table->id('voyage_id');
             $table->foreignId('vessel_id')->constrained('vessel', 'vessel_id');
-            $table->enum('voyage_routefrom', ['Cebu', 'Manila', 'Davao', 'Other']);
-            $table->enum('voyage_routeto', ['Cebu', 'Manila', 'Davao', 'Other']);
-            $table->date('voyage_departuredate');
-            $table->time('voyage_etd');
-            $table->time('voyage_eta');
-            $table->timestamp('voyage_arrival_time')->nullable();
-            $table->enum('voyage_status', ['Enabled', 'Ongoing', 'Completed', 'Cancelled', 'Disabled']);
+            $table->foreignId('route_id')->constrained('route', 'route_id');
+            $table->foreignId('port_id')->constrained('port', 'port_id');
+            $table->date('voyage_departure_date');
+            $table->date('voyage_arrival_date');
+            $table->string('voyage_code')->unique();
+            $table->time('voyage_estimated_TD');
+            $table->time('voyage_estimated_TA');
+            $table->time('voyage_actual_TD')->nullable();
+            $table->time('voyage_actual_TA')->nullable();
+            $table->enum('voyage_status', ['Scheduled', 'At Sea', 'Completed', 'Cancelled', 'Archived'])
+                ->default('Scheduled');
+            $table->string('voyage_description', 255)->nullable();
             $table->timestamps();
         });
 
@@ -240,8 +263,8 @@ return new class extends Migration {
             $table->foreignId('cargo_receipt_id')->nullable()->constrained('cargo_receipt', 'cargo_receipt_id');
             $table->foreignId('payment_id')->nullable()->constrained('payment', 'payment_id');
             $table->string('notification_message', 255);
-            $table->enum('notification_type', ['cargo booking approval', 'payment received']);
-            $table->enum('notification_status', ['approved', 'rejected', 'read', 'archived']);
+            $table->enum('notification_type', ['Cargo Booking Approval', 'Payment Received']);
+            $table->enum('notification_status', ['Approved', 'Rejected', 'Read', 'Archived']);
             $table->timestamp('notification_created');
             $table->timestamps();
         });

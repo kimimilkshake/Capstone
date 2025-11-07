@@ -13,24 +13,24 @@
     <div class="user-dropdown" id="userDropdownToggle">
       <div class="d-flex align-items-center gap-2">
         <i class="fa-solid fa-circle-user auheader-profile"></i>
-        <span class="fw-semibold">{{ Session::get('username') }}</span>
+        <span class="fw-semibold">{{ Session::get('user_name') }}</span>
       </div>
 
-  <div class="dropdown-menu">
-      <a href="#" class="dropdown-item">
-        <i class="fa-solid fa-user"></i> View Profile
-      </a>
-      <a href="#" class="dropdown-item">
-        <i class="fa-solid fa-gear"></i> Settings
-      </a>
-      <form action="{{ route('logout') }}" method="POST">
-        @csrf
-        <button type="submit" class="dropdown-item logout">
-          <i class="fa-solid fa-right-from-bracket"></i> Log out
-        </button>
-      </form>
+    <div class="dropdown-menu">
+        <a href="#" class="dropdown-item">
+          <i class="fa-solid fa-user"></i> View Profile
+        </a>
+          <a href="#" class="dropdown-item">
+            <i class="fa-solid fa-gear"></i> Settings
+          </a>
+          <form action="{{ route('logout') }}" method="POST">
+            @csrf
+            <button type="submit" class="dropdown-item logout">
+              <i class="fa-solid fa-right-from-bracket"></i> Log out
+            </button>
+          </form>
+        </div>
     </div>
-  </div>
 
 
   </div>
