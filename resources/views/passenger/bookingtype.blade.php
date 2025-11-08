@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('content')
-    @include('components.hero'){{-- Head Nav --}}
+    @include('components.hero') {{-- Head Nav --}}
     <div class="trip-booking-container container my-5">
         <div class="row align-items-center">
 
@@ -42,10 +42,25 @@
             </div>
 
             <!-- Right Side: Booking Selection -->
-            <div class="col-md-6 text-center">
+            <div class="col-md-6 text-center mt-1">
                 <h2 class="mb-5">Select Route & Schedule</h2>
 
-                <div class="d-flex gap-3 mb-0 mt-2">
+                <!-- Booking Type -->
+                <div class="mb-4">
+                    <h5 class="mb-3 text-secondary fst-italic">Booking Type</h5>
+                    <div class="d-flex justify-content-center gap-4 fs-5">
+                        <div>
+                            <input type="radio" name="bookingType" id="passengerType" value="passenger" checked>
+                            <label for="passengerType">Passenger</label>
+                        </div>
+                        <div>
+                            <input type="radio" name="bookingType" id="cargoType" value="cargo">
+                            <label for="cargoType">Cargo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 mb-0 mt-0">
                     <!-- Route From -->
                     <select id="routeFrom" class="form-select">
                         <option value="">Select Origin</option>
@@ -71,14 +86,14 @@
                 </div>
 
                 <button id="proceedBtn" class="proceed-btn btn btn-primary" type="button"
-                    data-url="{{ route('passengerbooking') }}" disabled>
+                    data-passenger-url="{{ route('passengerbooking') }}" data-cargo-url="{{ route('cargobooking') }}"
+                    disabled>
                     PROCEED
                 </button>
             </div>
-
         </div>
     </div>
 
     <script type="application/json" id="routes-data">{!! json_encode($routes) !!}</script>
-    <script src="{{ asset('js/booking.js') }}"></script>
+    <script src="{{ asset('js/bookingtype.js') }}"></script>
 @endsection

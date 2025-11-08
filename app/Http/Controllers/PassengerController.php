@@ -13,6 +13,7 @@ class PassengerController extends Controller
         $routeFrom = $request->query('route_from');
         $routeTo = $request->query('route_to');
         $departureDate = $request->query('departure_date');
+        $type = $request->query('type'); // 👈 booking type from radio buttons
 
         $route = \DB::table('vessel_routes')
             ->where('route_from', $routeFrom)
@@ -27,7 +28,13 @@ class PassengerController extends Controller
             $departureTime = Carbon::parse($departureTime)->format('g:i A');
         }
 
-        return view('passenger.passengerbooking', compact(
+        // ✅ If user selected "cargo", load passenger.cargobooking
+        // Otherwise load passenger.passengerbooking
+        $view = $type === 'cargo'
+            ? 'passenger.cargobooking'
+            : 'passenger.passengerbooking';
+
+        return view($view, compact(
             'routeFrom',
             'routeTo',
             'departureDate',
@@ -55,6 +62,6 @@ class PassengerController extends Controller
 
         Passenger::create($validated);
 
-        return redirect()->route('passenger')->with('success', 'Passenger booked successfully!');
+        return redirect()->route('bookingtype')->with('success', 'Passenger booked successfully!');
     }
 }

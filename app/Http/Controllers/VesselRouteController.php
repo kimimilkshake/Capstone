@@ -12,7 +12,7 @@ class VesselRouteController extends Controller
         $routes = VesselRoute::all();
 
         // pass to the view
-        return view('passenger.passenger', compact('routes'));
+        return view('passenger.bookingtype', compact('routes'));
         // or: return view('passenger.passenger', ['routes' => $routes]);
     }
 

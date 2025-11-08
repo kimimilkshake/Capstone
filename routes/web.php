@@ -29,16 +29,19 @@ Route::get('/passenger/homepage', function () {
     return view('passenger.homepage');
 })->name('homepage');
 
-Route::get('/passenger/book', function () {
-    return view('passenger.book');
-})->name('book');
+Route::get('/passenger/bookingtype', function () {
+    return view('passenger.bookingtype');
+})->name('bookingtype');
 
 // Passenger booking route
 // Show the available routes and selection page
-Route::get('/passenger/passenger', [VesselRouteController::class, 'index'])->name('passenger');
+//Route::get('/passenger/passenger', [VesselRouteController::class, 'index'])->name('passenger');
+Route::get('/passenger/bookingtype', [VesselRouteController::class, 'index'])->name('bookingtype');
+
 
 // Booking page (form)
 Route::get('/passenger/passengerbooking', [PassengerController::class, 'index'])->name('passengerbooking');
+Route::get('/passenger/cargobooking', [PassengerController::class, 'index'])->name('cargobooking');
 
 // Form submission
 Route::post('/passenger/store', [PassengerController::class, 'store'])->name('passenger.store');

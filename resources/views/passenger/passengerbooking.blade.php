@@ -52,7 +52,7 @@
                             </div>
 
                             <div class="d-flex justify-content-between mt-4">
-                                <a href="{{ route('passenger') }}"
+                                <a href="{{ route('bookingtype') }}"
                                     class="btn btn-outline-danger fw-bold w-50 py-3 me-2">CANCEL</a>
                                 <button type="submit" class="btn btn-primary fw-bold w-50 py-3">BOOK NOW</button>
                             </div>
@@ -74,5 +74,5 @@
     </div>
 
     <!-- JS -->
-    <script src="{{ asset('js/bookingform.js') }}"></script>
+    <script src="{{ asset('js/passengerform.js') }}"></script>
 @endsection
