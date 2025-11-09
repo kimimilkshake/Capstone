@@ -1,0 +1,417 @@
+/*
+THIS SCSS FILE CONTAINS THE CSS FOR ABOUT US PAGE, THE ABOUT_PARTIALS, FAQs PAGE, AND CONTACT PAGE
+*/
+
+//ABOUT PAGE
+.container {
+  display: flex;
+  gap: 1rem;
+  align-items: stretch;
+  height: calc(100vh - 280px);
+}
+
+.about-sidebar {
+  width: 25%;
+  background-color: #f8f8f8;
+  padding: 1rem;
+  border-radius: 8px;
+  height: 100%;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.about-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.about-sidebar li {
+  padding: 12px 16px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  font-size: 25px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.about-sidebar li:hover {
+  background-color: #d2ebf4;
+}
+
+.about-sidebar li.active {
+  background-color: #339cff;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+  color: white;
+  font-weight: 600;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.3s, clip-path 0.3s;
+  clip-path: polygon(
+    0 0,
+    calc(100% - 10px) 0,
+    100% 50%,
+    calc(100% - 10px) 100%,
+    0 100%
+  );
+}
+
+.about-content-fragment {
+  flex: 1;    
+  display: flex;
+  flex-direction: column;              
+  background-color: #ffffff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  height: calc(100vh - 280px);
+  overflow-y: auto;
+}
+
+.about-content-fragment::-webkit-scrollbar {
+  width: 8px;
+}
+
+.about-content-fragment::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.2);
+  border-radius: 4px;
+}
+
+//ABOUT - WHO WE ARE
+.awwa-wrapper {
+  background-color: #f4f8fb;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.awwa-content {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.awwa-logo-wrapper {
+  flex: 0 0 350px;
+  text-align: center;
+
+  .awwa-logo {
+    width: 100%;
+    max-width: 300px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+}
+
+.awwa-text {
+  flex: 1;
+  
+  .awwa-p {
+    font-size: 1.1rem;
+    line-height: 1.3;
+    color: #333;
+    margin-bottom: 1.5rem;
+  }
+
+  .awwa-quote {
+    font-size: 1rem;
+    font-style: italic;
+    color: #19569f;
+    border-left: 4px solid #339cff;
+    padding-left: 1rem;
+    margin: 0;
+    background-color: #e6f3ff;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .awwa-content {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .awwa-logo-wrapper {
+    flex: 0 0 auto;
+    margin-bottom: 1rem;
+  }
+
+  .awwa-text {
+    text-align: center;
+
+    .awwa-quote {
+      padding-left: 0.75rem;
+    }
+  }
+}
+
+//ABOUT - WHAT WE OFFER
+.awwo-row {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: stretch;
+}
+
+.awwo-col {
+  flex: 1 1 45%;
+  min-width: 280px;
+  display: flex;
+}
+
+.awwo-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 1.3rem 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: transform 0.3s, box-shadow 0.3s;
+  flex: 1;
+
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  }
+}
+
+.awwo-icon-wrapper {
+  width: 120px;       
+  height: 120px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e6f3ff;
+  border-radius: 50%;
+  font-size: 3.5rem;
+  color: #19569f;
+  transition: transform 0.3s, background-color 0.3s;
+}
+
+.awwo-pic {
+  font-size: inherit;
+  line-height: 1;
+}
+
+
+.awwo-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 1rem 0 0.5rem;
+  color: #19569f;
+}
+
+.awwo-desc {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #4a4a4a;
+  margin-bottom: 1.5rem;
+}
+
+.awwo-btn {
+  display: inline-block;
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
+  background-color: #339cff;
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: #007bff;
+    color: white;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .awwo-row {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .awwo-col {
+    flex: 1 1 100%;
+  }
+}
+
+//ABOUT - VISION MISSION
+.avm-row{
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  align-items: stretch;
+}
+
+.avm-col{
+  flex: 1 1 45%;
+  min-width: 280px;
+  display: flex;
+}
+
+.avm-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: transform 0.3s, box-shadow 0.3s;
+  flex: 1;
+}
+
+.avm-icon-wrapper {
+  width: 50px;       
+  height: 50px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e6f3ff;
+  border-radius: 50%;
+  font-size: 3.5rem;
+  color: #19569f;
+  transition: transform 0.3s, background-color 0.3s;
+}
+
+.avm-pic {
+  font-size: 25px;
+  line-height: 1;
+}
+
+.avm-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 1rem 0 0.5rem;
+  color: #19569f;
+}
+
+.avm-desc {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  color: #4a4a4a;
+  margin-bottom: 1.5rem;
+}
+
+//ABOUT - VESSELS
+.ava-row{
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: stretch;
+}
+
+.ava-col{
+  flex: 1 1 30%;
+  min-width: 250px;
+  display: flex;
+}
+
+.ava-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: transform 0.3s, box-shadow 0.3s;
+  flex: 1;
+}
+
+.ava-pic{
+  width: 250px;
+}
+
+@media screen and (max-width: 992px) {
+  .ava-col {
+    flex: 1 1 45%;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .ava-col {
+    flex: 1 1 100%;
+  }
+}
+
+.ava-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 1rem 0 0.5rem;
+  color: #19569f;
+}
+
+/* Modal background */
+.ava-modal {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  justify-content: center;
+  align-items: center;
+}
+
+/* Enlarged image */
+.ava-modal-content {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+/* Close button */
+.ava-close {
+  position: absolute;
+  top: 25px;
+  right: 35px;
+  color: #fff;
+  font-size: 2.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.ava-close:hover {
+  color: #339cff;
+}
+
+//ABOUT - PORTS OF CALL
+.apoc-row{
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: stretch;
+}
+
+.apoc-col{
+  flex: 1 1 30%;
+  min-width: 250px;
+  display: flex;
+}
+
+.apoc-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: transform 0.3s, box-shadow 0.3s;
+  flex: 1;
+}
+
+.apoc-pic{
+  width: 250px;
+}
+
+.apoc-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 1rem 0 0.5rem;
+  color: #19569f;
+}

@@ -56,14 +56,30 @@ Route::get('/passenger/schedules', function () {
     return view('passenger.schedules');
 })->name('schedules');
 
+
+//About Us Page
 Route::get('/passenger/about', function () {
     return view('passenger.about');
 })->name('about');
 
+Route::prefix('passenger/about_partials')->group(function () {
+    Route::get('/', function () {
+        return view('passenger.about_partials');
+    });
+    Route::get('/{fragment}', function ($fragment) {
+        $valid = ['who_we_are', 'what_we_offer', 'vision_mission', 'vessels_about', 'ports_of_call'];
+        if (!in_array($fragment, $valid)) abort(404);
+        return view("passenger.about_partials.$fragment");
+    });
+});
+
+
+//FAQs Page
 Route::get('/passenger/faqs', function () {
     return view('passenger.faqs');
 })->name('faqs');
 
+//Contact Us Page
 Route::get('/passenger/contact', function () {
     return view('passenger.contact');
 })->name('contact');

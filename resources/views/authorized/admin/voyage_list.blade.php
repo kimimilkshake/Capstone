@@ -16,6 +16,12 @@
               name="search" 
               placeholder="Search by name, code, route, vessel, status..." 
               value="{{ request('search') }}">
+          <input 
+              type="date" 
+              name="date" 
+              placeholder="Search by date"
+              value="{{ request('date') }}"
+              style="margin-left:10px;">
           <button type="submit">
               <i class="fa-solid fa-magnifying-glass me-2"></i>Search
           </button>
