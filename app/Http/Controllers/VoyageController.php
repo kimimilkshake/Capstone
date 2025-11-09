@@ -162,4 +162,11 @@ class VoyageController extends Controller
         Voyage::destroy($id);
         return redirect()->route('voyages.index')->with('success', 'Voyage deleted.');
     }
+
+    public function showManifest($id)
+    {
+    $voyage = Voyage::with(['route', 'vessel', 'port'])->findOrFail($id);
+    return view('authorized.admin.manifest', compact('voyage'));
+    }
+
 }

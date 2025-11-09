@@ -244,22 +244,22 @@ body {
 }
 
 //STAFF LIST
-.staff-table, .promo-table, .vessel-table, .voyage-table, .rp-table{
+.staff-table, .promo-table, .vessel-table, .voyage-table, .rp-table, .manifest-table{
     width: 100%;
     border-collapse: collapse;
 }
 
-.staff-table th, .staff-table td, .promo-table th, .promo-table td, .vessel-table th, .vessel-table td, .voyage-table th, .voyage-table td, .rp-table th, .rp-table td{
+.staff-table th, .staff-table td, .promo-table th, .promo-table td, .vessel-table th, .vessel-table td, .voyage-table th, .voyage-table td, .rp-table th, .rp-table td, .manifest-table td, .manifest-table th{
     padding: 10px;
     text-align: center;
 }
 
-.staff-table th, .promo-table th, .vessel-table th, .voyage-table th, .rp-table th{
+.staff-table th, .promo-table th, .vessel-table th, .voyage-table th, .rp-table th, .manifest-table th{
     background-color: #485b8c;
     color: white;
 }
 
-.staff-table tr, .promo-table tr, .vessel-table tr, .voyage-table tr, .rp-table tr {
+.staff-table tr, .promo-table tr, .vessel-table tr, .voyage-table tr, .rp-table tr, .manifest-table {
   border-style: solid;
   border-color: rgba(0,0,0,0.1);
   border-width: 1px;
@@ -267,7 +267,7 @@ body {
   margin: 10px;
 }
 
-.staff-table tr:nth-child(even), .promo-table tr:nth-child(even), .vessel-table tr:nth-child(even), .voyage-table tr:nth-child(even), .rp-table tr:nth-child(even) {
+.staff-table tr:nth-child(even), .promo-table tr:nth-child(even), .vessel-table tr:nth-child(even), .voyage-table tr:nth-child(even), .rp-table tr:nth-child(even), .manifest-table tr:nth-child(even) {
     background-color: #f2f2f2;
 }
 
@@ -675,7 +675,7 @@ body {
 .manifest-header {
     margin-bottom: 1.5rem;
     color: #000;
-     padding-top: 120px;
+     padding-top: 3px;
      margin-bottom: -3rem;
 
     .manifest-title {
@@ -696,14 +696,6 @@ body {
     }
 }
 
-.manifest-container {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    font-family: 'Segoe UI', sans-serif;
-    color: #333;
-     padding-top: 80px;
-}
 
 .manifest-header h2 {
     font-weight: bold;
@@ -730,33 +722,7 @@ body {
     margin-bottom: 1rem;
 }
 
-.manifest-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-    background-color: #fff;
 
-    th, td {
-        border: 1px solid #ccc;
-        padding: 10px;
-        text-align: center;
-        vertical-align: middle;
-    }
-
-    thead {
-        background-color: #f8f9fa;
-        font-weight: 600;
-    }
-
-    tbody tr:nth-child(even) {
-        background-color: #f2f2f2;
-    }
-
-    tbody td[colspan] {
-        font-style: italic;
-        color: #888;
-    }
-}
 
 
 

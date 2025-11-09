@@ -117,10 +117,9 @@ Route::prefix('authorized/admin')->group(function () {
     Route::put('/ports/{id}', [PortController::class, 'update'])->name('admin.port_update');
     Route::delete('/ports/{id}', [PortController::class, 'destroy'])->name('admin.port_destroy');
 
-//MANIFEST
-    Route::get('/manifest', function () {
-    return view('authorized.admin.manifest');
-})->name('admin.manifest');
+    //MANIFEST
+
+    Route::get('/manifest/{id}', [VoyageController::class, 'showManifest'])->name('admin.manifest');
 
 });
 
