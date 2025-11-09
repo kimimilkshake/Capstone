@@ -13,8 +13,11 @@ use App\Http\Controllers\Admin\VesselController;
 use App\Http\Controllers\Admin\RouteController;
 use App\Http\Controllers\Admin\PortController;
 
+
+
 //SHARED CONTOLLERS
 use App\Http\Controllers\VoyageController;
+use App\Http\Controllers\ManifestController;
 
 Route::get('/', function () {
     return view('passenger.homepage');
@@ -117,13 +120,13 @@ Route::prefix('authorized/admin')->group(function () {
     Route::put('/ports/{id}', [PortController::class, 'update'])->name('admin.port_update');
     Route::delete('/ports/{id}', [PortController::class, 'destroy'])->name('admin.port_destroy');
 
-    //MANIFEST
+  
 
-    Route::get('/manifest/{id}', [VoyageController::class, 'showManifest'])->name('admin.manifest');
 
 });
 
-
+    //MANIFEST
+    Route::get('authorized/manifest/{id}', [ManifestController::class, 'show'])->name('manifest');
 
 
 

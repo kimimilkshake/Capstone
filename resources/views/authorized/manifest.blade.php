@@ -31,7 +31,7 @@
                     <th>Age/Gen</th>
                     <th>Category</th>
                     <th>Accommodation</th>
-                    <th>Cabin No</th>
+                    <th>Cot No</th>
                     <th>Departure</th>
                     <th>Fare</th>
                 </tr>
