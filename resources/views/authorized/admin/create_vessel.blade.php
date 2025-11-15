@@ -60,7 +60,8 @@
             <div id="hatch-container">
               <div class="hatch-row">
                 <input type="text" name="hatches[0][label]" placeholder="Hatch Label" required>
-                <input type="number" name="hatches[0][capacity]" placeholder="Capacity in Cubic Meters" required>
+                <input type="number" name="hatches[0][area_capacity]" placeholder="Area Capacity in Cubic Meters" title="Area Capacity in Cubic Meters" required>
+                <input type="number" name="hatches[0][weight_capacity]" placeholder="Weight Capacity in Tons" title="Weight Capacity in Tons" required>
                 <button type="button" class="hatch-btn add-hatch">+</button>
               </div>
             </div>

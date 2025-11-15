@@ -4,8 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Voyage;
-use App\Models\Route;
-use App\Models\Port;
+use App\Models\RoutePort;
 use App\Models\Vessel;
 use Carbon\Carbon;
 
@@ -42,9 +41,8 @@ class VoyageController extends Controller
     public function create()
     {
         $vessels = Vessel::where('vessel_status', 'Active')->get();
-        $routes = Route::all();
-        $ports = Port::all();
-        return view('authorized.admin.create_voyage', compact('vessels', 'routes', 'ports'));
+        $route_port = RoutePort::all();
+        return view('authorized.admin.create_voyage', compact('vessels', 'route_port'));
     }
 
     public function store(Request $request)

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('page-title', 'ROUTES AND PORTS')
+@section('page-title', 'VOYAGES')
 @section('content')
 @include('components.authHeader')
 @include('components.admin_nav')
