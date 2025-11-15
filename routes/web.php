@@ -137,11 +137,6 @@ Route::prefix('authorized/admin')->group(function () {
     Route::delete('/route_port/{id}', [RoutePortController::class, 'destroy'])->name('admin.route_port_destroy');
 });
 
-Route::middleware(['auth:admin'])->group(function () {
-    Route::resource('routes', RouteController::class);
-    Route::resource('ports', PortController::class);
-});
-
 // Both admin and staff
 Route::middleware(['auth:admin,auth:staff'])->group(function () {
     Route::resource('voyages', VoyageController::class);
