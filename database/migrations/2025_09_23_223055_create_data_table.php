@@ -126,7 +126,8 @@ return new class extends Migration {
             $table->id('hatch_id');
             $table->foreignId('vessel_id')->constrained('vessel', 'vessel_id');
             $table->string('hatch_label');
-            $table->integer('hatch_capacity');
+            $table->integer('hatch_area_capacity');
+            $table->integer('hatch_weight_capacity');
             $table->timestamps();
         });
 
@@ -154,26 +155,23 @@ return new class extends Migration {
         // ==========================
         // VOYAGES & TICKETS
         // ==========================
-        Schema::create('route', function (Blueprint $table) {
-            $table->id('route_id');
+        Schema::create('route_port', function (Blueprint $table) {
+            $table->id('route_port_id');
             $table->string('route_origin');
             $table->string('route_destination');
-            $table->timestamps();
-        });
-
-        Schema::create('port', function (Blueprint $table) {
-            $table->id('port_id');
-            $table->string('port_name');
-            $table->string('port_city');
-            $table->string('port_province');
+            $table->string('port_origin_name');
+            $table->string('port_origin_city');
+            $table->string('port_origin_province');
+            $table->string('port_destination_name');
+            $table->string('port_destination_city');
+            $table->string('port_destination_province');
             $table->timestamps();
         });
 
         Schema::create('voyage', function (Blueprint $table) {
             $table->id('voyage_id');
             $table->foreignId('vessel_id')->constrained('vessel', 'vessel_id');
-            $table->foreignId('route_id')->constrained('route', 'route_id');
-            $table->foreignId('port_id')->constrained('port', 'port_id');
+            $table->foreignId('route_port_id')->constrained('route_port', 'route_port_id');
             $table->date('voyage_departure_date');
             $table->date('voyage_arrival_date');
             $table->string('voyage_code')->unique();

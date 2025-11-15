@@ -70,3 +70,24 @@ const sidebarItems = document.querySelectorAll('.about-sidebar li');
   };
   document.addEventListener('click', stopPropagationIfModalImg);
 })();
+
+//FAQs PAGE for every FAQ Item
+document.querySelectorAll('.faq-question').forEach(button => {
+    button.addEventListener('click', () => {
+        const answer = button.nextElementSibling;
+        const toggle = button.querySelector('.faq-toggle');
+
+        // Toggle display
+        if (answer.style.display === 'block') {
+            answer.style.display = 'none';
+            toggle.textContent = '+';
+        } else {
+            // Close all other open answers
+            document.querySelectorAll('.faq-answer').forEach(a => a.style.display = 'none');
+            document.querySelectorAll('.faq-toggle').forEach(t => t.textContent = '+');
+
+            answer.style.display = 'block';
+            toggle.textContent = '–';
+        }
+    });
+});

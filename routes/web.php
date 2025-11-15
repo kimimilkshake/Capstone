@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\PromoController;
 use App\Http\Controllers\Admin\VesselController;
 use App\Http\Controllers\Admin\RouteController;
 use App\Http\Controllers\Admin\PortController;
+use App\Http\Controllers\Admin\RoutePortController;
 
 // SHARED CONTROLLERS
 use App\Http\Controllers\VoyageController;
@@ -129,17 +130,11 @@ Route::prefix('authorized/admin')->group(function () {
     Route::get('/voyages/{id}/edit', [VoyageController::class, 'edit'])->name('admin.voyage_edit');
     Route::put('/voyages/{id}/update', [VoyageController::class, 'update'])->name('admin.voyage_update');
 
-    // Route
-    Route::get('/routes', [RouteController::class, 'index'])->name('admin.route_list');
-    Route::post('/routes', [RouteController::class, 'store'])->name('admin.route_store');
-    Route::put('/routes/{id}', [RouteController::class, 'update'])->name('admin.route_update');
-    Route::delete('/routes/{id}', [RouteController::class, 'destroy'])->name('admin.route_destroy');
-
-    // Port
-    Route::get('/ports', [PortController::class, 'index'])->name('admin.port_list');
-    Route::post('/ports', [PortController::class, 'store'])->name('admin.port_store');
-    Route::put('/ports/{id}', [PortController::class, 'update'])->name('admin.port_update');
-    Route::delete('/ports/{id}', [PortController::class, 'destroy'])->name('admin.port_destroy');
+    //Route and Port
+    Route::get('/route_port', [RoutePortController::class, 'index'])->name('admin.route_port_list');
+    Route::post('/route_port', [RoutePortController::class, 'store'])->name('admin.route_port_store');
+    Route::put('/route_port/{id}', [RoutePortController::class, 'update'])->name('admin.route_port_update');
+    Route::delete('/route_port/{id}', [RoutePortController::class, 'destroy'])->name('admin.route_port_destroy');
 });
 
 Route::middleware(['auth:admin'])->group(function () {

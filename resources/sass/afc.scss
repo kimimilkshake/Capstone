@@ -3,10 +3,12 @@ THIS SCSS FILE CONTAINS THE CSS FOR ABOUT US PAGE, THE ABOUT_PARTIALS, FAQs PAGE
 */
 
 //ABOUT PAGE
-.container {
+.about-container {
   display: flex;
   gap: 1rem;
   align-items: stretch;
+  padding-left: 20px;
+  padding-right: 20px;
   height: calc(100vh - 280px);
 }
 
@@ -82,6 +84,7 @@ THIS SCSS FILE CONTAINS THE CSS FOR ABOUT US PAGE, THE ABOUT_PARTIALS, FAQs PAGE
   background-color: #f4f8fb;
   padding: 1rem 1.5rem;
   border-radius: 12px;
+  height: 300px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
@@ -414,4 +417,137 @@ THIS SCSS FILE CONTAINS THE CSS FOR ABOUT US PAGE, THE ABOUT_PARTIALS, FAQs PAGE
   font-weight: 700;
   margin: 1rem 0 0.5rem;
   color: #19569f;
+}
+
+//FAQS PAGE
+.faqs-container {
+    width: 80%;
+    max-width: 900px;
+    margin: 2rem auto;
+    font-family: Arial, sans-serif;
+}
+
+.faq-item {
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    overflow: hidden;
+    background-color: #f6f6f6;
+}
+
+.faq-question {
+    width: 100%;
+    background: #f1f1f1;
+    border: none;
+    outline: none;
+    padding: 1rem;
+    text-align: left;
+    font-size: 1.1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.faq-question:hover {
+    background: #e9ecef;
+}
+
+.faq-toggle {
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.faq-answer {
+    display: none;
+    padding: 1rem;
+    background: #fff;
+    border-top: 1px solid #ddd;
+}
+
+
+
+//CONTACT US PAGE
+.contact-container{
+  display: block;
+  margin: 0 auto;
+}
+
+.contact-row{
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.contact-col{
+  flex: 1;
+  min-width: 280px;
+  padding: 1rem;
+}
+
+.contact-card{
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.contact-divider {
+  background-color: #485b8c;
+  width: 100%;
+  align-items: center;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.contact-title{
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.main-office-pic{
+  display: flex;
+  width: 25%;
+  margin-bottom: 10px;
+}
+
+.contact-divtitle{
+  text-align: center;
+  color: #ffffff;
+}
+
+.contact-card label{
+  font-size: 15px;
+  font-weight: 200;
+}
+
+.contact-card textarea, .contact-card input{
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.contact-card textarea{
+  height: 105px;
+}
+
+.contact-card button{
+  width: 150px;
+  background-color: #007bff;
+  color: #ffffff;
+  padding: 8px;
+  border-color: #007bff;
+  border-radius: 8px;
+  display: block;
+  margin: 0 auto;
+  justify-content: center;
+}
+
+.ticketbooth-pic1{
+  display: block;
+  margin: 0 auto;
+  width: 400px;
 }

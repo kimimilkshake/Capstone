@@ -527,6 +527,7 @@ body {
 }
 
 //ROUTE AND PORTS
+/* --- BUTTONS --- */
 .add-link-btn {
   background-color: #485b8c;
   border: none;
@@ -542,7 +543,11 @@ body {
   transition: background-color 0.2s;
 }
 
-.link-btn{
+.add-link-btn:hover {
+  background-color: #3a4870;
+}
+
+.link-btn {
   background: none;
   border: none;
   color: inherit;
@@ -551,6 +556,7 @@ body {
   padding: 0;
 }
 
+/* --- MODAL --- */
 .modal-overlay {
   display: none;
   position: fixed;
@@ -565,11 +571,13 @@ body {
   background: #fff;
   padding: 25px;
   border-radius: 10px;
-  width: 400px;
+  width: 600px; /* wider for 2 columns */
+  max-width: 90%;
   position: relative;
   box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 }
 
+/* --- CLOSE BUTTON --- */
 .close-btn {
   position: absolute;
   top: 8px;
@@ -578,37 +586,81 @@ body {
   cursor: pointer;
 }
 
+/* --- MODAL HEADER --- */
 .modal-content h3 {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   color: #1b3b8b;
+  text-align: center;
 }
 
-.modal-content label {
-  display: block;
-  margin-top: 10px;
-  font-weight: bold;
+/* --- FORM GRID --- */
+.rpmodal-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 columns */
+  gap: 15px;
+  margin-bottom: 15px;
 }
 
-.modal-content input {
-  width: 100%;
-  padding: 8px;
-  margin-top: 4px;
+.rpmodal-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.rpmodal-col label {
+  margin-bottom: 5px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.rpmodal-col input {
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  border-radius: 5px;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
-.modal-content button {
+/* 2 columns layout */
+.rpmodal-row.two-col {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+/* 3 columns layout */
+.rpmodal-row.three-col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+
+/* --- SUBMIT BUTTON --- */
+.modal-content button[type="submit"] {
   margin-top: 15px;
-  padding: 8px 14px;
+  padding: 10px 15px;
   border: none;
   background: #1b3b8b;
   color: white;
   border-radius: 6px;
   cursor: pointer;
+  font-weight: 500;
+  width: 100%;
+  transition: background-color 0.2s;
 }
-.modal-content button:hover {
+
+.modal-content button[type="submit"]:hover {
   background: #2546a3;
 }
+
+/* --- RESPONSIVE --- */
+@media screen and (max-width: 600px) {
+  .rpmodal-row {
+    grid-template-columns: 1fr; /* stack on mobile */
+  }
+}
+
 
 
 //PAGINATION 

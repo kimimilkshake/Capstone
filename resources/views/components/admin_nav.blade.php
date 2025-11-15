@@ -13,7 +13,7 @@
     </li>
 
     <li class="anav-item">
-      <a class="anav-link" href="{{ route('admin.route_list') }}">
+      <a class="anav-link" href="{{ route('admin.route_port_list') }}">
         <i class="fa-solid fa-route"></i>
         <span class="anav-label">Routes and Ports</span>
       </a>

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('content')
     @include('components.hero'){{-- Head Nav --}}
-    <div class="container my-4">
+    <div class="about-container my-4">
         <div class="about-sidebar">
             <ul>
                 <li data-section="who_we_are">Who We Are</li>
@@ -16,7 +16,4 @@
         </div>
     </div>
 
-    <script>
-        
-    </script>
 @endsection
