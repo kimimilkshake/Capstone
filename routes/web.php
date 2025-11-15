@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PassengerController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\OcrController;
+use App\Http\Controllers\PaymentController;
 
 // ADMIN CONTROLLERS
 use App\Http\Controllers\Admin\DashboardController;
@@ -47,10 +48,22 @@ Route::get('/passenger/cargobooking', [PassengerController::class, 'index'])->na
 Route::post('/passenger/store', [PassengerController::class, 'store'])->name('passenger.store');
 Route::post('/booking/submit', [BookingController::class, 'store'])->name('booking.submit');
 
-// Confirm booking
+// API: return unavailable cot numbers for a voyage (by route/date or voyage_id)
+Route::get('/voyage/unavailable-cots', [BookingController::class, 'unavailableCots'])->name('voyage.unavailable_cots');
+
+// Confirm booking (show booking by reference)
+Route::get('/passenger/confirmbooking/{booking_ref_no}', [BookingController::class, 'confirm'])->name('passenger.confirmbooking');
+
+// Backwards-compatible route (no ref) - shows generic page
 Route::get('/passenger/confirmbooking', function () {
     return view('passenger.confirmbooking');
-})->name('passenger.confirmbooking');
+});
+
+// PayMongo endpoints
+Route::post('/paymongo/create-source', [PaymentController::class, 'createSource'])->name('paymongo.create_source');
+Route::post('/paymongo/webhook', [PaymentController::class, 'webhook'])->name('paymongo.webhook')
+    ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+Route::get('/paymongo/return', [PaymentController::class, 'redirectReturn'])->name('paymongo.return');
 
 Route::get('/passenger/schedules', function () {
     return view('passenger.schedules');

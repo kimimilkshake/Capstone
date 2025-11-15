@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const passengerSections = document.getElementById("passengerSections");
     const bookingForm = document.getElementById("bookingForm");
     const loader = document.getElementById("ocrLoader");
+    let unavailableCots = [];
 
     function generatePassengerForms(count) {
         passengerSections.innerHTML = "";
@@ -103,6 +104,54 @@ document.addEventListener("DOMContentLoaded", function () {
             passengerSections.insertAdjacentHTML("beforeend", passengerHTML);
         }
 
+        // After rendering, wire up cot-selection uniqueness among current selects
+        function updateCotOptions() {
+            const selects = document.querySelectorAll(
+                'select[name="cot_number"]'
+            );
+            // collect selected values
+            const chosen = [];
+            selects.forEach((s) => {
+                if (s.value) chosen.push(s.value);
+            });
+            // for each select, disable options that are chosen by other selects
+            selects.forEach((s) => {
+                const val = s.value;
+                Array.from(s.options).forEach((opt) => {
+                    if (!opt.value) return; // skip placeholder
+                    // enable by default unless globally unavailable
+                    if (unavailableCots.includes(opt.value)) {
+                        opt.disabled = true;
+                    } else {
+                        opt.disabled = false;
+                    }
+                });
+                selects.forEach((other) => {
+                    if (other === s) return;
+                    const otherVal = other.value;
+                    if (otherVal) {
+                        const optionToDisable = s.querySelector(
+                            'option[value="' + otherVal + '"]'
+                        );
+                        if (optionToDisable) optionToDisable.disabled = true;
+                    }
+                });
+                // keep currently selected value enabled so the select shows it
+                if (val) {
+                    const cur = s.querySelector('option[value="' + val + '"]');
+                    if (cur) cur.disabled = false;
+                }
+            });
+        }
+
+        // Attach change listeners
+        document.querySelectorAll('select[name="cot_number"]').forEach((s) => {
+            s.addEventListener("change", updateCotOptions);
+        });
+
+        // initial update
+        updateCotOptions();
+
         document.querySelectorAll(".passenger-type").forEach((select) => {
             select.addEventListener("change", function () {
                 const idFields =
@@ -113,10 +162,37 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    generatePassengerForms(parseInt(numPassengersSelect.value));
-    numPassengersSelect.addEventListener("change", function () {
-        generatePassengerForms(parseInt(this.value));
-    });
+    async function init() {
+        // try to fetch unavailable cots for this voyage (route_from, route_to, departure_date)
+        const routeFromEl = document.getElementById("routeFrom");
+        const routeToEl = document.getElementById("routeTo");
+        const departureDateEl = document.getElementById("departureDate");
+        if (routeFromEl && routeToEl && departureDateEl) {
+            try {
+                const q = new URLSearchParams({
+                    route_from: routeFromEl.value,
+                    route_to: routeToEl.value,
+                    departure_date: departureDateEl.value,
+                });
+                const resp = await fetch(
+                    "/voyage/unavailable-cots?" + q.toString()
+                );
+                const json = await resp.json();
+                if (json && json.success && Array.isArray(json.unavailable)) {
+                    unavailableCots = json.unavailable.map(String);
+                }
+            } catch (err) {
+                console.error("Failed to fetch unavailable cots", err);
+            }
+        }
+
+        generatePassengerForms(parseInt(numPassengersSelect.value));
+        numPassengersSelect.addEventListener("change", function () {
+            generatePassengerForms(parseInt(this.value));
+        });
+    }
+
+    init();
 
     bookingForm.addEventListener("submit", async function (e) {
         e.preventDefault();
@@ -176,7 +252,90 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             }
 
-            window.location.href = "/passenger/confirmbooking";
+            // Gather passenger data and voyage info then submit to server to create a hold
+            const passengers = [];
+            for (const formEl of passengerForms) {
+                passengers.push({
+                    type: formEl.querySelector(".passenger-type").value,
+                    suffix: formEl.querySelector('input[name="suffix"]').value,
+                    first_name: formEl
+                        .querySelector(".first-name")
+                        .value.trim(),
+                    last_name: formEl.querySelector(".last-name").value.trim(),
+                    middle_initial: formEl
+                        .querySelector('input[name="middle_initial"]')
+                        .value.trim(),
+                    gender: formEl.querySelector('select[name="gender"]').value,
+                    address: formEl.querySelector('input[name="address"]')
+                        .value,
+                    age: formEl.querySelector('input[name="age"]').value,
+                    contact_number: formEl.querySelector(
+                        'input[name="contact_number"]'
+                    ).value,
+                    email: formEl.querySelector('input[name="email"]').value,
+                    id_number: formEl.querySelector('input[name="id_number"]')
+                        ? formEl.querySelector('input[name="id_number"]').value
+                        : null,
+                    accommodation_type: formEl.querySelector(
+                        'select[name="accommodation_type"]'
+                    ).value,
+                    cot_number: formEl.querySelector(
+                        'select[name="cot_number"]'
+                    ).value,
+                });
+            }
+
+            // Voyage info from hidden inputs
+            const routeFrom = document.getElementById("routeFrom")
+                ? document.getElementById("routeFrom").value
+                : null;
+            const routeTo = document.getElementById("routeTo")
+                ? document.getElementById("routeTo").value
+                : null;
+            const departureDate = document.getElementById("departureDate")
+                ? document.getElementById("departureDate").value
+                : null;
+            const departureTime = document.getElementById("departureTime")
+                ? document.getElementById("departureTime").value
+                : null;
+
+            const payload = {
+                passengers,
+                route_from: routeFrom,
+                route_to: routeTo,
+                departure_date: departureDate,
+                departure_time: departureTime,
+            };
+
+            // POST JSON to booking endpoint
+            const submitUrl = bookingForm.dataset.submitUrl;
+            const res = await fetch(submitUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": bookingForm.dataset.csrf,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const result = await res.json();
+            loader.style.display = "none";
+            if (!result.success) {
+                alert(
+                    result.message ||
+                        "Failed to create booking hold. Please try again."
+                );
+                return;
+            }
+
+            // Redirect to confirm page for this booking
+            if (result.redirect_url) {
+                window.location.href = result.redirect_url;
+            } else if (result.booking_ref_no) {
+                window.location.href = `/passenger/confirmbooking/${result.booking_ref_no}`;
+            } else {
+                window.location.href = "/passenger/confirmbooking";
+            }
         } catch (err) {
             loader.style.display = "none";
             console.error(err);
