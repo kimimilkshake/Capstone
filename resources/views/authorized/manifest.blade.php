@@ -9,12 +9,12 @@
     <h2 class="manifest-title">{{ $voyage->routePort->route_origin }} to {{ $voyage->routePort->route_destination }}</h2>
     <div class="d-flex justify-content-center flex-wrap gap-5 mt-3">
         <div class="text-start">
-            <p><strong>Schedule :</strong>{{ \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('F j, Y, D') }}</p>
-            <p><strong>Vessel :</strong> {{ $voyage->vessel->vessel_name}}</p>
+            <p><strong>Schedule: </strong>{{ \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('F j, Y, D') }}</p>
+            <p><strong>Vessel: </strong> {{ $voyage->vessel->vessel_name}}</p>
         </div>
         <div class="text-start">
-            <p><strong>Voyage no :</strong>{{ $voyage->voyage_code }}</p>
-            <p><strong>Status :</strong> {{ $voyage->voyage_status }}</p>
+            <p><strong>Voyage no: </strong>{{ $voyage->voyage_code }}</p>
+            <p><strong>Status: </strong> {{ $voyage->voyage_status }}</p>
         </div>
     </div>
 </div>

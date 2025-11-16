@@ -48,24 +48,6 @@
             </div>
           </div>
 
-          {{-- Port Dropdown --}}
-          {{-- 
-          <div class="form-col">
-            <div class="form-group">
-              <label for="port_id">Port</label>
-              <select id="port_id" name="port_id" required>
-                <option value="" disabled selected>Select Port</option>
-                @foreach($ports as $port)
-                  <option value="{{ $port->port_id }}">{{ $port->port_name }}</option>
-                @endforeach
-              </select>
-            </div>
-          </div>
-          --}}
-
-          
-          
-
           {{-- Vessel Dropdown --}}
           <div class="form-col">
             <div class="form-group">
