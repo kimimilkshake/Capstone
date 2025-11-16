@@ -21,7 +21,7 @@
     </li>
 
     <li class="snav-item">
-      <a class="snav-link" href="{{ url('/') }}">
+      <a class="snav-link" href="{{ url('/staff/cargobooking') }}">
         <i class="fa-solid fa-truck-ramp-box me-1"></i>
         <span class="snav-label">Cargo Booking</span>
       </a>
@@ -65,7 +65,7 @@
 
     <li class="snav-item">
       <a class="snav-link" href="{{ url('/') }}">
-        <i class="fa-solid fa-tags me-1"></i>
+        <i class="fa-solid fa-rectangle-list me-1"></i>
         <span class="snav-label">View Rates</span>
       </a>
     </li>

@@ -2,33 +2,34 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Vessel;
 use Illuminate\Http\Request;
 use App\Models\Voyage;
-use App\Models\Route;
-use App\Models\Port;
-use App\Models\Vessel;
+use App\Models\RoutePort;
+use Carbon\Carbon;
 
 class VoyageController extends Controller
 {
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $date = $request->input('date');
 
-        $voyages = Voyage::with(['vessel', 'route', 'port'])
+        $voyages = Voyage::with(['vessel', 'routePort'])
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->Where('voyage_code', 'like', "%{$search}%")
-                        ->orWhere('voyage_departure_date', 'like', "%{$search}%")
-                        ->orWhere('voyage_arrival_date', 'like', "%{$search}%")
-                        ->orWhere('voyage_status', 'like', "%{$search}%");
-                })
-                ->orWhereHas('vessel', function ($q) use ($search) {
-                    $q->where('vessel_name', 'like', "%{$search}%");
-                })
-                ->orWhereHas('route', function ($q) use ($search) {
-                    $q->where('route_origin', 'like', "%{$search}%")
-                        ->orWhere('route_destination', 'like', "%{$search}%");
+                    $q->where('voyage_code', 'like', "%{$search}%")
+                      ->orWhere('voyage_status', 'like', "%{$search}%")
+                      ->orWhereHas('vessel', fn($v) => $v->where('vessel_name', 'like', "%{$search}%"))
+                      ->orWhereHas('routePort', fn($r) =>
+                          $r->where('route_origin', 'like', "%{$search}%")
+                            ->orWhere('route_destination', 'like', "%{$search}%")
+                      );
                 });
+            })
+            ->when($date, function ($query, $date) {
+                $query->whereDate('voyage_departure_date', $date)
+                      ->orWhereDate('voyage_arrival_date', $date);
             })
             ->orderBy('voyage_departure_date', 'desc')
             ->paginate(10);
@@ -39,17 +40,15 @@ class VoyageController extends Controller
     public function create()
     {
         $vessels = Vessel::where('vessel_status', 'Active')->get();
-        $routes = Route::all();
-        $ports = Port::all();
-        return view('authorized.admin.create_voyage', compact('vessels', 'routes', 'ports'));
+        $route_port = RoutePort::all();
+        return view('authorized.admin.create_voyage', compact('vessels', 'route_port'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'vessel_id' => 'required|exists:vessel,vessel_id',
-            'route_id' => 'required|exists:route,route_id',
-            'port_id' => 'required|exists:port,port_id',
+            'route_port_id' => 'required|exists:route_port,route_port_id',
             'voyage_departure_date' => 'required|date',
             'voyage_arrival_date' => 'required|date',
             'voyage_estimated_TD' => 'required',
@@ -57,10 +56,10 @@ class VoyageController extends Controller
         ]);
 
         $vessel = Vessel::findOrFail($request->vessel_id);
-        $route = Route::findOrFail($request->route_id);
+        $route_port = RoutePort::findOrFail($request->route_port_id);
 
-        $origin = strtoupper(substr($route->route_origin, 0, 3));
-        $destination = strtoupper(substr($route->route_destination, 0, 3));
+        $origin = strtoupper(substr($route_port->route_origin, 0, 3));
+        $destination = strtoupper(substr($route_port->route_destination, 0, 3));
         $year = date('Y', strtotime($request->voyage_departure_date));
         $month = date('m', strtotime($request->voyage_departure_date));
 
@@ -78,8 +77,7 @@ class VoyageController extends Controller
 
         Voyage::create([
             'vessel_id' => $request->vessel_id,
-            'route_id' => $request->route_id,
-            'port_id' => $request->port_id,
+            'route_port_id' => $request->route_port_id,
             'voyage_departure_date' => $request->voyage_departure_date,
             'voyage_arrival_date' => $request->voyage_arrival_date,
             'voyage_estimated_TD' => $request->voyage_estimated_TD,
@@ -95,9 +93,8 @@ class VoyageController extends Controller
     {
         $voyage = Voyage::findOrFail($id);
         $vessels = Vessel::where('vessel_status', 'Active')->get();
-        $routes = Route::all();
-        $ports = Port::all();
-        return view('authorized.admin.voyage_edit', compact('voyage', 'vessels', 'routes', 'ports'));
+        $route_port = RoutePort::all();
+        return view('authorized.admin.voyage_edit', compact('voyage', 'vessels', 'route_port'));
     }
 
     public function update(Request $request, $id)
@@ -106,8 +103,7 @@ class VoyageController extends Controller
 
         $request->validate([
             'vessel_id' => 'required|exists:vessel,vessel_id',
-            'route_id' => 'required|exists:route,route_id',
-            'port_id' => 'required|exists:port,port_id',
+            'route_port_id' => 'required|exists:route_port,route_port_id',
             'voyage_departure_date' => 'required|date',
             'voyage_arrival_date' => 'required|date|after_or_equal:voyage_departure_date',
             'voyage_estimated_TD' => 'required',
@@ -116,14 +112,14 @@ class VoyageController extends Controller
         ]);
 
         $vesselChanged = $voyage->vessel_id != $request->vessel_id;
-        $routeChanged = $voyage->route_id != $request->route_id;
+        $routeChanged = $voyage->route_port_id != $request->route_port_id;
 
         if ($vesselChanged || $routeChanged) {
             $vessel = Vessel::findOrFail($request->vessel_id);
-            $route = Route::findOrFail($request->route_id);
+            $route_port = RoutePort::findOrFail($request->route_port_id);
 
-            $origin = strtoupper(substr($route->route_origin, 0, 3));
-            $destination = strtoupper(substr($route->route_destination, 0, 3));
+            $origin = strtoupper(substr($route_port->route_origin, 0, 3));
+            $destination = strtoupper(substr($route_port->route_destination, 0, 3));
             $year = date('Y', strtotime($request->voyage_departure_date));
             $month = date('m', strtotime($request->voyage_departure_date));
 
@@ -142,8 +138,7 @@ class VoyageController extends Controller
 
         $voyage->update([
             'vessel_id' => $request->vessel_id,
-            'route_id' => $request->route_id,
-            'port_id' => $request->port_id,
+            'route_port_id' => $request->route_port_id,
             'voyage_departure_date' => $request->voyage_departure_date,
             'voyage_arrival_date' => $request->voyage_arrival_date,
             'voyage_estimated_TD' => $request->voyage_estimated_TD,

@@ -17,8 +17,12 @@ use App\Http\Controllers\Admin\VesselController;
 use App\Http\Controllers\Admin\RouteController;
 use App\Http\Controllers\Admin\PortController;
 
+
+use App\Http\Controllers\Admin\RoutePortController;
+
 // SHARED CONTROLLERS
 use App\Http\Controllers\VoyageController;
+use App\Http\Controllers\ManifestController;
 
 // OCR route
 Route::post('/ocr/parse', [OcrController::class, 'parseImage'])->name('ocr.parse');
@@ -74,14 +78,30 @@ Route::get('/passenger/schedules', function () {
     return view('passenger.schedules');
 })->name('schedules');
 
+
+//About Us Page
 Route::get('/passenger/about', function () {
     return view('passenger.about');
 })->name('about');
 
+Route::prefix('passenger/about_partials')->group(function () {
+    Route::get('/', function () {
+        return view('passenger.about_partials');
+    });
+    Route::get('/{fragment}', function ($fragment) {
+        $valid = ['who_we_are', 'what_we_offer', 'vision_mission', 'vessels_about', 'ports_of_call'];
+        if (!in_array($fragment, $valid)) abort(404);
+        return view("passenger.about_partials.$fragment");
+    });
+});
+
+
+//FAQs Page
 Route::get('/passenger/faqs', function () {
     return view('passenger.faqs');
 })->name('faqs');
 
+//Contact Us Page
 Route::get('/passenger/contact', function () {
     return view('passenger.contact');
 })->name('contact');
@@ -131,25 +151,21 @@ Route::prefix('authorized/admin')->group(function () {
     Route::get('/voyages/{id}/edit', [VoyageController::class, 'edit'])->name('admin.voyage_edit');
     Route::put('/voyages/{id}/update', [VoyageController::class, 'update'])->name('admin.voyage_update');
 
-    // Route
-    Route::get('/routes', [RouteController::class, 'index'])->name('admin.route_list');
-    Route::post('/routes', [RouteController::class, 'store'])->name('admin.route_store');
-    Route::put('/routes/{id}', [RouteController::class, 'update'])->name('admin.route_update');
-    Route::delete('/routes/{id}', [RouteController::class, 'destroy'])->name('admin.route_destroy');
+    //Route and Port
+    Route::get('/route_port', [RoutePortController::class, 'index'])->name('admin.route_port_list');
+    Route::post('/route_port', [RoutePortController::class, 'store'])->name('admin.route_port_store');
+    Route::put('/route_port/{id}', [RoutePortController::class, 'update'])->name('admin.route_port_update');
+    Route::delete('/route_port/{id}', [RoutePortController::class, 'destroy'])->name('admin.route_port_destroy');
+  
 
-    // Port
-    Route::get('/ports', [PortController::class, 'index'])->name('admin.port_list');
-    Route::post('/ports', [PortController::class, 'store'])->name('admin.port_store');
-    Route::put('/ports/{id}', [PortController::class, 'update'])->name('admin.port_update');
-    Route::delete('/ports/{id}', [PortController::class, 'destroy'])->name('admin.port_destroy');
+
 });
 
-Route::middleware(['auth:admin'])->group(function () {
-    Route::resource('routes', RouteController::class);
-    Route::resource('ports', PortController::class);
-});
+    //MANIFEST
+    Route::get('authorized/manifest/{id}', [ManifestController::class, 'show'])->name('manifest');
 
-// Both admin and staff
+
+//BOTH ADMIN AND STAFF
 Route::middleware(['auth:admin,auth:staff'])->group(function () {
     Route::resource('voyages', VoyageController::class);
 });
@@ -160,3 +176,21 @@ Route::get('/authorized/staff/dashboard', function () {
 })->name('staff.dashboard');
 
 Route::post('/authorized/logout', [AuthController::class, 'logout'])->name('logout');
+
+// CARGO BOOKING
+Route::get('/staff/cargobooking', function () {
+    return view('authorized.staff.cargobooking');
+});
+
+/*
+Route::prefix('authorized/staff')->group(function () {
+    Route::get('/dashboard', fn() => view('authorized.staff.dashboard'))->name('staff.dashboard');
+
+    // Shared voyage access for staff
+    Route::get('/voyages', [VoyageController::class, 'index'])->name('staff.voyage_list');
+    Route::get('/voyages/create', [VoyageController::class, 'create'])->name('staff.create_voyage');
+    Route::post('/voyages/store', [VoyageController::class, 'store'])->name('staff.store_voyage');
+    Route::get('/voyages/{id}/edit', [VoyageController::class, 'edit'])->name('staff.voyage_edit');
+    Route::post('/voyages/{id}/update', [VoyageController::class, 'update'])->name('staff.voyage_update');
+});
+*/

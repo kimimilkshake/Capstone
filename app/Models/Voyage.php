@@ -15,8 +15,7 @@ class Voyage extends Model
 
     protected $fillable = [
         'vessel_id',
-        'route_id',
-        'port_id',
+        'route_port_id',
         'voyage_departure_date',
         'voyage_arrival_date',
         'voyage_estimated_TD',
@@ -34,15 +33,9 @@ class Voyage extends Model
         return $this->belongsTo(Vessel::class, 'vessel_id', 'vessel_id');
     }
 
-    // Each voyage belongs to a route
-    public function route()
+    // Each voyage belongs to a route and port
+    public function routePort()
     {
-        return $this->belongsTo(Route::class, 'route_id', 'route_id');
-    }
-
-    // Each voyage belongs to a port
-    public function port()
-    {
-        return $this->belongsTo(Port::class, 'port_id', 'port_id');
+        return $this->belongsTo(RoutePort::class, 'route_port_id', 'route_port_id');
     }
 }

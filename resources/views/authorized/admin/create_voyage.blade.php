@@ -36,26 +36,13 @@
           {{-- Route Dropdown --}}
           <div class="form-col">
             <div class="form-group">
-              <label for="route_id">Route</label>
-              <select id="route_id" name="route_id" required>
+              <label for="route_port_id">Route</label>
+              <select id="route_port_id" name="route_port_id" required>
                 <option value="" disabled selected>Select Route</option>
-                @foreach($routes as $route)
-                  <option value="{{ $route->route_id }}">
-                    {{ $route->route_origin }} → {{ $route->route_destination }}
+                @foreach($route_port as $rp)
+                  <option value="{{ $rp->route_port_id }}">
+                    {{ $rp->route_origin }} → {{ $rp->route_destination }}
                   </option>
-                @endforeach
-              </select>
-            </div>
-          </div>
-
-          {{-- Port Dropdown --}}
-          <div class="form-col">
-            <div class="form-group">
-              <label for="port_id">Port</label>
-              <select id="port_id" name="port_id" required>
-                <option value="" disabled selected>Select Port</option>
-                @foreach($ports as $port)
-                  <option value="{{ $port->port_id }}">{{ $port->port_name }}</option>
                 @endforeach
               </select>
             </div>
@@ -75,7 +62,24 @@
           </div>
         </div>
 
-        <!--ROW 2: DEPARTURE DATE AND ARRIVAL DATE-->
+        <!--ROW 2: PORT OF ORIGIN AND PORT OF DESTINATION-->
+        <div class="form-row">
+            <div class="form-col">
+                <div class="form-group">
+                    <label for="port_origin_info">Port of Origin</label>
+                    <input id="port_origin_info" type="text" placeholder="Port Origin Name, City, Province" disabled>
+                </div>
+            </div>
+
+            <div class="form-col">
+                <div class="form-group">
+                    <label for="port_destination_info">Port of Destination</label>
+                    <input id="port_destination_info" type="text" placeholder="Port Destination Name, City, Province" disabled>
+                </div>
+            </div>
+        </div>
+
+        <!--ROW 3: DEPARTURE DATE AND ARRIVAL DATE-->
         <div class="form-row">
           <div class="form-col">
             <div class="form-group">
@@ -92,7 +96,7 @@
           </div>
         </div>
 
-        <!--ROW 3: ESTIMATED TD AND ESTIMATED TA-->
+        <!--ROW 4: ESTIMATED TD AND ESTIMATED TA-->
         <div class="form-row">
           <div class="form-col">
             <div class="form-group">
@@ -122,4 +126,33 @@
       {{-- FORM END --}}
     </div>
   </div>
+
+  <script>
+    const routePorts = {
+      @foreach($route_port as $rp)
+          "{{ $rp->route_port_id }}": {
+              origin: "{{ $rp->port_origin_name }}, {{ $rp->port_origin_city }}, {{ $rp->port_origin_province }}",
+              destination: "{{ $rp->port_destination_name }}, {{ $rp->port_destination_city }}, {{ $rp->port_destination_province }}"
+          },
+      @endforeach
+    };
+
+    const routeSelect = document.getElementById('route_port_id');
+    const portOriginInput = document.getElementById('port_origin_info');
+    const portDestinationInput = document.getElementById('port_destination_info');
+
+    routeSelect.addEventListener('change', function() {
+        const selectedId = this.value;
+
+        if(routePorts[selectedId]) {
+            portOriginInput.value = routePorts[selectedId].origin;
+            portDestinationInput.value = routePorts[selectedId].destination;
+        } else {
+            portOriginInput.value = '';
+            portDestinationInput.value = '';
+        }
+    });
+  </script>
+
+
 @endsection

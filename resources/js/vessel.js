@@ -1,21 +1,19 @@
 document.addEventListener('DOMContentLoaded', function() {
-  // containers
   const hatchContainer = document.getElementById('hatch-container');
   const accContainer = document.getElementById('accommodation-container');
 
-  // helper to make a hatch row element
   function createHatchRow(index) {
     const row = document.createElement('div');
     row.className = 'hatch-row';
     row.innerHTML = `
       <input type="text" name="hatches[${index}][label]" placeholder="Hatch Label" required>
-      <input type="number" name="hatches[${index}][capacity]" placeholder="Capacity" required>
+      <input type="number" name="hatches[${index}][area_capacity]" placeholder="Area Capacity in Cubic Meters" required>
+      <input type="number" name="hatches[${index}][weight_capacity]" placeholder="Weight Capacity in Tons" required>
       <button type="button" class="dynamic-add hatch-action">+</button>
     `;
     return row;
   }
 
-  // helper to make an accommodation row element
   function createAccRow(index) {
     const row = document.createElement('div');
     row.className = 'accommodation-row';
@@ -27,7 +25,6 @@ document.addEventListener('DOMContentLoaded', function() {
     return row;
   }
 
-  // initialize indexes by counting existing rows
   function hatchCount() { return hatchContainer.querySelectorAll('.hatch-row').length; }
   function accCount() { return accContainer.querySelectorAll('.accommodation-row').length; }
 
@@ -61,60 +58,44 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Attach single delegated click listener for hatch container
   hatchContainer.addEventListener('click', function(e) {
     const target = e.target;
 
-    // Add new hatch
     if (target.classList.contains('hatch-action')) {
       target.textContent = '−';
       target.className = 'dynamic-remove remove-hatch';
-
-      const newIndex = hatchCount(); // next index
-      const newRow = createHatchRow(newIndex);
+      const newRow = createHatchRow(hatchCount());
       hatchContainer.appendChild(newRow);
-
       refreshHatchButtons();
       return;
     }
 
-    // Remove hatch
     if (target.classList.contains('remove-hatch')) {
-      const row = target.closest('.hatch-row');
-      if (row) row.remove();
-      // after removal, refresh buttons so last is + again
+      target.closest('.hatch-row').remove();
       refreshHatchButtons();
       return;
     }
   });
 
-  // Attach delegated listener for accommodation container
   accContainer.addEventListener('click', function(e) {
     const target = e.target;
 
-    // Add new accommodation
     if (target.classList.contains('acc-action')) {
       target.textContent = '−';
       target.className = 'dynamic-remove remove-acc';
-
-      const newIndex = accCount();
-      const newRow = createAccRow(newIndex);
+      const newRow = createAccRow(accCount());
       accContainer.appendChild(newRow);
-
       refreshAccButtons();
       return;
     }
 
-    // Remove accommodation
     if (target.classList.contains('remove-acc')) {
-      const row = target.closest('.accommodation-row');
-      if (row) row.remove();
+      target.closest('.accommodation-row').remove();
       refreshAccButtons();
       return;
     }
   });
 
-  // initial refresh to set button states correctly for pre-existing rows
   refreshHatchButtons();
   refreshAccButtons();
 });
