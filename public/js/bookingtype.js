@@ -2,16 +2,34 @@
 const routeFromSelect = document.getElementById("routeFrom");
 const routeToSelect = document.getElementById("routeTo");
 const tripDateInput = document.getElementById("tripDate");
+const proceedBtn = document.getElementById("proceedBtn");
+const bookingTypeRadios = document.getElementsByName("bookingType");
 
 // Parse routes data from Blade
 const routes = JSON.parse(document.getElementById("routes-data").textContent);
 
 let allowedDays = [];
 
+// Initially disable proceed button
+proceedBtn.disabled = true;
+
 // Event listeners
 routeFromSelect.addEventListener("change", updateDestinations);
 routeToSelect.addEventListener("change", updateAllowedDays);
 tripDateInput.addEventListener("input", validateDate);
+bookingTypeRadios.forEach((radio) =>
+    radio.addEventListener("change", checkProceedButton)
+);
+
+// Check all fields to enable/disable proceed button
+function checkProceedButton() {
+    const isValid =
+        routeFromSelect.value &&
+        routeToSelect.value &&
+        tripDateInput.value &&
+        document.querySelector('input[name="bookingType"]:checked');
+    proceedBtn.disabled = !isValid;
+}
 
 // Update destinations based on selected origin
 function updateDestinations() {
@@ -23,10 +41,10 @@ function updateDestinations() {
 
     if (!origin) {
         routeToSelect.disabled = true;
+        checkProceedButton();
         return;
     }
 
-    // Get unique destinations for this origin
     const destinations = routes
         .filter((r) => r.route_from === origin)
         .map((r) => r.route_to)
@@ -40,9 +58,10 @@ function updateDestinations() {
     });
 
     routeToSelect.disabled = false;
+    checkProceedButton();
 }
 
-// Update allowed days for the selected route
+// Update allowed days
 function updateAllowedDays() {
     const origin = routeFromSelect.value;
     const destination = routeToSelect.value;
@@ -51,6 +70,7 @@ function updateAllowedDays() {
     if (!origin || !destination) {
         tripDateInput.disabled = true;
         allowedDays = [];
+        checkProceedButton();
         return;
     }
 
@@ -64,7 +84,6 @@ function updateAllowedDays() {
         return;
     }
 
-    // Map operating days to numeric days for Date.getDay()
     const dayMap = {
         Sunday: 0,
         Monday: 1,
@@ -77,10 +96,11 @@ function updateAllowedDays() {
 
     allowedDays = JSON.parse(route.operating_days).map((d) => dayMap[d]);
     tripDateInput.disabled = false;
-    tripDateInput.min = new Date().toISOString().split("T")[0]; // prevent past dates
+    tripDateInput.min = new Date().toISOString().split("T")[0];
+    checkProceedButton();
 }
 
-// Validate selected date
+// Validate date
 function validateDate() {
     if (!allowedDays.length) return;
 
@@ -88,21 +108,22 @@ function validateDate() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Past date check
     if (selectedDate < today) {
         alert("You cannot select a past date.");
         this.value = "";
+        checkProceedButton();
         return;
     }
 
-    // Allowed days check
     if (!allowedDays.includes(selectedDate.getDay())) {
         alert("Selected date is not available for this route.");
         this.value = "";
     }
+
+    checkProceedButton();
 }
 
-// Reset selection
+// Reset
 function resetSelection() {
     routeFromSelect.value = "";
     routeToSelect.innerHTML = '<option value="">Select Destination</option>';
@@ -110,4 +131,36 @@ function resetSelection() {
     tripDateInput.value = "";
     tripDateInput.disabled = true;
     allowedDays = [];
+    checkProceedButton();
 }
+
+// Proceed button
+proceedBtn.addEventListener("click", function () {
+    if (proceedBtn.disabled) {
+        alert("Please select origin, destination, and date before proceeding.");
+        return;
+    }
+
+    const bookingType = document.querySelector(
+        'input[name="bookingType"]:checked'
+    ).value;
+    const routeFrom = routeFromSelect.value;
+    const routeTo = routeToSelect.value;
+    const tripDate = tripDateInput.value;
+
+    const baseUrl =
+        bookingType === "cargo"
+            ? proceedBtn.getAttribute("data-cargo-url")
+            : proceedBtn.getAttribute("data-passenger-url");
+
+    // ✅ Include type in URL so controller knows which booking page to load
+    const url = `${baseUrl}?route_from=${encodeURIComponent(
+        routeFrom
+    )}&route_to=${encodeURIComponent(
+        routeTo
+    )}&departure_date=${encodeURIComponent(tripDate)}&type=${encodeURIComponent(
+        bookingType
+    )}`;
+
+    window.location.href = url;
+});

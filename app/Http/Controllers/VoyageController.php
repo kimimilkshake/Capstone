@@ -4,34 +4,36 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Voyage;
-use App\Models\Route;
-use App\Models\Port;
+use App\Models\RoutePort;
 use App\Models\Vessel;
+use Carbon\Carbon;
 
 class VoyageController extends Controller
 {
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $date = $request->input('date');
 
         $voyages = Voyage::with(['vessel', 'route', 'port'])
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->Where('voyage_code', 'like', "%{$search}%")
-                        ->orWhere('voyage_departure_date', 'like', "%{$search}%")
-                        ->orWhere('voyage_arrival_date', 'like', "%{$search}%")
-                        ->orWhere('voyage_status', 'like', "%{$search}%");
-                })
-                ->orWhereHas('vessel', function ($q) use ($search) {
-                    $q->where('vessel_name', 'like', "%{$search}%");
-                })
-                ->orWhereHas('route', function ($q) use ($search) {
-                    $q->where('route_origin', 'like', "%{$search}%")
-                        ->orWhere('route_destination', 'like', "%{$search}%");
+                    $q->where('voyage_code', 'like', "%{$search}%")
+                    ->orWhere('voyage_status', 'like', "%{$search}%")
+                    ->orWhereHas('vessel', fn($v) => $v->where('vessel_name', 'like', "%{$search}%"))
+                    ->orWhereHas('route', fn($r) => 
+                        $r->where('route_origin', 'like', "%{$search}%")
+                            ->orWhere('route_destination', 'like', "%{$search}%")
+                    );
                 });
             })
-            ->orderBy('voyage_departure_date', 'desc')
-            ->paginate(10);
+            ->when($date, function ($query, $date) {
+                $query->whereDate('voyage_departure_date', $date)
+                    ->orWhereDate('voyage_arrival_date', $date);
+            })
+    ->orderBy('voyage_departure_date', 'desc')
+    ->paginate(10);
+
 
         return view('authorized.admin.voyage_list', compact('voyages', 'search'));
     }
@@ -39,9 +41,8 @@ class VoyageController extends Controller
     public function create()
     {
         $vessels = Vessel::where('vessel_status', 'Active')->get();
-        $routes = Route::all();
-        $ports = Port::all();
-        return view('authorized.admin.create_voyage', compact('vessels', 'routes', 'ports'));
+        $route_port = RoutePort::all();
+        return view('authorized.admin.create_voyage', compact('vessels', 'route_port'));
     }
 
     public function store(Request $request)

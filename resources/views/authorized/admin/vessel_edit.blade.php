@@ -54,15 +54,18 @@
               @foreach ($vessel->hatches as $index => $hatch)
                 <div class="hatch-row">
                   <input type="text" name="hatches[{{ $index }}][label]" value="{{ $hatch->hatch_label }}" placeholder="Hatch Label" required>
-                  <input type="number" name="hatches[{{ $index }}][capacity]" value="{{ $hatch->hatch_capacity }}" placeholder="Capacity" required>
-                  <button type="button" class="hatch-btn add-hatch">+</button>
+                  <input type="number" name="hatches[{{ $index }}][area_capacity]" value="{{ $hatch->hatch_area_capacity }}" placeholder="Area Capacity in Cubic Meters" title="Area Capacity in Cubic Meters" required>
+                  <input type="number" name="hatches[{{ $index }}][weight_capacity]" value="{{ $hatch->hatch_weight_capacity }}" placeholder="Weight Capacity in Tons" title="Weight Capacity in Tons" required>
+                  <button type="button" class="hatch-btn">+</button>
                 </div>
               @endforeach
+
               @if ($vessel->hatches->isEmpty())
                 <div class="hatch-row">
                   <input type="text" name="hatches[0][label]" placeholder="Hatch Label" required>
-                  <input type="number" name="hatches[0][capacity]" placeholder="Capacity in Cubic Meters" required>
-                  <button type="button" class="hatch-btn add-hatch">+</button>
+                  <input type="number" name="hatches[0][area_capacity]" placeholder="Area Capacity in Cubic Meters" required>
+                  <input type="number" name="hatches[0][weight_capacity]" placeholder="Weight Capacity in Tons" required>
+                  <button type="button" class="hatch-btn">+</button>
                 </div>
               @endif
             </div>

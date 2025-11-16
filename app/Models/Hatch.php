@@ -15,7 +15,8 @@ class Hatch extends Model
     protected $fillable = [
         'vessel_id',
         'hatch_label',
-        'hatch_capacity',
+        'hatch_area_capacity',
+        'hatch_weight_capacity',
     ];
 
     public function vessel() {

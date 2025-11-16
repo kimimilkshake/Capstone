@@ -45,7 +45,7 @@ class DatabaseSeeder extends Seeder
 
         DB::table('vessel_routes')->insert([
             [
-                'vessel_name' => 'MV Lapu-Lapu',
+                'vessel_name' => 'MV Rosalia 3',
                 'route_from' => 'Cebu',
                 'route_to' => 'Baybay, Leyte',
                 'departure_time' => '20:00:00',
@@ -56,7 +56,7 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'vessel_name' => 'MV Lapu-Lapu',
+                'vessel_name' => 'MV Lapu-lapu Ferry 1',
                 'route_from' => 'Baybay, Leyte',
                 'route_to' => 'Cebu',
                 'departure_time' => '20:00:00',
@@ -67,7 +67,7 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'vessel_name' => 'MV Lapu-Lapu',
+                'vessel_name' => 'MV Lapu-Lapu Ferry 8',
                 'route_from' => 'Cebu',
                 'route_to' => 'Talibon',
                 'departure_time' => '21:00:00',
@@ -78,24 +78,13 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'vessel_name' => 'MV Lapu-Lapu',
+                'vessel_name' => 'MV Lapu-Lapu Ferry 8',
                 'route_from' => 'Talibon',
                 'route_to' => 'Cebu',
                 'departure_time' => '21:00:00',
                 'operating_days' => json_encode(['Tuesday', 'Thursday', 'Sunday']),
                 'travel_time_hours' => 4,
                 'port_of_origin' => 'Port of Talibon',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'vessel_name' => 'MV Lapu-Lapu',
-                'route_from' => 'Cebu',
-                'route_to' => 'Ormoc',
-                'departure_time' => '21:00:00',
-                'operating_days' => json_encode(['Tuesday', 'Thursday', 'Sunday']),
-                'travel_time_hours' => 4,
-                'port_of_origin' => 'Port of Ormoc',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

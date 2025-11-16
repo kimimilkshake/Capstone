@@ -369,122 +369,126 @@ body {
 }
 
 //VESSEL
-.add-vessel a {
-    display: inline-block;        
-    text-decoration: none;   
-    color: #fff;           
-    background-color: #485b8c; 
-    padding: 8px 16px; 
-    border-radius: 5px;
-    font-size: 14px;
-    font-weight: 500;
-    transition: background-color 0.2s;
-}
+.add-vessel a { 
+  display: inline-block; 
+  text-decoration: none; 
+  color: #fff; background-color: #485b8c; 
+  padding: 8px 16px; 
+  border-radius: 5px; 
+  font-size: 14px; 
+  font-weight: 500; 
+  transition: background-color 0.2s; 
+} 
 
-.add-vessel a:hover {
-    background-color: #2a364f;
-}
+.add-vessel a:hover { 
+  background-color: #2a364f; 
+} 
 
-.hatch-row, .accommodation-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
+.hatch-row, .accommodation-row { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  margin-bottom: 10px; 
+} 
 
-.hatch-row input, .accommodation-row input {
-  flex: 1;
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
+.hatch-row input, .accommodation-row input { 
+  flex: 1; 
+  padding: 6px 10px; 
+  border: 1px solid #ccc; 
+  border-radius: 6px; 
+} 
 
-.hatch-btn, .accommodation-btn {
-  background-color: #5ba270;
-  color: white;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: bold;
-}
+.hatch-btn, .accommodation-btn { 
+  background-color: #5ba270; 
+  color: white; 
+  border: none; 
+  padding: 6px 10px; 
+  border-radius: 6px; 
+  cursor: pointer; 
+  font-size: 1rem; 
+  font-weight: bold; 
+} 
 
-.hatch-btn:hover, .accommodation-btn:hover {
-  background-color: #3e885b;
-}
+.hatch-btn:hover, .accommodation-btn:hover { 
+  background-color: #3e885b; 
+} 
 
-.ha-label {
-  display: inline-block;
-  margin-bottom: 0;
-  font-weight: 600;
-  color: #333;
-  white-space: nowrap;
-}
+.ha-label { 
+  display: inline-block; 
+  margin-bottom: 0; 
+  font-weight: 600; 
+  color: #333; 
+  white-space: nowrap; 
+} 
 
-#hatch-container, #accommodation-container {
-  margin-top: 0;
-}
+#hatch-container, #accommodation-container { 
+  margin-top: 0; 
+} 
 
-.vcot-plan {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin: 1.5rem auto;
-  width: fit-content;
-}
+.vcot-plan { 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 1rem; 
+  margin: 1.5rem auto; 
+  width: fit-content; 
+} 
 
-.vcot-plan label {
-  font-weight: 500;
-  white-space: nowrap;
-}
+.vcot-plan label { 
+  font-weight: 500; 
+  white-space: nowrap; 
+} 
 
-.vcot-plan input[type="file"] {
-  border: 1px solid #ccc;
-  padding: 8px;
-  border-radius: 6px;
-  background-color: #f9f9f9;
-  cursor: pointer;
-}
+.vcot-plan input[type="file"] { 
+  border: 1px solid #ccc; 
+  padding: 8px; 
+  border-radius: 6px; 
+  background-color: #f9f9f9; 
+  cursor: pointer; 
+} 
 
-.dynamic-add {
-  background-color: #5ba270;
-  color: #fff;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 700;
-}
-.dynamic-add:hover { background-color: #3e885b; }
+.dynamic-add { 
+  background-color: #5ba270; 
+  color: #fff; 
+  border: none; 
+  padding: 6px 10px; 
+  border-radius: 6px; 
+  cursor: pointer; 
+  font-weight: 700; 
+} 
 
-.dynamic-remove {
-  background-color: #b03a48;
-  color: #fff;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 700;
-  text-decoration: none;
-}
-.dynamic-remove:hover {
-  background-color: #8b2635;
-  color: #ffffff;
-}
+.dynamic-add:hover { 
+  background-color: #3e885b; 
+} 
 
-.hatch-row, .accommodation-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-.hatch-row input, .accommodation-row input {
-  flex: 1;
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+.dynamic-remove { 
+  background-color: #b03a48; 
+  color: #fff; 
+  border: none; 
+  padding: 6px 10px; 
+  border-radius: 6px; 
+  cursor: pointer; 
+  font-weight: 700; 
+  text-decoration: none; 
+} 
+
+.dynamic-remove:hover { 
+  background-color: #8b2635; 
+  color: #ffffff; 
+} 
+
+.hatch-row, .accommodation-row { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  margin-bottom: 10px; 
+} 
+
+.hatch-row input, .accommodation-row input { 
+  flex: 1; 
+  padding: 6px 10px; 
+  border: 1px solid #ccc; 
+  border-radius: 6px; 
 }
 
 //ROUTES AND PORTS
@@ -526,7 +530,7 @@ body {
   color: white !important;
 }
 
-//ROUTE AND PORTS
+//ROUTES AND PORTS
 .add-link-btn {
   background-color: #485b8c;
   border: none;
@@ -542,7 +546,11 @@ body {
   transition: background-color 0.2s;
 }
 
-.link-btn{
+.add-link-btn:hover {
+  background-color: #3a4870;
+}
+
+.link-btn {
   background: none;
   border: none;
   color: inherit;
@@ -565,7 +573,8 @@ body {
   background: #fff;
   padding: 25px;
   border-radius: 10px;
-  width: 400px;
+  width: 600px;
+  max-width: 90%;
   position: relative;
   box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 }
@@ -579,37 +588,72 @@ body {
 }
 
 .modal-content h3 {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   color: #1b3b8b;
+  text-align: center;
 }
 
-.modal-content label {
-  display: block;
-  margin-top: 10px;
-  font-weight: bold;
+.rpmodal-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 columns */
+  gap: 15px;
+  margin-bottom: 15px;
 }
 
-.modal-content input {
-  width: 100%;
-  padding: 8px;
-  margin-top: 4px;
+.rpmodal-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.rpmodal-col label {
+  margin-bottom: 5px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.rpmodal-col input {
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  border-radius: 5px;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
-.modal-content button {
+.rpmodal-row.two-col {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+.rpmodal-row.three-col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.modal-content button[type="submit"] {
   margin-top: 15px;
-  padding: 8px 14px;
+  padding: 10px 15px;
   border: none;
   background: #1b3b8b;
   color: white;
   border-radius: 6px;
   cursor: pointer;
+  font-weight: 500;
+  width: 100%;
+  transition: background-color 0.2s;
 }
-.modal-content button:hover {
+
+.modal-content button[type="submit"]:hover {
   background: #2546a3;
 }
 
+@media screen and (max-width: 600px) {
+  .rpmodal-row {
+    grid-template-columns: 1fr;
+  }
+}
 
 //PAGINATION 
 .pagination-container {

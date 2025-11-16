@@ -1,11 +1,11 @@
 @use 'bootstrap/scss/bootstrap';
 @use 'homepage';
-@use 'book';
-@use 'passenger';
+@use 'bookingtype';
 @use 'login';
 @use 'admin';
 @use 'staff';
 @use 'authHeader';
+@use 'afc';
 
 
 body {

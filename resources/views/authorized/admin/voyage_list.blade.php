@@ -16,6 +16,12 @@
               name="search" 
               placeholder="Search by name, code, route, vessel, status..." 
               value="{{ request('search') }}">
+          <input 
+              type="date" 
+              name="date" 
+              placeholder="Search by date"
+              value="{{ request('date') }}"
+              style="margin-left:10px;">
           <button type="submit">
               <i class="fa-solid fa-magnifying-glass me-2"></i>Search
           </button>
@@ -47,8 +53,8 @@
           <tr>
             <td>{{ $voyage->voyage_code }}</td>
             <td>
-              {{ $voyage->route->route_origin }} → 
-              {{ $voyage->route->route_destination }}
+              {{ $voyage->route_port->route_origin }} → 
+              {{ $voyage->route_port->route_destination }}
             </td>
             <td>{{ \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('F j, Y, D') }}</td>
             <td>{{ \Carbon\Carbon::parse($voyage->voyage_arrival_date)->format('F j, Y, D') }}</td>

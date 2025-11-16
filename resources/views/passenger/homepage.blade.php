@@ -16,7 +16,7 @@
                         freedom to pick the bunks that suites you best!
                     </span>
 
-                    <a href="{{ route('passenger') }}" class="btn btn-outline-primary mt-3 travel-btn">
+                    <a href="{{ route('bookingtype') }}" class="btn btn-outline-primary mt-3 travel-btn">
                         GO TRAVEL
                     </a>
                 </p>
