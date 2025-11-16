@@ -42,8 +42,8 @@
                     <tr>
                         <td>{{ $voyage->voyage_code }}</td>
                         <td>
-                            {{ $voyage->route->route_origin }} → 
-                            {{ $voyage->route->route_destination }}
+                            {{ $voyage->routePort->route_origin }} → 
+                            {{ $voyage->routePort->route_destination }}
                         </td>
                         <td>{{ \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('F j, Y, D') }}</td>
                         <td>{{ \Carbon\Carbon::parse($voyage->voyage_arrival_date)->format('F j, Y, D') }}</td>

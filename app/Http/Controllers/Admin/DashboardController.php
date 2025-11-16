@@ -15,7 +15,7 @@ class DashboardController extends Controller
         $today = Carbon::today();
 
         // Fetch voyages whose departure date is today
-        $voyages = Voyage::with(['vessel', 'route'])
+        $voyages = Voyage::with(['vessel', 'routePort'])
             ->whereDate('voyage_departure_date', $today)
             ->orderBy('voyage_departure_date', 'asc')
             ->get();

@@ -6,7 +6,7 @@
 
     <div class="admin-body">
 <div class="manifest-header text-center">
-    <h2 class="manifest-title">{{ $voyage->route->route_origin }} to {{ $voyage->route->route_destination }}</h2>
+    <h2 class="manifest-title">{{ $voyage->routePort->route_origin }} to {{ $voyage->routePort->route_destination }}</h2>
     <div class="d-flex justify-content-center flex-wrap gap-5 mt-3">
         <div class="text-start">
             <p><strong>Schedule :</strong>{{ \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('F j, Y, D') }}</p>

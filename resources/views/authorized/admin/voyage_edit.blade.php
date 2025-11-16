@@ -30,10 +30,10 @@
             <div class="form-group">
               <label for="route_id">Route</label>
               <select name="route_id" id="route_id" required>
-                @foreach($routes as $route)
-                  <option value="{{ $route->route_id }}" 
-                    {{ $voyage->route_id == $route->route_id ? 'selected' : '' }}>
-                    {{ $route->route_origin }} → {{ $route->route_destination }}
+                @foreach($route_port as $rp)
+                  <option value="{{ $rp->route_port_id }}" 
+                    {{ $voyage->route_port_id == $rp->route_id ? 'selected' : '' }}>
+                    {{ $rp->route_origin }} → {{ $rp->route_destination }}
                   </option>
                 @endforeach
               </select>

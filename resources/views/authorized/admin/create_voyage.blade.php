@@ -36,8 +36,8 @@
           {{-- Route Dropdown --}}
           <div class="form-col">
             <div class="form-group">
-              <label for="route_id">Route</label>
-              <select id="route_id" name="route_id" required>
+              <label for="route_port_id">Route</label>
+              <select id="route_port_id" name="route_port_id" required>
                 <option value="" disabled selected>Select Route</option>
                 @foreach($route_port as $rp)
                   <option value="{{ $rp->route_port_id }}">
@@ -155,7 +155,7 @@
       @endforeach
     };
 
-    const routeSelect = document.getElementById('route_id');
+    const routeSelect = document.getElementById('route_port_id');
     const portOriginInput = document.getElementById('port_origin_info');
     const portDestinationInput = document.getElementById('port_destination_info');
 
