@@ -160,14 +160,6 @@ Route::prefix('authorized/admin')->group(function () {
     Route::get('authorized/manifest/{id}', [ManifestController::class, 'show'])->name('manifest');
 
 
-
-Route::middleware(['auth:admin'])->group(function () {
-    Route::resource('routes', RouteController::class);
-    Route::resource('ports', PortController::class);
-});
-
-
-
 //BOTH ADMIN AND STAFF
 Route::middleware(['auth:admin,auth:staff'])->group(function () {
     Route::resource('voyages', VoyageController::class);
