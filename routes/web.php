@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use App\Http\Controllers\VesselRouteController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PassengerController;
@@ -64,6 +65,10 @@ Route::post('/paymongo/create-source', [PaymentController::class, 'createSource'
 Route::post('/paymongo/webhook', [PaymentController::class, 'webhook'])->name('paymongo.webhook')
     ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 Route::get('/paymongo/return', [PaymentController::class, 'redirectReturn'])->name('paymongo.return');
+Route::get('/paymongo/failed', function (Request $request) {
+    $bookingRef = $request->query('booking_ref_no');
+    return view('payments.failed', ['bookingRef' => $bookingRef]);
+})->name('paymongo.failed');
 
 Route::get('/passenger/schedules', function () {
     return view('passenger.schedules');

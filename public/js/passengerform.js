@@ -8,6 +8,11 @@ document.addEventListener("DOMContentLoaded", function () {
     function generatePassengerForms(count) {
         passengerSections.innerHTML = "";
         for (let i = 1; i <= count; i++) {
+            // Build cot options dynamically (1..50)
+            const cotOptions = Array.from(
+                { length: 50 },
+                (_, idx) => `<option>${idx + 1}</option>`
+            ).join("");
             const passengerHTML = `
                 <div class="passenger-form mb-4 p-3 bg-white rounded shadow-sm" data-passenger="${i}">
                     <h6 class="fw-bold mb-3 text-primary">Personal Information - Person ${i}</h6>
@@ -93,9 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             <label class="form-label">Cot Number</label>
                             <select class="form-select" name="cot_number" required>
                                 <option value="">Select Cot</option>
-                                <option>1</option>
-                                <option>2</option>
-                                <option>3</option>
+                                ${cotOptions}
                             </select>
                         </div>
                     </div>
