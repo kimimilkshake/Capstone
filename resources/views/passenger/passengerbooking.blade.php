@@ -23,6 +23,11 @@
 
                         <form id="bookingForm" data-submit-url="{{ route('booking.submit') }}"
                             data-csrf="{{ csrf_token() }}">
+                            <!-- Hidden voyage fields used by JS to submit booking -->
+                            <input type="hidden" id="routeFrom" name="route_from" value="{{ $routeFrom }}">
+                            <input type="hidden" id="routeTo" name="route_to" value="{{ $routeTo }}">
+                            <input type="hidden" id="departureDate" name="departure_date" value="{{ $departureDate }}">
+                            <input type="hidden" id="departureTime" name="departure_time" value="{{ $departureTime }}">
                             <!-- Number of Passengers -->
                             <div class="mb-4">
                                 <label for="numPassengers" class="form-label fw-bold">Number of Passengers</label>

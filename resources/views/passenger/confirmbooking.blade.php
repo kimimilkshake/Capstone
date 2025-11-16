@@ -1,4 +1,182 @@
 @extends('layouts.app')
 @section('content')
-    @include('components.hero'){{-- Head Nav --}}
+    @include('components.hero')
+
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">Confirm Booking</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>Booking Reference: {{ $booking->booking_ref_no }}</h6>
+                        <p>Status: <strong>{{ $booking->booking_status }}</strong></p>
+
+                        @if ($payment)
+                            <p>Total: <strong>PHP {{ number_format($payment->total_amount, 2) }}</strong></p>
+                            <p>Payment Status: <strong>{{ $payment->payment_status }}</strong></p>
+                        @endif
+
+                        <hr>
+
+                        <h6>Passengers</h6>
+                        <ul class="list-group mb-3">
+                            @foreach ($passengers as $item)
+                                <li class="list-group-item">
+                                    <strong>{{ $item['passenger']->passenger_firstname }}
+                                        {{ $item['passenger']->passenger_lastname }}</strong>
+                                    <div>Cot: {{ $item['ticket']->pt_cot_no }}</div>
+                                    <div>Price: PHP {{ number_format($item['ticket']->pt_ticket_price, 2) }}</div>
+                                </li>
+                            @endforeach
+                        </ul>
+
+                        <div class="mb-3">
+                            <p>Your hold will expire in: <span id="countdown">--:--</span></p>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ route('bookingtype') }}" class="btn btn-outline-secondary">Cancel</a>
+
+                            @php
+                                $canPay = false;
+                                if (
+                                    isset($payment) &&
+                                    strtolower($payment->payment_status) === 'pending' &&
+                                    strtolower($booking->booking_status) === 'pending'
+                                ) {
+                                    $canPay = true;
+                                }
+                            @endphp
+
+                            @if ($canPay)
+                                <button id="payBtn" class="btn btn-primary">Pay with GCash (PayMongo)</button>
+                            @else
+                                <button class="btn btn-secondary" disabled>
+                                    @if (strtolower($booking->booking_status) === 'canceled')
+                                        Booking canceled
+                                    @elseif (isset($payment) && strtolower($payment->payment_status) !== 'pending')
+                                        Payment: {{ $payment->payment_status ?? 'N/A' }}
+                                    @else
+                                        Payment unavailable
+                                    @endif
+                                </button>
+                            @endif
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // compute countdown from the earliest ticket valid-until-ts
+        (function() {
+            // Use server-provided epoch ms when available for robust parsing
+            const validUntilMs = @json($validUntilMs ?? null);
+            let validUntil = null;
+            if (validUntilMs) {
+                validUntil = new Date(validUntilMs);
+            }
+
+            // If no validUntil found, and booking is canceled or payment canceled, show Expired
+            const bookingStatus = '{{ strtolower($booking->booking_status) }}';
+            const paymentStatus = '{{ isset($payment) ? strtolower($payment->payment_status) : '' }}';
+            if (!validUntil) {
+                if (bookingStatus === 'canceled' || paymentStatus === 'canceled') {
+                    document.getElementById('countdown').innerText = 'Expired';
+                }
+                return;
+            }
+
+            function update() {
+                const now = new Date();
+                const diff = validUntil - now;
+                if (diff <= 0) {
+                    document.getElementById('countdown').innerText = 'Expired';
+                    const payBtn = document.getElementById('payBtn');
+                    if (payBtn) payBtn.classList.add('disabled');
+                    return;
+                }
+                const mins = Math.floor(diff / 60000);
+                const secs = Math.floor((diff % 60000) / 1000);
+                document.getElementById('countdown').innerText = `${mins}:${secs.toString().padStart(2,'0')}`;
+            }
+            update();
+            setInterval(update, 1000);
+        })();
+
+        const payBtnEl = document.getElementById('payBtn');
+        if (payBtnEl) {
+            payBtnEl.addEventListener('click', async function(e) {
+                e.preventDefault();
+                const bookingRef = '{{ $booking->booking_ref_no }}';
+                if (!bookingRef) {
+                    alert('Missing booking reference.');
+                    return;
+                }
+
+                // Disable button to prevent double clicks
+                payBtnEl.disabled = true;
+                payBtnEl.innerText = 'Initializing...';
+
+                try {
+                    const res = await fetch('{{ url('/paymongo/create-source') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            booking_ref_no: bookingRef
+                        })
+                    });
+
+                    // If the server returned a non-JSON (error page), attempt to surface that
+                    if (!res.ok) {
+                        let text = await res.text();
+                        console.error('create-source response not ok', res.status, text);
+                        alert('Payment initialization failed (server error). Check logs.');
+                        return;
+                    }
+
+                    let data = null;
+                    try {
+                        data = await res.json();
+                    } catch (jsonErr) {
+                        const txt = await res.text();
+                        console.error('Failed to parse JSON from create-source', txt, jsonErr);
+                        alert('Payment initialization failed (invalid response).');
+                        return;
+                    }
+
+                    if (!data || !data.success) {
+                        console.error('create-source failed', data);
+                        alert((data && data.message) ? data.message : 'Failed to initialize payment.');
+                        return;
+                    }
+
+                    // Redirect user to PayMongo checkout
+                    const checkoutUrl = data.checkout_url || data.checkout || data.redirect_url;
+                    if (checkoutUrl) {
+                        window.location.href = checkoutUrl;
+                    } else {
+                        console.error('No checkout_url in create-source response', data);
+                        alert('Checkout URL not returned by payment provider.');
+                    }
+                } catch (err) {
+                    console.error('Error calling create-source', err);
+                    alert('Error initializing payment. See console and server logs.');
+                } finally {
+                    // Restore button state if still on this page
+                    if (document.contains(payBtnEl)) {
+                        payBtnEl.disabled = false;
+                        payBtnEl.innerText = 'Pay with GCash (PayMongo)';
+                    }
+                }
+            });
+        }
+    </script>
 @endsection
