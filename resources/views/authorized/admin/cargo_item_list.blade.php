@@ -7,6 +7,10 @@
     <div class="avl-title">
       <h3>VIEW RATES</h3>
     </div>
+
+    
+
+
   </div>
 
 @endsection
