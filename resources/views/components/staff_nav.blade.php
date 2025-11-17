@@ -57,14 +57,14 @@
     </li>
 
     <li class="snav-item">
-      <a class="snav-link" href="{{ url('/') }}">
+      <a class="snav-link" href="{{ route('staff.create_cargo_item') }}">
         <i class="fa-solid fa-boxes-stacked me-1"></i>
         <span class="snav-label">Create Cargo Item</span>
       </a>
     </li>
 
     <li class="snav-item">
-      <a class="snav-link" href="{{ url('/') }}">
+      <a class="snav-link" href="{{ route('staff.cargo_item_list') }}">
         <i class="fa-solid fa-rectangle-list me-1"></i>
         <span class="snav-label">View Rates</span>
       </a>
