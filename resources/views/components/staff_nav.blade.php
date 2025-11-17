@@ -38,7 +38,7 @@
     </li>
 
     <li class="snav-item">
-      <a class="snav-link" href="{{ url('/') }}">
+      <a class="snav-link" href="{{ route('admin.voyage_list') }}">
         <i class="fa-solid fa-magnifying-glass me-1"></i>
         <span class="snav-label">Search Voyage</span>
       </a>
