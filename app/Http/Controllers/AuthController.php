@@ -46,21 +46,28 @@ class AuthController extends Controller
         // Check staff
         $staff = DB::table('staff')->where('staff_user', $username)->first();
         if ($staff) {
-        // Check if inactive
-        if ($staff->staff_status === 'Inactive') {
-            return back()->withErrors(['username' => 'Your account is inactive. Please contact admin.'])->withInput();
+
+            // Check if inactive
+            if ($staff->staff_status === 'Inactive') {
+                return back()->withErrors(['username' => 'Your account is inactive. Please contact admin.'])->withInput();
+            }
+
+            // Check password
+            if (Hash::check($password, $staff->staff_password)) {
+
+                // 🔥 IMPORTANT: login using staff guard
+                auth()->guard('staff')->loginUsingId($staff->staff_id);
+
+                // Store session (optional)
+                Session::put('user_id', $staff->staff_id);
+                Session::put('user_role', 'staff');
+                Session::put('username', $staff->staff_user);
+                Session::put('user_name', $staff->staff_name);
+
+                return redirect()->route('staff.dashboard');
+            }
         }
 
-        // Check password
-        if (Hash::check($password, $staff->staff_password)) {
-            // Store session
-            Session::put('user_id', $staff->staff_id);
-            Session::put('user_role', 'staff');
-            Session::put('username', $staff->staff_user);
-            Session::put('user_name', $staff->staff_name);
-            return redirect()->route('staff.dashboard');
-        }
-    }
         return back()->withErrors(['username' => 'Invalid username or password'])->withInput();
     }
 

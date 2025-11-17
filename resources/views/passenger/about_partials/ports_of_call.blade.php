@@ -13,7 +13,7 @@
   </div>
   <div class="apoc-col">
     <div class="apoc-card">
-      <img src="{{ asset('images/poc-talibon.jpg') }}" alt="Talibon Mangrove Forest and Boardwalk" class="apoc-pic">
+      <img src="{{ asset('images/poc-talibon.jpg') }}" alt="Talibon Cathedral" class="apoc-pic">
       <h3 class="apoc-title">Talibon, Bohol</h3>
     </div>
   </div>

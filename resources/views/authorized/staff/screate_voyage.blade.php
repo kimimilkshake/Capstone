@@ -2,14 +2,12 @@
 @section('page-title', 'VOYAGES')
 @section('content')
   @include('components.authHeader')
-  @include('components.admin_nav')
-
-  <div class="admin-body">
-    <div class="avl-title">
+  @include('components.staff_nav')
+  <div class="staff-body">
+    <div class="svl-title">
       <h3>CREATE VOYAGE</h3>
     </div>
-
-    <div class="acs-form_container">
+    <div class="scs-form_container">
       {{-- Validation Errors --}}
       @if ($errors->any())
         <div class="alert alert-danger" style="color: red; text-align: center;">
@@ -28,7 +26,7 @@
       @endif
 
       {{-- FORM START --}}
-      <form action="{{ route('admin.store_voyage') }}" method="POST">
+      <form action="{{ route('staff.store_voyage') }}" method="POST">
         @csrf
 
         <!--ROW 1: ROUTE, PORT, AND VESSEL-->
@@ -118,7 +116,7 @@
           <button type="submit" class="acs-add-btn">
             <i class="fa-solid fa-plus me-2"></i>ADD
           </button>
-          <a href="{{ route('admin.voyage_list') }}" class="acs-add-btn acs-cancel-btn">
+          <a href="{{ route('staff.voyage_list') }}" class="acs-add-btn acs-cancel-btn">
             <i class="fa-solid fa-xmark me-2"></i>CANCEL
           </a>
         </div>
@@ -126,6 +124,7 @@
       {{-- FORM END --}}
     </div>
   </div>
+
 
   <script>
     const routePorts = {
@@ -153,6 +152,4 @@
         }
     });
   </script>
-
-
 @endsection
