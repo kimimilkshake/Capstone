@@ -3,13 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Vessel;
-use Illuminate\Http\Request;
 use App\Models\Voyage;
 use App\Models\RoutePort;
-use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class VoyageController extends Controller
 {
+    // Helper methods to check which guard is logged in
+    private function isStaff()
+    {
+        return auth()->guard('staff')->check();
+    }
+
+    private function isAdmin()
+    {
+        return auth()->guard('admin')->check();
+    }
+
     public function index(Request $request)
     {
         $search = $request->input('search');
@@ -34,14 +44,28 @@ class VoyageController extends Controller
             ->orderBy('voyage_departure_date', 'desc')
             ->paginate(10);
 
-        return view('authorized.admin.voyage_list', compact('voyages', 'search'));
+        return $this->isStaff()
+            ? view('authorized.staff.svoyage_list', compact('voyages', 'search'))
+            : view('authorized.admin.voyage_list', compact('voyages', 'search'));
     }
 
     public function create()
     {
+        /*
+        dd([
+            'staff_guard' => auth()->guard('staff')->check(),
+            'admin_guard' => auth()->guard('admin')->check(),
+            'staff_user' => auth()->guard('staff')->user(),
+            'admin_user' => auth()->guard('admin')->user(),
+        ]);
+        */
+
         $vessels = Vessel::where('vessel_status', 'Active')->get();
         $route_port = RoutePort::all();
-        return view('authorized.admin.create_voyage', compact('vessels', 'route_port'));
+
+        return $this->isStaff()
+            ? view('authorized.staff.screate_voyage', compact('vessels', 'route_port'))
+            : view('authorized.admin.create_voyage', compact('vessels', 'route_port'));
     }
 
     public function store(Request $request)
@@ -86,7 +110,9 @@ class VoyageController extends Controller
             'voyage_code' => $voyageCode,
         ]);
 
-        return redirect()->route('voyages.index')->with('success', 'Voyage added successfully.');
+        return redirect()->route($this->isStaff() ? 'staff.voyage_list' : 'admin.voyage_list')
+                 ->with('success', 'Voyage added successfully.');
+
     }
 
     public function edit($id)
@@ -94,7 +120,10 @@ class VoyageController extends Controller
         $voyage = Voyage::findOrFail($id);
         $vessels = Vessel::where('vessel_status', 'Active')->get();
         $route_port = RoutePort::all();
-        return view('authorized.admin.voyage_edit', compact('voyage', 'vessels', 'route_port'));
+
+        return $this->isStaff()
+            ? view('authorized.staff.svoyage_edit', compact('voyage', 'vessels', 'route_port'))
+            : view('authorized.admin.voyage_edit', compact('voyage', 'vessels', 'route_port'));
     }
 
     public function update(Request $request, $id)
@@ -149,12 +178,14 @@ class VoyageController extends Controller
             'voyage_status' => $request->voyage_status,
         ]);
 
-        return redirect()->route('voyages.index')->with('success', 'Voyage updated successfully.');
+        return redirect()->route($this->isStaff() ? 'staff.voyage_list' : 'admin.voyage_list')
+                         ->with('success', 'Voyage updated successfully.');
     }
 
     public function destroy($id)
     {
         Voyage::destroy($id);
-        return redirect()->route('voyages.index')->with('success', 'Voyage deleted.');
+        return redirect()->route($this->isStaff() ? 'staff.voyage_list' : 'admin.voyage_list')
+                         ->with('success', 'Voyage deleted.');
     }
 }
