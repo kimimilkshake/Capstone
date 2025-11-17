@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Http\Controllers\VesselRouteController;
+use App\Http\Controllers\VoyageBookingController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PassengerController;
 use App\Http\Controllers\BookingController;
@@ -35,14 +36,8 @@ Route::get('/passenger/homepage', function () {
     return view('passenger.homepage');
 })->name('homepage');
 
-Route::get('/passenger/bookingtype', function () {
-    return view('passenger.bookingtype');
-})->name('bookingtype');
-
-// Passenger booking route
-// Show the available routes and selection page
-//Route::get('/passenger/passenger', [VesselRouteController::class, 'index'])->name('passenger');
-Route::get('/passenger/bookingtype', [VesselRouteController::class, 'index'])->name('bookingtype');
+// Passenger booking route - show available voyages within 8 days
+Route::get('/passenger/bookingtype', [VoyageBookingController::class, 'index'])->name('bookingtype');
 
 
 // Booking page (form)
@@ -90,7 +85,8 @@ Route::prefix('passenger/about_partials')->group(function () {
     });
     Route::get('/{fragment}', function ($fragment) {
         $valid = ['who_we_are', 'what_we_offer', 'vision_mission', 'vessels_about', 'ports_of_call'];
-        if (!in_array($fragment, $valid)) abort(404);
+        if (!in_array($fragment, $valid))
+            abort(404);
         return view("passenger.about_partials.$fragment");
     });
 });
@@ -156,13 +152,13 @@ Route::prefix('authorized/admin')->group(function () {
     Route::post('/route_port', [RoutePortController::class, 'store'])->name('admin.route_port_store');
     Route::put('/route_port/{id}', [RoutePortController::class, 'update'])->name('admin.route_port_update');
     Route::delete('/route_port/{id}', [RoutePortController::class, 'destroy'])->name('admin.route_port_destroy');
-  
+
 
 
 });
 
-    //MANIFEST
-    Route::get('authorized/manifest/{id}', [ManifestController::class, 'show'])->name('manifest');
+//MANIFEST
+Route::get('authorized/manifest/{id}', [ManifestController::class, 'show'])->name('manifest');
 
 
 //BOTH ADMIN AND STAFF

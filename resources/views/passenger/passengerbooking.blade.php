@@ -28,6 +28,7 @@
                             <input type="hidden" id="routeTo" name="route_to" value="{{ $routeTo }}">
                             <input type="hidden" id="departureDate" name="departure_date" value="{{ $departureDate }}">
                             <input type="hidden" id="departureTime" name="departure_time" value="{{ $departureTime }}">
+                            <input type="hidden" id="voyageId" name="voyage_id" value="{{ $voyage->voyage_id }}">
                             <!-- Number of Passengers -->
                             <div class="mb-4">
                                 <label for="numPassengers" class="form-label fw-bold">Number of Passengers</label>

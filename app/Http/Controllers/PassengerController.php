@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Passenger;
+use App\Models\Voyage;
 use Carbon\Carbon;
 
 class PassengerController extends Controller
@@ -13,16 +14,21 @@ class PassengerController extends Controller
         $routeFrom = $request->query('route_from');
         $routeTo = $request->query('route_to');
         $departureDate = $request->query('departure_date');
+        $voyageId = $request->query('voyage_id');
         $type = $request->query('type'); // 👈 booking type from radio buttons
 
-        $route = \DB::table('vessel_routes')
-            ->where('route_from', $routeFrom)
-            ->where('route_to', $routeTo)
+        // Get voyage information from voyage table with relationships
+        $voyage = Voyage::with(['vessel', 'routePort'])
+            ->where('voyage_id', $voyageId)
             ->first();
 
-        $vesselName = $route->vessel_name ?? null;
-        $departureTime = $route->departure_time ?? null;
-        $portOfOrigin = $route->port_of_origin ?? null;
+        if (!$voyage) {
+            return redirect()->route('bookingtype')->with('error', 'Voyage not found.');
+        }
+
+        $vesselName = $voyage->vessel->vessel_name ?? 'Unknown Vessel';
+        $departureTime = $voyage->voyage_estimated_TD;
+        $portOfOrigin = $voyage->routePort->port_origin_name ?? 'Unknown Port';
 
         if ($departureTime) {
             $departureTime = Carbon::parse($departureTime)->format('g:i A');
@@ -40,7 +46,8 @@ class PassengerController extends Controller
             'departureDate',
             'vesselName',
             'departureTime',
-            'portOfOrigin'
+            'portOfOrigin',
+            'voyage'
         ));
     }
 
