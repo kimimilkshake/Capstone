@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\RoutePortController;
 
 //STAFF CONTROLLERS
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
+use App\Http\Controllers\Staff\SemaphoreController;
 
 // SHARED CONTROLLERS
 use App\Http\Controllers\VoyageController;
@@ -189,7 +190,10 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     Route::put('/cargo_items/{id}/update', [CargoItemController::class, 'update'])->name('staff.cargo_item_update');
     Route::delete('/cargo_items/{id}/delete', [CargoItemController::class, 'destroy'])->name('staff.cargo_item_delete');
 
+    // Semaphore Text SMS
 
+    Route::get('/semaphore', [SemaphoreController::class, 'show'])->name('staff.semaphore');
+    
 });
 
 Route::post('/authorized/logout', [AuthController::class, 'logout'])->name('logout');

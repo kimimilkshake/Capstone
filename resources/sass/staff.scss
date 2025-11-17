@@ -154,3 +154,75 @@ body {
   max-width: 1500px;
   margin-inline: auto;
 }
+
+//semaphore
+
+.sms-header {
+    width:650px;
+    margin-left:200px;
+    padding-top:10px;
+    padding-bottom:10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    background-color: #485b8c;
+    color:white;
+    margin-bottom: -3px;
+}
+
+.sms-container {
+    
+    width: 650px;
+    margin-left:200px;
+    padding-top: 10px;
+    padding-bottom: 20px;
+    padding-left: 30px;
+    padding-right: 30px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    background-color: #f9f9f9;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+   
+}
+
+.sms-label {
+    display: block;
+    font-size: 18px;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.sms-textarea {
+    width: 100%;
+    font-size: 16px;
+    padding: 10px;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    resize: none;
+    margin-bottom: 20px;
+}
+
+.sms-button {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    background-color:#1E2541;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.sms-button:hover {
+    background-color: #485b8c;
+}

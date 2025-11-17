@@ -38,11 +38,7 @@
     </li>
 
     <li class="snav-item">
-<<<<<<< HEAD
-      <a class="snav-link" href="{{ route('admin.voyage_list') }}">
-=======
       <a class="snav-link" href="{{ route('staff.voyage_list') }}">
->>>>>>> origin/beta
         <i class="fa-solid fa-magnifying-glass me-1"></i>
         <span class="snav-label">Search Voyage</span>
       </a>
@@ -81,4 +77,3 @@
 
   </ul>
 </nav>
-
