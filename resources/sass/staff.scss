@@ -107,9 +107,9 @@ body {
 /* === DASHBOARD CONTENT === */
 .staff-body {
   margin-left: 240px;
-  margin-top: 70px; /* ⬅️ add this */
+  margin-top: 80px;
   padding: 20px;
-  min-height: calc(100vh - 70px); /* so it fits under the header */
+  min-height: calc(100vh - 80px);
   background-color: #f8f9fa;
   transition: margin-left 0.3s ease;
 }
@@ -137,4 +137,20 @@ body {
 #s-collapseBtn:hover {
   background-color: #3b4a73;
   color: #ffffff;
+}
+
+//voyage
+.svl-title{
+  text-align: center;
+}
+
+.scs-form_container {
+  margin-top: 20px;
+  background: #fff;
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 1500px;
+  margin-inline: auto;
 }

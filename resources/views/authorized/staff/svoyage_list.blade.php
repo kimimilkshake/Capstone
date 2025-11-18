@@ -2,15 +2,13 @@
 @section('page-title', 'VOYAGES')
 @section('content')
   @include('components.authHeader')
-  @include('components.admin_nav')
-
-  <div class="admin-body">
-    <div class="avl-title">
-      <h3>VOYAGE LIST</h3>
+  @include('components.staff_nav')
+  <div class="staff-body">
+    <div class="svl-title">
+      <h3>SEARCH VOYAGE</h3>
     </div>
-
     <div class="search-add-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
-      <form class="search-bar" action="{{ route('admin.voyage_list') }}" method="GET" style="flex: 1;">
+      <form class="search-bar" action="{{ route('staff.voyage_list') }}" method="GET" style="flex: 1;">
           <input 
               type="text" 
               name="search" 
@@ -24,14 +22,8 @@
               style="margin-left:10px;">
           <button type="submit">
               <i class="fa-solid fa-magnifying-glass me-2"></i>Search
-          </button>6
+          </button>
       </form>
-
-      <div class="add-vessel">
-        <a href="{{ route('admin.create_voyage') }}">
-          <i class="fa-solid fa-plus me-2"></i>Add Voyage
-        </a>
-      </div>
     </div>
 
     <table class="voyage-table">
@@ -63,7 +55,7 @@
             <td>{{ $voyage->vessel->vessel_name}}</td>
             <td>{{ $voyage->voyage_status }}</td>
             <td>
-              <a href="{{ route('admin.voyage_edit', $voyage->voyage_id) }}" title="Edit Voyage"><i class="fa fa-pencil me-1" ></i></a>
+              <a href="{{ route('staff.voyage_edit', $voyage->voyage_id) }}" title="Edit Voyage"><i class="fa fa-pencil me-1" ></i></a>
               <a href="{{ route('manifest', $voyage->voyage_id) }}" title="View Manifest" ><i class="fa-solid fa-file me-1"></i></a>
               <a href="#" title="Cancel Trip" style="color: red; "><i class="fa-solid fa-ban"></i></a>
             </td>
@@ -81,4 +73,5 @@
       {{ $voyages->appends(['search' => request('search')])->links('pagination::bootstrap-5') }}
     </div>
   </div>
+
 @endsection

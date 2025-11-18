@@ -67,26 +67,22 @@ body {
   color: #ffffff;
 }
 
-/* Icon style */
 .anav-link i {
   font-size: 18px;
   min-width: 24px;
   text-align: center;
 }
 
-/* Text label */
 .anav-label {
   white-space: nowrap;
   transition: opacity 0.2s ease, visibility 0.3s ease;
 }
 
-/* Hide text when collapsed */
 .admin-nav.collapsed .anav-label {
   opacity: 0;
   visibility: hidden;
 }
 
-/* Center icons in collapsed state */
 .admin-nav.collapsed .anav-link {
   justify-content: center;
 }
@@ -115,12 +111,10 @@ body {
   transition: margin-left 0.3s ease;
 }
 
-/* Adjust margin when sidebar is collapsed */
 .admin-body.collapsed {
   margin-left: 80px;
 }
 
-/* Collapse Menu Button */
 #collapseBtn {
   position: absolute;
   bottom: 10px;
@@ -211,7 +205,7 @@ body {
 .form-group label {
   font-weight: 600;
   display: block;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.2rem;
 }
 
 .form-group input,
@@ -244,17 +238,17 @@ body {
 }
 
 //STAFF LIST
-.staff-table, .promo-table, .vessel-table, .voyage-table, .rp-table, .manifest-table{
+.staff-table, .promo-table, .vessel-table, .voyage-table, .rp-table, .manifest-table, .cargo-item-table{
     width: 100%;
     border-collapse: collapse;
 }
 
-.staff-table th, .staff-table td, .promo-table th, .promo-table td, .vessel-table th, .vessel-table td, .voyage-table th, .voyage-table td, .rp-table th, .rp-table td, .manifest-table td, .manifest-table th{
+.staff-table th, .staff-table td, .promo-table th, .promo-table td, .vessel-table th, .vessel-table td, .voyage-table th, .voyage-table td, .rp-table th, .rp-table td, .manifest-table td, .manifest-table th, .cargo-item-table th {
     padding: 10px;
     text-align: center;
 }
 
-.staff-table th, .promo-table th, .vessel-table th, .voyage-table th, .rp-table th, .manifest-table th{
+.staff-table th, .promo-table th, .vessel-table th, .voyage-table th, .rp-table th, .manifest-table th, .cargo-item-table th{
     background-color: #485b8c;
     color: white;
 }
@@ -655,6 +649,59 @@ body {
   }
 }
 
+//CARGO ITEM
+.aci-form_container {
+    width: 100%;
+    max-width: 1800px;
+    margin: 10px auto;
+    padding: 20px 25px;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Force form to always fit horizontally */
+.aci-form_container .form-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 25px;
+    margin-bottom: 15px;
+}
+
+/* Each column inside the row */
+.aci-form_container .form-col {
+    flex: 1;
+}
+
+/* Inputs + selects styling */
+.aci-form_container .form-group input,
+.aci-form_container .form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+}
+
+/* Labels */
+.aci-form_container .form-group label {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 4px;
+    display: block;
+}
+
+
+/* RESPONSIVE FIX – prevents overflow on smaller screens */
+@media (max-width: 900px) {
+    .aci-form_container .form-row {
+        flex-direction: column;
+        gap: 15px;
+    }
+}
+
+
+
 //PAGINATION 
 .pagination-container {
   display: flex;
@@ -765,9 +812,3 @@ body {
     font-size: 1.2rem;
     margin-bottom: 1rem;
 }
-
-
-
-
-
-

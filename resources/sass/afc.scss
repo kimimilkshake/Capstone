@@ -1,6 +1,9 @@
 /*
 THIS SCSS FILE CONTAINS THE CSS FOR ABOUT US PAGE, THE ABOUT_PARTIALS, FAQs PAGE, AND CONTACT PAGE
 */
+.root{
+  --primary-color: #485b8c;
+}
 
 //ABOUT PAGE
 .about-container {
@@ -84,16 +87,21 @@ THIS SCSS FILE CONTAINS THE CSS FOR ABOUT US PAGE, THE ABOUT_PARTIALS, FAQs PAGE
   background-color: #f4f8fb;
   padding: 1rem 1.5rem;
   border-radius: 12px;
-  height: 300px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  flex: 1;
+  display: flex; 
+  align-items: center;
+  justify-content: center;
 }
 
 .awwa-content {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 2rem;
-  flex-wrap: wrap;
+  width: 100%;
 }
+
 
 .awwa-logo-wrapper {
   flex: 0 0 350px;
@@ -153,10 +161,11 @@ THIS SCSS FILE CONTAINS THE CSS FOR ABOUT US PAGE, THE ABOUT_PARTIALS, FAQs PAGE
 //ABOUT - WHAT WE OFFER
 .awwo-row {
   display: flex;
+  flex: 1;
   gap: 2rem;
   flex-wrap: wrap;
   justify-content: space-between;
-  align-items: stretch;
+  align-items: flex-start;
 }
 
 .awwo-col {
@@ -326,7 +335,10 @@ THIS SCSS FILE CONTAINS THE CSS FOR ABOUT US PAGE, THE ABOUT_PARTIALS, FAQs PAGE
 }
 
 .ava-pic{
-  width: 250px;
+  width: 285px;
+  height: 285px;
+  object-fit: cover; 
+  border-radius: 12px; 
 }
 
 @media screen and (max-width: 992px) {
@@ -348,18 +360,16 @@ THIS SCSS FILE CONTAINS THE CSS FOR ABOUT US PAGE, THE ABOUT_PARTIALS, FAQs PAGE
   color: #19569f;
 }
 
-/* Modal background */
 .ava-modal {
   display: none;
   position: fixed;
-  z-index: 999;
+  z-index: 2000;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.85);
   justify-content: center;
   align-items: center;
 }
 
-/* Enlarged image */
 .ava-modal-content {
   max-width: 90%;
   max-height: 90%;
@@ -367,7 +377,6 @@ THIS SCSS FILE CONTAINS THE CSS FOR ABOUT US PAGE, THE ABOUT_PARTIALS, FAQs PAGE
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
 }
 
-/* Close button */
 .ava-close {
   position: absolute;
   top: 25px;
@@ -409,7 +418,10 @@ THIS SCSS FILE CONTAINS THE CSS FOR ABOUT US PAGE, THE ABOUT_PARTIALS, FAQs PAGE
 }
 
 .apoc-pic{
-  width: 250px;
+  width: 285px;
+  height: 285px;
+  object-fit: cover; 
+  border-radius: 12px; 
 }
 
 .apoc-title {
@@ -466,8 +478,6 @@ THIS SCSS FILE CONTAINS THE CSS FOR ABOUT US PAGE, THE ABOUT_PARTIALS, FAQs PAGE
     border-top: 1px solid #ddd;
 }
 
-
-
 //CONTACT US PAGE
 .contact-container{
   display: block;
@@ -477,61 +487,78 @@ THIS SCSS FILE CONTAINS THE CSS FOR ABOUT US PAGE, THE ABOUT_PARTIALS, FAQs PAGE
 .contact-row{
   display: flex;
   flex-wrap: wrap;
+  align-items: stretch;
 }
 
 .contact-col{
   flex: 1;
   min-width: 280px;
   padding: 1rem;
+  display: flex;
 }
 
-.contact-card{
+.contact-card {
   background-color: #ffffff;
-  padding: 20px;
-  border-radius: 6px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.contact-divider {
-  background-color: #485b8c;
-  width: 100%;
-  align-items: center;
-  padding: 10px;
-  border-radius: 6px;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
+  flex: 1;
+  height: 100%;
 }
 
 .contact-title{
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
+  color: #485b8c;
+  font-weight: 600;
 }
 
-.main-office-pic{
+.main-office-pics {
   display: flex;
-  width: 25%;
-  margin-bottom: 10px;
+  gap: 1rem; 
+  justify-content: center;
+  flex-wrap: wrap; 
+  margin-bottom: 1rem;
+  margin-bottom: 20px;
 }
 
-.contact-divtitle{
-  text-align: center;
-  color: #ffffff;
+.main-office-pic {
+  width: 250px;
+  height: 250px;
+  object-fit: cover;  
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.main-office-details p, .main-office-details a{
+  margin: 10px 20px 10px;
+  font-size: 18.5px;
+  text-decoration: none;
+  color: #333;
+  font-weight: 100;
 }
 
 .contact-card label{
-  font-size: 15px;
+  font-size: 20px;
   font-weight: 200;
+  margin-left: 5px;
+  margin-right: 5px;
 }
 
 .contact-card textarea, .contact-card input{
   width: 100%;
-  padding: 8px;
+  padding: 10px;
+  margin-left: 5px;
+  margin-right: 5px;
   margin-bottom: 15px;
   border: 1px solid #ccc;
   border-radius: 6px;
 }
 
 .contact-card textarea{
-  height: 105px;
+  height: 110px;
+  margin-bottom: 55px;
 }
 
 .contact-card button{
@@ -546,8 +573,40 @@ THIS SCSS FILE CONTAINS THE CSS FOR ABOUT US PAGE, THE ABOUT_PARTIALS, FAQs PAGE
   justify-content: center;
 }
 
+.contact-divider {
+  background-color: #485b8c;
+  width: 100%;
+  align-items: center;
+  padding: 15px;
+  border-radius: 6px;
+  margin: 10px 20px 10px;
+}
+
+.contact-divtitle{
+  text-align: center;
+  font-size: 30px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
 .ticketbooth-pic1{
   display: block;
   margin: 0 auto;
   width: 400px;
+}
+
+.ticketbooth-title{
+  text-align: center;
+  margin-bottom: 20px;
+  color: #485b8c;
+  font-weight: 600;
+  margin: 10px;
+}
+
+.ticketbooth-details{
+  margin: 10px 20px 10px;
+  font-size: 18px;
+  text-decoration: none;
+  color: #333;
+  font-weight: 100;
 }

@@ -15,15 +15,15 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\PromoController;
 use App\Http\Controllers\Admin\VesselController;
-use App\Http\Controllers\Admin\RouteController;
-use App\Http\Controllers\Admin\PortController;
-
-
 use App\Http\Controllers\Admin\RoutePortController;
+
+//STAFF CONTROLLERS
+use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 
 // SHARED CONTROLLERS
 use App\Http\Controllers\VoyageController;
 use App\Http\Controllers\ManifestController;
+use App\Http\Controllers\CargoItemController;
 
 // OCR route
 Route::post('/ocr/parse', [OcrController::class, 'parseImage'])->name('ocr.parse');
@@ -113,8 +113,8 @@ Route::get('/authorized/forgot_password', function () {
     return view('authorized.forgot_password');
 })->name('authorized.forgot_password');
 
-// Admin routes
-Route::prefix('authorized/admin')->group(function () {
+//ADMIN ROUTES
+Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
@@ -153,6 +153,13 @@ Route::prefix('authorized/admin')->group(function () {
     Route::put('/route_port/{id}', [RoutePortController::class, 'update'])->name('admin.route_port_update');
     Route::delete('/route_port/{id}', [RoutePortController::class, 'destroy'])->name('admin.route_port_destroy');
 
+    // Cargo Items
+    Route::get('/cargo_items', [CargoItemController::class, 'index'])->name('admin.cargo_item_list');
+    Route::get('/cargo_items/create', [CargoItemController::class, 'create'])->name('admin.create_cargo_item');
+    Route::post('/cargo_items/store', [CargoItemController::class, 'store'])->name('admin.store_cargo_item');
+    Route::get('/cargo_items/{id}/edit', [CargoItemController::class, 'edit'])->name('admin.cargo_item_edit');
+    Route::put('/cargo_items/{id}/update', [CargoItemController::class, 'update'])->name('admin.cargo_item_update');
+    Route::delete('/cargo_items/{id}/delete', [CargoItemController::class, 'destroy'])->name('admin.cargo_item_delete');
 
 
 });
@@ -161,15 +168,30 @@ Route::prefix('authorized/admin')->group(function () {
 Route::get('authorized/manifest/{id}', [ManifestController::class, 'show'])->name('manifest');
 
 
-//BOTH ADMIN AND STAFF
-Route::middleware(['auth:admin,auth:staff'])->group(function () {
-    Route::resource('voyages', VoyageController::class);
-});
+//STAFF
+Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
 
-// Staff dashboard
-Route::get('/authorized/staff/dashboard', function () {
-    return view('authorized.staff.dashboard');
-})->name('staff.dashboard');
+    //Dashboard
+    Route::get('/dashboard', [StaffDashboardController::class, 'index'])
+        ->name('staff.dashboard');
+
+    //Voyages
+    Route::get('/voyages', [VoyageController::class, 'index'])->name('staff.voyage_list');
+    Route::get('/voyages/create', [VoyageController::class, 'create'])->name('staff.create_voyage');
+    Route::post('/voyages/store', [VoyageController::class, 'store'])->name('staff.store_voyage');
+    Route::get('/voyages/{id}/edit', [VoyageController::class, 'edit'])->name('staff.voyage_edit');
+    Route::put('/voyages/{id}/update', [VoyageController::class, 'update'])->name('staff.voyage_update');
+
+    // Cargo Items
+    Route::get('/cargo_items', [CargoItemController::class, 'index'])->name('staff.cargo_item_list');
+    Route::get('/cargo_items/create', [CargoItemController::class, 'create'])->name('staff.create_cargo_item');
+    Route::post('/cargo_items/store', [CargoItemController::class, 'store'])->name('staff.store_cargo_item');
+    Route::get('/cargo_items/{id}/edit', [CargoItemController::class, 'edit'])->name('staff.cargo_item_edit');
+    Route::put('/cargo_items/{id}/update', [CargoItemController::class, 'update'])->name('staff.cargo_item_update');
+    Route::delete('/cargo_items/{id}/delete', [CargoItemController::class, 'destroy'])->name('staff.cargo_item_delete');
+
+
+});
 
 Route::post('/authorized/logout', [AuthController::class, 'logout'])->name('logout');
 
