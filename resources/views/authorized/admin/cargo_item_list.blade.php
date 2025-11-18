@@ -22,7 +22,7 @@
       </form>
     </div>
 
-    <div class="cargo-item-table">
+    <table class="cargo-item-table">
       <thead>
         <tr>
           <th>Item No.</th>
@@ -31,7 +31,7 @@
           <th></th>
         </tr>
       </thead>
-    </div>
+    </table>
   </div>
 
 @endsection
