@@ -9,7 +9,7 @@
     <h3>CREATE STAFF</h3>
   </div>
   <div class="acs-form_container">
-    @if ($errors->any())
+    ('@if ($errors->any())
       <div class="alert alert-danger" style="color: red; text-align: center;">
         <strong>All fields are required.</strong><br>
         @foreach ($errors->all() as $error)
@@ -22,7 +22,7 @@
       <div class="alert alert-success" style="color: green; text-align: center; margin-bottom: 1rem;">
         {{ session('success') }}
       </div>
-    @endif
+    @endif')
 
     <form action="{{ route('admin.storeStaff') }}" method="POST" class="create-staff-form">
       @csrf

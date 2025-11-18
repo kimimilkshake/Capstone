@@ -24,12 +24,6 @@
               <i class="fa-solid fa-magnifying-glass me-2"></i>Search
           </button>
       </form>
-
-      <div class="add-vessel">
-        <a href="{{ route('staff.create_voyage') }}">
-          <i class="fa-solid fa-plus me-2"></i>Add Voyage
-        </a>
-      </div>
     </div>
 
     <table class="voyage-table">
