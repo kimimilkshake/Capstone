@@ -243,7 +243,7 @@ body {
     border-collapse: collapse;
 }
 
-.staff-table th, .staff-table td, .promo-table th, .promo-table td, .vessel-table th, .vessel-table td, .voyage-table th, .voyage-table td, .rp-table th, .rp-table td, .manifest-table td, .manifest-table th, .cargo-item-table th {
+.staff-table th, .staff-table td, .promo-table th, .promo-table td, .vessel-table th, .vessel-table td, .voyage-table th, .voyage-table td, .rp-table th, .rp-table td, .manifest-table td, .manifest-table th, .cargo-item-table th, .cargo-item-table td {
     padding: 10px;
     text-align: center;
 }
@@ -253,7 +253,7 @@ body {
     color: white;
 }
 
-.staff-table tr, .promo-table tr, .vessel-table tr, .voyage-table tr, .rp-table tr, .manifest-table {
+.staff-table tr, .promo-table tr, .vessel-table tr, .voyage-table tr, .rp-table tr, .manifest-table tr, .cargo-item-table tr {
   border-style: solid;
   border-color: rgba(0,0,0,0.1);
   border-width: 1px;
@@ -261,7 +261,7 @@ body {
   margin: 10px;
 }
 
-.staff-table tr:nth-child(even), .promo-table tr:nth-child(even), .vessel-table tr:nth-child(even), .voyage-table tr:nth-child(even), .rp-table tr:nth-child(even), .manifest-table tr:nth-child(even) {
+.staff-table tr:nth-child(even), .promo-table tr:nth-child(even), .vessel-table tr:nth-child(even), .voyage-table tr:nth-child(even), .rp-table tr:nth-child(even), .manifest-table tr:nth-child(even), .cargo-item-table tr:nth-child(even) {
     background-color: #f2f2f2;
 }
 
