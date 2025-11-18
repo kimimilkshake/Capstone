@@ -19,21 +19,34 @@ class BookingController extends Controller
         $routeFrom = $data['route_from'] ?? null;
         $routeTo = $data['route_to'] ?? null;
         $departureDate = $data['departure_date'] ?? null;
+        $voyageId = $data['voyage_id'] ?? null;
 
         if (empty($passengers) || !$routeFrom || !$routeTo || !$departureDate) {
             return response()->json(['success' => false, 'message' => 'Missing booking data.'], 422);
         }
 
-        // Find voyage: map route origin/destination to route_id then voyage
-        $route = DB::table('route')->where('route_origin', $routeFrom)->where('route_destination', $routeTo)->first();
-        if (!$route) {
-            return response()->json(['success' => false, 'message' => 'No matching route found.'], 422);
+        // Find voyage using voyage_id if provided, otherwise find by route_port and date
+        $voyage = null;
+        if ($voyageId) {
+            $voyage = DB::table('voyage')->where('voyage_id', $voyageId)->first();
         }
 
-        $voyage = DB::table('voyage')
-            ->where('route_id', $route->route_id)
-            ->whereDate('voyage_departure_date', $departureDate)
-            ->first();
+        if (!$voyage) {
+            // Find route_port: map route origin/destination to route_port_id then voyage
+            $routePort = DB::table('route_port')
+                ->where('route_origin', $routeFrom)
+                ->where('route_destination', $routeTo)
+                ->first();
+
+            if (!$routePort) {
+                return response()->json(['success' => false, 'message' => 'No matching route found.'], 422);
+            }
+
+            $voyage = DB::table('voyage')
+                ->where('route_port_id', $routePort->route_port_id)
+                ->whereDate('voyage_departure_date', $departureDate)
+                ->first();
+        }
 
         if (!$voyage) {
             return response()->json(['success' => false, 'message' => 'No voyage found for selected date. Please contact administrator.'], 422);
@@ -231,14 +244,19 @@ class BookingController extends Controller
                 return response()->json(['success' => false, 'message' => 'Missing parameters'], 422);
             }
 
-            $route = DB::table('route')->where('route_origin', $routeFrom)->where('route_destination', $routeTo)->first();
-            if (!$route)
+            $routePort = DB::table('route_port')
+                ->where('route_origin', $routeFrom)
+                ->where('route_destination', $routeTo)
+                ->first();
+
+            if (!$routePort)
                 return response()->json(['success' => true, 'unavailable' => []]);
 
             $voyage = DB::table('voyage')
-                ->where('route_id', $route->route_id)
+                ->where('route_port_id', $routePort->route_port_id)
                 ->whereDate('voyage_departure_date', $departureDate)
                 ->first();
+
             if (!$voyage)
                 return response()->json(['success' => true, 'unavailable' => []]);
 

@@ -1,7 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use App\Http\Controllers\VesselRouteController;
+use App\Http\Controllers\VoyageBookingController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PassengerController;
 use App\Http\Controllers\BookingController;
@@ -35,14 +37,8 @@ Route::get('/passenger/homepage', function () {
     return view('passenger.homepage');
 })->name('homepage');
 
-Route::get('/passenger/bookingtype', function () {
-    return view('passenger.bookingtype');
-})->name('bookingtype');
-
-// Passenger booking route
-// Show the available routes and selection page
-//Route::get('/passenger/passenger', [VesselRouteController::class, 'index'])->name('passenger');
-Route::get('/passenger/bookingtype', [VesselRouteController::class, 'index'])->name('bookingtype');
+// Passenger booking route - show available voyages within 8 days
+Route::get('/passenger/bookingtype', [VoyageBookingController::class, 'index'])->name('bookingtype');
 
 
 // Booking page (form)
@@ -69,6 +65,10 @@ Route::post('/paymongo/create-source', [PaymentController::class, 'createSource'
 Route::post('/paymongo/webhook', [PaymentController::class, 'webhook'])->name('paymongo.webhook')
     ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 Route::get('/paymongo/return', [PaymentController::class, 'redirectReturn'])->name('paymongo.return');
+Route::get('/paymongo/failed', function (Request $request) {
+    $bookingRef = $request->query('booking_ref_no');
+    return view('payments.failed', ['bookingRef' => $bookingRef]);
+})->name('paymongo.failed');
 
 Route::get('/passenger/schedules', function () {
     return view('passenger.schedules');
@@ -86,7 +86,8 @@ Route::prefix('passenger/about_partials')->group(function () {
     });
     Route::get('/{fragment}', function ($fragment) {
         $valid = ['who_we_are', 'what_we_offer', 'vision_mission', 'vessels_about', 'ports_of_call'];
-        if (!in_array($fragment, $valid)) abort(404);
+        if (!in_array($fragment, $valid))
+            abort(404);
         return view("passenger.about_partials.$fragment");
     });
 });
@@ -153,6 +154,7 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
     Route::put('/route_port/{id}', [RoutePortController::class, 'update'])->name('admin.route_port_update');
     Route::delete('/route_port/{id}', [RoutePortController::class, 'destroy'])->name('admin.route_port_destroy');
 
+<<<<<<< HEAD
     // Cargo Items
     Route::get('/cargo_items', [CargoItemController::class, 'index'])->name('admin.cargo_item_list');
     Route::get('/cargo_items/create', [CargoItemController::class, 'create'])->name('admin.create_cargo_item');
@@ -160,6 +162,8 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
     Route::get('/cargo_items/{id}/edit', [CargoItemController::class, 'edit'])->name('admin.cargo_item_edit');
     Route::put('/cargo_items/{id}/update', [CargoItemController::class, 'update'])->name('admin.cargo_item_update');
     Route::delete('/cargo_items/{id}/delete', [CargoItemController::class, 'destroy'])->name('admin.cargo_item_delete');
+=======
+>>>>>>> origin/passengerSafe
 
 
 });

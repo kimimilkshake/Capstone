@@ -267,29 +267,10 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-
-        // VESSEL ROUTES
-        Schema::create('vessel_routes', function (Blueprint $table) {
-            $table->id('vessel_route_id');
-
-            // keep vessel info as simple data, not FK
-            $table->unsignedBigInteger('vessel_id')->nullable(); // optional, no foreign key
-            $table->string('vessel_name', 100);                  // store vessel name directly
-
-            $table->string('route_from', 100);
-            $table->string('route_to', 100);
-            $table->time('departure_time');
-            $table->json('operating_days')->nullable(); // ["Monday","Tuesday"]
-            $table->integer('travel_time_hours');
-            $table->string('port_of_origin', 100);
-
-            $table->timestamps();
-        });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('vessel_routes');
         Schema::dropIfExists('notification');
         Schema::dropIfExists('reprint');
         Schema::dropIfExists('manifest');

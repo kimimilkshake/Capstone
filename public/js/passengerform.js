@@ -8,6 +8,11 @@ document.addEventListener("DOMContentLoaded", function () {
     function generatePassengerForms(count) {
         passengerSections.innerHTML = "";
         for (let i = 1; i <= count; i++) {
+            // Build cot options dynamically (1..50)
+            const cotOptions = Array.from(
+                { length: 50 },
+                (_, idx) => `<option>${idx + 1}</option>`
+            ).join("");
             const passengerHTML = `
                 <div class="passenger-form mb-4 p-3 bg-white rounded shadow-sm" data-passenger="${i}">
                     <h6 class="fw-bold mb-3 text-primary">Personal Information - Person ${i}</h6>
@@ -93,9 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             <label class="form-label">Cot Number</label>
                             <select class="form-select" name="cot_number" required>
                                 <option value="">Select Cot</option>
-                                <option>1</option>
-                                <option>2</option>
-                                <option>3</option>
+                                ${cotOptions}
                             </select>
                         </div>
                     </div>
@@ -154,10 +157,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
         document.querySelectorAll(".passenger-type").forEach((select) => {
             select.addEventListener("change", function () {
-                const idFields =
-                    this.closest(".passenger-form").querySelector(".id-fields");
-                idFields.style.display =
-                    this.value === "Adult" ? "none" : "block";
+                const passengerForm = this.closest(".passenger-form");
+                const idFields = passengerForm.querySelector(".id-fields");
+                const idNumberInput = passengerForm.querySelector(".id-number");
+                const idUploadInput = passengerForm.querySelector(".id-upload");
+
+                if (this.value === "Adult") {
+                    idFields.style.display = "none";
+                    // Remove required attribute for adult passengers
+                    if (idNumberInput)
+                        idNumberInput.removeAttribute("required");
+                    if (idUploadInput)
+                        idUploadInput.removeAttribute("required");
+                } else {
+                    idFields.style.display = "block";
+                    // Add required attribute for non-adult passengers
+                    if (idNumberInput)
+                        idNumberInput.setAttribute("required", "required");
+                    if (idUploadInput)
+                        idUploadInput.setAttribute("required", "required");
+                }
             });
         });
     }
@@ -199,11 +218,20 @@ document.addEventListener("DOMContentLoaded", function () {
         loader.style.display = "flex";
 
         try {
+            console.log("Starting form submission...");
             const passengerForms = document.querySelectorAll(".passenger-form");
+            console.log("Found", passengerForms.length, "passenger forms");
 
             for (const form of passengerForms) {
                 const type = form.querySelector(".passenger-type").value;
-                if (type === "Adult") continue;
+                console.log("Processing passenger type:", type);
+
+                if (type === "Adult") {
+                    console.log("Skipping ID verification for Adult passenger");
+                    continue;
+                }
+
+                console.log("Starting ID verification for", type);
 
                 const firstName = form
                     .querySelector(".first-name")
@@ -252,11 +280,20 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             }
 
+            console.log(
+                "ID verification completed, gathering passenger data..."
+            );
             // Gather passenger data and voyage info then submit to server to create a hold
             const passengers = [];
             for (const formEl of passengerForms) {
+                const passengerType =
+                    formEl.querySelector(".passenger-type").value;
+                const idNumberInput = formEl.querySelector(
+                    'input[name="id_number"]'
+                );
+
                 passengers.push({
-                    type: formEl.querySelector(".passenger-type").value,
+                    type: passengerType,
                     suffix: formEl.querySelector('input[name="suffix"]').value,
                     first_name: formEl
                         .querySelector(".first-name")
@@ -273,9 +310,12 @@ document.addEventListener("DOMContentLoaded", function () {
                         'input[name="contact_number"]'
                     ).value,
                     email: formEl.querySelector('input[name="email"]').value,
-                    id_number: formEl.querySelector('input[name="id_number"]')
-                        ? formEl.querySelector('input[name="id_number"]').value
-                        : null,
+                    id_number:
+                        passengerType === "Adult"
+                            ? null
+                            : idNumberInput
+                            ? idNumberInput.value
+                            : null,
                     accommodation_type: formEl.querySelector(
                         'select[name="accommodation_type"]'
                     ).value,
@@ -298,6 +338,9 @@ document.addEventListener("DOMContentLoaded", function () {
             const departureTime = document.getElementById("departureTime")
                 ? document.getElementById("departureTime").value
                 : null;
+            const voyageId = document.getElementById("voyageId")
+                ? document.getElementById("voyageId").value
+                : null;
 
             const payload = {
                 passengers,
@@ -305,10 +348,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 route_to: routeTo,
                 departure_date: departureDate,
                 departure_time: departureTime,
+                voyage_id: voyageId,
             };
+
+            console.log("Submitting booking with payload:", payload);
 
             // POST JSON to booking endpoint
             const submitUrl = bookingForm.dataset.submitUrl;
+            console.log("Submit URL:", submitUrl);
+
             const res = await fetch(submitUrl, {
                 method: "POST",
                 headers: {
@@ -319,6 +367,8 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
             const result = await res.json();
+            console.log("Booking submission result:", result);
+
             loader.style.display = "none";
             if (!result.success) {
                 alert(
@@ -338,8 +388,27 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         } catch (err) {
             loader.style.display = "none";
-            console.error(err);
-            alert("Error during ID verification. Please try again.");
+            console.error("Detailed error:", err);
+            console.error("Error stack:", err.stack);
+
+            // More specific error messages
+            if (err.message && err.message.includes("OCR")) {
+                alert(
+                    "Error during ID verification: " +
+                        err.message +
+                        ". Please try again."
+                );
+            } else if (err.message && err.message.includes("fetch")) {
+                alert(
+                    "Network error occurred. Please check your connection and try again."
+                );
+            } else {
+                alert(
+                    "Error during form submission: " +
+                        (err.message || "Unknown error") +
+                        ". Please check the browser console for details."
+                );
+            }
         }
     });
 });

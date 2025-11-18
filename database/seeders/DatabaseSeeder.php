@@ -24,73 +24,7 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        DB::table('passenger')->insert([
-            [
-                'passenger_firstname' => 'Juan',
-                'passenger_midinitial' => 'D',
-                'passenger_lastname' => 'Cruz',
-                'passenger_suffix' => null,
-                'passenger_age' => 25,
-                'passenger_gender' => 'M',
-                'passenger_type' => 'adult',
-                'passenger_address' => 'Cebu City',
-                'passenger_contactno' => '09123456789',
-                'passenger_email' => 'juan@example.com',
-                'passenger_idnumber' => 'ID12345',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
-
-
-        DB::table('vessel_routes')->insert([
-            [
-                'vessel_name' => 'MV Rosalia 3',
-                'route_from' => 'Cebu',
-                'route_to' => 'Baybay, Leyte',
-                'departure_time' => '20:00:00',
-                'operating_days' => json_encode(['Tuesday', 'Thursday', 'Sunday']),
-                'travel_time_hours' => 6,
-                'port_of_origin' => 'Port of Cebu, Passenger Terminal 2 (Pier 3)',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'vessel_name' => 'MV Lapu-lapu Ferry 1',
-                'route_from' => 'Baybay, Leyte',
-                'route_to' => 'Cebu',
-                'departure_time' => '20:00:00',
-                'operating_days' => json_encode(['Monday', 'Wednesday', 'Friday']),
-                'travel_time_hours' => 6,
-                'port_of_origin' => 'Port of Baybay',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'vessel_name' => 'MV Lapu-Lapu Ferry 8',
-                'route_from' => 'Cebu',
-                'route_to' => 'Talibon',
-                'departure_time' => '21:00:00',
-                'operating_days' => json_encode(['Monday', 'Wednesday', 'Friday']),
-                'travel_time_hours' => 4,
-                'port_of_origin' => 'Port of Cebu, Passenger Terminal 2 (Pier 3)',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'vessel_name' => 'MV Lapu-Lapu Ferry 8',
-                'route_from' => 'Talibon',
-                'route_to' => 'Cebu',
-                'departure_time' => '21:00:00',
-                'operating_days' => json_encode(['Tuesday', 'Thursday', 'Sunday']),
-                'travel_time_hours' => 4,
-                'port_of_origin' => 'Port of Talibon',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
-
-
+        // Insert one admin user
         DB::table('admin')->insert([
             'admin_name' => 'Admin User',
             'admin_user' => 'admin',

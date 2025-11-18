@@ -28,15 +28,14 @@
                             <input type="hidden" id="routeTo" name="route_to" value="{{ $routeTo }}">
                             <input type="hidden" id="departureDate" name="departure_date" value="{{ $departureDate }}">
                             <input type="hidden" id="departureTime" name="departure_time" value="{{ $departureTime }}">
+                            <input type="hidden" id="voyageId" name="voyage_id" value="{{ $voyage->voyage_id }}">
                             <!-- Number of Passengers -->
                             <div class="mb-4">
                                 <label for="numPassengers" class="form-label fw-bold">Number of Passengers</label>
                                 <select id="numPassengers" class="form-select">
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                    <option value="4">4</option>
-                                    <option value="5">5</option>
+                                    @for ($i = 1; $i <= 50; $i++)
+                                        <option value="{{ $i }}">{{ $i }}</option>
+                                    @endfor
                                 </select>
                             </div>
 
