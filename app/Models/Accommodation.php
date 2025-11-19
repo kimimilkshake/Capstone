@@ -17,6 +17,7 @@ class Accommodation extends Model
         'vessel_id',
         'accommodation_name',
         'accommodation_regular_price',
+        'accommodation_capacity',
     ];
 
     public function vessel() {

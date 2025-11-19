@@ -38,14 +38,14 @@
 
           <div class="form-col">
             <div class="form-group">
-              <label for="vessel_total_passenger_capacity">Passenger Capacity:</label>
+              <label for="vessel_total_passenger_capacity">Total Passenger Capacity:</label>
               <input type="number" id="vessel_total_passenger_capacity" name="vessel_total_passenger_capacity"
                      value="{{ $vessel->vessel_total_passenger_capacity }}" required>
             </div>
           </div>
         </div>
 
-        <!-- ROW 2: HATCHES + ACCOMMODATIONS -->
+        <!-- ROW 2: HATCHES -->
         <div class="form-row">
           <!-- Hatches -->
           <div class="form-col">
@@ -70,8 +70,10 @@
               @endif
             </div>
           </div>
+        </div>
 
-          <!-- Accommodations -->
+        <!--ROW 3: ACCOMMODATIONS-->
+        <div class="form-row">
           <div class="form-col">
             <label class="ha-label">Accommodations</label>
             <div id="accommodation-container">
@@ -79,6 +81,7 @@
                 <div class="accommodation-row">
                   <input type="text" name="accommodations[{{ $index }}][name]" value="{{ $acc->accommodation_name }}" placeholder="Accommodation Name" required>
                   <input type="number" name="accommodations[{{ $index }}][price]" value="{{ $acc->accommodation_regular_price }}" placeholder="Regular Price" required>
+                  <input type="number" name="accommodations[{{ $index }}][capacity]" value="{{ $acc->accommodation_capacity }}" placeholder="Capacity" required>
                   <button type="button" class="accommodation-btn add-accommodation">+</button>
                 </div>
               @endforeach
@@ -86,6 +89,7 @@
                 <div class="accommodation-row">
                   <input type="text" name="accommodations[0][name]" placeholder="Accommodation Name" required>
                   <input type="number" name="accommodations[0][price]" placeholder="Regular Price" required>
+                  <input type="number" name="accommodations[0][capacity]" placeholder="Accommodation Capacity" required>
                   <button type="button" class="accommodation-btn add-accommodation">+</button>
                 </div>
               @endif
@@ -93,9 +97,8 @@
           </div>
         </div>
 
-        <!-- ROW 3: COT PLAN + STATUS -->
+        <!-- ROW 4: COT PLAN + STATUS -->
         <div class="form-row" style="display: flex; gap: 2rem; align-items: flex-start; width: 100%;">
-
           <!-- Cot Plan -->
           <div class="form-col" style="flex: 1;">
             <div class="form-group vcot-plan" style="display: flex; flex-direction: column; align-items: flex-start; width: 100%;">
@@ -135,9 +138,6 @@
           </div>
 
         </div>
-
-
-
 
         <!-- ACTION BUTTONS -->
         <div class="form-actions" style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">

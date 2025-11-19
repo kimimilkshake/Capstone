@@ -75,10 +75,12 @@ class VesselController extends Controller
 
         if ($request->has('accommodations')) {
             foreach ($request->accommodations as $accommodation) {
-                if (!empty($accommodation['name']) && !empty($accommodation['price'])) {
+                if (!empty($accommodation['name']) && !empty($accommodation['price']) && !empty($accommodation['capacity'])) {
                     $vessel->accommodations()->create([
                         'accommodation_name' => $accommodation['name'],
                         'accommodation_regular_price' => $accommodation['price'],
+                        'accommodation_capacity' => $accommodation['capacity'],
+
                     ]);
                 }
             }
@@ -136,10 +138,11 @@ class VesselController extends Controller
         $vessel->accommodations()->delete();
         if ($request->has('accommodations')) {
             foreach ($request->accommodations as $a) {
-                if (!empty($a['name']) && !empty($a['price'])) {
+                if (!empty($a['name']) && !empty($a['price']) && !empty($a['capacity'])) {
                     $vessel->accommodations()->create([
                         'accommodation_name' => $a['name'],
                         'accommodation_regular_price' => $a['price'],
+                        'accommodation_capacity' => $a['capacity']
                     ]);
                 }
             }
