@@ -24,7 +24,7 @@
 
           <div class="form-col">
             <div class="form-group">
-              <label for="vessel_code">Vessel Name:</label>
+              <label for="vessel_code">Vessel Code:</label>
               <input type="text" id="vessel_code" name="vessel_code" value="{{ $vessel->vessel_code }}" required>
             </div>
           </div>
@@ -39,8 +39,7 @@
           <div class="form-col">
             <div class="form-group">
               <label for="vessel_total_passenger_capacity">Total Passenger Capacity:</label>
-              <input type="number" id="vessel_total_passenger_capacity" name="vessel_total_passenger_capacity"
-                     value="{{ $vessel->vessel_total_passenger_capacity }}" required>
+             <input type="number" value="{{ $vessel->vessel_total_passenger_capacity }}" disabled> 
             </div>
           </div>
         </div>

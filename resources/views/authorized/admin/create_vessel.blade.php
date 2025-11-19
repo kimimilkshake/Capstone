@@ -46,7 +46,7 @@
           <div class="form-col">
             <div class="form-group">
               <label for="vessel_total_passenger_capacity">Total Passenger Capacity:</label>
-              <input type="number" id="vessel_total_passenger_capacity" name="vessel_total_passenger_capacity" placeholder="Total Passenger Capacity" required>
+              <input type="number" value="{{ isset($vessel) ? $vessel->vessel_total_passenger_capacity : 0 }}" disabled>
             </div>
           </div>
         </div>
@@ -78,7 +78,7 @@
                 <div class="accommodation-row">
                   <input type="text" name="accommodations[0][name]" placeholder="Accommodation Name" required>
                   <input type="number" name="accommodations[0][price]" placeholder="Regular Price" required>
-                  <input type="number" name="accommodations[o][capacity]" placeholder="Accommodation Capacity">
+                  <input type="number" name="accommodations[0][capacity]" placeholder="Accommodation Capacity">
                   <button type="button" class="accommodation-btn add-accommodation">+</button>
                 </div>
               </div>
