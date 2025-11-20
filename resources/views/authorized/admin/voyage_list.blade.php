@@ -24,7 +24,7 @@
               style="margin-left:10px;">
           <button type="submit">
               <i class="fa-solid fa-magnifying-glass me-2"></i>Search
-          </button>6
+          </button>
       </form>
 
       <div class="add-vessel">

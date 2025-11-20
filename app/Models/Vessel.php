@@ -11,7 +11,7 @@ class Vessel extends Model
     use HasFactory;
 
     protected $table = 'vessel';
-    protected $primaryKey = 'vessel_id'; // ✅ this is crucial
+    protected $primaryKey = 'vessel_id';
     public $incrementing = true;
     protected $keyType = 'int';
     protected $fillable = [
@@ -31,4 +31,10 @@ class Vessel extends Model
     public function hatches() {
         return $this->hasMany(Hatch::class, 'vessel_id');
     }
+
+    public function getTotalPassengerCapacity()
+    {
+        return $this->accommodations()->sum('accommodation_capacity');
+    }
+
 }

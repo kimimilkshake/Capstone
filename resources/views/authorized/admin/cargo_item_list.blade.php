@@ -11,7 +11,7 @@
     <div class="search-filter-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
       <form class="search-bar" action="{{ route('admin.cargo_item_list') }}"  method="GET" style="flex: 1;">
 
-        <input type="text" name="search" placeholder="Search..." value="{{ request('search') }}">
+        <input type="text" name="search" placeholder="Search..." value="{{ request('search') }}" style="margin-right: 10px;">
         <select name="type">
             <option value="">All Types</option>
             <option value="Type A" {{ request('type')=='Type A' ? 'selected' : '' }}>Type A</option>
@@ -26,12 +26,45 @@
       <thead>
         <tr>
           <th>Item No.</th>
-          <th>Calssification</th>
+          <th>Classification</th>
           <th>Description</th>
-          <th></th>
+          <th>Freight</th>
+          <th>Arrastre</th>
+          <th>Volume</th>
+          <th>Weight</th>
+          <th>Length</th>
+          <th>Height</th>
+          <th>Width</th>
+          <th>Type</th>
+          <th>Action</th>
         </tr>
       </thead>
+      <tbody>
+        @foreach ($cargo_items as $index => $c)
+          <tr>
+            <td>{{ $c->cargo_item_id }}</td>
+            <td>{{ $c->cargo_item_classification }}</td>
+            <td>{{ $c->cargo_item_description }}</td>
+            <td>{{ $c->cargo_item_freight }}</td>
+            <td>{{ $c->cargo_item_arrastre }}</td>
+            <td>{{ $c->cargo_item_volume }}</td>
+            <td>{{ $c->cargo_item_weight }}</td>
+            <td>{{ $c->cargo_item_length }}</td>
+            <td>{{ $c->cargo_item_height }}</td>
+            <td>{{ $c->cargo_item_width }}</td>
+            <td>{{ $c->cargo_item_type }}</td>
+            <td>
+              <a href="{{ route('admin.cargo_item_edit', $c->cargo_item_id) }}" class="edit-icon">
+                <i class="fa fa-pencil" aria-hidden="true"></i>
+              </a>
+            </td>
+          </tr>
+        @endforeach
+      </tbody>
     </table>
+    <div class="pagination-container">
+      {{ $cargo_items->appends(request()->query())->links('pagination::bootstrap-5') }}
+    </div>
   </div>
 
 @endsection
