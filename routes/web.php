@@ -47,6 +47,7 @@ Route::get('/passenger/cargobooking', [PassengerController::class, 'index'])->na
 // Form submission
 Route::post('/passenger/store', [PassengerController::class, 'store'])->name('passenger.store');
 Route::post('/booking/submit', [BookingController::class, 'store'])->name('booking.submit');
+Route::post('/booking/cancel/{booking_ref_no}', [BookingController::class, 'cancel'])->name('booking.cancel');
 
 // API: return unavailable cot numbers for a voyage (by route/date or voyage_id)
 Route::get('/voyage/unavailable-cots', [BookingController::class, 'unavailableCots'])->name('voyage.unavailable_cots');

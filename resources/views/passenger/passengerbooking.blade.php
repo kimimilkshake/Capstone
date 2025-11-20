@@ -77,6 +77,7 @@
         <p class="text-white mt-3 fw-bold">Loading... Please wait</p>
     </div>
 
-    <!-- JS -->
+    <!-- JS Data -->
+    <script type="application/json" id="accommodations-data">{!! json_encode($accommodations) !!}</script>
     <script src="{{ asset('js/passengerform.js') }}"></script>
 @endsection

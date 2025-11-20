@@ -18,7 +18,7 @@ class PassengerController extends Controller
         $type = $request->query('type'); // 👈 booking type from radio buttons
 
         // Get voyage information from voyage table with relationships
-        $voyage = Voyage::with(['vessel', 'routePort'])
+        $voyage = Voyage::with(['vessel.accommodations', 'routePort'])
             ->where('voyage_id', $voyageId)
             ->first();
 
@@ -29,6 +29,7 @@ class PassengerController extends Controller
         $vesselName = $voyage->vessel->vessel_name ?? 'Unknown Vessel';
         $departureTime = $voyage->voyage_estimated_TD;
         $portOfOrigin = $voyage->routePort->port_origin_name ?? 'Unknown Port';
+        $accommodations = $voyage->vessel->accommodations ?? collect();
 
         if ($departureTime) {
             $departureTime = Carbon::parse($departureTime)->format('g:i A');
@@ -47,7 +48,8 @@ class PassengerController extends Controller
             'vesselName',
             'departureTime',
             'portOfOrigin',
-            'voyage'
+            'voyage',
+            'accommodations'
         ));
     }
 
