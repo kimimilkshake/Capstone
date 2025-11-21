@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Passenger;
+use App\Models\CargoItem; // ✅ Add this
 use Carbon\Carbon;
 
 class PassengerController extends Controller
@@ -28,6 +29,9 @@ class PassengerController extends Controller
             $departureTime = Carbon::parse($departureTime)->format('g:i A');
         }
 
+        // ✅ Add this: fetch cargo items for the Blade
+        $cargoItems = $type === 'cargo' ? CargoItem::all() : collect();
+
         // ✅ If user selected "cargo", load passenger.cargobooking
         // Otherwise load passenger.passengerbooking
         $view = $type === 'cargo'
@@ -40,7 +44,8 @@ class PassengerController extends Controller
             'departureDate',
             'vesselName',
             'departureTime',
-            'portOfOrigin'
+            'portOfOrigin',
+            'cargoItems' // ✅ Pass it to Blade
         ));
     }
 
@@ -63,5 +68,94 @@ class PassengerController extends Controller
         Passenger::create($validated);
 
         return redirect()->route('bookingtype')->with('success', 'Passenger booked successfully!');
+    }
+
+    public function storeCargo(Request $request)
+    {
+        // 1. Validate fields
+        $request->validate([
+            'sender_firstname' => 'required',
+            'sender_lastname' => 'required',
+            'sender_contact' => 'required',
+            'sender_email' => 'nullable|email',
+
+            'consignee' => 'required',
+            'receiver_contact' => 'required',
+
+            'cargo_description' => 'required',
+            'cargo_quantity' => 'required|integer|min:1',
+        ]);
+
+        // 2. Create full sender name
+        $senderFullName = trim(
+            $request->sender_firstname . ' ' .
+            ($request->sender_mi ? $request->sender_mi . '. ' : '') .
+            $request->sender_lastname . ' ' .
+            ($request->sender_suffix ?? '')
+        );
+
+        // 3. Insert Sender
+        $senderId = \DB::table('sender')->insertGetId([
+            'sender_name' => $senderFullName,
+            'sender_contactno' => $request->sender_contact,
+            'sender_email' => $request->sender_email,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // 4. Insert Consignee
+        $consigneeId = \DB::table('consignee')->insertGetId([
+            'consignee_name' => $request->consignee,
+            'consignee_contactno' => $request->receiver_contact,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // 5. Find or Create Cargo Item Record
+        $cargoItemId = \DB::table('cargo_item')->insertGetId([
+            'cargo_item_classification' => 'General Cargo',
+            'cargo_item_description' => $request->cargo_description,
+            'cargo_item_freight' => 0,
+            'cargo_item_arrastre' => 0,
+            'cargo_item_type' => 'Type A',
+            'cargo_item_volume' => 0,
+            'cargo_item_weight' => 0,
+            'cargo_item_length' => 0,
+            'cargo_item_height' => 0,
+            'cargo_item_width' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // 6. Identify voyage (your form does NOT pass voyage_id yet)
+        $voyageId = null;
+
+        // 7. Create Cargo Receipt (actual cargo booking)
+        $cargoReceiptId = \DB::table('cargo_receipt')->insertGetId([
+            'sender_id' => $senderId,
+            'consignee_id' => $consigneeId,
+            'cargo_item_id' => $cargoItemId,
+            'voyage_id' => $voyageId,
+            'payment_id' => null,
+            'booking_ref_no' => null,
+            'cargo_item_qty' => $request->cargo_quantity,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // 8. Auto-create a Notification
+        \DB::table('notification')->insert([
+            'cargo_receipt_id' => $cargoReceiptId,
+            'payment_id' => null,
+            'notification_message' => 'Cargo booking submitted. Waiting for approval.',
+            'notification_type' => 'Cargo Booking Approval',
+            'notification_status' => 'Pending',
+            'notification_created' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // 9. Redirect to success page
+        return redirect()->route('cargobooking.success');
     }
 }

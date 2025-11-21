@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\RoutePortController;
 
 //STAFF CONTROLLERS
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
+use App\Http\Controllers\Staff\StaffCargoController;
 use App\Http\Controllers\Staff\SemaphoreController;
 
 // SHARED CONTROLLERS
@@ -40,17 +41,26 @@ Route::get('/passenger/bookingtype', function () {
 })->name('bookingtype');
 
 // Passenger booking route
-// Show the available routes and selection page
-//Route::get('/passenger/passenger', [VesselRouteController::class, 'index'])->name('passenger');
 Route::get('/passenger/bookingtype', [VesselRouteController::class, 'index'])->name('bookingtype');
 
-
-// Booking page (form)
+// Passenger Booking Page
 Route::get('/passenger/passengerbooking', [PassengerController::class, 'index'])->name('passengerbooking');
+
+// Cargo Booking Page
 Route::get('/passenger/cargobooking', [PassengerController::class, 'index'])->name('cargobooking');
 
-// Form submission
+// Cargo booking success page
+Route::get('/passenger/cargobooking/success', function () {
+    return view('passenger.cargo_success');
+})->name('cargobooking.success');
+
+// Passenger Form Submission
 Route::post('/passenger/store', [PassengerController::class, 'store'])->name('passenger.store');
+
+// Cargo Form Submission
+Route::post('/passenger/cargobooking/store', [PassengerController::class, 'storeCargo'])->name('cargobooking.store');
+
+// Form submission
 Route::post('/booking/submit', [BookingController::class, 'store'])->name('booking.submit');
 
 // API: return unavailable cot numbers for a voyage (by route/date or voyage_id)
@@ -74,7 +84,6 @@ Route::get('/passenger/schedules', function () {
     return view('passenger.schedules');
 })->name('schedules');
 
-
 //About Us Page
 Route::get('/passenger/about', function () {
     return view('passenger.about');
@@ -90,7 +99,6 @@ Route::prefix('passenger/about_partials')->group(function () {
         return view("passenger.about_partials.$fragment");
     });
 });
-
 
 //FAQs Page
 Route::get('/passenger/faqs', function () {
@@ -160,13 +168,10 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
     Route::get('/cargo_items/{id}/edit', [CargoItemController::class, 'edit'])->name('admin.cargo_item_edit');
     Route::put('/cargo_items/{id}/update', [CargoItemController::class, 'update'])->name('admin.cargo_item_update');
     Route::delete('/cargo_items/{id}/delete', [CargoItemController::class, 'destroy'])->name('admin.cargo_item_delete');
-
-
 });
 
 //MANIFEST
 Route::get('authorized/manifest/{id}', [ManifestController::class, 'show'])->name('manifest');
-
 
 //STAFF
 Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
@@ -174,7 +179,7 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     //Dashboard
     Route::get('/dashboard', [StaffDashboardController::class, 'index'])
         ->name('staff.dashboard');
-    
+
     //Voyages
     Route::get('/voyages', [VoyageController::class, 'index'])->name('staff.voyage_list');
     Route::get('/voyages/create', [VoyageController::class, 'create'])->name('staff.create_voyage');
@@ -190,28 +195,18 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     Route::put('/cargo_items/{id}/update', [CargoItemController::class, 'update'])->name('staff.cargo_item_update');
     Route::delete('/cargo_items/{id}/delete', [CargoItemController::class, 'destroy'])->name('staff.cargo_item_delete');
 
-    // Semaphore Text SMS
+    Route::get('/staff/cargo-booking', [StaffCargoController::class, 'createBooking'])
+     ->name('staff.cargo_booking.create');
+Route::post('/staff/cargo-booking', [StaffCargoController::class, 'storeBooking'])
+     ->name('staff.cargo_booking.store');
 
+    // Review Bookings
+    Route::get('/staff/cargo-bookings', [StaffCargoController::class, 'reviewBookings'])->name('staff.cargo_bookings.review');
+    Route::post('/staff/cargo-bookings/approve/{bookingRefNo}', [StaffCargoController::class, 'approveBooking'])->name('approveCargoBooking');
+    Route::post('/staff/cargo-bookings/reject/{bookingRefNo}', [StaffCargoController::class, 'rejectBooking'])->name('rejectCargoBooking');
+
+    // Semaphore Text SMS
     Route::get('/semaphore', [SemaphoreController::class, 'show'])->name('staff.semaphore');
-    
 });
 
 Route::post('/authorized/logout', [AuthController::class, 'logout'])->name('logout');
-
-// CARGO BOOKING
-Route::get('/staff/cargobooking', function () {
-    return view('authorized.staff.cargobooking');
-});
-
-/*
-Route::prefix('authorized/staff')->group(function () {
-    Route::get('/dashboard', fn() => view('authorized.staff.dashboard'))->name('staff.dashboard');
-
-    // Shared voyage access for staff
-    Route::get('/voyages', [VoyageController::class, 'index'])->name('staff.voyage_list');
-    Route::get('/voyages/create', [VoyageController::class, 'create'])->name('staff.create_voyage');
-    Route::post('/voyages/store', [VoyageController::class, 'store'])->name('staff.store_voyage');
-    Route::get('/voyages/{id}/edit', [VoyageController::class, 'edit'])->name('staff.voyage_edit');
-    Route::post('/voyages/{id}/update', [VoyageController::class, 'update'])->name('staff.voyage_update');
-});
-*/

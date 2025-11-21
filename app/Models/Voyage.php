@@ -38,4 +38,6 @@ class Voyage extends Model
     {
         return $this->belongsTo(RoutePort::class, 'route_port_id', 'route_port_id');
     }
+
+    
 }
