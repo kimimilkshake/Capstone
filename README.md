@@ -116,3 +116,7 @@ and make sure that your branch is up to date with the remote repository. Otherwi
 **Staff Credentials**
  - username: `staff`
  - password: `12345`
+
+
+**Semaphore API**
+- Ensure Laravel queue worker is running for bulk jobs (recommended, this is for sms bulk texts): php artisan queue:work

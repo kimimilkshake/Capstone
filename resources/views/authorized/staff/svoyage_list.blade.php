@@ -57,7 +57,7 @@
             <td>
               <a href="{{ route('staff.voyage_edit', $voyage->voyage_id) }}" title="Edit Voyage"><i class="fa fa-pencil me-1" ></i></a>
               <a href="{{ route('manifest', $voyage->voyage_id) }}" title="View Manifest" ><i class="fa-solid fa-file me-1"></i></a>
-              <a href="#" title="Cancel Trip" style="color: red; "><i class="fa-solid fa-ban"></i></a>
+              <a href="{{ route('staff.semaphore') }}" title="Cancel Trip" style="color: red; "><i class="fa-solid fa-ban"></i></a>
             </td>
           </tr>
         @empty

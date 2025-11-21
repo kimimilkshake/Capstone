@@ -25,6 +25,7 @@ use App\Http\Controllers\Staff\SemaphoreController;
 use App\Http\Controllers\VoyageController;
 use App\Http\Controllers\ManifestController;
 use App\Http\Controllers\CargoItemController;
+use App\Http\Controllers\CargoAutoPlacementController;
 
 // OCR route
 Route::post('/ocr/parse', [OcrController::class, 'parseImage'])->name('ocr.parse');
@@ -154,7 +155,6 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
     Route::put('/route_port/{id}', [RoutePortController::class, 'update'])->name('admin.route_port_update');
     Route::delete('/route_port/{id}', [RoutePortController::class, 'destroy'])->name('admin.route_port_destroy');
 
-<<<<<<< HEAD
     // Cargo Items
     Route::get('/cargo_items', [CargoItemController::class, 'index'])->name('admin.cargo_item_list');
     Route::get('/cargo_items/create', [CargoItemController::class, 'create'])->name('admin.create_cargo_item');
@@ -162,14 +162,31 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
     Route::get('/cargo_items/{id}/edit', [CargoItemController::class, 'edit'])->name('admin.cargo_item_edit');
     Route::put('/cargo_items/{id}/update', [CargoItemController::class, 'update'])->name('admin.cargo_item_update');
     Route::delete('/cargo_items/{id}/delete', [CargoItemController::class, 'destroy'])->name('admin.cargo_item_delete');
-=======
->>>>>>> origin/passengerSafe
 
 
 });
 
-//MANIFEST
-Route::get('authorized/manifest/{id}', [ManifestController::class, 'show'])->name('manifest');
+    //MANIFEST
+    Route::get('authorized/manifest/{id}', [ManifestController::class, 'show'])->name('manifest');
+
+//CargoAutoPlacement
+
+// POST route for processing placement calculation
+Route::post('/cargo/place', [CargoAutoPlacementController::class, 'place'])
+    ->name('cargo.place');
+
+Route::get('/cargo/placement', [CargoAutoPlacementController::class, 'show'])
+    ->name('cargo.placement');
+
+Route::post('/cargo/place', [CargoAutoPlacementController::class, 'place'])
+    ->name('cargo.place');
+
+Route::post('/cargo/placement/add-row', [CargoAutoPlacementController::class, 'addRow'])
+    ->name('cargo.addRow');
+
+Route::post('/cargo/placement/remove-row', [CargoAutoPlacementController::class, 'removeRow'])
+    ->name('cargo.removeRow');
+
 
 
 //STAFF
@@ -197,6 +214,7 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     // Semaphore Text SMS
 
     Route::get('/semaphore', [SemaphoreController::class, 'show'])->name('staff.semaphore');
+    Route::post('/semaphore/send', [SemaphoreController::class, 'send'])->name('staff.semaphore.send')->middleware('auth');
     
 });
 

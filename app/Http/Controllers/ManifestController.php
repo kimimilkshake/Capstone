@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Voyage;
 use App\Models\RoutePort;
 use App\Models\Vessel;
+use App\Models\Passenger;
 
 class ManifestController extends Controller
 {

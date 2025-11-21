@@ -157,6 +157,33 @@ body {
 
 //semaphore
 
+.alert{
+  width: 400px;
+  margin-left:330px;
+  margin-top:20px;
+  
+}
+
+/* place in your app CSS file */
+.alert-autodismiss {
+  overflow: hidden;
+  /* visible for 3.5s, then fade/collapse over 0.6s */
+  animation: showThenHide 4.1s ease forwards;
+}
+
+/* keyframes: visible -> fade -> collapse */
+@keyframes showThenHide {
+  0%   { opacity: 1; max-height: 200px; padding: 0.75rem 1rem; margin-bottom: 1rem; transform: translateY(0); }
+  80%  { opacity: 1; max-height: 200px; padding: 0.75rem 1rem; margin-bottom: 1rem; transform: translateY(0); }
+  100% { opacity: 0; max-height: 0; padding: 0; margin-bottom: 0; transform: translateY(-4px); }
+}
+
+/* small accessibility tweak: reduce motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .alert-autodismiss { animation: none; }
+}
+
+
 .sms-header {
     width:650px;
     margin-left:200px;
