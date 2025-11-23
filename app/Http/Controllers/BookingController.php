@@ -19,21 +19,34 @@ class BookingController extends Controller
         $routeFrom = $data['route_from'] ?? null;
         $routeTo = $data['route_to'] ?? null;
         $departureDate = $data['departure_date'] ?? null;
+        $voyageId = $data['voyage_id'] ?? null;
 
         if (empty($passengers) || !$routeFrom || !$routeTo || !$departureDate) {
             return response()->json(['success' => false, 'message' => 'Missing booking data.'], 422);
         }
 
-        // Find voyage: map route origin/destination to route_id then voyage
-        $route = DB::table('route')->where('route_origin', $routeFrom)->where('route_destination', $routeTo)->first();
-        if (!$route) {
-            return response()->json(['success' => false, 'message' => 'No matching route found.'], 422);
+        // Find voyage using voyage_id if provided, otherwise find by route_port and date
+        $voyage = null;
+        if ($voyageId) {
+            $voyage = DB::table('voyage')->where('voyage_id', $voyageId)->first();
         }
 
-        $voyage = DB::table('voyage')
-            ->where('route_id', $route->route_id)
-            ->whereDate('voyage_departure_date', $departureDate)
-            ->first();
+        if (!$voyage) {
+            // Find route_port: map route origin/destination to route_port_id then voyage
+            $routePort = DB::table('route_port')
+                ->where('route_origin', $routeFrom)
+                ->where('route_destination', $routeTo)
+                ->first();
+
+            if (!$routePort) {
+                return response()->json(['success' => false, 'message' => 'No matching route found.'], 422);
+            }
+
+            $voyage = DB::table('voyage')
+                ->where('route_port_id', $routePort->route_port_id)
+                ->whereDate('voyage_departure_date', $departureDate)
+                ->first();
+        }
 
         if (!$voyage) {
             return response()->json(['success' => false, 'message' => 'No voyage found for selected date. Please contact administrator.'], 422);
@@ -102,7 +115,7 @@ class BookingController extends Controller
                     'passenger_suffix' => $p['suffix'] ?? null,
                     'passenger_age' => $p['age'] ?? 0,
                     'passenger_gender' => strtoupper(substr($p['gender'] ?? 'M', 0, 1)),
-                    'passenger_type' => strtolower($p['type'] ?? 'adult'),
+                    'passenger_type' => $p['type'] ?? 'Regular', // Use the new enum values directly
                     'passenger_address' => $p['address'] ?? null,
                     'passenger_contactno' => $p['contact_number'] ?? null,
                     'passenger_email' => $p['email'] ?? null,
@@ -111,19 +124,22 @@ class BookingController extends Controller
                     'updated_at' => now(),
                 ]);
 
-                // Determine price: try to lookup accommodation price for this vessel
-                $price = $flatPrice;
+                // Determine base price from accommodation
+                $basePrice = $flatPrice;
                 try {
                     $accom = DB::table('accommodation')
                         ->where('vessel_id', $voyage->vessel_id)
                         ->where('accommodation_name', $p['accommodation_type'])
                         ->first();
                     if ($accom && isset($accom->accommodation_regular_price)) {
-                        $price = (float) $accom->accommodation_regular_price;
+                        $basePrice = (float) $accom->accommodation_regular_price;
                     }
                 } catch (\Exception $e) {
                     // ignore and use flat price
                 }
+
+                // Apply discounts based on passenger type and route
+                $price = $this->calculateDiscountedPrice($basePrice, $p['type'] ?? 'Regular', $routeFrom, $routeTo);
 
                 $totalAmount += $price;
 
@@ -231,14 +247,19 @@ class BookingController extends Controller
                 return response()->json(['success' => false, 'message' => 'Missing parameters'], 422);
             }
 
-            $route = DB::table('route')->where('route_origin', $routeFrom)->where('route_destination', $routeTo)->first();
-            if (!$route)
+            $routePort = DB::table('route_port')
+                ->where('route_origin', $routeFrom)
+                ->where('route_destination', $routeTo)
+                ->first();
+
+            if (!$routePort)
                 return response()->json(['success' => true, 'unavailable' => []]);
 
             $voyage = DB::table('voyage')
-                ->where('route_id', $route->route_id)
+                ->where('route_port_id', $routePort->route_port_id)
                 ->whereDate('voyage_departure_date', $departureDate)
                 ->first();
+
             if (!$voyage)
                 return response()->json(['success' => true, 'unavailable' => []]);
 
@@ -256,5 +277,108 @@ class BookingController extends Controller
         $cots = $rows->pluck('pt_cot_no')->unique()->values()->all();
 
         return response()->json(['success' => true, 'unavailable' => $cots]);
+    }
+
+    /**
+     * Calculate discounted price based on passenger type and route
+     */
+    private function calculateDiscountedPrice($basePrice, $passengerType, $routeFrom, $routeTo)
+    {
+        // Check if route is Bohol-Cebu or Cebu-Bohol (case insensitive)
+        $isBoholCebuRoute = (
+            (stripos($routeFrom, 'bohol') !== false && stripos($routeTo, 'cebu') !== false) ||
+            (stripos($routeFrom, 'cebu') !== false && stripos($routeTo, 'bohol') !== false)
+        );
+
+        switch ($passengerType) {
+            case 'Regular':
+                return $basePrice; // No discount
+
+            case 'Student':
+            case 'Uniformed Personnel':
+                return $basePrice * 0.80; // 20% discount
+
+            case 'Senior Citizen':
+            case 'PWD':
+                return $basePrice * 0.80; // 20% discount
+
+            case '3 to 11 years old':
+                return $basePrice * 0.50; // Half fare
+
+            case 'Below 3 years old':
+                if ($isBoholCebuRoute) {
+                    return 0; // Free for Bohol-Cebu/Cebu-Bohol routes
+                }
+                return $basePrice * 0.75; // 25% discount for other routes
+
+            default:
+                return $basePrice; // Default to regular price
+        }
+    }
+
+    /**
+     * Cancel a booking immediately
+     */
+    public function cancel($bookingRef)
+    {
+        try {
+            DB::transaction(function () use ($bookingRef) {
+                $booking = DB::table('booking')->where('booking_ref_no', $bookingRef)->first();
+                if (!$booking) {
+                    throw new \Exception('Booking not found');
+                }
+
+                // Check if already confirmed - cannot cancel confirmed bookings
+                if (strtolower($booking->booking_status) === 'confirmed') {
+                    throw new \Exception('Cannot cancel a confirmed booking');
+                }
+
+                // Check if already canceled
+                if (strtolower($booking->booking_status) === 'canceled') {
+                    throw new \Exception('Booking is already canceled');
+                }
+
+                $payment = DB::table('payment')->where('booking_ref_no', $bookingRef)->first();
+
+                // Check if payment is completed - cannot cancel if payment is completed
+                if ($payment && strtolower($payment->payment_status) === 'completed') {
+                    throw new \Exception('Cannot cancel booking with completed payment');
+                }
+
+                // Cancel the booking
+                DB::table('booking')->where('booking_ref_no', $bookingRef)->update([
+                    'booking_status' => 'Canceled',
+                    'updated_at' => now(),
+                ]);
+
+                // Cancel the payment if exists
+                if ($payment) {
+                    DB::table('payment')->where('payment_id', $payment->payment_id)->update([
+                        'payment_status' => 'Canceled',
+                        'updated_at' => now(),
+                    ]);
+                }
+
+                // Free up the reserved tickets
+                DB::table('passenger_ticket')->where('booking_ref_no', $bookingRef)->update([
+                    'booking_ref_no' => null,
+                    'payment_id' => null,
+                    'pt_valid_until_ts' => null,
+                    'updated_at' => now(),
+                ]);
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Booking canceled successfully',
+                'redirect_url' => route('bookingtype')
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 400);
+        }
     }
 }

@@ -8,6 +8,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CancelBookingHold implements ShouldQueue
 {
@@ -28,30 +29,44 @@ class CancelBookingHold implements ShouldQueue
      */
     public function handle(): void
     {
-        // Re-check payment and booking status. If still pending, cancel and free up tickets.
         DB::transaction(function () {
             $booking = DB::table('booking')->where('booking_ref_no', $this->bookingRef)->first();
-            if (!$booking)
-                return;
-
-            // If booking already confirmed, do nothing
-            if (strtolower($booking->booking_status) === 'confirmed')
-                return;
-
-            // Check payment
-            $payment = DB::table('payment')->where('booking_ref_no', $this->bookingRef)->first();
-            if ($payment && strtolower($payment->payment_status) === 'completed') {
-                // Payment already completed -> keep booking
+            if (!$booking) {
+                Log::info("CancelBookingHold: booking {$this->bookingRef} not found");
                 return;
             }
 
-            // Cancel booking
+            if (strtolower($booking->booking_status) === 'confirmed') {
+                Log::info("CancelBookingHold: booking {$this->bookingRef} already confirmed; skip");
+                return;
+            }
+
+            $payment = DB::table('payment')->where('booking_ref_no', $this->bookingRef)->first();
+            if ($payment && strtolower($payment->payment_status) === 'completed') {
+                Log::info("CancelBookingHold: payment completed for booking {$this->bookingRef}; skip");
+                return;
+            }
+
+            // Ensure hold really expired: check the earliest ticket's pt_valid_until_ts
+            $ticket = DB::table('passenger_ticket')
+                ->where('booking_ref_no', $this->bookingRef)
+                ->orderBy('passenger_ticket_id')
+                ->first();
+            if ($ticket && $ticket->pt_valid_until_ts) {
+                $expiresAt =
+                    \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $ticket->pt_valid_until_ts);
+                if (now()->lt($expiresAt)) {
+                    Log::info("CancelBookingHold: booking {$this->bookingRef} not yet expired (expires {$ticket->pt_valid_until_ts}); skip");
+                    return; // still within hold window
+                }
+            }
+
+            Log::info("CancelBookingHold: CANCELING booking {$this->bookingRef}");
             DB::table('booking')->where('booking_ref_no', $this->bookingRef)->update([
                 'booking_status' => 'Canceled',
                 'updated_at' => now(),
             ]);
 
-            // Cancel payment if exists
             if ($payment) {
                 DB::table('payment')->where('payment_id', $payment->payment_id)->update([
                     'payment_status' => 'Canceled',
@@ -59,8 +74,6 @@ class CancelBookingHold implements ShouldQueue
                 ]);
             }
 
-            // Free up the passenger_ticket rows so the cots become available again for others.
-            // We clear the booking_ref_no, payment_id and the pt_valid_until_ts timestamp.
             DB::table('passenger_ticket')->where('booking_ref_no', $this->bookingRef)->update([
                 'booking_ref_no' => null,
                 'payment_id' => null,

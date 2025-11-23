@@ -40,7 +40,6 @@ class VesselController extends Controller
         $request->validate([
             'vessel_code' => 'required|string|max:10',
             'vessel_name' => 'required|string|max:255',
-            'vessel_total_passenger_capacity' => 'required|integer',
         ]);
 
         $admin = Auth::guard('admin')->user();
@@ -57,7 +56,7 @@ class VesselController extends Controller
             'admin_id' => $admin->admin_id,
             'vessel_code' => $request->vessel_code,
             'vessel_name' => $request->vessel_name,
-            'vessel_total_passenger_capacity' => $request->vessel_total_passenger_capacity,
+            'vessel_total_passenger_capacity' => 0,
             'vessel_cot_plan_url' => $cotPlanPath,
         ]);
 
@@ -75,14 +74,19 @@ class VesselController extends Controller
 
         if ($request->has('accommodations')) {
             foreach ($request->accommodations as $accommodation) {
-                if (!empty($accommodation['name']) && !empty($accommodation['price'])) {
+                if (!empty($accommodation['name']) && !empty($accommodation['price']) && !empty($accommodation['capacity'])) {
                     $vessel->accommodations()->create([
                         'accommodation_name' => $accommodation['name'],
                         'accommodation_regular_price' => $accommodation['price'],
+                        'accommodation_capacity' => $accommodation['capacity'],
+
                     ]);
                 }
             }
         }
+
+        $totalCapacity = $vessel->accommodations()->sum('accommodation_capacity');
+        $vessel->update(['vessel_total_passenger_capacity' => $totalCapacity]);
 
         return redirect()->route('admin.vessel_list')
                          ->with('success', 'Vessel created successfully!');
@@ -101,7 +105,6 @@ class VesselController extends Controller
         $request->validate([
             'vessel_code' => 'required|string|max:10',
             'vessel_name' => 'required|string|max:255',
-            'vessel_total_passenger_capacity' => 'required|integer',
             'vessel_status' => 'required|in:Active,Inactive',
         ]);
 
@@ -113,7 +116,6 @@ class VesselController extends Controller
         $vessel->update([
             'vessel_code' => $request->vessel_code,
             'vessel_name' => $request->vessel_name,
-            'vessel_total_passenger_capacity' => $request->vessel_total_passenger_capacity,
             'vessel_status' => ucfirst($request->vessel_status),
             'vessel_cot_plan_url' => $cotPlanPath,
         ]);
@@ -136,14 +138,18 @@ class VesselController extends Controller
         $vessel->accommodations()->delete();
         if ($request->has('accommodations')) {
             foreach ($request->accommodations as $a) {
-                if (!empty($a['name']) && !empty($a['price'])) {
+                if (!empty($a['name']) && !empty($a['price']) && !empty($a['capacity'])) {
                     $vessel->accommodations()->create([
                         'accommodation_name' => $a['name'],
                         'accommodation_regular_price' => $a['price'],
+                        'accommodation_capacity' => $a['capacity']
                     ]);
                 }
             }
         }
+
+        $totalCapacity = $vessel->accommodations()->sum('accommodation_capacity');
+        $vessel->update(['vessel_total_passenger_capacity' => $totalCapacity]);
 
         return redirect()->route('admin.vessel_list')->with('success', 'Vessel updated successfully.');
     }

@@ -2,21 +2,24 @@
 const routeFromSelect = document.getElementById("routeFrom");
 const routeToSelect = document.getElementById("routeTo");
 const tripDateInput = document.getElementById("tripDate");
+const departureTimeSelect = document.getElementById("departureTime");
 const proceedBtn = document.getElementById("proceedBtn");
 const bookingTypeRadios = document.getElementsByName("bookingType");
 
-// Parse routes data from Blade
-const routes = JSON.parse(document.getElementById("routes-data").textContent);
+// Parse voyages data from Blade (updated from routes to voyages)
+const voyages = JSON.parse(document.getElementById("voyages-data").textContent);
 
-let allowedDays = [];
+let availableDates = [];
+let availableVoyages = []; // Store voyages for selected route
 
 // Initially disable proceed button
 proceedBtn.disabled = true;
 
 // Event listeners
 routeFromSelect.addEventListener("change", updateDestinations);
-routeToSelect.addEventListener("change", updateAllowedDays);
-tripDateInput.addEventListener("input", validateDate);
+routeToSelect.addEventListener("change", updateAvailableDates);
+tripDateInput.addEventListener("input", updateAvailableTimes);
+departureTimeSelect.addEventListener("change", checkProceedButton);
 bookingTypeRadios.forEach((radio) =>
     radio.addEventListener("change", checkProceedButton)
 );
@@ -27,6 +30,7 @@ function checkProceedButton() {
         routeFromSelect.value &&
         routeToSelect.value &&
         tripDateInput.value &&
+        departureTimeSelect.value &&
         document.querySelector('input[name="bookingType"]:checked');
     proceedBtn.disabled = !isValid;
 }
@@ -37,7 +41,10 @@ function updateDestinations() {
     routeToSelect.innerHTML = '<option value="">Select Destination</option>';
     tripDateInput.value = "";
     tripDateInput.disabled = true;
-    allowedDays = [];
+    departureTimeSelect.innerHTML = '<option value="">Select Time</option>';
+    departureTimeSelect.disabled = true;
+    availableDates = [];
+    availableVoyages = [];
 
     if (!origin) {
         routeToSelect.disabled = true;
@@ -45,9 +52,9 @@ function updateDestinations() {
         return;
     }
 
-    const destinations = routes
-        .filter((r) => r.route_from === origin)
-        .map((r) => r.route_to)
+    const destinations = voyages
+        .filter((v) => v.route_from === origin)
+        .map((v) => v.route_to)
         .filter((v, i, a) => a.indexOf(v) === i);
 
     destinations.forEach((dest) => {
@@ -61,65 +68,99 @@ function updateDestinations() {
     checkProceedButton();
 }
 
-// Update allowed days
-function updateAllowedDays() {
+// Update available dates based on selected route
+function updateAvailableDates() {
     const origin = routeFromSelect.value;
     const destination = routeToSelect.value;
     tripDateInput.value = "";
+    departureTimeSelect.innerHTML = '<option value="">Select Time</option>';
+    departureTimeSelect.disabled = true;
 
     if (!origin || !destination) {
         tripDateInput.disabled = true;
-        allowedDays = [];
+        availableDates = [];
+        availableVoyages = [];
         checkProceedButton();
         return;
     }
 
-    const route = routes.find(
-        (r) => r.route_from === origin && r.route_to === destination
+    // Find all voyages for this route
+    availableVoyages = voyages.filter(
+        (v) => v.route_from === origin && v.route_to === destination
     );
 
-    if (!route) {
-        alert("No route found. Resetting selection.");
+    if (!availableVoyages.length) {
+        alert("No voyages found for this route in the next 8 days.");
         resetSelection();
         return;
     }
 
-    const dayMap = {
-        Sunday: 0,
-        Monday: 1,
-        Tuesday: 2,
-        Wednesday: 3,
-        Thursday: 4,
-        Friday: 5,
-        Saturday: 6,
-    };
+    // Extract unique available dates from voyages
+    availableDates = [
+        ...new Set(availableVoyages.map((v) => v.departure_date)),
+    ];
 
-    allowedDays = JSON.parse(route.operating_days).map((d) => dayMap[d]);
     tripDateInput.disabled = false;
     tripDateInput.min = new Date().toISOString().split("T")[0];
+
+    // Set max date to 8 days from now
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 8);
+    tripDateInput.max = maxDate.toISOString().split("T")[0];
+
     checkProceedButton();
 }
 
-// Validate date
-function validateDate() {
-    if (!allowedDays.length) return;
+// Update available times based on selected date
+function updateAvailableTimes() {
+    const selectedDate = tripDateInput.value;
+    departureTimeSelect.innerHTML = '<option value="">Select Time</option>';
 
-    const selectedDate = new Date(this.value);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (selectedDate < today) {
-        alert("You cannot select a past date.");
-        this.value = "";
+    if (!selectedDate || !availableVoyages.length) {
+        departureTimeSelect.disabled = true;
         checkProceedButton();
         return;
     }
 
-    if (!allowedDays.includes(selectedDate.getDay())) {
-        alert("Selected date is not available for this route.");
-        this.value = "";
+    const today = new Date().toISOString().split("T")[0];
+
+    if (selectedDate < today) {
+        alert("You cannot select a past date.");
+        tripDateInput.value = "";
+        departureTimeSelect.disabled = true;
+        checkProceedButton();
+        return;
     }
 
+    if (!availableDates.includes(selectedDate)) {
+        alert("No voyages available on this date for the selected route.");
+        tripDateInput.value = "";
+        departureTimeSelect.disabled = true;
+        checkProceedButton();
+        return;
+    }
+
+    // Find voyages for the selected date
+    const dateVoyages = availableVoyages.filter(
+        (v) => v.departure_date === selectedDate
+    );
+
+    // Populate departure times
+    dateVoyages.forEach((voyage) => {
+        const option = document.createElement("option");
+        option.value = voyage.voyage_id;
+        option.textContent = new Date(
+            "2000-01-01 " + voyage.departure_time
+        ).toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+        option.dataset.voyageId = voyage.voyage_id;
+        option.dataset.departureTime = voyage.departure_time;
+        departureTimeSelect.appendChild(option);
+    });
+
+    departureTimeSelect.disabled = false;
     checkProceedButton();
 }
 
@@ -130,14 +171,19 @@ function resetSelection() {
     routeToSelect.disabled = true;
     tripDateInput.value = "";
     tripDateInput.disabled = true;
-    allowedDays = [];
+    departureTimeSelect.innerHTML = '<option value="">Select Time</option>';
+    departureTimeSelect.disabled = true;
+    availableDates = [];
+    availableVoyages = [];
     checkProceedButton();
 }
 
 // Proceed button
 proceedBtn.addEventListener("click", function () {
     if (proceedBtn.disabled) {
-        alert("Please select origin, destination, and date before proceeding.");
+        alert(
+            "Please select origin, destination, date, and departure time before proceeding."
+        );
         return;
     }
 
@@ -147,18 +193,42 @@ proceedBtn.addEventListener("click", function () {
     const routeFrom = routeFromSelect.value;
     const routeTo = routeToSelect.value;
     const tripDate = tripDateInput.value;
+    const selectedTimeOption =
+        departureTimeSelect.options[departureTimeSelect.selectedIndex];
+
+    if (!selectedTimeOption || !selectedTimeOption.dataset.voyageId) {
+        alert("Please select a valid departure time.");
+        return;
+    }
+
+    const voyageId = selectedTimeOption.dataset.voyageId;
+    const departureTime = selectedTimeOption.dataset.departureTime;
+
+    // Find the specific voyage for verification
+    const selectedVoyage = availableVoyages.find(
+        (v) => v.voyage_id == voyageId
+    );
+
+    if (!selectedVoyage) {
+        alert("Selected voyage not found. Please try again.");
+        return;
+    }
 
     const baseUrl =
         bookingType === "cargo"
             ? proceedBtn.getAttribute("data-cargo-url")
             : proceedBtn.getAttribute("data-passenger-url");
 
-    // ✅ Include type in URL so controller knows which booking page to load
+    // Include voyage information in URL
     const url = `${baseUrl}?route_from=${encodeURIComponent(
         routeFrom
     )}&route_to=${encodeURIComponent(
         routeTo
-    )}&departure_date=${encodeURIComponent(tripDate)}&type=${encodeURIComponent(
+    )}&departure_date=${encodeURIComponent(
+        tripDate
+    )}&departure_time=${encodeURIComponent(
+        departureTime
+    )}&voyage_id=${encodeURIComponent(voyageId)}&type=${encodeURIComponent(
         bookingType
     )}`;
 

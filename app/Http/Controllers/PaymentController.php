@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -100,45 +102,87 @@ class PaymentController extends Controller
      */
     public function webhook(Request $request)
     {
+        // Optional signature verification (placeholder - adjust to PayMongo spec if different)
+        if ($secretSig = env('PAYMONGO_WEBHOOK_SECRET')) {
+            $provided = $request->header('Paymongo-Signature');
+            if (!$provided || !Str::contains($provided, $secretSig)) {
+                Log::warning('PayMongo signature mismatch', ['header' => $provided]);
+                return response()->json(['error' => 'invalid signature'], 401);
+            }
+        }
+
         $payload = $request->all();
-        \Log::info('PayMongo webhook', $payload);
+        Log::info('PayMongo webhook raw', $payload);
 
-        $type = $payload['type'] ?? null;
-        $data = $payload['data'] ?? null;
+        // Events come as: data:{ id, type:event, attributes:{ type: <event_type>, data: { id, type, attributes:{...} } } }
+        $event = $payload['data'] ?? [];
+        $eventAttributes = $event['attributes'] ?? [];
+        $eventType = $eventAttributes['type'] ?? null; // e.g. source.chargeable, payment.paid
+        $resource = $eventAttributes['data'] ?? []; // the actual source/payment resource
+        $resourceId = $resource['id'] ?? null;
+        $resourceType = $resource['type'] ?? null; // 'source' or 'payment'
+        $resourceAttrs = $resource['attributes'] ?? [];
+        $secret = env('PAYMONGO_SECRET');
 
-        // Try to extract a source id from payload to match our payment.transaction_code
-        $sourceId = null;
-        if (isset($data['id'])) {
-            $sourceId = $data['id'];
+        // SOURCE CHARGEABLE -> attempt charge
+        if ($eventType === 'source.chargeable' && $resourceType === 'source' && $resourceId) {
+            $payment = DB::table('payment')->where('transaction_code', $resourceId)->first();
+            if ($payment && strtolower($payment->payment_status) === 'pending' && $secret) {
+                $amountPhp = (float) $payment->total_amount;
+                $amount = (int) round($amountPhp * 100);
+                try {
+                    $chargePayload = [
+                        'data' => [
+                            'attributes' => [
+                                'amount' => $amount,
+                                'currency' => 'PHP',
+                                'source' => ['id' => $resourceId, 'type' => 'source'],
+                                'description' => 'Booking #' . $payment->booking_ref_no,
+                                'statement_descriptor' => 'Booking ' . $payment->booking_ref_no,
+                            ],
+                        ],
+                    ];
+                    $chargeResp = Http::withBasicAuth($secret, '')->post('https://api.paymongo.com/v1/payments', $chargePayload);
+                    if ($chargeResp->successful()) {
+                        $chargeJson = $chargeResp->json();
+                        $chargeStatus = $chargeJson['data']['attributes']['status'] ?? null;
+                        Log::info('PayMongo charge success', ['status' => $chargeStatus]);
+                        if ($chargeStatus === 'paid') {
+                            DB::table('payment')->where('payment_id', $payment->payment_id)->update([
+                                'payment_status' => 'Completed',
+                                'updated_at' => now(),
+                            ]);
+                            DB::table('booking')->where('booking_ref_no', $payment->booking_ref_no)->update([
+                                'booking_status' => 'Confirmed',
+                                'updated_at' => now(),
+                            ]);
+                        }
+                    } else {
+                        Log::error('PayMongo charge failure', ['status' => $chargeResp->status(), 'body' => $chargeResp->body()]);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('PayMongo charge exception', ['message' => $e->getMessage()]);
+                }
+            }
         }
-        // Some events include source inside attributes
-        if (!$sourceId && isset($data['attributes']['source']['id'])) {
-            $sourceId = $data['attributes']['source']['id'];
-        }
 
-        // If event indicates payment succeeded, update our DB
-        if ($type && str_contains($type, 'payment') && isset($data['attributes']['status'])) {
-            $status = $data['attributes']['status'];
-            if ($status === 'paid' || $status === 'succeeded') {
-                // find payment by transaction_code (source id)
-                if ($sourceId) {
-                    $payment = DB::table('payment')->where('transaction_code', $sourceId)->first();
-                    if ($payment) {
+        // PAYMENT EVENTS
+        if (Str::startsWith((string) $eventType, 'payment.') && $resourceType === 'payment' && $resourceId) {
+            $status = $resourceAttrs['status'] ?? null; // expected: paid|succeeded|failed|canceled
+            $sourceId = $resourceAttrs['source']['id'] ?? null;
+            if ($sourceId) {
+                $payment = DB::table('payment')->where('transaction_code', $sourceId)->first();
+                if ($payment && $status) {
+                    if (in_array($status, ['paid', 'succeeded'])) {
                         DB::table('payment')->where('payment_id', $payment->payment_id)->update([
                             'payment_status' => 'Completed',
                             'updated_at' => now(),
                         ]);
-
                         DB::table('booking')->where('booking_ref_no', $payment->booking_ref_no)->update([
                             'booking_status' => 'Confirmed',
                             'updated_at' => now(),
                         ]);
-                    }
-                }
-            } elseif ($status === 'failed' || $status === 'canceled') {
-                if ($sourceId) {
-                    $payment = DB::table('payment')->where('transaction_code', $sourceId)->first();
-                    if ($payment) {
+                    } elseif (in_array($status, ['failed', 'canceled'])) {
                         DB::table('payment')->where('payment_id', $payment->payment_id)->update([
                             'payment_status' => 'Canceled',
                             'updated_at' => now(),
@@ -185,10 +229,50 @@ class PaymentController extends Controller
                             'booking_status' => 'Confirmed',
                             'updated_at' => now(),
                         ]);
+                    } elseif ($status === 'chargeable') {
+                        // Attempt to charge immediately if still pending
+                        $amountPhp = (float) $payment->total_amount;
+                        $amount = (int) round($amountPhp * 100);
+                        try {
+                            $chargePayload = [
+                                'data' => [
+                                    'attributes' => [
+                                        'amount' => $amount,
+                                        'currency' => 'PHP',
+                                        'source' => [
+                                            'id' => $sourceId,
+                                            'type' => 'source',
+                                        ],
+                                        'description' => 'Booking #' . $payment->booking_ref_no,
+                                        'statement_descriptor' => 'Booking ' . $payment->booking_ref_no,
+                                    ],
+                                ],
+                            ];
+                            $chargeResp = Http::withBasicAuth($secret, '')->post('https://api.paymongo.com/v1/payments', $chargePayload);
+                            if ($chargeResp->successful()) {
+                                $chargeJson = $chargeResp->json();
+                                $chargeStatus = $chargeJson['data']['attributes']['status'] ?? null;
+                                if ($chargeStatus === 'paid') {
+                                    DB::table('payment')->where('payment_id', $payment->payment_id)->update([
+                                        'payment_status' => 'Completed',
+                                        'updated_at' => now(),
+                                    ]);
+                                    DB::table('booking')->where('booking_ref_no', $bookingRef)->update([
+                                        'booking_status' => 'Confirmed',
+                                        'updated_at' => now(),
+                                    ]);
+                                    $status = 'paid';
+                                }
+                            } else {
+                                Log::error('PayMongo redirect charge failed', ['status' => $chargeResp->status(), 'body' => $chargeResp->body()]);
+                            }
+                        } catch (\Exception $e) {
+                            Log::error('PayMongo redirect charge exception', ['message' => $e->getMessage()]);
+                        }
                     }
                 }
             } catch (\Exception $e) {
-                \Log::warning('PayMongo redirect verification failed: ' . $e->getMessage());
+                Log::warning('PayMongo redirect verification failed: ' . $e->getMessage());
             }
         }
 

@@ -37,7 +37,28 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <a href="{{ route('bookingtype') }}" class="btn btn-outline-secondary">Cancel</a>
+                            @php
+                                $canCancel = strtolower($booking->booking_status) === 'pending';
+                                if ($payment && strtolower($payment->payment_status) === 'completed') {
+                                    $canCancel = false; // Cannot cancel if payment is completed
+                                }
+                            @endphp
+
+                            @if ($canCancel)
+                                <button type="button" id="cancelBtn" class="btn btn-outline-secondary">Cancel</button>
+                            @else
+                                <button type="button" class="btn btn-outline-secondary" disabled>
+                                    @if (strtolower($booking->booking_status) === 'canceled')
+                                        Already Canceled
+                                    @elseif (strtolower($booking->booking_status) === 'confirmed')
+                                        Cannot Cancel
+                                    @elseif (isset($payment) && strtolower($payment->payment_status) === 'completed')
+                                        Payment Completed
+                                    @else
+                                        Cannot Cancel
+                                    @endif
+                                </button>
+                            @endif
 
                             @php
                                 $canPay = false;
@@ -175,6 +196,62 @@
                         payBtnEl.disabled = false;
                         payBtnEl.innerText = 'Pay with GCash (PayMongo)';
                     }
+                }
+            });
+        }
+
+        // Handle cancel button click
+        const cancelBtnEl = document.getElementById('cancelBtn');
+        if (cancelBtnEl && !cancelBtnEl.disabled) {
+            cancelBtnEl.addEventListener('click', async function(e) {
+                e.preventDefault();
+
+                // Confirm cancellation
+                if (!confirm('Are you sure you want to cancel this booking?')) {
+                    return;
+                }
+
+                const bookingRef = '{{ $booking->booking_ref_no }}';
+                if (!bookingRef) {
+                    alert('Missing booking reference.');
+                    return;
+                }
+
+                // Disable button to prevent double clicks
+                cancelBtnEl.disabled = true;
+                cancelBtnEl.innerText = 'Canceling...';
+
+                try {
+                    const res = await fetch(`{{ url('/booking/cancel') }}/${bookingRef}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+
+                    const data = await res.json();
+
+                    if (data.success) {
+                        alert('Booking canceled successfully.');
+                        // Redirect to booking type page
+                        window.location.href = data.redirect_url || '{{ route('bookingtype') }}';
+                    } else {
+                        alert(data.message || 'Failed to cancel booking.');
+                        // Restore button state
+                        cancelBtnEl.disabled = false;
+                        cancelBtnEl.innerText = 'Cancel';
+                    }
+                } catch (err) {
+                    console.error('Error canceling booking', err);
+                    alert('Error canceling booking. Please try again.');
+                    // Restore button state
+                    cancelBtnEl.disabled = false;
+                    cancelBtnEl.innerText = 'Cancel';
                 }
             });
         }

@@ -19,21 +19,32 @@ class CargoItemController extends Controller
     }
 
     public function index(Request $request)
-    {
-        $search = $request->input('search');
+{
+    $query = CargoItem::query();
 
-        $cargo_items = CargoItem::when($search, function ($query, $search) {
-                $query->where('cargo_item_classification', 'like', "%{$search}%")
-                      ->orWhere('cargo_item_description', 'like', "%{$search}%")
-                      ->orWhere('cargo_item_type', 'like', "%{$search}%");
-            })
-            ->orderBy('cargo_item_description', 'asc')
-            ->paginate(10);
+    // SEARCH (classification, description, type)
+    if ($request->filled('search')) {
+        $search = $request->search;
 
-        return $this->isStaff()
-            ? view('authorized.staff.scargo_item_list', compact('cargo_items', 'search'))
-            : view('authorized.admin.cargo_item_list', compact('cargo_items', 'search'));
+        $query->where(function ($q) use ($search) {
+            $q->where('cargo_item_classification', 'like', "%{$search}%")
+              ->orWhere('cargo_item_description', 'like', "%{$search}%");
+        });
     }
+
+    // FILTER BY TYPE (Type A, Type B, Type C, etc)
+    if ($request->filled('type')) {
+        $query->where('cargo_item_type', $request->type);
+    }
+
+    $cargo_items = $query
+        ->orderBy('cargo_item_description', 'asc')
+        ->paginate(10);
+
+    return $this->isStaff()
+        ? view('authorized.staff.scargo_item_list', compact('cargo_items'))
+        : view('authorized.admin.cargo_item_list', compact('cargo_items'));
+}
 
     public function create()
     {

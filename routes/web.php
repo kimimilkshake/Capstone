@@ -1,7 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use App\Http\Controllers\VesselRouteController;
+use App\Http\Controllers\VoyageBookingController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PassengerController;
 use App\Http\Controllers\BookingController;
@@ -36,12 +38,17 @@ Route::get('/passenger/homepage', function () {
     return view('passenger.homepage');
 })->name('homepage');
 
+<<<<<<< HEAD
 Route::get('/passenger/bookingtype', function () {
     return view('passenger.bookingtype');
 })->name('bookingtype');
 
 // Passenger booking route
 Route::get('/passenger/bookingtype', [VesselRouteController::class, 'index'])->name('bookingtype');
+=======
+// Passenger booking route - show available voyages within 8 days
+Route::get('/passenger/bookingtype', [VoyageBookingController::class, 'index'])->name('bookingtype');
+>>>>>>> origin/passengerSafe
 
 // Passenger Booking Page
 Route::get('/passenger/passengerbooking', [PassengerController::class, 'index'])->name('passengerbooking');
@@ -62,6 +69,7 @@ Route::post('/passenger/cargobooking/store', [PassengerController::class, 'store
 
 // Form submission
 Route::post('/booking/submit', [BookingController::class, 'store'])->name('booking.submit');
+Route::post('/booking/cancel/{booking_ref_no}', [BookingController::class, 'cancel'])->name('booking.cancel');
 
 // API: return unavailable cot numbers for a voyage (by route/date or voyage_id)
 Route::get('/voyage/unavailable-cots', [BookingController::class, 'unavailableCots'])->name('voyage.unavailable_cots');
@@ -79,6 +87,10 @@ Route::post('/paymongo/create-source', [PaymentController::class, 'createSource'
 Route::post('/paymongo/webhook', [PaymentController::class, 'webhook'])->name('paymongo.webhook')
     ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
 Route::get('/paymongo/return', [PaymentController::class, 'redirectReturn'])->name('paymongo.return');
+Route::get('/paymongo/failed', function (Request $request) {
+    $bookingRef = $request->query('booking_ref_no');
+    return view('payments.failed', ['bookingRef' => $bookingRef]);
+})->name('paymongo.failed');
 
 Route::get('/passenger/schedules', function () {
     return view('passenger.schedules');
@@ -95,7 +107,8 @@ Route::prefix('passenger/about_partials')->group(function () {
     });
     Route::get('/{fragment}', function ($fragment) {
         $valid = ['who_we_are', 'what_we_offer', 'vision_mission', 'vessels_about', 'ports_of_call'];
-        if (!in_array($fragment, $valid)) abort(404);
+        if (!in_array($fragment, $valid))
+            abort(404);
         return view("passenger.about_partials.$fragment");
     });
 });
@@ -209,4 +222,26 @@ Route::post('/staff/cargo-booking', [StaffCargoController::class, 'storeBooking'
     Route::get('/semaphore', [SemaphoreController::class, 'show'])->name('staff.semaphore');
 });
 
+<<<<<<< HEAD
 Route::post('/authorized/logout', [AuthController::class, 'logout'])->name('logout');
+=======
+Route::post('/authorized/logout', [AuthController::class, 'logout'])->name('logout');
+
+// CARGO BOOKING
+Route::get('/staff/cargobooking', function () {
+    return view('authorized.staff.cargobooking');
+});
+
+/*
+Route::prefix('authorized/staff')->group(function () {
+    Route::get('/dashboard', fn() => view('authorized.staff.dashboard'))->name('staff.dashboard');
+
+    // Shared voyage access for staff
+    Route::get('/voyages', [VoyageController::class, 'index'])->name('staff.voyage_list');
+    Route::get('/voyages/create', [VoyageController::class, 'create'])->name('staff.create_voyage');
+    Route::post('/voyages/store', [VoyageController::class, 'store'])->name('staff.store_voyage');
+    Route::get('/voyages/{id}/edit', [VoyageController::class, 'edit'])->name('staff.voyage_edit');
+    Route::post('/voyages/{id}/update', [VoyageController::class, 'update'])->name('staff.voyage_update');
+});
+*/
+>>>>>>> origin/passengerSafe

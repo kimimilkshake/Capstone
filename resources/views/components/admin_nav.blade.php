@@ -46,7 +46,7 @@
     </li>
 
     <li class="anav-item">
-      <a class="anav-link" href="{{ route('staff.cargo_item_list') }}">
+      <a class="anav-link" href="{{ route('admin.cargo_item_list') }}">
         <i class="fa-solid fa-rectangle-list me-1"></i>
         <span class="anav-label">View Rates</span>
       </a>

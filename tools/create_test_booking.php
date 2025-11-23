@@ -40,7 +40,7 @@ try {
         'passenger_suffix' => null,
         'passenger_age' => 30,
         'passenger_gender' => 'M',
-        'passenger_type' => 'adult',
+        'passenger_type' => 'Regular',
         'passenger_address' => 'Test Address',
         'passenger_contactno' => '09171234567',
         'passenger_email' => 'test+booking@example.invalid',

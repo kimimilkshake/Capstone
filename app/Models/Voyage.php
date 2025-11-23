@@ -11,7 +11,7 @@ class Voyage extends Model
 
     protected $table = 'voyage';
     protected $primaryKey = 'voyage_id';
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected $fillable = [
         'vessel_id',

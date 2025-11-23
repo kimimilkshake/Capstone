@@ -2,119 +2,262 @@
     margin-top: 3rem;
     margin-bottom: 3rem;
 
-    .col-md-6 {
-        &.text-center {
-            // This will apply to both image + options sections
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+    .row {
+        min-height: 400px;
+    }
+
+    .col-lg-6:first-child {
+        margin-bottom: 2rem;
+
+        @media (min-width: 992px) {
+            margin-bottom: 0;
         }
     }
 
-    // 🔹 Image styles
+    /* Table container */
+    .table-container {
+        background-color: #ffffff;
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        height: 100%;
+        max-height: 520px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+        h4 {
+            margin-bottom: 1.5rem;
+        }
+
+        .table-responsive {
+            max-height: 380px;
+            overflow-y: auto;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .text-muted {
+            i {
+                margin-bottom: 0.75rem;
+            }
+        }
+    }
+
+    /* Booking section */
+    .booking-selection-content {
+        padding: 1.75rem;
+        background-color: #f7f9fc;
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem; // Reduced gap between sections
+
+        .text-center {
+            margin-bottom: 0;
+
+            h4 {
+                color: #333; // Make title black instead of primary blue
+                font-weight: 600;
+            }
+        }
+
+        .booking-type-section {
+            margin-bottom: 0;
+            text-align: center; // Center the booking type section
+
+            h6 {
+                margin-bottom: 0.75rem; // Slightly reduce margin
+                font-weight: 600;
+            }
+        }
+
+        .route-selection {
+            margin-bottom: 0;
+
+            .route-inputs {
+                display: flex;
+                align-items: flex-end;
+                gap: 1rem;
+
+                .route-input-group {
+                    flex: 1;
+
+                    .form-label {
+                        display: block;
+                        margin-bottom: 0.5rem;
+                    }
+                }
+
+                .route-arrow {
+                    display: flex;
+                    align-items: center;
+                    padding-bottom: 0.375rem; // Align with form control height
+                    flex-shrink: 0;
+
+                    i {
+                        margin: 0;
+                    }
+                }
+            }
+
+            @media (max-width: 768px) {
+                .route-inputs {
+                    flex-direction: column;
+                    align-items: stretch;
+                    gap: 1rem;
+
+                    .route-arrow {
+                        align-self: center;
+                        transform: rotate(90deg);
+                        padding: 0;
+                    }
+                }
+            }
+        }
+
+        .date-time-selection {
+            margin-bottom: 0;
+
+            .datetime-inputs {
+                display: flex;
+                gap: 1rem;
+
+                .datetime-input-group {
+                    flex: 1;
+
+                    .form-label {
+                        display: block;
+                        margin-bottom: 0.5rem;
+                    }
+                }
+            }
+
+            @media (max-width: 768px) {
+                .datetime-inputs {
+                    flex-direction: column;
+                    gap: 1rem;
+                }
+            }
+        }
+
+        // Auto-grow spacer to push button to bottom
+        .spacer {
+            flex-grow: 1;
+        }
+
+        .proceed-btn {
+            margin-top: 0; // Remove margin as gap handles spacing
+        }
+    }
+
     img {
         max-width: 100%;
         height: auto;
         display: block;
-        margin-bottom: 50px;
+        margin-bottom: 40px;
     }
 
-    // 🔹 Booking title
-    h2 {
-        margin-bottom: 1.5rem;
+    h2, h4 {
+        margin-bottom: 1.25rem;
         font-weight: 700;
     }
 
-    // 🔹 Options wrapper
-    .d-flex {
+    .form-label {
+        color: #495057;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    /* Dedicated class so it won't break Bootstrap */
+    .booking-type-options {
         display: flex;
         justify-content: center;
-        gap: 2rem; // change this value to control spacing between Passenger/Cargo
+        gap: 2rem;
+        margin-top: 0.5rem;
     }
 
-    // 🔹 Individual radio buttons
-    .form-check {
-        margin: 0;
-
-        .form-check-input {
-            cursor: pointer;
-        }
-
-        .form-check-label {
-            margin-left: 0.5rem;
-            font-weight: 500;
-            cursor: pointer;
-        }
+    .form-check .form-check-label {
+        font-weight: 500;
+        margin-left: 0.35rem;
     }
 
-    // 🔹 Responsive adjustments
     @media (max-width: 768px) {
-        .d-flex {
-            flex-direction: row;
+        .booking-type-options {
             gap: 1rem;
         }
     }
-
 }
 
+/* Calendar styles */
 .trip-calendar-container {
-  margin-top: 2rem;
-  display: flex;
-  justify-content: flex-end; // align the whole thing to the right
+    margin-top: 2rem;
+    display: flex;
+    justify-content: flex-end;
 }
 
 .calendar-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  border: 2px solid #afafaf;
-  border-radius: 8px; // 🔹 rounded corners
-  background-color: #fff;
-  width: 250px; // adjust as needed
-  height: 50px;
-}
+    position: relative;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    background-color: #fff;
+    width: 100%;
+    box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.15);
 
-.calendar-input {
-  border: none;
-  outline: none;
-  flex: 1;
-  padding: 0.5rem 2.5rem 0.5rem 1rem; // space for icon on right
-  font-size: 1rem;
-  text-align: left; // keeps date toward left
-  border-radius: 8px; // 🔹 matches wrapper
-}
+    .calendar-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+        pointer-events: none;
+        font-size: 1.1rem;
+    }
 
-.calendar-icon {
-  position: absolute;
-  right: 0.75rem;  // lock to right edge
-  color: #666;
-  font-size: 1.2rem;
-  pointer-events: none;
+    .calendar-input {
+        padding-right: 40px;
+        border: none;
+        outline: none;
+        flex: 1;
+        padding-left: 0.75rem;
+        font-size: 1rem;
+        border-radius: 8px;
+        background: transparent;
+    }
 }
 
 .calendar-input::-webkit-calendar-picker-indicator {
-  opacity: 0; // hide native icon
-  position: absolute;
-  right: 0;
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
 }
 
+/* Proceed button */
 .proceed-btn {
-    margin-top: 50px;
-    font-size: 25px;
-    border-radius: 35px;       /* rounded corners */
-    border: 2px solid #0d6dfd00; /* custom border color */
+    width: 100%;
+    padding: 0.85rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 35px;
+    border: 2px solid transparent;
     background-color: #1E2541;
-    color: #ffffff;            /* text color */
-    padding: 0.8rem 6.5rem;    /* button size */
-    transition: all 0.3s ease;
-}
+    color: #ffffff;
+    transition: 0.25s ease;
 
-.proceed-btn:hover {
-    background-color: #0d6efd; /* fill on hover */
-    color: #fff;               /* text turns white */
-    text-decoration: none;
+    &:hover {
+        background-color: #0d6efd;
+        color: #fff;
+    }
+
+    &:disabled {
+        background-color: #6c757d;
+        opacity: 0.65;
+        cursor: not-allowed;
+    }
 }
