@@ -9,11 +9,11 @@
         </div>
 
         <div class="card-body">
-            <form action="{{ route('cargobooking.store') }}" method="POST" id="cargoBookingForm">
+            <form action="{{ route('cargobooking.store') }}" method="POST" id="cargoBookingForm" enctype="multipart/form-data">
                 @csrf
                 <div class="row">
 
-                    <!-- LEFT: Sender Info -->
+                    <!-- LEFT: Sender & Consignee Info -->
                     <div class="col-md-6 mb-3">
                         <h6 class="fw-bold">Sender Information</h6>
                         <div class="mb-2 d-flex gap-2">
@@ -31,6 +31,19 @@
                             <input type="email" name="sender_email" class="form-control" placeholder="Email Address">
                         </div>
 
+                        <h6 class="fw-bold mt-4">Consignee Information</h6>
+                        <div class="mb-2 d-flex gap-2">
+                            <input type="text" name="consignee_firstname" class="form-control flex-grow-1" placeholder="First Name" required>
+                            <input type="text" name="consignee_suffix" class="form-control" style="width:80px;" placeholder="Suffix">
+                        </div>
+                        <div class="mb-2 d-flex gap-2">
+                            <input type="text" name="consignee_lastname" class="form-control flex-grow-1" placeholder="Last Name" required>
+                            <input type="text" name="consignee_mi" class="form-control" style="width:80px;" placeholder="MI">
+                        </div>
+                        <div class="mb-2">
+                            <input type="text" name="consignee_contact" class="form-control" placeholder="Contact Number" required>
+                        </div>
+
                         <!-- Voyage Info -->
                         <h6 class="fw-bold mt-4">Voyage Information</h6>
                         <div class="bg-white p-3 rounded shadow-sm mb-3 small">
@@ -41,35 +54,65 @@
                             <p class="mb-0"><strong>Port of Origin:</strong> {{ $portOfOrigin }}</p>
                         </div>
                     </div>
-
-                    <!-- RIGHT: Cargo Info -->
-                    <div class="col-md-6 mb-3">
-                        <h6 class="fw-bold">Cargo Information</h6>
-                        <div class="mb-2">
-                            <input type="text" name="consignee" class="form-control" placeholder="Consignee" required>
-                        </div>
-                        <div class="mb-2">
-                            <input type="text" name="receiver_contact" class="form-control" placeholder="Contact Number" required>
-                        </div>
-                        <div class="mb-2 d-flex gap-2">
-                            <select name="cargo_item_id" class="form-control flex-grow-1" required>
-                                <option value="">-- Select Cargo Item --</option>
-                                @foreach($cargoItems as $item)
-                                    <option value="{{ $item->id }}">{{ $item->cargo_item_description }}</option>
-                                @endforeach
-                            </select>
-                            <input type="number" name="cargo_quantity" class="form-control" style="width:100px;" placeholder="Qty" required min="1">
-                        </div>
-
-                        <div class="d-flex justify-content-end gap-3 mt-5">
-                            <a href="{{ route('bookingtype') }}" class="btn btn-outline-danger fw-bold py-3" style="width:180px;">CANCEL</a>
-                            <button type="submit" class="btn btn-primary fw-bold py-3" style="width:180px;">BOOK NOW</button>
-                        </div>
-                    </div>
-
-                </div>
-            </form>
+<!-- RIGHT: Cargo Items -->
+<div class="col-md-6 mb-3">
+    <h6 class="fw-bold">Cargo Information</h6>
+    <div id="cargo-items-container">
+        <div class="cargo-item border rounded p-3 mb-3">
+            <div class="mb-2">
+                <input type="text" name="cargo_description[]" class="form-control" placeholder="Cargo Description" required>
+            </div>
+            <div class="mb-2 d-flex gap-2">
+                <input type="number" name="cargo_quantity[]" class="form-control" placeholder="Quantity" required min="1">
+                <input type="number" name="cargo_length[]" class="form-control" placeholder="Length (cm)" required>
+            </div>
+            <div class="mb-2 d-flex gap-2">
+                <input type="number" name="cargo_width[]" class="form-control" placeholder="Width (cm)" required>
+                <input type="number" name="cargo_height[]" class="form-control" placeholder="Height (cm)" required>
+            </div>
+            <div class="mb-2">
+                <input type="number" name="cargo_weight[]" class="form-control" placeholder="Weight (kg)" required>
+            </div>
+            <div class="mb-2">
+                <label class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center">
+                    <i class="bi bi-image me-2"></i> Add Photo
+                    <input type="file" name="cargo_picture[]" class="d-none" accept="image/*">
+                </label>
+            </div>
         </div>
     </div>
+
+    <div class="d-flex gap-2 mb-3">
+        <button type="button" id="addCargoItem" class="btn btn-secondary">Add Another Cargo</button>
+        <button type="button" id="removeCargoItem" class="btn btn-danger">Remove Last Cargo</button>
+    </div>
 </div>
-@endsection
+
+<div class="d-flex justify-content-end mt-4 gap-3">
+    <a href="{{ route('bookingtype') }}" class="btn btn-outline-danger fw-bold py-3" style="width:180px;">
+        CANCEL BOOKING
+    </a>
+    <button type="submit" class="btn btn-primary fw-bold py-3" style="width:180px;">
+        PROCEED
+    </button>
+</div>
+
+
+<script>
+const container = document.getElementById('cargo-items-container');
+
+document.getElementById('addCargoItem').addEventListener('click', function() {
+    const newItem = container.querySelector('.cargo-item').cloneNode(true);
+    newItem.querySelectorAll('input').forEach(input => input.value = '');
+    container.appendChild(newItem);
+});
+
+document.getElementById('removeCargoItem').addEventListener('click', function() {
+    const items = container.querySelectorAll('.cargo-item');
+    if(items.length > 1) {
+        items[items.length - 1].remove();
+    } else {
+        alert('At least one cargo item is required.');
+    }
+});
+</script>

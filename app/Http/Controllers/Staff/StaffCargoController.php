@@ -80,6 +80,26 @@ public function reviewBookings(Request $request)
     return view('authorized.staff.reviewcargobookings', compact('cargoBookings'));
 }
 
+public function getVoyages($routeId)
+{
+    $voyages = Voyage::where('route_port_id', $routeId)->get([
+        'voyage_id',
+        'voyage_departure_date'
+    ]);
+
+    return response()->json($voyages);
+}
+
+public function getTimes($voyageId)
+{
+    $times = Voyage::where('voyage_id', $voyageId)->get([
+        'voyage_id',
+        'voyage_estimated_TD'
+    ]);
+
+    return response()->json($times);
+}
+
 
     // Approve Booking
     public function approveBooking($bookingRefNo)

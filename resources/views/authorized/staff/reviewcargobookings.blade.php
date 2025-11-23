@@ -22,8 +22,6 @@
                 <th>Sender</th>
                 <th>Consignee</th>
                 <th>Voyage</th>
-                <th>Cargo Item</th>
-                <th>Quantity</th>
                 <th>Status</th>
                 <th>Actions</th>
             </tr>
@@ -35,8 +33,6 @@
                     <td>{{ $booking->sender->sender_name ?? 'N/A' }}</td>
                     <td>{{ $booking->consignee->consignee_name ?? 'N/A' }}</td>
                     <td>{{ $booking->voyage->voyage_code ?? 'N/A' }}</td>
-                    <td>{{ $booking->cargoItem->cargo_item_description ?? 'N/A' }}</td>
-                    <td>{{ $booking->cargo_item_qty ?? 'N/A' }}</td>
                     <td>{{ $booking->booking_status }}</td>
                     <td>
                         @if($booking->booking_status == 'Pending')

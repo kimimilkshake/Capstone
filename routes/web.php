@@ -203,6 +203,7 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
      ->name('staff.cargo_booking.create');
 Route::post('/staff/cargo-booking', [StaffCargoController::class, 'storeBooking'])
      ->name('staff.cargo_booking.store');
+     Route::get('/get-times/{voyageId}', [BookingController::class, 'getTimes']);
 
     // Review Bookings
     Route::get('/staff/cargo-bookings', [StaffCargoController::class, 'reviewBookings'])->name('staff.cargo_bookings.review');
@@ -213,9 +214,6 @@ Route::post('/staff/cargo-booking', [StaffCargoController::class, 'storeBooking'
     Route::get('/semaphore', [SemaphoreController::class, 'show'])->name('staff.semaphore');
 });
 
-<<<<<<< HEAD
-Route::post('/authorized/logout', [AuthController::class, 'logout'])->name('logout');
-=======
 Route::post('/authorized/logout', [AuthController::class, 'logout'])->name('logout');
 
 // CARGO BOOKING
@@ -235,4 +233,3 @@ Route::prefix('authorized/staff')->group(function () {
     Route::post('/voyages/{id}/update', [VoyageController::class, 'update'])->name('staff.voyage_update');
 });
 */
->>>>>>> origin/passengerSafe

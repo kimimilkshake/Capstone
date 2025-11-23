@@ -52,7 +52,7 @@ class PassengerController extends Controller
             'vesselName',
             'departureTime',
             'portOfOrigin',
-            'cargoItems' // ✅ Pass it to Blade
+            'cargoItems', // ✅ Pass it to Blade
             'voyage',
             'accommodations'
         ));
