@@ -38,17 +38,8 @@ Route::get('/passenger/homepage', function () {
     return view('passenger.homepage');
 })->name('homepage');
 
-<<<<<<< HEAD
-Route::get('/passenger/bookingtype', function () {
-    return view('passenger.bookingtype');
-})->name('bookingtype');
-
-// Passenger booking route
-Route::get('/passenger/bookingtype', [VesselRouteController::class, 'index'])->name('bookingtype');
-=======
 // Passenger booking route - show available voyages within 8 days
 Route::get('/passenger/bookingtype', [VoyageBookingController::class, 'index'])->name('bookingtype');
->>>>>>> origin/passengerSafe
 
 // Passenger Booking Page
 Route::get('/passenger/passengerbooking', [PassengerController::class, 'index'])->name('passengerbooking');

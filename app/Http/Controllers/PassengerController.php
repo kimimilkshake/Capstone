@@ -4,11 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Passenger;
-<<<<<<< HEAD
 use App\Models\CargoItem; // ✅ Add this
-=======
 use App\Models\Voyage;
->>>>>>> origin/passengerSafe
 use Carbon\Carbon;
 
 class PassengerController extends Controller
@@ -55,12 +52,9 @@ class PassengerController extends Controller
             'vesselName',
             'departureTime',
             'portOfOrigin',
-<<<<<<< HEAD
             'cargoItems' // ✅ Pass it to Blade
-=======
             'voyage',
             'accommodations'
->>>>>>> origin/passengerSafe
         ));
     }
 
