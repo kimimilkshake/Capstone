@@ -41,24 +41,8 @@
           
           <div class="form-col">
             <div class="form-group">
-              <label>Volume</label>
-              <input type="number" name="cargo_item_volume">
-            </div>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-col">
-            <div class="form-group">
               <label>Description</label>
               <input type="text" name="cargo_item_description" required>
-            </div>
-          </div>
-          
-          <div class="form-col">
-            <div class="form-group">
-              <label>Weight</label>
-              <input type="number" name="cargo_item_weight">
             </div>
           </div>
         </div>
@@ -67,52 +51,28 @@
           <div class="form-col">
             <div class="form-group">
               <label>Freight</label>
-              <input type="number" name="cargo_item_freight" required>
+              <input type="number" name="cargo_item_freight" step="0.01" required>
             </div>
           </div>
-          
-          <div class="form-col">
-            <div class="form-group">
-              <label>Length</label>
-              <input type="number" name="cargo_item_length">
-            </div>
-          </div>
-        </div>
 
-        <div class="form-row">
           <div class="form-col">
             <div class="form-group">
               <label>Arrastre</label>
-              <input type="number" name="cargo_item_arrastre" required>
+              <input type="number" name="cargo_item_arrastre" step="0.01" required>
             </div>
           </div>
-          
-          <div class="form-col">
-            <div class="form-group">
-              <label>Height</label>
-              <input type="number" name="cargo_item_height">
-            </div>
-          </div>
-          
-        </div>
 
-        <div class="form-row">
           <div class="form-col">
             <div class="form-group">
-              <label>Type</label>
-              <select name="cargo_item_type" required>
-                <option value="">Select Type</option>
-                <option value="Type A">Type A</option>
-                <option value="Type B">Type B</option>
-                <option value="Type C">Type C</option>
+              <label>Route Destination</label>
+              <select name="route_port_id" required>
+                <option value="">Select Destination</option>
+                @foreach ($routes as $route)
+                  <option value="{{ $route->route_port_id }}">
+                    {{ $route->route_destination }}
+                  </option>
+                @endforeach
               </select>
-            </div>
-          </div>
-          
-          <div class="form-col">
-            <div class="form-group">
-              <label>Width</label>
-              <input type="number" name="cargo_item_width">
             </div>
           </div>
         </div>

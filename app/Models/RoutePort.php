@@ -24,4 +24,10 @@ class RoutePort extends Model
     {
         return $this->hasMany(Voyage::class, 'route_port_id', 'route_port_id');
     }
+
+    public function cargoItems()
+    {
+        return $this->hasMany(CargoItem::class, 'route_port_id', 'route_port_id');
+    }
+
 }

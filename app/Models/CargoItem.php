@@ -17,11 +17,11 @@ class CargoItem extends Model
         'cargo_item_description',
         'cargo_item_freight',
         'cargo_item_arrastre',
-        'cargo_item_type',
-        'cargo_item_volume',
-        'cargo_item_weight',
-        'cargo_item_length',
-        'cargo_item_height',
-        'cargo_item_width',
+        'route_port_id',
     ];
+
+    public function routePort()
+    {
+        return $this->belongsTo(RoutePort::class, 'route_port_id', 'route_port_id');
+    }
 }

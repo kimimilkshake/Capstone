@@ -19,7 +19,7 @@ class RoutePortController extends Controller
                       ->orWhere('port_destination_name', 'like', "%{$search}%");
             })
             ->orderBy('route_port_id', 'asc')
-            ->paginate(10);
+            ->paginate(8);
 
         return view('authorized.admin.route_port_list', compact('route_port', 'search'));
     }
