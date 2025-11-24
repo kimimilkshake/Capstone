@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB; 
 use App\Models\Passenger;
 use App\Models\CargoItem; // ✅ Add this
 use App\Models\Voyage;
@@ -79,92 +80,127 @@ class PassengerController extends Controller
         return redirect()->route('bookingtype')->with('success', 'Passenger booked successfully!');
     }
 
-    public function storeCargo(Request $request)
+    public function showCargoBookingForm()
     {
-        // 1. Validate fields
+    $cargoItems = CargoItem::all();
+
+    return view('passenger.cargobooking', compact('cargoItems'));
+    }
+
+   // Step 1: POST form → save to session and create temporary booking
+    public function confirmCargo(Request $request)
+    {
         $request->validate([
-            'sender_firstname' => 'required',
-            'sender_lastname' => 'required',
-            'sender_contact' => 'required',
-            'sender_email' => 'nullable|email',
-
-            'consignee' => 'required',
-            'receiver_contact' => 'required',
-
-            'cargo_description' => 'required',
-            'cargo_quantity' => 'required|integer|min:1',
+            'sender_firstname' => 'required|string|max:255',
+            'sender_lastname' => 'required|string|max:255',
+            'sender_contact' => 'required|string|max:20',
+            'consignee_firstname' => 'required|string|max:255',
+            'consignee_lastname' => 'required|string|max:255',
+            'consignee_contact' => 'required|string|max:20',
+            'voyage_id' => 'required|exists:voyage,voyage_id',
+            'cargo_item_id.*' => 'required|exists:cargo_item,cargo_item_id',
+            'cargo_quantity.*' => 'required|integer|min:1',
+            'cargo_weight.*' => 'required|numeric|min:0',
         ]);
 
-        // 2. Create full sender name
-        $senderFullName = trim(
-            $request->sender_firstname . ' ' .
-            ($request->sender_mi ? $request->sender_mi . '. ' : '') .
-            $request->sender_lastname . ' ' .
-            ($request->sender_suffix ?? '')
-        );
+        // Store temporary booking in DB (status = Pending)
+        DB::beginTransaction();
+        try {
+            $senderId = DB::table('sender')->insertGetId([
+                'sender_name' => $request->sender_firstname . ' ' . $request->sender_lastname,
+                'sender_contactno' => $request->sender_contact,
+                'sender_email' => $request->sender_email ?? null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
 
-        // 3. Insert Sender
-        $senderId = \DB::table('sender')->insertGetId([
-            'sender_name' => $senderFullName,
-            'sender_contactno' => $request->sender_contact,
-            'sender_email' => $request->sender_email,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+            $consigneeId = DB::table('consignee')->insertGetId([
+                'consignee_name' => $request->consignee_firstname . ' ' . $request->consignee_lastname,
+                'consignee_contactno' => $request->consignee_contact,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
 
-        // 4. Insert Consignee
-        $consigneeId = \DB::table('consignee')->insertGetId([
-            'consignee_name' => $request->consignee,
-            'consignee_contactno' => $request->receiver_contact,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+            $bookingId = DB::table('booking')->insertGetId([
+                'booking_date' => now(),
+                'booking_type' => 'cargo',
+                'booking_status' => 'Pending',
+                'voyage_id' => $request->voyage_id,
+                'sender_id' => $senderId,
+                'consignee_id' => $consigneeId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
 
-        // 5. Find or Create Cargo Item Record
-        $cargoItemId = \DB::table('cargo_item')->insertGetId([
-            'cargo_item_classification' => 'General Cargo',
-            'cargo_item_description' => $request->cargo_description,
-            'cargo_item_freight' => 0,
-            'cargo_item_arrastre' => 0,
-            'cargo_item_type' => 'Type A',
-            'cargo_item_volume' => 0,
-            'cargo_item_weight' => 0,
-            'cargo_item_length' => 0,
-            'cargo_item_height' => 0,
-            'cargo_item_width' => 0,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+            foreach ($request->cargo_item_id as $index => $itemId) {
+                $picturePath = null;
+                if ($request->hasFile('cargo_picture.' . $index)) {
+                    $picturePath = $request->file('cargo_picture')[$index]->store('cargo_pictures', 'public');
+                }
 
-        // 6. Identify voyage (your form does NOT pass voyage_id yet)
-        $voyageId = null;
+                DB::table('cargo_booking')->insert([
+                    'booking_ref_no' => $bookingId,
+                    'cargo_item_id' => $itemId,
+                    'quantity' => $request->cargo_quantity[$index],
+                    'weight' => $request->cargo_weight[$index],
+                    'length' => $request->cargo_length[$index] ?? 0,
+                    'width' => $request->cargo_width[$index] ?? 0,
+                    'height' => $request->cargo_height[$index] ?? 0,
+                    'cargo_picture' => $picturePath,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
 
-        // 7. Create Cargo Receipt (actual cargo booking)
-        $cargoReceiptId = \DB::table('cargo_receipt')->insertGetId([
-            'sender_id' => $senderId,
-            'consignee_id' => $consigneeId,
-            'cargo_item_id' => $cargoItemId,
-            'voyage_id' => $voyageId,
-            'payment_id' => null,
-            'booking_ref_no' => null,
-            'cargo_item_qty' => $request->cargo_quantity,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+            DB::commit();
+            return redirect()->route('cargobooking.show', ['booking_ref_no' => $bookingId]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to save booking: ' . $e->getMessage());
+        }
+    }
 
-        // 8. Auto-create a Notification
-        \DB::table('notification')->insert([
-            'cargo_receipt_id' => $cargoReceiptId,
-            'payment_id' => null,
-            'notification_message' => 'Cargo booking submitted. Waiting for approval.',
-            'notification_type' => 'Cargo Booking Approval',
-            'notification_status' => 'Pending',
-            'notification_created' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+    // Step 2: GET confirmation page
+ // Show confirmation page
+public function showCargoConfirmation($bookingRef)
+{
+    // Fetch cargo items with freight & arrastre rates from cargo_item
+    $cargoItems = \DB::table('cargo_booking')
+        ->join('cargo_item', 'cargo_booking.cargo_item_id', '=', 'cargo_item.cargo_item_id')
+        ->select(
+            'cargo_booking.*',
+            'cargo_item.cargo_item_description',
+            'cargo_item.cargo_item_classification',
+            'cargo_item.cargo_item_freight as freight',
+            'cargo_item.cargo_item_arrastre as arrastre'
+        )
+        ->where('booking_ref_no', $bookingRef)
+        ->get();
 
-        // 9. Redirect to success page
-        return redirect()->route('cargobooking.success');
+    $booking = \DB::table('booking')->where('booking_ref_no', $bookingRef)->first();
+    $sender = \DB::table('sender')->where('sender_id', $booking->sender_id)->first();
+    $consignee = \DB::table('consignee')->where('consignee_id', $booking->consignee_id)->first();
+
+    return view('passenger.cargobooking_confirm', compact('booking', 'sender', 'consignee', 'cargoItems'));
+}
+
+
+// Cancel booking
+public function cancelCargo($bookingRef)
+{
+    \DB::table('booking')->where('booking_ref_no', $bookingRef)->update([
+        'booking_status' => 'Canceled',
+        'updated_at' => now(),
+    ]);
+
+    return redirect()->route('cargobooking')->with('success', 'Cargo booking canceled.');
+}
+
+
+    // Step 4: Finalize booking (staff approval)
+    public function finalizeCargo($bookingId)
+    {
+
+        return redirect()->route('cargobooking.success')->with('success', 'Cargo booking submitted!');
     }
 }

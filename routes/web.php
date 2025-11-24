@@ -41,34 +41,40 @@ Route::get('/passenger/homepage', function () {
 
 // Passenger booking route - show available voyages within 8 days
 Route::get('/passenger/bookingtype', [VoyageBookingController::class, 'index'])->name('bookingtype');
-
 // Passenger Booking Page
 Route::get('/passenger/passengerbooking', [PassengerController::class, 'index'])->name('passengerbooking');
 
 // Cargo Booking Page
 Route::get('/passenger/cargobooking', [PassengerController::class, 'index'])->name('cargobooking');
-
 // Cargo booking success page
+//Route::get('/passenger/cargobooking/success', function () {
+   // return view('passenger.cargo_success');
+//})->name('cargobooking.success');
+// Cargo Form Submission
+//Route::post('/passenger/cargobooking/store', [PassengerController::class, 'storeCargo'])->name('cargobooking.store');
+// Step 1: Submit cargo booking form → POST → shows confirmation page
+Route::post('/passenger/cargobooking/confirm', [PassengerController::class, 'confirmCargo'])->name('cargobooking.confirm');
+// Step 2: Display the confirmation page → GET
+Route::get('/passenger/cargobooking/confirm/{booking_ref_no}', [PassengerController::class, 'showCargoConfirmation'])->name('cargobooking.show');
+// Cancel booking → POST
+Route::post('/passenger/cargobooking/cancel/{booking_ref_no}', [PassengerController::class, 'cancelCargo'])->name('cargobooking.cancel');
+// Finalize booking → POST
+Route::post('/passenger/cargobooking/finalize/{booking_ref_no}', [PassengerController::class, 'finalizeCargo'])->name('cargobooking.finalize');
 Route::get('/passenger/cargobooking/success', function () {
     return view('passenger.cargo_success');
 })->name('cargobooking.success');
 
+
+
 // Passenger Form Submission
 Route::post('/passenger/store', [PassengerController::class, 'store'])->name('passenger.store');
-
-// Cargo Form Submission
-Route::post('/passenger/cargobooking/store', [PassengerController::class, 'storeCargo'])->name('cargobooking.store');
-
 // Form submission
 Route::post('/booking/submit', [BookingController::class, 'store'])->name('booking.submit');
 Route::post('/booking/cancel/{booking_ref_no}', [BookingController::class, 'cancel'])->name('booking.cancel');
-
 // API: return unavailable cot numbers for a voyage (by route/date or voyage_id)
 Route::get('/voyage/unavailable-cots', [BookingController::class, 'unavailableCots'])->name('voyage.unavailable_cots');
-
 // Confirm booking (show booking by reference)
 Route::get('/passenger/confirmbooking/{booking_ref_no}', [BookingController::class, 'confirm'])->name('passenger.confirmbooking');
-
 // Backwards-compatible route (no ref) - shows generic page
 Route::get('/passenger/confirmbooking', function () {
     return view('passenger.confirmbooking');
@@ -201,10 +207,8 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     Route::put('/cargo_items/{id}/update', [CargoItemController::class, 'update'])->name('staff.cargo_item_update');
     Route::delete('/cargo_items/{id}/delete', [CargoItemController::class, 'destroy'])->name('staff.cargo_item_delete');
 
-    Route::get('/staff/cargo-booking', [StaffCargoController::class, 'createBooking'])
-     ->name('staff.cargo_booking.create');
-Route::post('/staff/cargo-booking', [StaffCargoController::class, 'storeBooking'])
-     ->name('staff.cargo_booking.store');
+    Route::get('/staff/cargo-booking', [StaffCargoController::class, 'createBooking'])->name('staff.cargo_booking.create');
+    Route::post('/staff/cargo-booking', [StaffCargoController::class, 'storeBooking'])->name('staff.cargo_booking.store');
      Route::get('/get-times/{voyageId}', [BookingController::class, 'getTimes']);
 
     // Review Bookings

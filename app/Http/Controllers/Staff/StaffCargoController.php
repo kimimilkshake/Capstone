@@ -5,119 +5,101 @@ namespace App\Http\Controllers\Staff;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Booking;
-use App\Models\Sender;
-use App\Models\Consignee;
-use App\Models\CargoItem;
+use App\Models\CargoBooking;
 use App\Models\Voyage;
+use App\Models\CargoItem;
+use Carbon\Carbon;
 
 class StaffCargoController extends Controller
 {
-    // Show Cargo Booking Form
+    // Show create booking form
     public function createBooking()
     {
-        $voyages = Voyage::all();
+        $voyages = Voyage::with(['vessel', 'routePort'])->get();
         $cargoItems = CargoItem::all();
-
-        return view('authorized.staff.cargobooking', compact('voyages', 'cargoItems'));
+        return view('staff.cargo_booking.create', compact('voyages', 'cargoItems'));
     }
 
-    // Store Cargo Booking
+    // Store booking + cargo items
     public function storeBooking(Request $request)
     {
         $request->validate([
-            'sender_name' => 'required|string',
-            'sender_contactno' => 'required|string',
-            'sender_email' => 'nullable|email',
-            'consignee_name' => 'required|string',
-            'consignee_contactno' => 'required|string',
-            'voyage_id' => 'required|exists:voyage,voyage_id',
-            'cargo_item_id' => 'required|exists:cargo_item,cargo_item_id',
-            'cargo_item_qty' => 'required|integer|min:1',
+            'sender_firstname' => 'required|string|max:255',
+            'sender_lastname'  => 'required|string|max:255',
+            'sender_contact'   => 'required|string|max:20',
+            'sender_email'     => 'nullable|email',
+            'consignee_firstname' => 'required|string|max:255',
+            'consignee_lastname'  => 'required|string|max:255',
+            'consignee_contact'   => 'required|string|max:20',
+            'cargo_description.*' => 'required|string',
+            'cargo_quantity.*'    => 'required|integer|min:1',
+            'cargo_weight.*'      => 'required|numeric|min:0',
+            'cargo_length.*'      => 'required|numeric|min:0',
+            'cargo_width.*'       => 'required|numeric|min:0',
+            'cargo_height.*'      => 'required|numeric|min:0',
         ]);
 
-        // Create sender & consignee
-        $sender = Sender::create([
-            'sender_name' => $request->sender_name,
-            'sender_contactno' => $request->sender_contactno,
-            'sender_email' => $request->sender_email,
-        ]);
-
-        $consignee = Consignee::create([
-            'consignee_name' => $request->consignee_name,
-            'consignee_contactno' => $request->consignee_contactno,
-        ]);
-
-        // Create booking (auto-increment BIGINT booking_ref_no)
-        Booking::create([
-            'booking_type' => 'cargo',
+        // 1️⃣ Create Booking
+        $booking = Booking::create([
+            'booking_date' => Carbon::now(),
             'booking_status' => 'Pending',
-            'voyage_id' => $request->voyage_id,
-            'sender_id' => $sender->sender_id,
-            'consignee_id' => $consignee->consignee_id,
-            'cargo_item_id' => $request->cargo_item_id,
-            'cargo_item_qty' => $request->cargo_item_qty,
+            'booking_type' => 'cargo',
+            'sender_id' => null,
+            'consignee_id' => null,
+            'voyage_id' => $request->input('voyage_id'),
         ]);
+
+        // 2️⃣ Create multiple cargo items
+        foreach ($request->cargo_description as $index => $desc) {
+            $picturePath = $request->file('cargo_picture')[$index] ?? null;
+            if ($picturePath) {
+                $picturePath = $picturePath->store('cargo_pictures', 'public');
+            }
+
+            CargoBooking::create([
+                'booking_ref_no' => $booking->booking_ref_no,
+                'cargo_item_id'  => $request->cargo_item_id[$index] ?? null,
+                'quantity'       => $request->cargo_quantity[$index],
+                'weight'         => $request->cargo_weight[$index],
+                'length'         => $request->cargo_length[$index],
+                'width'          => $request->cargo_width[$index],
+                'height'         => $request->cargo_height[$index],
+                'cargo_picture'  => $picturePath,
+            ]);
+        }
 
         return redirect()->route('staff.cargo_booking.create')
-                         ->with('success', 'Cargo booking submitted successfully!');
+                         ->with('success', 'Cargo booking created successfully!');
     }
 
-// Review Cargo Bookings
-public function reviewBookings(Request $request)
-{
-    $cargoBookings = Booking::with(['sender', 'consignee', 'voyage', 'cargoItem'])
-        ->where('booking_type', 'cargo')
-        ->when($request->search, function($query, $search) {
-            $query->where('booking_ref_no', 'like', "%{$search}%");
-        })
-        ->when($request->date, function($query, $date) {
-            $query->whereDate('created_at', $date);
-        })
-        ->orderBy('booking_ref_no', 'desc')
-        ->paginate(10);
+    // List all bookings for review
+    public function reviewBookings()
+    {
+        $bookings = Booking::where('booking_type', 'cargo')
+                            ->with('cargoBookings.cargoItem', 'voyage.vessel', 'voyage.routePort')
+                            ->orderBy('booking_date', 'desc')
+                            ->get();
 
-    // ✅ Return the view and pass the bookings
-    return view('authorized.staff.reviewcargobookings', compact('cargoBookings'));
-}
+        return view('staff.cargo_booking.review', compact('bookings'));
+    }
 
-public function getVoyages($routeId)
-{
-    $voyages = Voyage::where('route_port_id', $routeId)->get([
-        'voyage_id',
-        'voyage_departure_date'
-    ]);
-
-    return response()->json($voyages);
-}
-
-public function getTimes($voyageId)
-{
-    $times = Voyage::where('voyage_id', $voyageId)->get([
-        'voyage_id',
-        'voyage_estimated_TD'
-    ]);
-
-    return response()->json($times);
-}
-
-
-    // Approve Booking
+    // Approve booking
     public function approveBooking($bookingRefNo)
     {
         $booking = Booking::findOrFail($bookingRefNo);
         $booking->booking_status = 'Confirmed';
         $booking->save();
 
-        return back()->with('success', 'Booking approved successfully!');
+        return back()->with('success', 'Booking approved successfully.');
     }
 
-    // Reject Booking
+    // Reject booking
     public function rejectBooking($bookingRefNo)
     {
         $booking = Booking::findOrFail($bookingRefNo);
-        $booking->booking_status = 'Cancelled';
+        $booking->booking_status = 'Canceled';
         $booking->save();
 
-        return back()->with('success', 'Booking cancelled successfully!');
+        return back()->with('success', 'Booking rejected successfully.');
     }
 }
