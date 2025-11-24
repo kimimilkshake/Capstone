@@ -23,7 +23,7 @@ class PromoController extends Controller
 
         $promos = $query
             ->orderBy('promo_id', 'asc')
-            ->paginate(10);
+            ->paginate(8);
 
 
         return view('authorized.admin.promo_list', compact('promos'));
