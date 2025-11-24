@@ -91,12 +91,13 @@ return new class extends Migration {
             $table->string('cargo_item_description');
             $table->decimal('cargo_item_freight', 10, 2);
             $table->decimal('cargo_item_arrastre', 10, 2);
-            $table->enum('cargo_item_type', ['Type A', 'Type B', 'Type C']);
-            $table->integer('cargo_item_volume')->nullable();
-            $table->integer('cargo_item_weight')->nullable();
-            $table->integer('cargo_item_length')->nullable();
-            $table->integer('cargo_item_height')->nullable();
-            $table->integer('cargo_item_width')->nullable();
+            $table->enum('cargo_item_type', ['Type A', 'Type B', 'Type C']); //remove
+            $table->integer('cargo_item_volume')->nullable(); //remove
+            $table->integer('cargo_item_weight')->nullable(); //remove
+            $table->integer('cargo_item_length')->nullable(); //remove
+            $table->integer('cargo_item_height')->nullable(); //remove
+            $table->integer('cargo_item_width')->nullable(); //remove
+            //add port
             $table->timestamps();
         });
 

@@ -7,6 +7,7 @@ use App\Http\Controllers\PassengerController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\OcrController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ContactController;
 
 // ADMIN CONTROLLERS
 use App\Http\Controllers\Admin\DashboardController;
@@ -100,6 +101,7 @@ Route::get('/passenger/faqs', function () {
 Route::get('/passenger/contact', function () {
     return view('passenger.contact');
 })->name('contact');
+Route::post('/contact/send', [ContactController::class, 'send'])->name('contact.send');
 
 // Show login page
 Route::get('/authorized/login', [AuthController::class, 'showLoginForm'])->name('login.form');

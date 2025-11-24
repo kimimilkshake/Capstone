@@ -25,7 +25,7 @@
             <div class="contact-col">
                 <div class="contact-card">
                     <h3 class="contact-title">SEND US A MESSAGE!</h3>
-                    <form action="#" method="POST">
+                    <form action="{{ route('contact.send') }}" method="POST">
                         @csrf
                         <label for="contact_name">Name:</label>
                         <input type="text" name="name" id="contact_name" required>
