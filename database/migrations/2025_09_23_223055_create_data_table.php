@@ -85,21 +85,6 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        Schema::create('cargo_item', function (Blueprint $table) {
-            $table->id('cargo_item_id');
-            $table->string('cargo_item_classification');
-            $table->string('cargo_item_description');
-            $table->decimal('cargo_item_freight', 10, 2);
-            $table->decimal('cargo_item_arrastre', 10, 2);
-            $table->enum('cargo_item_type', ['Type A', 'Type B', 'Type C']); //remove
-            $table->integer('cargo_item_volume')->nullable(); //remove
-            $table->integer('cargo_item_weight')->nullable(); //remove
-            $table->integer('cargo_item_length')->nullable(); //remove
-            $table->integer('cargo_item_height')->nullable(); //remove
-            $table->integer('cargo_item_width')->nullable(); //remove
-            //add port
-            $table->timestamps();
-        });
 
         // ==========================
         // VESSEL RELATED
@@ -203,6 +188,16 @@ return new class extends Migration {
         // ==========================
         // CARGO
         // ==========================
+        Schema::create('cargo_item', function (Blueprint $table) {
+            $table->id('cargo_item_id');
+            $table->string('cargo_item_classification');
+            $table->string('cargo_item_description');
+            $table->decimal('cargo_item_freight', 10, 2);
+            $table->decimal('cargo_item_arrastre', 10, 2);
+            $table->foreignId('route_port_id')->constrained('route_port', 'route_port_id');
+            $table->timestamps();
+        });
+
         Schema::create('cargo_receipt', function (Blueprint $table) {
             $table->id('cargo_receipt_id');
             $table->foreignId('sender_id')->constrained('sender', 'sender_id');
