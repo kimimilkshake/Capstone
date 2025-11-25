@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class CargoReceipt extends Model
 {
+    use HasFactory;
+
     protected $table = 'cargo_receipt';
     protected $primaryKey = 'cargo_receipt_id';
 
@@ -15,7 +17,4 @@ class CargoReceipt extends Model
         'cargo_item_id', 'voyage_id', 'cargo_item_qty'
     ];
 
-    public function booking() {
-        return $this->belongsTo(Booking::class, 'booking_ref_no', 'booking_ref_no');
-    }
 }

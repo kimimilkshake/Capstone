@@ -27,17 +27,34 @@ class Voyage extends Model
         'voyage_code'
     ];
 
-    // Each voyage belongs to a vessel
     public function vessel()
     {
         return $this->belongsTo(Vessel::class, 'vessel_id', 'vessel_id');
     }
 
-    // Each voyage belongs to a route and port
     public function routePort()
     {
         return $this->belongsTo(RoutePort::class, 'route_port_id', 'route_port_id');
     }
 
-    
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class, 'voyage_id', 'voyage_id');
+    }
+
+    public function passengerBookings()
+    {
+        return $this->hasMany(Booking::class, 'voyage_id')->where('booking_type', 'passenger');
+    }
+
+    public function cargoBookings()
+    {
+        return $this->hasMany(CargoBooking::class, 'voyage_id');
+    }
+
+    // New: cargoReceipts uses the cargo_receipt.voyage_id column (which exists)
+    public function cargoReceipts()
+    {
+        return $this->hasMany(\App\Models\CargoReceipt::class, 'voyage_id', 'voyage_id');
+    }
 }

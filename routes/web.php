@@ -186,7 +186,7 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
 });
 
     //MANIFEST
-    Route::get('authorized/manifest/{id}', [ManifestController::class, 'show'])->name('manifest');
+    Route::get('authorized/manifest/{voyage}', [ManifestController::class, 'show'])->name('manifest');
 
 //CargoAutoPlacement
 
