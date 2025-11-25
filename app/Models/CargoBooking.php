@@ -10,6 +10,9 @@ class CargoBooking extends Model
     use HasFactory;
 
     protected $table = 'cargo_booking';
+    protected $primaryKey = 'cargo_booking_id'; // Specify primary key
+    public $incrementing = true; // if auto-increment
+    protected $keyType = 'int'; // if integer
 
     protected $fillable = [
         'booking_ref_no',
@@ -24,6 +27,7 @@ class CargoBooking extends Model
         'arrastre',
         'total',
     ];
+    
 
     // Relation to CargoItem
     public function cargoItem()

@@ -26,7 +26,12 @@ class Booking extends Model
         'cargo_item_id',
         'cargo_item_qty',
     ];
-
+    // Booking.php
+    public function cargoBookings()
+    {
+    return $this->hasMany(CargoBooking::class, 'booking_ref_no', 'booking_ref_no');
+    }
+    
     // Relations
     public function sender()
     {
