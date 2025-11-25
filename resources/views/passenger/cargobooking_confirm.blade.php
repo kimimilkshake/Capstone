@@ -1,0 +1,82 @@
+@extends('layouts.app')
+@section('content')
+@include('components.hero')
+
+<div class="container my-5">
+    <div class="card shadow-sm mx-auto" style="max-width:1100px; background-color:#f0f0f0;">
+        <div class="card-header bg-dark text-white text-center mb-1">
+            <h5 class="mb-0">CARGO BOOKING CONFIRMATION</h5>
+        </div>
+
+        <div class="card-body">
+            <h6>Booking Reference: <strong>{{ $booking->booking_ref_no }}</strong></h6>
+            <p>Status: <strong>{{ $booking->booking_status }}</strong></p>
+
+            <hr>
+
+            <h6>Sender Information</h6>
+            <p>{{ $sender->sender_name }} | {{ $sender->sender_contactno }} | {{ $sender->sender_email }}</p>
+
+            <h6>Consignee Information</h6>
+            <p>{{ $consignee->consignee_name }} | {{ $consignee->consignee_contactno }}</p>
+
+            <hr>
+
+            <h6>Cargo Items</h6>
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Dimensions (LxWxH cm)</th>
+                        <th>CBM</th>
+                        <th>Freight Rate</th>
+                        <th>Arrastre Rate</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php $totalExpense = 0; @endphp
+                    @foreach($cargoItems as $item)
+                        @php
+                            // CBM calculation (m³)
+                            $cbm = ($item->length * $item->width * $item->height) / 1000000;
+
+                            // Subtotal: (freight + arrastre) * quantity * CBM
+                            $subtotal = $cbm * ($item->freight + $item->arrastre) * $item->quantity;
+                            $totalExpense += $subtotal;
+                        @endphp
+                        <tr>
+                            <td>{{ $item->cargo_item_description }} ({{ $item->cargo_item_classification }})</td>
+                            <td>{{ $item->quantity }}</td>
+                            <td>{{ $item->length }} x {{ $item->width }} x {{ $item->height }}</td>
+                            <td>{{ number_format($cbm, 3) }}</td>
+                            <td>PHP {{ number_format($item->freight, 2) }}</td>
+                            <td>PHP {{ number_format($item->arrastre, 2) }}</td>
+                            <td>PHP {{ number_format($subtotal, 2) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="6" class="text-end">Total Expense:</th>
+                        <th>PHP {{ number_format($totalExpense, 2) }}</th>
+                    </tr>
+                </tfoot>
+            </table>
+
+<div class="d-flex justify-content-end gap-2 mt-4">
+    @if(strtolower($booking->booking_status) === 'pending')
+        <form action="{{ route('cargobooking.finalize', ['booking_ref_no' => $booking->booking_ref_no]) }}" method="POST">
+            @csrf
+            <button type="submit" class="btn btn-primary">Proceed</button>
+        </form>
+
+        <form action="{{ route('cargobooking.cancel', ['booking_ref_no' => $booking->booking_ref_no]) }}" method="POST">
+            @csrf
+            <button type="submit" class="btn btn-outline-secondary">Cancel Booking</button>
+        </form>
+    @endif
+</div>
+
+@endsection

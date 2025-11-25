@@ -5,6 +5,19 @@ document.addEventListener("DOMContentLoaded", function () {
     const loader = document.getElementById("ocrLoader");
     let unavailableCots = [];
 
+    // Get accommodations data from the page
+    let accommodations = [];
+    try {
+        const accommodationsData = document.getElementById(
+            "accommodations-data"
+        );
+        if (accommodationsData) {
+            accommodations = JSON.parse(accommodationsData.textContent);
+        }
+    } catch (error) {
+        console.error("Failed to load accommodations data:", error);
+    }
+
     function generatePassengerForms(count) {
         passengerSections.innerHTML = "";
         for (let i = 1; i <= count; i++) {
@@ -13,6 +26,20 @@ document.addEventListener("DOMContentLoaded", function () {
                 { length: 50 },
                 (_, idx) => `<option>${idx + 1}</option>`
             ).join("");
+
+            // Build accommodation options from vessel data
+            const accommodationOptions = accommodations
+                .map(
+                    (acc) =>
+                        `<option value="${
+                            acc.accommodation_name
+                        }" data-price="${acc.accommodation_regular_price}">${
+                            acc.accommodation_name
+                        } - ₱${parseFloat(
+                            acc.accommodation_regular_price
+                        ).toFixed(2)}</option>`
+                )
+                .join("");
             const passengerHTML = `
                 <div class="passenger-form mb-4 p-3 bg-white rounded shadow-sm" data-passenger="${i}">
                     <h6 class="fw-bold mb-3 text-primary">Personal Information - Person ${i}</h6>
@@ -21,11 +48,13 @@ document.addEventListener("DOMContentLoaded", function () {
                             <label class="form-label">Type</label>
                             <select class="form-select passenger-type" name="type" required>
                                 <option value="">Select Type</option>
-                                <option value="Adult">Adult</option>
-                                <option value="Student">Student</option>
-                                <option value="SeniorCitizen">Senior Citizen</option>
+                                <option value="Regular">Regular/Adult</option>
+                                <option value="Senior Citizen">Senior Citizen</option>
                                 <option value="PWD">PWD</option>
-                                <option value="UniformedPerson">Uniformed Personnel</option>
+                                <option value="Student">Student</option>
+                                <option value="Uniformed Personnel">Uniformed Personnel</option>
+                                <option value="3 to 11 years old">3 to 11 years old</option>
+                                <option value="Below 3 years old">Below 3 years old</option>
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -87,11 +116,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Accommodation Type</label>
-                            <select class="form-select" name="accommodation_type" required>
+                            <select class="form-select accommodation-select" name="accommodation_type" required>
                                 <option value="">Select Accommodation</option>
-                                <option>Tourist Class</option>
-                                <option>Cabin</option>
-                                <option>Economy</option>
+                                ${accommodationOptions}
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -162,16 +189,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 const idNumberInput = passengerForm.querySelector(".id-number");
                 const idUploadInput = passengerForm.querySelector(".id-upload");
 
-                if (this.value === "Adult") {
+                if (this.value === "Regular") {
                     idFields.style.display = "none";
-                    // Remove required attribute for adult passengers
+                    // Remove required attribute for regular passengers
                     if (idNumberInput)
                         idNumberInput.removeAttribute("required");
                     if (idUploadInput)
                         idUploadInput.removeAttribute("required");
                 } else {
                     idFields.style.display = "block";
-                    // Add required attribute for non-adult passengers
+                    // Add required attribute for non-regular passengers
                     if (idNumberInput)
                         idNumberInput.setAttribute("required", "required");
                     if (idUploadInput)
@@ -226,8 +253,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 const type = form.querySelector(".passenger-type").value;
                 console.log("Processing passenger type:", type);
 
-                if (type === "Adult") {
-                    console.log("Skipping ID verification for Adult passenger");
+                if (type === "Regular") {
+                    console.log(
+                        "Skipping ID verification for Regular passenger"
+                    );
                     continue;
                 }
 
@@ -311,7 +340,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     ).value,
                     email: formEl.querySelector('input[name="email"]').value,
                     id_number:
-                        passengerType === "Adult"
+                        passengerType === "Regular"
                             ? null
                             : idNumberInput
                             ? idNumberInput.value

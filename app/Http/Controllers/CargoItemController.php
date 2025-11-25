@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CargoItem;
+use App\Models\RoutePort;
 use Illuminate\Http\Request;
 
 class CargoItemController extends Controller
@@ -19,38 +20,42 @@ class CargoItemController extends Controller
     }
 
     public function index(Request $request)
-{
-    $query = CargoItem::query();
+    {
+        $query = CargoItem::query();
 
-    // SEARCH (classification, description, type)
-    if ($request->filled('search')) {
-        $search = $request->search;
+        if ($request->filled('search')) {
+            $search = $request->search;
 
-        $query->where(function ($q) use ($search) {
-            $q->where('cargo_item_classification', 'like', "%{$search}%")
-              ->orWhere('cargo_item_description', 'like', "%{$search}%");
-        });
+            $query->where(function ($q) use ($search) {
+                $q->where('cargo_item_classification', 'like', "%{$search}%")
+                ->orWhere('cargo_item_description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('destination')) {
+            $query->whereHas('routePort', function ($q) use ($request) {
+                $q->where('route_destination', $request->destination);
+            });
+        }
+
+        $cargo_items = $query
+            ->orderBy('cargo_item_description', 'asc')
+            ->paginate(8);
+
+        $destinations = RoutePort::pluck('route_destination')->unique();
+
+        return $this->isStaff()
+            ? view('authorized.staff.scargo_item_list', compact('cargo_items', 'destinations'))
+            : view('authorized.admin.cargo_item_list', compact('cargo_items', 'destinations'));
     }
 
-    // FILTER BY TYPE (Type A, Type B, Type C, etc)
-    if ($request->filled('type')) {
-        $query->where('cargo_item_type', $request->type);
-    }
-
-    $cargo_items = $query
-        ->orderBy('cargo_item_description', 'asc')
-        ->paginate(10);
-
-    return $this->isStaff()
-        ? view('authorized.staff.scargo_item_list', compact('cargo_items'))
-        : view('authorized.admin.cargo_item_list', compact('cargo_items'));
-}
 
     public function create()
     {
+        $routes = RoutePort::all();
         return $this->isStaff()
-            ? view('authorized.staff.screate_cargo_item')
-            : view('authorized.admin.create_cargo_item');
+            ? view('authorized.staff.screate_cargo_item', compact('routes'))
+            : view('authorized.admin.create_cargo_item', compact('routes'));
     }
 
     public function store(Request $request)
@@ -60,12 +65,7 @@ class CargoItemController extends Controller
             'cargo_item_description'    => 'required|string',
             'cargo_item_freight'        => 'required|numeric',
             'cargo_item_arrastre'       => 'required|numeric',
-            'cargo_item_type'           => 'required|string',
-            'cargo_item_volume'         => 'required|numeric',
-            'cargo_item_weight'         => 'required|numeric',
-            'cargo_item_length'         => 'required|numeric',
-            'cargo_item_height'         => 'required|numeric',
-            'cargo_item_width'          => 'required|numeric',
+            'route_port_id'             => 'required|exists:route_port,route_port_id',
         ]);
 
         CargoItem::create($request->all());
@@ -77,10 +77,11 @@ class CargoItemController extends Controller
     public function edit($id)
     {
         $cargo_item = CargoItem::findOrFail($id);
+        $routes = RoutePort::all();
 
         return $this->isStaff()
-            ? view('authorized.staff.scargo_item_edit', compact('cargo_item'))
-            : view('authorized.admin.cargo_item_edit', compact('cargo_item'));
+            ? view('authorized.staff.scargo_item_edit', compact('cargo_item', 'routes'))
+            : view('authorized.admin.cargo_item_edit', compact('cargo_item', 'routes'));
     }
 
     public function update(Request $request, $id)
@@ -92,12 +93,7 @@ class CargoItemController extends Controller
             'cargo_item_description'    => 'required|string',
             'cargo_item_freight'        => 'required|numeric',
             'cargo_item_arrastre'       => 'required|numeric',
-            'cargo_item_type'           => 'required|string',
-            'cargo_item_volume'         => 'required|numeric',
-            'cargo_item_weight'         => 'required|numeric',
-            'cargo_item_length'         => 'required|numeric',
-            'cargo_item_height'         => 'required|numeric',
-            'cargo_item_width'          => 'required|numeric',
+            'route_port_id'             => 'required|exists:route_port,route_port_id',
         ]);
 
         $cargo_item->update($request->all());

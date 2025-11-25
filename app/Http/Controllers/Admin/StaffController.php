@@ -26,7 +26,7 @@ class StaffController extends Controller
 
         $staff = $query
             ->orderBy('staff_id', 'asc')
-            ->paginate(10);
+            ->paginate(8);
 
 
         return view('authorized.admin.staff_list', compact('staff'));

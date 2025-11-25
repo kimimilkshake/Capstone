@@ -85,20 +85,6 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        Schema::create('cargo_item', function (Blueprint $table) {
-            $table->id('cargo_item_id');
-            $table->string('cargo_item_classification');
-            $table->string('cargo_item_description');
-            $table->decimal('cargo_item_freight', 10, 2);
-            $table->decimal('cargo_item_arrastre', 10, 2);
-            $table->enum('cargo_item_type', ['Type A', 'Type B', 'Type C']);
-            $table->integer('cargo_item_volume')->nullable();
-            $table->integer('cargo_item_weight')->nullable();
-            $table->integer('cargo_item_length')->nullable();
-            $table->integer('cargo_item_height')->nullable();
-            $table->integer('cargo_item_width')->nullable();
-            $table->timestamps();
-        });
 
         // ==========================
         // VESSEL RELATED
@@ -119,6 +105,7 @@ return new class extends Migration {
             $table->foreignId('vessel_id')->constrained('vessel', 'vessel_id');
             $table->string('accommodation_name');
             $table->decimal('accommodation_regular_price', 10, 2);
+            $table->integer('accommodation_capacity');
             $table->timestamps();
         });
 
@@ -201,6 +188,16 @@ return new class extends Migration {
         // ==========================
         // CARGO
         // ==========================
+        Schema::create('cargo_item', function (Blueprint $table) {
+            $table->id('cargo_item_id');
+            $table->string('cargo_item_classification');
+            $table->string('cargo_item_description');
+            $table->decimal('cargo_item_freight', 10, 2);
+            $table->decimal('cargo_item_arrastre', 10, 2);
+            $table->foreignId('route_port_id')->constrained('route_port', 'route_port_id');
+            $table->timestamps();
+        });
+
         Schema::create('cargo_receipt', function (Blueprint $table) {
             $table->id('cargo_receipt_id');
             $table->foreignId('sender_id')->constrained('sender', 'sender_id');

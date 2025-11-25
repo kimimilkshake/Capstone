@@ -29,7 +29,6 @@
 
         <!--ROW  1: VESSEL NAME AND PASSENGER CAPACITY-->
         <div class="form-row">
-
           <div class="form-col">
             <div class="form-group">
               <label for="vessel_code">Vessel Code:</label>
@@ -46,41 +45,48 @@
 
           <div class="form-col">
             <div class="form-group">
-              <label for="vessel_total_passenger_capacity">Passenger Capacity:</label>
-              <input type="number" id="vessel_total_passenger_capacity" name="vessel_total_passenger_capacity" placeholder="Enter Passenger Capacity" required>
+              <label for="vessel_total_passenger_capacity">Total Passenger Capacity:</label>
+              <input type="number" value="{{ isset($vessel) ? $vessel->vessel_total_passenger_capacity : 0 }}" disabled>
             </div>
           </div>
         </div>
 
-        <!--ROW 2: HATCH AND ACCOMMODATION-->
+        <!--ROW 2: HATCH-->
         <div class="form-row">
-          <!-- Hatch Section -->
           <div class="form-col">
-            <label class="ha-label">Hatches</label>
-            <div id="hatch-container">
-              <div class="hatch-row">
-                <input type="text" name="hatches[0][label]" placeholder="Hatch Label" required>
-                <input type="number" name="hatches[0][area_capacity]" placeholder="Area Capacity in Cubic Meters" title="Area Capacity in Cubic Meters" required>
-                <input type="number" name="hatches[0][weight_capacity]" placeholder="Weight Capacity in Tons" title="Weight Capacity in Tons" required>
-                <button type="button" class="hatch-btn add-hatch">+</button>
-              </div>
+            <div class="form-group">
+              <label class="ha-label">Hatches</label>
+                <div id="hatch-container">
+                  <div class="hatch-row">
+                    <input type="text" name="hatches[0][label]" placeholder="Hatch Label" required>
+                    <input type="number" name="hatches[0][area_capacity]" placeholder="Area Capacity in Cubic Meters" title="Area Capacity in Cubic Meters" required>
+                    <input type="number" name="hatches[0][weight_capacity]" placeholder="Weight Capacity in Tons" title="Weight Capacity in Tons" required>
+                    <button type="button" class="hatch-btn add-hatch">+</button>
+                  </div>
+                </div>
             </div>
-          </div>
+            
+          </div>          
+        </div>
 
-          <!-- Accommodation Section -->
+        <!--ROW 3: ACCOMMODATION-->
+        <div class="form-row">
           <div class="form-col">
-            <label class="ha-label">Accommodations</label>
-            <div id="accommodation-container">
-              <div class="accommodation-row">
-                <input type="text" name="accommodations[0][name]" placeholder="Accommodation Name" required>
-                <input type="number" name="accommodations[0][price]" placeholder="Regular Price" required>
-                <button type="button" class="accommodation-btn add-accommodation">+</button>
+            <div class="form-group">
+              <label class="ha-label">Accommodations</label>
+              <div id="accommodation-container">
+                <div class="accommodation-row">
+                  <input type="text" name="accommodations[0][name]" placeholder="Accommodation Name" required>
+                  <input type="number" name="accommodations[0][price]" placeholder="Regular Price" required>
+                  <input type="number" name="accommodations[0][capacity]" placeholder="Accommodation Capacity">
+                  <button type="button" class="accommodation-btn add-accommodation">+</button>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-
+        <!--ROW 4: COT PLAN-->
         <div class="form-row">
           <div class="form-group vcot-plan">
             <label for="vessel_cot_plan_url">Cot Plan:</label>

@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     row.innerHTML = `
       <input type="text" name="accommodations[${index}][name]" placeholder="Accommodation Name" required>
       <input type="number" name="accommodations[${index}][price]" placeholder="Regular Price" required>
+      <input type="number" name="accommodations[${index}][capacity]" placeholder="Accommodation Capacity" required>
       <button type="button" class="dynamic-add acc-action">+</button>
     `;
     return row;
