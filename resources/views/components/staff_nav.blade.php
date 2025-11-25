@@ -20,12 +20,20 @@
       </a>
     </li>
 
-    <li class="snav-item">
-      <a class="snav-link" href="{{ url('/staff/cargobooking') }}">
-        <i class="fa-solid fa-truck-ramp-box me-1"></i>
-        <span class="snav-label">Cargo Booking</span>
-      </a>
-    </li>
+<li class="snav-item">
+  <a class="snav-link" href="{{ route('staff.cargo_booking.create') }}">
+    <i class="fa-solid fa-truck-ramp-box me-1"></i>
+    <span class="snav-label">Cargo Booking</span>
+  </a>
+</li>
+
+<li class="snav-item">
+  <a class="snav-link" href="{{ route('staff.cargo_bookings.review') }}">
+    <i class="fa-solid fa-eye me-1"></i>
+    <span class="snav-label">Review Cargo Bookings</span>
+  </a>
+</li>
+
 
     <li class="snav-item">
       <i class="fa-solid fa-map me-3"></i></i><span class="snav-label">Voyages</span>
@@ -77,4 +85,3 @@
 
   </ul>
 </nav>
-

@@ -42,7 +42,7 @@ class VoyageController extends Controller
                       ->orWhereDate('voyage_arrival_date', $date);
             })
             ->orderBy('voyage_departure_date', 'desc')
-            ->paginate(10);
+            ->paginate(8);
 
         return $this->isStaff()
             ? view('authorized.staff.svoyage_list', compact('voyages', 'search'))
