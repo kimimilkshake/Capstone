@@ -181,11 +181,8 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
     Route::get('/cargo_items/{id}/edit', [CargoItemController::class, 'edit'])->name('admin.cargo_item_edit');
     Route::put('/cargo_items/{id}/update', [CargoItemController::class, 'update'])->name('admin.cargo_item_update');
     Route::delete('/cargo_items/{id}/delete', [CargoItemController::class, 'destroy'])->name('admin.cargo_item_delete');
-<<<<<<< HEAD
 
 
-=======
->>>>>>> origin/Cargo-Booking
 });
 
     //MANIFEST
@@ -243,11 +240,8 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
 
     // Semaphore Text SMS
     Route::get('/semaphore', [SemaphoreController::class, 'show'])->name('staff.semaphore');
-<<<<<<< HEAD
     Route::post('/semaphore/send', [SemaphoreController::class, 'send'])->name('staff.semaphore.send')->middleware('auth');
     
-=======
->>>>>>> origin/Cargo-Booking
 });
 
 Route::post('/authorized/logout', [AuthController::class, 'logout'])->name('logout');
