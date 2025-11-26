@@ -485,6 +485,31 @@ body {
   border-radius: 6px; 
 }
 
+.hatch-input label,
+.acc-input label {
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+    font-weight: 600;
+}
+
+.hatch-input input,
+.acc-input input {
+    padding: 6px 8px;
+    font-size: 0.85rem;
+}
+
+.hatch-input,
+.acc-input {
+    margin-bottom: 8px;
+}
+
+.hatch-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 8px;
+}
+
+
 //ROUTES AND PORTS
 .rp-row {
   display: flex;
@@ -660,7 +685,6 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* Force form to always fit horizontally */
 .aci-form_container .form-row {
     display: flex;
     justify-content: space-between;
@@ -668,12 +692,10 @@ body {
     margin-bottom: 15px;
 }
 
-/* Each column inside the row */
 .aci-form_container .form-col {
     flex: 1;
 }
 
-/* Inputs + selects styling */
 .aci-form_container .form-group input,
 .aci-form_container .form-group select {
     width: 100%;
@@ -683,7 +705,6 @@ body {
     font-size: 15px;
 }
 
-/* Labels */
 .aci-form_container .form-group label {
     font-weight: 600;
     font-size: 14px;
@@ -691,8 +712,6 @@ body {
     display: block;
 }
 
-
-/* RESPONSIVE FIX – prevents overflow on smaller screens */
 @media (max-width: 900px) {
     .aci-form_container .form-row {
         flex-direction: column;
@@ -762,7 +781,6 @@ body {
 }
 
 //MANIFEST
-
 .manifest-header {
     margin-bottom: 1.5rem;
     color: #000;

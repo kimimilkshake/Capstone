@@ -15,8 +15,21 @@ class Hatch extends Model
     protected $fillable = [
         'vessel_id',
         'hatch_label',
-        'hatch_area_capacity',
+        'hatch_length',
+        'hatch_width',
+        'hatch_height',
         'hatch_weight_capacity',
+        'hatch_area_capacity',
+        'hatch_capacity_per_hold',
+    ];
+
+    protected $casts = [
+        'hatch_length' => 'decimal:2',
+        'hatch_width' => 'decimal:2',
+        'hatch_height' => 'decimal:2',
+        'hatch_weight_capacity' => 'decimal:2',
+        'hatch_area_capacity' => 'decimal:2',
+        'hatch_capacity_per_hold' => 'decimal:2',
     ];
 
     public function vessel() {

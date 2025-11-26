@@ -45,9 +45,9 @@
                             {{ $voyage->routePort->route_origin }} → 
                             {{ $voyage->routePort->route_destination }}
                         </td>
-                        <td>{{ \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('F j, Y, D') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('M j, Y, D') }}</td>
                         <td>{{ \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:iA') }}</td>
-                        <td>{{ \Carbon\Carbon::parse($voyage->voyage_arrival_date)->format('F j, Y, D') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($voyage->voyage_arrival_date)->format('M j, Y, D') }}</td>
                         <td>{{ \Carbon\Carbon::parse($voyage->voyage_estimated_TA)->format('g:iA') }}</td>
                         <td>{{ $voyage->vessel->vessel_name}}</td>
                         <td>{{ $voyage->voyage_status }}</td>

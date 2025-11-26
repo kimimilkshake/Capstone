@@ -46,30 +46,130 @@
 
         <!-- ROW 2: HATCHES -->
         <div class="form-row">
-          <!-- Hatches -->
           <div class="form-col">
-            <label class="ha-label">Hatches</label>
-            <div id="hatch-container">
-              @foreach ($vessel->hatches as $index => $hatch)
-                <div class="hatch-row">
-                  <input type="text" name="hatches[{{ $index }}][label]" value="{{ $hatch->hatch_label }}" placeholder="Hatch Label" required>
-                  <input type="number" name="hatches[{{ $index }}][area_capacity]" value="{{ $hatch->hatch_area_capacity }}" placeholder="Area Capacity in Cubic Meters" title="Area Capacity in Cubic Meters" required>
-                  <input type="number" name="hatches[{{ $index }}][weight_capacity]" value="{{ $hatch->hatch_weight_capacity }}" placeholder="Weight Capacity in Tons" title="Weight Capacity in Tons" required>
-                  <button type="button" class="hatch-btn">+</button>
-                </div>
-              @endforeach
+            <div class="form-group">
+              <label class="ha-label">Hatches</label>
+              <div id="hatch-container">
+                @foreach ($vessel->hatches as $index => $hatch)
+                  <div class="hatch-row">
+                    
+                    <div class="form-group hatch-input">
+                      <label>Label</label>
+                      <input type="text" 
+                            name="hatches[{{ $index }}][label]" 
+                            value="{{ $hatch->hatch_label }}" 
+                            placeholder="Hatch Label" required>
+                    </div>
+                    
+                    <div class="form-group hatch-input">
+                      <label>Length (m)</label>
+                      <input type="number" 
+                        name="hatches[{{ $index }}][length]" 
+                        value="{{ $hatch->hatch_length }}" 
+                        placeholder="Length (m)" step="0.01" inputmode="decimal" required>
+                    </div>
 
-              @if ($vessel->hatches->isEmpty())
-                <div class="hatch-row">
-                  <input type="text" name="hatches[0][label]" placeholder="Hatch Label" required>
-                  <input type="number" name="hatches[0][area_capacity]" placeholder="Area Capacity in Cubic Meters" required>
-                  <input type="number" name="hatches[0][weight_capacity]" placeholder="Weight Capacity in Tons" required>
-                  <button type="button" class="hatch-btn">+</button>
-                </div>
-              @endif
+                    <div class="form-group hatch-input">
+                      <label>Width (m)</label>
+                      <input type="number" 
+                        name="hatches[{{ $index }}][width]" 
+                        value="{{ $hatch->hatch_width }}" 
+                        placeholder="Width (m)" step="0.01" inputmode="decimal" required>
+                    </div>
+
+                    <div class="form-group hatch-input">
+                      <label>Height (m)</label>
+                      <input type="number" 
+                        name="hatches[{{ $index }}][height]" 
+                        value="{{ $hatch->hatch_height }}" 
+                        placeholder="Height (m)" step="0.01" inputmode="decimal" required>
+                    </div>
+
+                    <div class="form-group hatch-input">
+                      <label>Weight Capacity (%)</label>
+                      <input type="number" 
+                          name="hatches[{{ $index }}][weight_capacity]" 
+                          value="{{ $hatch->hatch_weight_capacity }}" 
+                          placeholder="Weight Capacity (%)" step="0.01" inputmode="decimal">
+                    </div>
+
+                    <div class="form-group hatch-input">
+                      <label>Area Capacity (m³)</label>
+                      <input type="number" 
+                          name="hatches[{{ $index }}][area_capacity]" 
+                          value="{{ $hatch->hatch_area_capacity }}" 
+                          placeholder="Area Capacity (m³)" step="0.01" inputmode="decimal" required>
+                    </div>
+
+                    <div class="form-group hatch-input">
+                      <label>Capacity per Hold (Tons)</label>
+                      <input type="number" 
+                          name="hatches[{{ $index }}][capacity_per_hold]" 
+                          value="{{ $hatch->hatch_capacity_per_hold }}" 
+                          placeholder="Capacity Per Hold (Tons)" step="0.01" inputmode="decimal" required>
+                    </div>
+
+                    <button type="button" class="hatch-btn add-hatch">+</button>
+                  </div>
+                @endforeach
+
+                @if ($vessel->hatches->isEmpty())
+                  <div class="hatch-row">
+
+                    <div class="form-group hatch-input">
+                      <label>Label</label>
+                      <input type="text" name="hatches[0][label]" placeholder="Hatch Label" required>
+                    </div>
+
+                    <div class="form-group hatch-input">
+                      <label>Length (m)</label>
+                      <input type="number" name="hatches[0][length]" placeholder="Length (m)" step="0.01" inputmode="decimal" required>
+                    </div>
+
+                    <div class="form-group hatch-input">
+                      <label>Width (m)</label>
+                      <input type="number" name="hatches[0][width]" placeholder="Width (m)" step="0.01" inputmode="decimal" required>
+                    </div>
+
+                    <div class="form-group hatch-input">
+                      <label>Height (m)</label>
+                      <input type="number" name="hatches[0][height]" placeholder="Height (m)" step="0.01" inputmode="decimal" required>
+                    </div>
+
+                    <div class="form-group hatch-input">
+                      <label> Capacity (%)</label>
+                      <input type="number" name="hatches[0][weight_capacity]" placeholder="Weight Capacity (%)" step="0.01" inputmode="decimal">
+                    </div>
+
+                    <div class="form-group hatch-input">
+                      <label>Area Capacity (m³)</label>
+                      <input type="number" name="hatches[0][area_capacity]" placeholder="Area Capacity (m³)" step="0.01" inputmode="decimal" required>
+                    </div>
+
+                    <div class="form-group hatch-input">
+                      <label>Capacity per Hold (Tons)</label>
+                      <input type="number" name="hatches[0][capacity_per_hold]" placeholder="Capacity Per Hold (Tons)" step="0.01" inputmode="decimal" required>
+                    </div>
+
+
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+
+                    <button type="button" class="hatch-btn add-hatch">+</button>
+                  </div>
+                @endif
+
+              </div>
+
             </div>
           </div>
         </div>
+
 
         <!--ROW 3: ACCOMMODATIONS-->
         <div class="form-row">
@@ -78,16 +178,26 @@
             <div id="accommodation-container">
               @foreach ($vessel->accommodations as $index => $acc)
                 <div class="accommodation-row">
-                  <input type="text" name="accommodations[{{ $index }}][name]" value="{{ $acc->accommodation_name }}" placeholder="Accommodation Name" required>
-                  <input type="number" name="accommodations[{{ $index }}][price]" value="{{ $acc->accommodation_regular_price }}" placeholder="Regular Price" required>
-                  <input type="number" name="accommodations[{{ $index }}][capacity]" value="{{ $acc->accommodation_capacity }}" placeholder="Capacity" required>
+                  <div class="form-group acc-input">
+                    <label>Name</label>
+                    <input type="text" name="accommodations[{{ $index }}][name]" value="{{ $acc->accommodation_name }}" placeholder="Accommodation Name" required>
+                  </div>
+                  <div class="form-group acc-input">
+                    <label>Regular Price</label>
+                    <input type="number" name="accommodations[{{ $index }}][price]" value="{{ $acc->accommodation_regular_price }}" placeholder="Regular Price" step="0.01" inputmode="decimal" required>
+                  </div>
+                  <div class="form-group acc-input">
+                    <label>Cot Range</label>
+                    <input type="number" name="accommodations[{{ $index }}][capacity]" value="{{ $acc->accommodation_capacity }}" placeholder="Capacity" required>
+                  </div>
+                  
                   <button type="button" class="accommodation-btn add-accommodation">+</button>
                 </div>
               @endforeach
               @if ($vessel->accommodations->isEmpty())
                 <div class="accommodation-row">
                   <input type="text" name="accommodations[0][name]" placeholder="Accommodation Name" required>
-                  <input type="number" name="accommodations[0][price]" placeholder="Regular Price" required>
+                  <input type="number" name="accommodations[0][price]" placeholder="Regular Price" step="0.01" inputmode="decimal" required>
                   <input type="number" name="accommodations[0][capacity]" placeholder="Accommodation Capacity" required>
                   <button type="button" class="accommodation-btn add-accommodation">+</button>
                 </div>
