@@ -148,6 +148,6 @@ class ManifestController extends Controller
         }
 
         // Render the view
-        return view('authorized.manifest', compact('voyage', 'showPassenger', 'showCargo', 'passengers', 'cargos'));
+        return view('authorized.admin.adminmanifest', compact('voyage', 'showPassenger', 'showCargo', 'passengers', 'cargos'));
     }
 }

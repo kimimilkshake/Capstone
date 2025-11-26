@@ -58,7 +58,7 @@
     </li>
 
     <li class="snav-item">
-      <a class="snav-link" href="{{ route('cargo.placement') }}">
+      <a class="snav-link" href="{{ route('staff.cargo.placement') }}">
         <i class="fa-solid fa-cubes me-1"></i>
         <span class="snav-label">Auto Placement</span>
       </a>

@@ -8,13 +8,23 @@ use Illuminate\Support\Facades\Log;
 
 class CargoAutoPlacementController extends Controller
 {
-    /**
-     * Show the placement form
-     */
+     private function isStaff()
+    {
+        return auth()->guard('staff')->check();
+    }
+
+    private function isAdmin()
+    {
+        return auth()->guard('admin')->check();
+    }
+
     public function show()
     {
-        return view('authorized.cargoautoplacement');
+        return $this->isStaff()
+            ? view('authorized.staff.staff_cargoautoplacement')
+            : view('authorized.admin.admin_cargoautoplacement');
     }
+
 
     /**
      * Process cargo placement request using 3DBinPacking API.

@@ -182,29 +182,29 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
     Route::put('/cargo_items/{id}/update', [CargoItemController::class, 'update'])->name('admin.cargo_item_update');
     Route::delete('/cargo_items/{id}/delete', [CargoItemController::class, 'destroy'])->name('admin.cargo_item_delete');
 
+    //Manifest
+    Route::get('/adminmanifest/{voyage}', [ManifestController::class, 'show'])->name('admin.manifest');
 
+    // Cargo Auto Placement
+
+    Route::post('/admin_cargo/place', [CargoAutoPlacementController::class, 'place'])
+    ->name('admin.cargo.place');
+
+    Route::get('/admin_cargo/placement', [CargoAutoPlacementController::class, 'show'])
+    ->name('admin.cargo.placement');
+
+    Route::post('/admin_cargo/place', [CargoAutoPlacementController::class, 'place'])
+    ->name('admin.cargo.place');
+
+    Route::post('/admin_cargo/placement/add-row', [CargoAutoPlacementController::class, 'addRow'])
+    ->name('admin.cargo.addRow');
+
+    Route::post('/admin_cargo/placement/remove-row', [CargoAutoPlacementController::class, 'removeRow'])
+    ->name('admin.cargo.removeRow');
 });
 
-    //MANIFEST
-    Route::get('authorized/manifest/{voyage}', [ManifestController::class, 'show'])->name('manifest');
+    
 
-//CargoAutoPlacement
-
-// POST route for processing placement calculation
-Route::post('/cargo/place', [CargoAutoPlacementController::class, 'place'])
-    ->name('cargo.place');
-
-Route::get('/cargo/placement', [CargoAutoPlacementController::class, 'show'])
-    ->name('cargo.placement');
-
-Route::post('/cargo/place', [CargoAutoPlacementController::class, 'place'])
-    ->name('cargo.place');
-
-Route::post('/cargo/placement/add-row', [CargoAutoPlacementController::class, 'addRow'])
-    ->name('cargo.addRow');
-
-Route::post('/cargo/placement/remove-row', [CargoAutoPlacementController::class, 'removeRow'])
-    ->name('cargo.removeRow');
 
 
 //STAFF
@@ -242,6 +242,25 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     Route::get('/semaphore', [SemaphoreController::class, 'show'])->name('staff.semaphore');
     Route::post('/semaphore/send', [SemaphoreController::class, 'send'])->name('staff.semaphore.send')->middleware('auth');
     
+    //MANIFEST
+    Route::get('/staffmanifest/{voyage}', [ManifestController::class, 'show'])->name('staff.manifest');
+
+    // Cargo Auto Placement
+
+    Route::post('/staff_cargo/place', [CargoAutoPlacementController::class, 'place'])
+    ->name('staff.cargo.place');
+
+    Route::get('/staff_cargo/placement', [CargoAutoPlacementController::class, 'show'])
+    ->name('staff.cargo.placement');
+
+    Route::post('/staff_cargo/place', [CargoAutoPlacementController::class, 'place'])
+    ->name('staff.cargo.place');
+
+    Route::post('/staff_cargo/placement/add-row', [CargoAutoPlacementController::class, 'addRow'])
+    ->name('staff.cargo.addRow');
+
+    Route::post('/staff_cargo/placement/remove-row', [CargoAutoPlacementController::class, 'removeRow'])
+    ->name('staff.cargo.removeRow');
 });
 
 Route::post('/authorized/logout', [AuthController::class, 'logout'])->name('logout');

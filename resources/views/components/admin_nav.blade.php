@@ -32,7 +32,7 @@
     </li>
 
     <li class="anav-item">
-      <a class="anav-link" href="{{ route('cargo.placement') }}">
+      <a class="anav-link" href="{{ route('admin.cargo.placement') }}">
         <i class="fa-solid fa-cubes me-1"></i>
         <span class="anav-label">Auto Placement</span>
       </a>
