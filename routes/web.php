@@ -228,16 +228,28 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     Route::get('/cargo_items/{id}/edit', [CargoItemController::class, 'edit'])->name('staff.cargo_item_edit');
     Route::put('/cargo_items/{id}/update', [CargoItemController::class, 'update'])->name('staff.cargo_item_update');
     Route::delete('/cargo_items/{id}/delete', [CargoItemController::class, 'destroy'])->name('staff.cargo_item_delete');
+//Cargo Booking
+ 
+    // Show cargo booking form
+    Route::get('/cargo-bookings/create', [StaffCargoController::class, 'create'])->name('staff.cargo_booking.create');
+    // Save new cargo booking
+    Route::post('/cargo-bookings/store', [StaffCargoController::class, 'store'])->name('cargo.bookings.store');
+    // Show only pending cargo bookings
+    Route::get('/cargo-bookings/pending', [StaffCargoController::class, 'pending'])->name('cargo.bookings.pending');
+    // View booking details
+    Route::get('/cargo-bookings/{id}', [StaffCargoController::class, 'show'])->name('cargo.bookings.show');
+    // Approve booking
+    Route::post('/cargo-bookings/{id}/approve', [StaffCargoController::class, 'approve'])->name('cargo.bookings.approve');
+    Route::post('/cargo-bookings/{id}/reject', [StaffCargoController::class, 'reject'])->name('cargo.bookings.reject');
 
-    Route::get('/staff/cargo-booking', [StaffCargoController::class, 'createBooking'])->name('staff.cargo_booking.create');
-    Route::post('/staff/cargo-booking', [StaffCargoController::class, 'storeBooking'])->name('staff.cargo_booking.store');
-     Route::get('/get-times/{voyageId}', [BookingController::class, 'getTimes']);
 
-    // Review Bookings
-    Route::get('/staff/cargo-bookings', [StaffCargoController::class, 'reviewBookings'])->name('staff.cargo_bookings.review');
-    Route::post('/staff/cargo-bookings/approve/{bookingRefNo}', [StaffCargoController::class, 'approveBooking'])->name('approveCargoBooking');
-    Route::post('/staff/cargo-bookings/reject/{bookingRefNo}', [StaffCargoController::class, 'rejectBooking'])->name('rejectCargoBooking');
+    // Edit cargo items
+    Route::get('/cargo-bookings/{id}/edit', [StaffCargoController::class, 'edit'])
+        ->name('cargo.bookings.edit');
 
+    // Update cargo items
+    Route::post('/cargo-bookings/{id}/update', [StaffCargoController::class, 'update'])
+        ->name('cargo.bookings.update');
     // Semaphore Text SMS
     Route::get('/semaphore', [SemaphoreController::class, 'show'])->name('staff.semaphore');
     Route::post('/semaphore/send', [SemaphoreController::class, 'send'])->name('staff.semaphore.send')->middleware('auth');

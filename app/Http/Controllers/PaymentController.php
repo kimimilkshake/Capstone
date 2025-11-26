@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendTicketEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -156,6 +157,9 @@ class PaymentController extends Controller
                                 'booking_status' => 'Confirmed',
                                 'updated_at' => now(),
                             ]);
+
+                            // Send ticket email
+                            SendTicketEmail::dispatch($payment->booking_ref_no);
                         }
                     } else {
                         Log::error('PayMongo charge failure', ['status' => $chargeResp->status(), 'body' => $chargeResp->body()]);
@@ -182,6 +186,9 @@ class PaymentController extends Controller
                             'booking_status' => 'Confirmed',
                             'updated_at' => now(),
                         ]);
+
+                        // Send ticket email
+                        SendTicketEmail::dispatch($payment->booking_ref_no);
                     } elseif (in_array($status, ['failed', 'canceled'])) {
                         DB::table('payment')->where('payment_id', $payment->payment_id)->update([
                             'payment_status' => 'Canceled',
@@ -229,6 +236,9 @@ class PaymentController extends Controller
                             'booking_status' => 'Confirmed',
                             'updated_at' => now(),
                         ]);
+
+                        // Send ticket email
+                        SendTicketEmail::dispatch($bookingRef);
                     } elseif ($status === 'chargeable') {
                         // Attempt to charge immediately if still pending
                         $amountPhp = (float) $payment->total_amount;
@@ -261,6 +271,9 @@ class PaymentController extends Controller
                                         'booking_status' => 'Confirmed',
                                         'updated_at' => now(),
                                     ]);
+
+                                    // Send ticket email
+                                    SendTicketEmail::dispatch($bookingRef);
                                     $status = 'paid';
                                 }
                             } else {
