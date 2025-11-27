@@ -1,4 +1,6 @@
 @extends('layouts.app')
+@section('page-title', 'CARGO BOOKING')
+
 @section('content')
 @include('components.hero')
 
@@ -9,7 +11,6 @@
         </div>
 
         <div class="card-body">
-
             @if(session('error'))
                 <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
@@ -20,31 +21,41 @@
 
                     <!-- LEFT SIDE -->
                     <div class="col-md-6 mb-3">
-
                         <h6 class="fw-bold">Sender Information</h6>
 
-                        <div class="mb-2 d-flex gap-2">
-                            <input type="text" name="sender_firstname" class="form-control" placeholder="First Name" required>
-                            <input type="text" name="sender_lastname" class="form-control" placeholder="Last Name" required>
-                        </div>
-
                         <div class="mb-2">
-                            <input type="text" name="sender_contact" class="form-control" placeholder="Contact Number" required>
+                            <label class="form-label">First Name <span class="text-danger">*</span></label>
+                            <input type="text" name="sender_firstname" class="form-control" required>
                         </div>
-
                         <div class="mb-2">
-                            <input type="email" name="sender_email" class="form-control" placeholder="Email Address">
+                            <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" name="sender_lastname" class="form-control" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Contact Number <span class="text-danger">*</span></label>
+                            <input type="text" name="sender_contact" class="form-control" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" name="sender_email" class="form-control">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">TIN Number (Optional)</label>
+                            <input type="text" name="sender_tin" class="form-control">
                         </div>
 
                         <h6 class="fw-bold mt-4">Consignee Information</h6>
-
-                        <div class="mb-2 d-flex gap-2">
-                            <input type="text" name="consignee_firstname" class="form-control" placeholder="First Name" required>
-                            <input type="text" name="consignee_lastname" class="form-control" placeholder="Last Name" required>
-                        </div>
-
                         <div class="mb-2">
-                            <input type="text" name="consignee_contact" class="form-control" placeholder="Contact Number" required>
+                            <label class="form-label">First Name <span class="text-danger">*</span></label>
+                            <input type="text" name="consignee_firstname" class="form-control" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" name="consignee_lastname" class="form-control" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Contact Number <span class="text-danger">*</span></label>
+                            <input type="text" name="consignee_contact" class="form-control" required>
                         </div>
 
                         <h6 class="fw-bold mt-4">Voyage Information</h6>
@@ -55,51 +66,93 @@
                             <p class="mb-1"><strong>Departure Time:</strong> {{ $departureTime }}</p>
                             <p class="mb-0"><strong>Port of Origin:</strong> {{ $portOfOrigin }}</p>
                         </div>
-
                         <input type="hidden" name="voyage_id" value="{{ request()->voyage_id }}">
                     </div>
 
                     <!-- RIGHT SIDE (CARGO ITEMS) -->
                     <div class="col-md-6 mb-3">
                         <h6 class="fw-bold">Cargo Information</h6>
-
                         <div id="cargo-items-container">
 
                             <div class="cargo-item border rounded p-3 mb-3">
 
-                                <!-- DROPDOWN -->
-                                <div class="mb-3">
-                                    <label class="fw-bold mb-1">Select Cargo Type</label>
-                                    <select name="cargo_item_id[]" class="form-control" required>
-                                        <option value="">-- Select Cargo Item --</option>
-                                        @foreach($cargoItems as $cargo)
-                                            <option value="{{ $cargo->cargo_item_id }}">
-                                                {{ $cargo->cargo_item_classification }} — {{ $cargo->cargo_item_description }}
-                                            </option>
+                                <!-- Classification Dropdown -->
+                                <div class="mb-2">
+                                    <label class="form-label">Classification</label>
+                                    <select class="form-control cargo-classification">
+                                        <option value="">-- Select Classification --</option>
+                                        @php
+                                            $classifications = $cargoItems
+                                                ->where('route_port_id', $voyage->routePort->route_port_id ?? null)
+                                                ->pluck('cargo_item_classification')
+                                                ->unique();
+                                        @endphp
+                                        @foreach($classifications as $class)
+                                            <option value="{{ $class }}">{{ $class }}</option>
                                         @endforeach
                                     </select>
                                 </div>
 
-                                <div class="mb-2 d-flex gap-2">
-                                    <input type="number" name="cargo_quantity[]" class="form-control" placeholder="Quantity" min="1" required>
-                                    <input type="number" name="cargo_weight[]" class="form-control" placeholder="Weight (kg)" step="0.01" required>
+                                <!-- Description Dropdown -->
+                                <div class="mb-3">
+                                    <label class="form-label">Description <span class="text-danger">*</span></label>
+                                    <select name="cargo_item_id[]" class="form-control cargo-description" required>
+                                        <option value="">-- Select Description --</option>
+                                        @foreach($cargoItems as $cargo)
+                                            @if($cargo->route_port_id == ($voyage->routePort->route_port_id ?? null))
+                                            <option value="{{ $cargo->cargo_item_id }}" data-classification="{{ $cargo->cargo_item_classification }}">
+                                                {{ $cargo->cargo_item_description }}
+                                            </option>
+                                            @endif
+                                        @endforeach
+                                    </select>
                                 </div>
 
+                                <!-- Quantity & Weight -->
                                 <div class="mb-2 d-flex gap-2">
-                                    <input type="number" name="cargo_length[]" class="form-control" placeholder="Length (cm)" step="0.01">
-                                    <input type="number" name="cargo_width[]" class="form-control" placeholder="Width (cm)" step="0.01">
+                                    <div class="flex-fill">
+                                        <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                                        <input type="number" name="cargo_quantity[]" class="form-control" placeholder="Quantity" min="1" required>
+                                    </div>
+                                    <div class="flex-fill">
+                                        <label class="form-label">Weight (kg) <span class="text-danger">*</span></label>
+                                        <input type="number" name="cargo_weight[]" class="form-control" placeholder="Weight" step="0.01" required>
+                                    </div>
                                 </div>
 
+                                <!-- Dimensions + CBM -->
                                 <div class="mb-2">
-                                    <input type="number" name="cargo_height[]" class="form-control" placeholder="Height (cm)" step="0.01">
+                                    <label class="form-label">Cargo Dimensions (cm) </label>
+                                    <div class="d-flex gap-2">
+                                        <div class="flex-fill">
+                                            <label class="form-label small">Length</label>
+                                            <input type="number" name="cargo_length[]" class="form-control dimension" step="0.01">
+                                        </div>
+                                        <div class="flex-fill">
+                                            <label class="form-label small">Width</label>
+                                            <input type="number" name="cargo_width[]" class="form-control dimension" step="0.01">
+                                        </div>
+                                        <div class="flex-fill">
+                                            <label class="form-label small">Height</label>
+                                            <input type="number" name="cargo_height[]" class="form-control dimension" step="0.01">
+                                        </div>
+                                        <div class="flex-fill">
+                                            <label class="form-label small">CBM</label>
+                                            <input type="text" class="form-control cbm-output" readonly placeholder="0.0000">
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <label class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center">
-                                    <i class="bi bi-image me-2"></i> Add Photo
-                                    <input type="file" name="cargo_picture[]" class="d-none" accept="image/*">
-                                </label>
+                                <!-- Photo Upload with confirmation -->
+                                <div class="mb-2">
+                                    <label class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center mt-2">
+                                        <i class="bi bi-image me-2"></i> Add Photo
+                                        <input type="file" name="cargo_picture[]" class="d-none cargo-photo" accept="image/*">
+                                    </label>
+                                    <small class="text-success photo-confirmation" style="display:none;">Photo selected!</small>
+                                </div>
 
-                            </div>
+                            </div> <!-- end cargo-item -->
 
                         </div>
 
@@ -107,7 +160,6 @@
                             <button type="button" id="addCargoItem" class="btn btn-secondary">Add Another Cargo</button>
                             <button type="button" id="removeCargoItem" class="btn btn-danger">Remove Last Cargo</button>
                         </div>
-
                     </div>
                 </div>
 
@@ -128,19 +180,56 @@
 <script>
 const container = document.getElementById('cargo-items-container');
 
-document.getElementById('addCargoItem').addEventListener('click', function() {
-    const first = container.querySelector('.cargo-item');
-    const clone = first.cloneNode(true);
-
-    clone.querySelectorAll('input').forEach(input => input.value = '');
-    clone.querySelector('select').selectedIndex = 0;
-
-    container.appendChild(clone);
+// CBM calculation
+container.addEventListener('input', function(e){
+    if(e.target.classList.contains('dimension')){
+        const item = e.target.closest('.cargo-item');
+        const length = parseFloat(item.querySelector('[name="cargo_length[]"]').value) || 0;
+        const width = parseFloat(item.querySelector('[name="cargo_width[]"]').value) || 0;
+        const height = parseFloat(item.querySelector('[name="cargo_height[]"]').value) || 0;
+        item.querySelector('.cbm-output').value = ((length * width * height)/1000000).toFixed(4);
+    }
 });
 
-document.getElementById('removeCargoItem').addEventListener('click', function() {
+// Add/remove cargo items
+document.getElementById('addCargoItem').addEventListener('click', function(){
+    const first = container.querySelector('.cargo-item');
+    const clone = first.cloneNode(true);
+    clone.querySelectorAll('input').forEach(i=>i.value='');
+    clone.querySelectorAll('select').forEach(s=>s.selectedIndex=0);
+    container.appendChild(clone);
+});
+document.getElementById('removeCargoItem').addEventListener('click', function(){
     const items = container.querySelectorAll('.cargo-item');
-    if (items.length > 1) items[items.length - 1].remove();
+    if(items.length > 1) items[items.length-1].remove();
+});
+
+// Classification filters Description
+container.addEventListener('change', function(e){
+    if(!e.target.classList.contains('cargo-classification')) return;
+    const item = e.target.closest('.cargo-item');
+    const classification = e.target.value;
+    const descriptionSelect = item.querySelector('.cargo-description');
+    Array.from(descriptionSelect.options).forEach(opt=>{
+        if(opt.value==='') return;
+        opt.style.display = (opt.dataset.classification===classification)?'block':'none';
+    });
+    descriptionSelect.value='';
+});
+
+// Photo confirmation
+container.addEventListener('change', function(e){
+    if(!e.target.classList.contains('cargo-photo')) return;
+
+    const confirmation = e.target.closest('.cargo-item').querySelector('.photo-confirmation');
+
+    if(e.target.files.length > 0){
+        confirmation.style.display = 'inline';
+        confirmation.textContent = `Photo selected: ${e.target.files[0].name}`;
+    } else {
+        confirmation.style.display = 'none';
+        confirmation.textContent = '';
+    }
 });
 </script>
 

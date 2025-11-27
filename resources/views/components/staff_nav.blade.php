@@ -31,7 +31,7 @@
 <li class="snav-item">
   <a class="snav-link" href="{{ route('cargo.bookings.pending') }}">
     <i class="fa-solid fa-eye me-1"></i>
-    <span class="snav-label">Review Cargo Bookings</span>
+    <span class="snav-label">Review Cargo</span>
   </a>
 </li>
 

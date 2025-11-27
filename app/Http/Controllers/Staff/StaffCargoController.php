@@ -20,9 +20,10 @@ class StaffCargoController extends Controller
     public function create()
     {
     $voyages = Voyage::with('routePort')->get();
-    $cargoItems = CargoItem::all(); // fetch fixed cargo items
+    $cargoItems = collect(CargoItem::all()); // <-- wrap in collect()
     return view('authorized.staff.cargobooking', compact('voyages', 'cargoItems'));
     }
+
 
     /**
      * Store new cargo booking
@@ -169,7 +170,7 @@ public function edit($id)
     public function approve($id)
     {
         $booking = Booking::where('booking_ref_no', $id)->firstOrFail();
-        $booking->booking_status = 'Approved';
+        $booking->booking_status = 'Confirmed';
         $booking->save();
 
         // Move cargo items to cargo_receipt
@@ -199,5 +200,13 @@ public function edit($id)
 
         return redirect()->route('cargo.bookings.pending')
             ->with('success', 'Booking has been canceled.');
+    }
+    public function getCargoItemsByVoyage($voyageId)
+    {
+    $voyage = Voyage::with('routePort')->findOrFail($voyageId);
+
+    $cargoItems = CargoItem::where('route_port_id', $voyage->route_port_id)->get();
+
+    return response()->json($cargoItems);
     }
 }

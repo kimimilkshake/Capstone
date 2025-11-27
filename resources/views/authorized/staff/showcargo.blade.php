@@ -15,38 +15,30 @@
         <h5>Booking Information</h5>
         <p><strong>Booking Ref #:</strong> {{ $booking->booking_ref_no }}</p>
         <p><strong>Status:</strong> {{ $booking->booking_status }}</p>
-        <p><strong>Created At:</strong> {{ $booking->created_at->format('M d, Y') }}</p>
-        <p><strong>Voyage:</strong>
-            @if($booking->voyage)
-                {{ $booking->voyage->voyage_code }} |
-                Departure: {{ $booking->voyage->voyage_departure_date }} |
-                Arrival: {{ $booking->voyage->voyage_arrival_date }}
-            @else
-                N/A
-            @endif
-        </p>
+        <p><strong>Created At:</strong> {{ \Carbon\Carbon::parse($booking->created_at)->format('M d, Y') }}</p>
+        @if($booking->voyage)
+        <p><strong>Voyage No:</strong> {{ $booking->voyage->voyage_code ?? 'N/A' }}</p>
+        <p><strong>Departure:</strong> {{ $booking->voyage->voyage_departure_date ?? 'N/A' }}</p>
+        <p><strong>Arrival:</strong> {{ $booking->voyage->voyage_arrival_date ?? 'N/A' }}</p>
+        @endif
     </div>
 
     {{-- Sender & Consignee --}}
     <div class="card mb-4 shadow-sm p-3">
-        <h5>Sender</h5>
-        <p>
-            {{ $booking->sender ? $booking->sender->sender_name : 'N/A' }} |
-            {{ $booking->sender ? $booking->sender->sender_contactno : 'N/A' }} |
-            {{ $booking->sender ? $booking->sender->sender_email : 'N/A' }}
-        </p>
+        <h5>Sender Information</h5>
+        <p><strong>Name:</strong> {{ $booking->sender->sender_name ?? 'N/A' }}</p>
+        <p><strong>Contact:</strong> {{ $booking->sender->sender_contactno ?? 'N/A' }}</p>
+        <p><strong>Email:</strong> {{ $booking->sender->sender_email ?? 'N/A' }}</p>
 
-        <h5>Consignee</h5>
-        <p>
-            {{ $booking->consignee ? $booking->consignee->consignee_name : 'N/A' }} |
-            {{ $booking->consignee ? $booking->consignee->consignee_contactno : 'N/A' }}
-        </p>
+        <h5 class="mt-3">Consignee Information</h5>
+        <p><strong>Name:</strong> {{ $booking->consignee->consignee_name ?? 'N/A' }}</p>
+        <p><strong>Contact:</strong> {{ $booking->consignee->consignee_contactno ?? 'N/A' }}</p>
     </div>
 
     {{-- Cargo Items --}}
     <div class="card mb-4 shadow-sm p-3">
         <h5>Cargo Items</h5>
-        <table class="table table-bordered">
+        <table class="table table-bordered table-striped">
             <thead class="table-dark">
                 <tr>
                     <th>Item</th>
@@ -70,16 +62,22 @@
                         $totalExpense += $subtotal;
                     @endphp
                     <tr>
-                        <td>{{ $item->cargoItem->cargo_item_description ?? $item->cargo_item_description ?? 'N/A' }} ({{ $item->cargoItem->cargo_item_classification ?? 'N/A' }})</td>
+                        <td>
+                            {{ $item->cargoItem->cargo_item_description ?? $item->cargo_item_description ?? 'N/A' }}
+                            ({{ $item->cargoItem->cargo_item_classification ?? 'N/A' }})
+                        </td>
                         <td>{{ $item->quantity }}</td>
                         <td>{{ $item->length }} × {{ $item->width }} × {{ $item->height }}</td>
-                        <td>{{ number_format($cbm, 3) }}</td>
+                        <td>{{ number_format($cbm, 4) }}</td>
                         <td>PHP {{ number_format($freight, 2) }}</td>
                         <td>PHP {{ number_format($arrastre, 2) }}</td>
                         <td>PHP {{ number_format($subtotal, 2) }}</td>
                         <td>
                             @if($item->cargo_picture)
-                                <img src="{{ asset('storage/cargo_pictures/' . $item->cargo_picture) }}" width="100" alt="Cargo Image">
+                                <a href="{{ asset('storage/cargo_pictures/' . $item->cargo_picture) }}" target="_blank">
+                                    <img src="{{ asset('storage/cargo_pictures/' . $item->cargo_picture) }}" 
+                                         alt="Cargo Image" class="img-thumbnail" style="max-width:100px;">
+                                </a>
                             @else
                                 N/A
                             @endif
@@ -98,22 +96,21 @@
 
     {{-- Actions --}}
     @if(strtolower($booking->booking_status) === 'pending')
-    <div class="d-flex justify-content-center gap-2 mt-4">
-        <form action="{{ route('cargo.bookings.approve', $booking->booking_ref_no) }}" method="POST">
-            @csrf
-            <button type="submit" class="btn btn-success btn-lg">Accept</button>
-        </form>
+        <div class="d-flex justify-content-center gap-2 mt-4">
+            <form action="{{ route('cargo.bookings.approve', $booking->booking_ref_no) }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-success btn-lg">Accept</button>
+            </form>
 
-        <form action="{{ route('cargo.bookings.reject', $booking->booking_ref_no) }}" method="POST">
-            @csrf
-            <button type="submit" class="btn btn-danger btn-lg">Reject</button>
-        </form>
-    </div>
+            <form action="{{ route('cargo.bookings.reject', $booking->booking_ref_no) }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-danger btn-lg">Reject</button>
+            </form>
+        </div>
     @endif
 
     <div class="text-center mt-4">
         <a href="{{ route('cargo.bookings.pending') }}" class="btn btn-outline-primary btn-lg">Back to Pending Bookings</a>
     </div>
-
 </div>
 @endsection
