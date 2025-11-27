@@ -48,8 +48,8 @@
 
         <div class="form-col">
           <div class="form-group">
-            <label>Total Passenger Capacity:</label>
-            <input type="number" value="0" disabled>
+            <label for="vessel_total_passenger_capacity">Total Passenger Capacity:</label>
+            <input type="number" id="vessel_total_passenger_capacity" name="vessel_total_passenger_capacity" value="0" min="1" required>
           </div>
         </div>
 
@@ -92,11 +92,11 @@
 
                 <div class="form-group hatch-input">
                   <label>Area Capacity (m³)</label>
-                  <input type="number" name="hatches[0][area_capacity]" placeholder="Area Capacity (m³)" step="0.01" inputmode="decimal" required>
+                  <input type="number" name="hatches[0][area_capacity]" placeholder="Area Capacity (  )" step="0.01" inputmode="decimal" required>
                 </div>
 
                 <div class="form-group hatch-input">
-                  <label>Capacity per Hold (Tons)</label>
+                  <label>Hold Capacity (Tons)</label>
                   <input type="number" name="hatches[0][capacity_per_hold]" placeholder="Capacity Per Hold (Tons)" step="0.01" inputmode="decimal" required>
                 </div>
 
@@ -119,18 +119,18 @@
             <div class="accommodation-row">
 
               <div class="form-group acc-input">
-                <label>Name</label>
+                <label>Accommodation Label</label>
                 <input type="text" name="accommodations[0][name]" placeholder="Accommodation Name" required>
               </div>
 
               <div class="form-group acc-input">
                 <label>Regular Price</label>
-                <input type="number" name="accommodations[0][price]" placeholder="Regular Price" step="0.01" required>
+                <input type="number" name="accommodations[0][price]" placeholder="Regular Price" step="0.01" inputmode="decimal" required>
               </div>
 
               <div class="form-group acc-input">
                 <label>Cot Range</label>
-                <input type="number" name="accommodations[0][capacity]" placeholder="Capacity" required>
+                <input type="text" name="accommodations[0][cot_range]" placeholder="Cot Range (e.g., 1-5, 7-10)" required>
               </div>
 
               <button type="button" class="accommodation-btn add-accommodation">+</button>
