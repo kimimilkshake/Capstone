@@ -105,7 +105,7 @@ return new class extends Migration {
             $table->foreignId('vessel_id')->constrained('vessel', 'vessel_id');
             $table->string('accommodation_name');
             $table->decimal('accommodation_regular_price', 10, 2);
-            $table->integer('accommodation_capacity');
+            $table->string('accommodation_cot_range');
             $table->timestamps();
         });
 
@@ -113,10 +113,15 @@ return new class extends Migration {
             $table->id('hatch_id');
             $table->foreignId('vessel_id')->constrained('vessel', 'vessel_id');
             $table->string('hatch_label');
-            $table->integer('hatch_area_capacity');
-            $table->integer('hatch_weight_capacity');
+            $table->decimal('hatch_length', 8, 2);
+            $table->decimal('hatch_width', 8, 2);
+            $table->decimal('hatch_height', 8, 2);
+            $table->decimal('hatch_weight_capacity', 5, 2)->nullable(); // percentage, optional
+            $table->decimal('hatch_area_capacity', 8, 2);
+            $table->decimal('hatch_capacity_per_hold', 8, 2);
             $table->timestamps();
         });
+
 
         // ==========================
         // BOOKING & PAYMENT

@@ -15,6 +15,7 @@
             <h4 class="text-success mb-3">Booking Submitted Successfully!</h4>
             <p>Your cargo booking is currently <strong>Pending</strong>.</p>
             <p>Please wait for approval from our staff.</p>
+            <p>Actively check your emails for updates on the confirmation.</p>
 
             <a href="{{ url('/') }}" class="btn btn-primary fw-bold mt-4 px-4 py-2">
                 Back to Home

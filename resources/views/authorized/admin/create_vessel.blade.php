@@ -1,112 +1,170 @@
 @extends('layouts.app')
 @section('page-title', 'VESSEL')
 @section('content')
-  @include('components.authHeader')
-  @include('components.admin_nav')
+@include('components.authHeader')
+@include('components.admin_nav')
 
-  <div class="admin-body">
-    <div class="avl-title">
-      <h3>CREATE VESSEL</h3>
-    </div>
-    <div class="acs-form_container">
-      @if ($errors->any())
-        <div class="alert alert-danger" style="color: red; text-align: center;">
-          <strong>All fields are required.</strong><br>
-          @foreach ($errors->all() as $error)
-            {{ $error }}<br>
-          @endforeach
-        </div>
-      @endif
+<div class="admin-body">
+  <div class="avl-title">
+    <h3>CREATE VESSEL</h3>
+  </div>
 
-      @if (session('success'))
-        <div class="alert alert-success" style="color: green; text-align: center; margin-bottom: 1rem;">
-          {{ session('success') }}
-        </div>
-      @endif
+  <div class="acs-form_container">
 
-      <form action="{{ route('admin.store_vessel') }}" method="POST" enctype="multipart/form-data" id="createVesselForm">
-        @csrf
+    @if ($errors->any())
+      <div class="alert alert-danger" style="color: red; text-align: center;">
+        <strong>All fields are required.</strong><br>
+        @foreach ($errors->all() as $error)
+          {{ $error }}<br>
+        @endforeach
+      </div>
+    @endif
 
-        <!--ROW  1: VESSEL NAME AND PASSENGER CAPACITY-->
-        <div class="form-row">
-          <div class="form-col">
-            <div class="form-group">
-              <label for="vessel_code">Vessel Code:</label>
-              <input type="text" id="vessel_code" name="vessel_code" placeholder="Enter Vessel Code" required>
-            </div>
-          </div>
+    @if (session('success'))
+      <div class="alert alert-success" style="color: green; text-align: center; margin-bottom: 1rem;">
+        {{ session('success') }}
+      </div>
+    @endif
 
-          <div class="form-col">
-            <div class="form-group">
-              <label for="vessel_name">Vessel Name:</label>
-              <input type="text" id="vessel_name" name="vessel_name" placeholder="Enter Vessel Name" required>
-            </div>
-          </div>
+    <form action="{{ route('admin.store_vessel') }}" method="POST" enctype="multipart/form-data" id="createVesselForm">
+      @csrf
 
-          <div class="form-col">
-            <div class="form-group">
-              <label for="vessel_total_passenger_capacity">Total Passenger Capacity:</label>
-              <input type="number" value="{{ isset($vessel) ? $vessel->vessel_total_passenger_capacity : 0 }}" disabled>
-            </div>
+      <!-- ROW 1: CODE + NAME + CAPACITY -->
+      <div class="form-row">
+
+        <div class="form-col">
+          <div class="form-group">
+            <label for="vessel_code">Vessel Code:</label>
+            <input type="text" id="vessel_code" name="vessel_code" placeholder="Enter Vessel Code" required>
           </div>
         </div>
 
-        <!--ROW 2: HATCH-->
-        <div class="form-row">
-          <div class="form-col">
-            <div class="form-group">
-              <label class="ha-label">Hatches</label>
-                <div id="hatch-container">
-                  <div class="hatch-row">
-                    <input type="text" name="hatches[0][label]" placeholder="Hatch Label" required>
-                    <input type="number" name="hatches[0][area_capacity]" placeholder="Area Capacity in Cubic Meters" title="Area Capacity in Cubic Meters" required>
-                    <input type="number" name="hatches[0][weight_capacity]" placeholder="Weight Capacity in Tons" title="Weight Capacity in Tons" required>
-                    <button type="button" class="hatch-btn add-hatch">+</button>
-                  </div>
+        <div class="form-col">
+          <div class="form-group">
+            <label for="vessel_name">Vessel Name:</label>
+            <input type="text" id="vessel_name" name="vessel_name" placeholder="Enter Vessel Name" required>
+          </div>
+        </div>
+
+        <div class="form-col">
+          <div class="form-group">
+            <label for="vessel_total_passenger_capacity">Total Passenger Capacity:</label>
+            <input type="number" id="vessel_total_passenger_capacity" name="vessel_total_passenger_capacity" value="0" min="1" required>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ROW 2: HATCHES -->
+      <div class="form-row">
+        <div class="form-col">
+          <div class="form-group">
+            <label class="ha-label">Hatches</label>
+
+            <div id="hatch-container">
+
+              <div class="hatch-row">
+
+                <div class="form-group hatch-input">
+                  <label>Label</label>
+                  <input type="text" name="hatches[0][label]" placeholder="Hatch Label" required>
                 </div>
-            </div>
-            
-          </div>          
-        </div>
 
-        <!--ROW 3: ACCOMMODATION-->
-        <div class="form-row">
-          <div class="form-col">
-            <div class="form-group">
-              <label class="ha-label">Accommodations</label>
-              <div id="accommodation-container">
-                <div class="accommodation-row">
-                  <input type="text" name="accommodations[0][name]" placeholder="Accommodation Name" required>
-                  <input type="number" name="accommodations[0][price]" placeholder="Regular Price" required>
-                  <input type="number" name="accommodations[0][capacity]" placeholder="Accommodation Capacity">
-                  <button type="button" class="accommodation-btn add-accommodation">+</button>
+                <div class="form-group hatch-input">
+                  <label>Length (m)</label>
+                  <input type="number" name="hatches[0][length]" placeholder="Length (m)" step="0.01" inputmode="decimal" required>
                 </div>
+
+                <div class="form-group hatch-input">
+                  <label>Width (m)</label>
+                  <input type="number" name="hatches[0][width]" placeholder="Width (m)" step="0.01" inputmode="decimal" required>
+                </div>
+
+                <div class="form-group hatch-input">
+                  <label>Height (m)</label>
+                  <input type="number" name="hatches[0][height]" placeholder="Height (m)" step="0.01" inputmode="decimal" required>
+                </div>
+
+                <div class="form-group hatch-input">
+                  <label>Weight Capacity (%)</label>
+                  <input type="number" name="hatches[0][weight_capacity]" placeholder="Weight Capacity (%)" step="0.01" inputmode="decimal">
+                </div>
+
+                <div class="form-group hatch-input">
+                  <label>Area Capacity (m³)</label>
+                  <input type="number" name="hatches[0][area_capacity]" placeholder="Area Capacity (  )" step="0.01" inputmode="decimal" required>
+                </div>
+
+                <div class="form-group hatch-input">
+                  <label>Hold Capacity (Tons)</label>
+                  <input type="number" name="hatches[0][capacity_per_hold]" placeholder="Capacity Per Hold (Tons)" step="0.01" inputmode="decimal" required>
+                </div>
+
+                <button type="button" class="hatch-btn add-hatch">+</button>
               </div>
+
             </div>
+
           </div>
         </div>
+      </div>
 
-        <!--ROW 4: COT PLAN-->
-        <div class="form-row">
+      <!-- ROW 3: ACCOMMODATIONS -->
+      <div class="form-row">
+        <div class="form-col">
+          <label class="ha-label">Accommodations</label>
+
+          <div id="accommodation-container">
+
+            <div class="accommodation-row">
+
+              <div class="form-group acc-input">
+                <label>Accommodation Label</label>
+                <input type="text" name="accommodations[0][name]" placeholder="Accommodation Name" required>
+              </div>
+
+              <div class="form-group acc-input">
+                <label>Regular Price</label>
+                <input type="number" name="accommodations[0][price]" placeholder="Regular Price" step="0.01" inputmode="decimal" required>
+              </div>
+
+              <div class="form-group acc-input">
+                <label>Cot Range</label>
+                <input type="text" name="accommodations[0][cot_range]" placeholder="Cot Range (e.g., 1-5, 7-10)" required>
+              </div>
+
+              <button type="button" class="accommodation-btn add-accommodation">+</button>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ROW 4: COT PLAN -->
+      <div class="form-row" style="display: flex; gap: 2rem; align-items: flex-start; width: 100%;">
+        <div class="form-col" style="flex: 1;">
           <div class="form-group vcot-plan">
             <label for="vessel_cot_plan_url">Cot Plan:</label>
             <input type="file" id="vessel_cot_plan_url" name="vessel_cot_plan_url" accept="image/*">
           </div>
         </div>
+      </div>
 
-        <div class="form-actions" style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
-          <button type="submit" class="acs-add-btn">
-            <i class="fa-solid fa-plus me-2"></i>ADD
-          </button>
-          <a href="{{ route('admin.vessel_list') }}" class="acs-add-btn acs-cancel-btn">
-              <i class="fa-solid fa-xmark me-2"></i>CANCEL
-            </a>
-        </div>
+      <!-- ACTION BUTTONS -->
+      <div class="form-actions" style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+        <button type="submit" class="acs-add-btn">
+          <i class="fa-solid fa-plus me-2"></i>ADD
+        </button>
+        <a href="{{ route('admin.vessel_list') }}" class="acs-add-btn acs-cancel-btn">
+          <i class="fa-solid fa-xmark me-2"></i>CANCEL
+        </a>
+      </div>
 
-      </form>
+    </form>
 
-    </div>
   </div>
-  
-  
+</div>
+
+<script src="{{ asset('js/vessel.js') }}"></script>
 @endsection

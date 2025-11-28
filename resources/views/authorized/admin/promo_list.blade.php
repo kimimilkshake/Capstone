@@ -21,7 +21,6 @@
       <table class="promo-table">
         <thead>
           <tr>
-            <th>Promo No.</th>
             <th>Name</th>
             <th>Code</th>
             <th>Type</th>
@@ -34,7 +33,6 @@
         <tbody>
           @foreach ($promos as $index => $p)
             <tr>
-              <td>{{ $p->promo_id }}</td>
               <td>{{ $p->promo_name }}</td>
               <td>{{ $p->promo_code }}</td>
               <td>{{ $p->promo_type }}</td>

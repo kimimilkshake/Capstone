@@ -32,14 +32,6 @@ class VesselController extends Controller
 
     public function create()
     {
-        /*
-        dd([
-            'staff_guard' => auth()->guard('staff')->check(),
-            'admin_guard' => auth()->guard('admin')->check(),
-            'staff_user' => auth()->guard('staff')->user(),
-            'admin_user' => auth()->guard('admin')->user(),
-        ]);
-        */
         return view('authorized.admin.create_vessel');
     }
 
@@ -48,6 +40,7 @@ class VesselController extends Controller
         $request->validate([
             'vessel_code' => 'required|string|max:10',
             'vessel_name' => 'required|string|max:255',
+            'vessel_total_passenger_capacity' => 'required|integer|min:1'
         ]);
 
         $admin = Auth::guard('admin')->user();
@@ -64,17 +57,32 @@ class VesselController extends Controller
             'admin_id' => $admin->admin_id,
             'vessel_code' => $request->vessel_code,
             'vessel_name' => $request->vessel_name,
-            'vessel_total_passenger_capacity' => 0,
+            'vessel_total_passenger_capacity' => $request->vessel_total_passenger_capacity,
             'vessel_cot_plan_url' => $cotPlanPath,
         ]);
 
+
         if ($request->has('hatches')) {
             foreach ($request->hatches as $hatch) {
-                if (!empty($hatch['label']) && isset($hatch['area_capacity']) && isset($hatch['weight_capacity'])) {
+                if (!empty($hatch['label']) &&
+                    isset($hatch['length']) &&
+                    isset($hatch['width']) &&
+                    isset($hatch['height']) &&
+                    isset($hatch['area_capacity'])
+                ) {
                     $vessel->hatches()->create([
                         'hatch_label' => $hatch['label'],
+                        'hatch_length' => $hatch['length'],
+                        'hatch_width' => $hatch['width'],
+                        'hatch_height' => $hatch['height'],
                         'hatch_area_capacity' => $hatch['area_capacity'],
-                        'hatch_weight_capacity' => $hatch['weight_capacity'],
+                        'hatch_capacity_per_hold' => $hatch['capacity_per_hold'],
+
+                        // optional field
+                        'hatch_weight_capacity' =>
+                            $hatch['weight_capacity'] !== null && $hatch['weight_capacity'] !== ""
+                            ? $hatch['weight_capacity']
+                            : null,
                     ]);
                 }
             }
@@ -82,20 +90,19 @@ class VesselController extends Controller
 
         if ($request->has('accommodations')) {
             foreach ($request->accommodations as $accommodation) {
-                if (!empty($accommodation['name']) && !empty($accommodation['price']) && !empty($accommodation['capacity'])) {
+                if (!empty($accommodation['name']) &&
+                    !empty($accommodation['price']) &&
+                    !empty($accommodation['cot_range']) // replace capacity
+                ) {
                     $vessel->accommodations()->create([
                         'accommodation_name' => $accommodation['name'],
                         'accommodation_regular_price' => $accommodation['price'],
-                        'accommodation_capacity' => $accommodation['capacity'],
-
+                        'accommodation_cot_range' => $accommodation['cot_range'], // new field
                     ]);
                 }
             }
         }
-
-        $totalCapacity = $vessel->accommodations()->sum('accommodation_capacity');
-        $vessel->update(['vessel_total_passenger_capacity' => $totalCapacity]);
-
+        
         return redirect()->route('admin.vessel_list')
                          ->with('success', 'Vessel created successfully!');
     }
@@ -113,6 +120,7 @@ class VesselController extends Controller
         $request->validate([
             'vessel_code' => 'required|string|max:10',
             'vessel_name' => 'required|string|max:255',
+            'vessel_total_passenger_capacity' => 'required|integer|min:1',
             'vessel_status' => 'required|in:Active,Inactive',
         ]);
 
@@ -124,41 +132,51 @@ class VesselController extends Controller
         $vessel->update([
             'vessel_code' => $request->vessel_code,
             'vessel_name' => $request->vessel_name,
+            'vessel_total_passenger_capacity' => $request->vessel_total_passenger_capacity,
             'vessel_status' => ucfirst($request->vessel_status),
             'vessel_cot_plan_url' => $cotPlanPath,
         ]);
 
-        // Delete old hatches and recreate
         $vessel->hatches()->delete();
+
         if ($request->has('hatches')) {
             foreach ($request->hatches as $h) {
-                if (!empty($h['label']) && isset($h['area_capacity']) && isset($h['weight_capacity'])) {
+
+                if (!empty($h['label']) &&
+                    isset($h['length']) &&
+                    isset($h['width']) &&
+                    isset($h['height']) &&
+                    isset($h['area_capacity']) &&
+                    isset($h['capacity_per_hold'])) {
+
                     $vessel->hatches()->create([
-                        'hatch_label' => $h['label'],
-                        'hatch_area_capacity' => $h['area_capacity'],
-                        'hatch_weight_capacity' => $h['weight_capacity'],
+                        'hatch_label'            => $h['label'],
+                        'hatch_length'           => $h['length'],
+                        'hatch_width'            => $h['width'],
+                        'hatch_height'           => $h['height'],
+                        'hatch_area_capacity'    => $h['area_capacity'],
+                        'hatch_capacity_per_hold'=> $h['capacity_per_hold'],
+                        'hatch_weight_capacity'  => $h['weight_capacity'] ?? null,
                     ]);
                 }
             }
         }
 
-        // Delete old accommodations and recreate
         $vessel->accommodations()->delete();
+
         if ($request->has('accommodations')) {
             foreach ($request->accommodations as $a) {
-                if (!empty($a['name']) && !empty($a['price']) && !empty($a['capacity'])) {
+                if (!empty($a['name']) && !empty($a['price']) && !empty($a['cot_range'])) {
                     $vessel->accommodations()->create([
                         'accommodation_name' => $a['name'],
                         'accommodation_regular_price' => $a['price'],
-                        'accommodation_capacity' => $a['capacity']
+                        'accommodation_cot_range' => $a['cot_range'],
                     ]);
                 }
             }
         }
 
-        $totalCapacity = $vessel->accommodations()->sum('accommodation_capacity');
-        $vessel->update(['vessel_total_passenger_capacity' => $totalCapacity]);
-
-        return redirect()->route('admin.vessel_list')->with('success', 'Vessel updated successfully.');
+        return redirect()->route('admin.vessel_list')
+                         ->with('success', 'Vessel updated successfully.');
     }
 }

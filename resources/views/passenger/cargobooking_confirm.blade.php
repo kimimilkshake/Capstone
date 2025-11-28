@@ -15,10 +15,13 @@
             <hr>
 
             <h6>Sender Information</h6>
-            <p>{{ $sender->sender_name }} | {{ $sender->sender_contactno }} | {{ $sender->sender_email }}</p>
+            <p>Sender Name : {{ $sender->sender_name }} </p>
+            <p>Sender Contact No: {{ $sender->sender_contactno }}</p>
+            <p>Sender Email: {{ $sender->sender_email }}</p>
 
             <h6>Consignee Information</h6>
-            <p>{{ $consignee->consignee_name }} | {{ $consignee->consignee_contactno }}</p>
+            <p>Consignee Name : {{ $consignee->consignee_name }}</p>
+            <p>Consignee Contact No: {{ $consignee->consignee_contactno }}</p>
 
             <hr>
 
