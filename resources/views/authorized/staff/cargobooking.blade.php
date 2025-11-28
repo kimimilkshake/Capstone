@@ -5,9 +5,8 @@
 @include('components.authHeader')
 @include('components.staff_nav')
 
-<div class="staff-body container my-5" style="max-width: 1100px; margin: auto;">
-
-    <div class="svl-title text-center mb-4" style="margin-top: 40px;">
+<div class="staff-body">   {{-- FIXED: Same wrapper as pending cargo --}}
+    <div class="svl-title text-center">
         <h3>CARGO BOOKING</h3>
     </div>
 
@@ -34,18 +33,21 @@
                 <option value="">-- Choose Voyage --</option>
                 @foreach($voyages as $voyage)
                     <option value="{{ $voyage->voyage_id }}">
-                        {{ $voyage->voyage_code }} | {{ $voyage->routePort->route_origin ?? 'N/A' }} → {{ $voyage->routePort->route_destination ?? 'N/A' }} | Departure: {{ $voyage->voyage_departure_date }}
+                        {{ $voyage->voyage_code }} | 
+                        {{ $voyage->routePort->route_origin ?? 'N/A' }} →
+                        {{ $voyage->routePort->route_destination ?? 'N/A' }} |
+                        Departure: {{ $voyage->voyage_departure_date }}
                     </option>
                 @endforeach
             </select>
         </div>
 
-        <div class="row justify-content-center">
+        <div class="row">
 
-            <!-- LEFT: Sender & Consignee -->
+            {{-- LEFT COLUMN --}}
             <div class="col-lg-6 mb-3">
-                <div class="card p-3 mb-3 shadow-sm">
-                    <h5 class="mb-3 fw-bold">Sender Information</h5>
+                <div class="card p-3 shadow-sm">
+                    <h5 class="fw-bold mb-3">Sender Information</h5>
 
                     <label class="form-label">First Name <span class="text-danger">*</span></label>
                     <input type="text" name="sender_firstname" class="form-control mb-2" required>
@@ -62,7 +64,7 @@
                     <label class="form-label">TIN Number (Optional)</label>
                     <input type="text" name="sender_tin" class="form-control mb-2">
 
-                    <h5 class="mt-4 mb-3 fw-bold">Consignee Information</h5>
+                    <h5 class="fw-bold mt-4 mb-3">Consignee Information</h5>
 
                     <label class="form-label">First Name <span class="text-danger">*</span></label>
                     <input type="text" name="consignee_firstname" class="form-control mb-2" required>
@@ -75,92 +77,97 @@
                 </div>
             </div>
 
- <!-- ... Keep everything above unchanged ... -->
+            {{-- RIGHT COLUMN --}}
+            <div class="col-lg-6 mb-3">
+                <div class="card p-3 shadow-sm">
+                    <h5 class="fw-bold mb-3">Cargo Items</h5>
 
-<!-- RIGHT: Cargo Items -->
-<div class="col-lg-6 mb-3">
-    <div class="card p-3 mb-3 shadow-sm">
-        <h5 class="mb-3 fw-bold">Cargo Items</h5>
+                    <div id="cargo-items-container">
 
-        <div id="cargo-items-container">
-            <div class="cargo-item border rounded p-3 mb-3 position-relative">
+                        <div class="cargo-item border rounded p-3 mb-3">
 
-                <!-- Classification -->
-                <label class="form-label">Classification <span class="text-danger">*</span></label>
-                <select name="cargo_classification[]" class="form-select cargo-classification mb-2">
-                    <option value="">-- Select Classification --</option>
-                    @foreach($cargoItems->unique('cargo_item_classification') as $item)
-                        <option value="{{ $item->cargo_item_classification }}" data-route_port="{{ $item->route_port_id }}">
-                            {{ $item->cargo_item_classification }}
-                        </option>
-                    @endforeach
-                </select>
+                            <label class="form-label">Cargo Classification <span class="text-danger">*</span></label>
+                            <select name="cargo_classification[]" class="form-select cargo-classification mb-2">
+                                <option value="">-- Select Classification --</option>
+                                @foreach($cargoItems->unique('cargo_item_classification') as $item)
+                                    <option value="{{ $item->cargo_item_classification }}" 
+                                            data-route_port="{{ $item->route_port_id }}">
+                                        {{ $item->cargo_item_classification }}
+                                    </option>
+                                @endforeach
+                            </select>
 
-                <!-- Description -->
-                <label class="form-label">Cargo Description <span class="text-danger">*</span></label>
-                <select name="cargo_item_id[]" class="form-select cargo-description mb-2" required>
-                    <option value="">-- Select Description --</option>
-                    @foreach($cargoItems as $item)
-                        <option value="{{ $item->cargo_item_id }}" data-classification="{{ $item->cargo_item_classification }}" data-route_port="{{ $item->route_port_id }}">
-                            {{ $item->cargo_item_description }}
-                        </option>
-                    @endforeach
-                </select>
+                            <label class="form-label">Cargo Description <span class="text-danger">*</span></label>
+                            <select name="cargo_item_id[]" class="form-select cargo-description mb-2" required>
+                                <option value="">-- Select Description --</option>
+                                @foreach($cargoItems as $item)
+                                    <option value="{{ $item->cargo_item_id }}"
+                                            data-classification="{{ $item->cargo_item_classification }}"
+                                            data-route_port="{{ $item->route_port_id }}">
+                                        {{ $item->cargo_item_description }}
+                                    </option>
+                                @endforeach
+                            </select>
 
-                <!-- Quantity & Weight in one row -->
-                <div class="d-flex gap-2 mb-2">
-                    <div class="flex-fill">
-                        <label class="form-label">Quantity <span class="text-danger">*</span></label>
-                        <input type="number" name="cargo_quantity[]" class="form-control" required min="1">
+                            <div class="d-flex gap-2 mb-2">
+                                <div class="flex-fill">
+                                    <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                                    <input type="number" name="cargo_quantity[]" class="form-control" required min="1">
+                                </div>
+
+                                <div class="flex-fill">
+                                    <label class="form-label">Weight (kg) <span class="text-danger">*</span></label>
+                                    <input type="number" name="cargo_weight[]" class="form-control" required>
+                                </div>
+                            </div>
+
+                            <label class="form-label">Cargo Dimensions (cm) <span class="text-danger">*</span></label>
+                            <div class="d-flex gap-2 mb-2 align-items-end">
+                                <div class="flex-fill">
+                                    <label class="form-label">Length <span class="text-danger">*</span></label>
+                                    <input type="number" name="cargo_length[]" class="form-control dimension" required>
+                                </div>
+
+                                <div class="flex-fill">
+                                    <label class="form-label">Width <span class="text-danger">*</span></label>
+                                    <input type="number" name="cargo_width[]" class="form-control dimension" required>
+                                </div>
+
+                                <div class="flex-fill">
+                                    <label class="form-label">Height <span class="text-danger">*</span></label>
+                                    <input type="number" name="cargo_height[]" class="form-control dimension" required>
+                                </div>
+
+                                <div class="flex-fill">
+                                    <label class="form-label">CBM </label>
+                                    <input type="text" class="form-control cbm-output" readonly placeholder="0.0000">
+                                </div>
+                            </div>
+
+                            <label class="form-label">Upload Photo <span class="text-danger">*</span></label>
+                            <label class="btn btn-outline-secondary w-100 mb-2">
+                                <i class="bi bi-image me-2"></i> Add Photo
+                                <input type="file" name="cargo_picture[]" class="d-none cargo-photo" accept="image/*">
+                            </label>
+                            <small class="text-success photo-confirmation" style="display:none;">Photo selected!</small>
+                        </div>
                     </div>
-                    <div class="flex-fill">
-                        <label class="form-label">Weight (kg) <span class="text-danger">*</span></label>
-                        <input type="number" name="cargo_weight[]" class="form-control" required>
+
+                    <div class="d-flex gap-2 my-3">
+                        <button type="button" id="addCargoItem" class="btn btn-secondary">Add Cargo</button>
+                        <button type="button" id="removeCargoItem" class="btn btn-danger">Remove</button>
                     </div>
                 </div>
-
-                <!-- Dimensions + CBM -->
-                <label class="form-label">Cargo Dimensions (cm) & CBM <span class="text-danger">*</span></label>
-                <div class="d-flex gap-2 mb-2 align-items-end">
-                    <div class="flex-fill">
-                        <label class="form-label">Length</label>
-                        <input type="number" name="cargo_length[]" class="form-control dimension" required>
-                    </div>
-                    <div class="flex-fill">
-                        <label class="form-label">Width</label>
-                        <input type="number" name="cargo_width[]" class="form-control dimension" required>
-                    </div>
-                    <div class="flex-fill">
-                        <label class="form-label">Height</label>
-                        <input type="number" name="cargo_height[]" class="form-control dimension" required>
-                    </div>
-                    <div class="flex-fill">
-                        <label class="form-label">CBM</label>
-                        <input type="text" class="form-control cbm-output" readonly placeholder="0.0000">
-                    </div>
-                </div>
-
-                <!-- Upload Photo with confirmation -->
-                <label class="form-label">Upload Photo</label>
-                <label class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center mb-2">
-                    <i class="bi bi-image me-2"></i> Add Photo
-                    <input type="file" name="cargo_picture[]" class="d-none cargo-photo" accept="image/*">
-                </label>
-                <small class="text-success photo-confirmation" style="display:none;">Photo selected!</small>
-
             </div>
+
+        </div> {{-- END ROW --}}
+
+        <div class="text-center mt-4 mb-5">
+            <button type="submit" class="btn btn-primary btn-lg">PROCEED</button>
+            <a href="{{ route('staff.dashboard') }}" class="btn btn-outline-danger btn-lg">CANCEL</a>
         </div>
 
-        <div class="d-flex gap-2 mb-3">
-            <button type="button" id="addCargoItem" class="btn btn-secondary">Add Another Cargo</button>
-            <button type="button" id="removeCargoItem" class="btn btn-danger">Remove Last Cargo</button>
-        </div>
-    </div>
-</div>
-
-<div class="text-center mb-5">
-    <button type="submit" class="btn btn-primary btn-lg">PROCEED</button>
-    <a href="{{ route('staff.dashboard') }}" class="btn btn-outline-danger btn-lg">CANCEL BOOKING</a>
+    </form>
 </div>
 
 

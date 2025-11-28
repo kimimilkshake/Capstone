@@ -78,7 +78,7 @@
 
                                 <!-- Classification Dropdown -->
                                 <div class="mb-2">
-                                    <label class="form-label">Classification</label>
+                                    <label class="form-label">Classification <span class="text-danger">*</span></label>
                                     <select class="form-control cargo-classification">
                                         <option value="">-- Select Classification --</option>
                                         @php
@@ -125,15 +125,15 @@
                                     <label class="form-label">Cargo Dimensions (cm) </label>
                                     <div class="d-flex gap-2">
                                         <div class="flex-fill">
-                                            <label class="form-label small">Length</label>
+                                            <label class="form-label small">Length <span class="text-danger">*</span></label>
                                             <input type="number" name="cargo_length[]" class="form-control dimension" step="0.01">
                                         </div>
                                         <div class="flex-fill">
-                                            <label class="form-label small">Width</label>
+                                            <label class="form-label small">Width <span class="text-danger">*</span></label>
                                             <input type="number" name="cargo_width[]" class="form-control dimension" step="0.01">
                                         </div>
                                         <div class="flex-fill">
-                                            <label class="form-label small">Height</label>
+                                            <label class="form-label small">Height <span class="text-danger">*</span></label>
                                             <input type="number" name="cargo_height[]" class="form-control dimension" step="0.01">
                                         </div>
                                         <div class="flex-fill">
@@ -146,7 +146,7 @@
                                 <!-- Photo Upload with confirmation -->
                                 <div class="mb-2">
                                     <label class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center mt-2">
-                                        <i class="bi bi-image me-2"></i> Add Photo
+                                        <i class="bi bi-image me-2"></i> Add Photo <span class="text-danger">*</span>
                                         <input type="file" name="cargo_picture[]" class="d-none cargo-photo" accept="image/*">
                                     </label>
                                     <small class="text-success photo-confirmation" style="display:none;">Photo selected!</small>
