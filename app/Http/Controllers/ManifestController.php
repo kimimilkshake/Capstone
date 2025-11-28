@@ -14,6 +14,8 @@ use App\Models\Booking;
 use App\Models\Passenger;
 use App\Models\CargoBooking;
 use App\Models\CargoReceipt;
+use App\Models\CargoItem;
+use App\Models\Payment;
 
 class ManifestController extends Controller
 {
@@ -113,38 +115,10 @@ class ManifestController extends Controller
         // CARGOS
         // --------------------
         if ($showCargo) {
-            // Prefer CargoReceipt (it has voyage_id)
-            $cargoReceiptTable = (new CargoReceipt)->getTable();
-            $cargoBookingTable = (new CargoBooking)->getTable();
-            $bookingTable = (new Booking)->getTable();
+            $cargos = CargoReceipt::where('voyage_id', $voyage->voyage_id)
+    ->with(['booking', 'cargoBooking', 'cargoItem', 'sender', 'consignee', 'payment'])
+    ->get();
 
-            if (Schema::hasTable($cargoReceiptTable) && Schema::hasColumn($cargoReceiptTable, 'voyage_id')) {
-                $cargos = CargoReceipt::where('voyage_id', $voyage->voyage_id)
-                    ->with(['booking', 'cargoBooking'])
-                    ->get();
-            } else {
-                // Fallback: find booking refs for the voyage, then cargo_booking by booking_ref_no
-                $bookingRefs = DB::table($bookingTable)
-                    ->where('voyage_id', $voyage->voyage_id)
-                    ->pluck('booking_ref_no')
-                    ->filter()
-                    ->unique()
-                    ->values()
-                    ->toArray();
-
-                if (!empty($bookingRefs) && Schema::hasColumn($cargoBookingTable, 'booking_ref_no')) {
-                    $cargos = CargoBooking::whereIn('booking_ref_no', $bookingRefs)->get();
-                } else {
-                    // Last fallback: return booking rows marked cargo (if booking_type exists)
-                    if (Schema::hasColumn($bookingTable, 'booking_type')) {
-                        $cargos = Booking::where('voyage_id', $voyage->voyage_id)
-                            ->where('booking_type', 'cargo')
-                            ->get();
-                    } else {
-                        $cargos = collect();
-                    }
-                }
-            }
         }
 
         // Render the view

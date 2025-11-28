@@ -117,7 +117,7 @@
                             <th>Qty</th>
                             <th>Classification / Item</th>
                             <th>Description</th>
-                            <th>Shippers</th>
+                            <th>Sender</th>
                             <th>TIN</th>
                             <th>Consignees</th>
                             <th>Freight</th>
@@ -136,17 +136,17 @@
                                 <tr>
                                     <td>{{ $c->bl_number ?? $c->booking_ref_no ?? $c->booking_ref ?? ($c->booking_ref_no ?? '-') }}</td>
                                     <td>{{ $c->quantity ?? $c->cargo_item_qty ?? '-' }}</td>
-                                    <td>{{ $c->classification ?? $c->cargo_item_id ?? '-' }}</td>
-                                    <td>{{ $c->description ?? ($c->cargo_item_description ?? '-') }}</td>
-                                    <td>{{ $c->shippers ?? '-' }}</td>
+                                    <td>{{ $c->cargoItem->cargo_item_classification ?? 'N/A' }}</td>
+                                    <td>{{ $c->cargoItem->cargo_item_description ?? 'N/A'  }}</td>
+                                    <td>{{ $c->sender->sender_name ?? 'N/A' }}</td>
                                     <td>{{ $c->tin_number ?? '-' }}</td>
-                                    <td>{{ $c->consignees ?? '-' }}</td>
-                                    <td>{{ $c->freight ?? $c->freight_charge ?? '-' }}</td>
+                                    <td>{{ $c->consignee->consignee_name }}</td>
+                                    <td>{{ $c->cargoItem->cargo_item_freight ?? '-' }}</td>
                                     <td>{{ $c->vat ?? '-' }}</td>
                                     <td>{{ $c->stamp ?? '-' }}</td>
-                                    <td>{{ $c->total ?? '-' }}</td>
+                                    <td>{{ $c->payment->total_amount ?? 'N/A' }}</td>
                                     <td>{{ $c->receipt_no ?? ($c->cargo_receipt_id ?? '-') }}</td>
-                                    <td>{{ $c->net_arrastre ?? $c->arrastre ?? '-' }}</td>
+                                    <td>{{ $c->cargoItem->cargo_item_arrastre ?? '-' }}</td>
                                 </tr>
                             @endforeach
                         @endif
