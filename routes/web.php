@@ -49,7 +49,7 @@ Route::get('/passenger/passengerbooking', [PassengerController::class, 'index'])
 Route::get('/passenger/cargobooking', [PassengerController::class, 'index'])->name('cargobooking');
 // Cargo booking success page
 //Route::get('/passenger/cargobooking/success', function () {
-   // return view('passenger.cargo_success');
+// return view('passenger.cargo_success');
 //})->name('cargobooking.success');
 // Cargo Form Submission
 //Route::post('/passenger/cargobooking/store', [PassengerController::class, 'storeCargo'])->name('cargobooking.store');
@@ -74,6 +74,8 @@ Route::post('/booking/submit', [BookingController::class, 'store'])->name('booki
 Route::post('/booking/cancel/{booking_ref_no}', [BookingController::class, 'cancel'])->name('booking.cancel');
 // API: return unavailable cot numbers for a voyage (by route/date or voyage_id)
 Route::get('/voyage/unavailable-cots', [BookingController::class, 'unavailableCots'])->name('voyage.unavailable_cots');
+// API: return available cots per accommodation for a voyage
+Route::get('/voyage/available-cots-by-accommodation', [BookingController::class, 'getAvailableCotsByAccommodation'])->name('voyage.available_cots_by_accommodation');
 // Confirm booking (show booking by reference)
 Route::get('/passenger/confirmbooking/{booking_ref_no}', [BookingController::class, 'confirm'])->name('passenger.confirmbooking');
 // Backwards-compatible route (no ref) - shows generic page
@@ -188,22 +190,22 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
     // Cargo Auto Placement
 
     Route::post('/admin_cargo/place', [CargoAutoPlacementController::class, 'place'])
-    ->name('admin.cargo.place');
+        ->name('admin.cargo.place');
 
     Route::get('/admin_cargo/placement', [CargoAutoPlacementController::class, 'show'])
-    ->name('admin.cargo.placement');
+        ->name('admin.cargo.placement');
 
     Route::post('/admin_cargo/place', [CargoAutoPlacementController::class, 'place'])
-    ->name('admin.cargo.place');
+        ->name('admin.cargo.place');
 
     Route::post('/admin_cargo/placement/add-row', [CargoAutoPlacementController::class, 'addRow'])
-    ->name('admin.cargo.addRow');
+        ->name('admin.cargo.addRow');
 
     Route::post('/admin_cargo/placement/remove-row', [CargoAutoPlacementController::class, 'removeRow'])
-    ->name('admin.cargo.removeRow');
+        ->name('admin.cargo.removeRow');
 });
 
-    
+
 
 
 
@@ -228,8 +230,8 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     Route::get('/cargo_items/{id}/edit', [CargoItemController::class, 'edit'])->name('staff.cargo_item_edit');
     Route::put('/cargo_items/{id}/update', [CargoItemController::class, 'update'])->name('staff.cargo_item_update');
     Route::delete('/cargo_items/{id}/delete', [CargoItemController::class, 'destroy'])->name('staff.cargo_item_delete');
-//Cargo Booking
- 
+    //Cargo Booking
+
     // Show cargo booking form
     Route::get('/cargo-bookings/create', [StaffCargoController::class, 'create'])->name('staff.cargo_booking.create');
     // Save new cargo booking
@@ -254,26 +256,26 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     // Semaphore Text SMS
     Route::get('/semaphore', [SemaphoreController::class, 'show'])->name('staff.semaphore');
     Route::post('/semaphore/send', [SemaphoreController::class, 'send'])->name('staff.semaphore.send')->middleware('auth');
-    
+
     //MANIFEST
     Route::get('/staffmanifest/{voyage}', [ManifestController::class, 'show'])->name('staff.manifest');
 
     // Cargo Auto Placement
 
     Route::post('/staff_cargo/place', [CargoAutoPlacementController::class, 'place'])
-    ->name('staff.cargo.place');
+        ->name('staff.cargo.place');
 
     Route::get('/staff_cargo/placement', [CargoAutoPlacementController::class, 'show'])
-    ->name('staff.cargo.placement');
+        ->name('staff.cargo.placement');
 
     Route::post('/staff_cargo/place', [CargoAutoPlacementController::class, 'place'])
-    ->name('staff.cargo.place');
+        ->name('staff.cargo.place');
 
     Route::post('/staff_cargo/placement/add-row', [CargoAutoPlacementController::class, 'addRow'])
-    ->name('staff.cargo.addRow');
+        ->name('staff.cargo.addRow');
 
     Route::post('/staff_cargo/placement/remove-row', [CargoAutoPlacementController::class, 'removeRow'])
-    ->name('staff.cargo.removeRow');
+        ->name('staff.cargo.removeRow');
 });
 
 Route::post('/authorized/logout', [AuthController::class, 'logout'])->name('logout');

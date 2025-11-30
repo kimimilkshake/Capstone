@@ -3,9 +3,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const passengerSections = document.getElementById("passengerSections");
     const bookingForm = document.getElementById("bookingForm");
     const loader = document.getElementById("ocrLoader");
-    let unavailableCots = [];
+    let accommodationsWithCots = []; // Will store accommodation data with available cots
 
-    // Get accommodations data from the page
+    // Get accommodations data from the page (basic info)
     let accommodations = [];
     try {
         const accommodationsData = document.getElementById(
@@ -21,17 +21,11 @@ document.addEventListener("DOMContentLoaded", function () {
     function generatePassengerForms(count) {
         passengerSections.innerHTML = "";
         for (let i = 1; i <= count; i++) {
-            // Build cot options dynamically (1..50)
-            const cotOptions = Array.from(
-                { length: 50 },
-                (_, idx) => `<option>${idx + 1}</option>`
-            ).join("");
-
             // Build accommodation options from vessel data
             const accommodationOptions = accommodations
                 .map(
                     (acc) =>
-                        `<option value="${
+                        `<option value="${acc.accommodation_id}" data-name="${
                             acc.accommodation_name
                         }" data-price="${acc.accommodation_regular_price}">${
                             acc.accommodation_name
@@ -44,8 +38,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 <div class="passenger-form mb-4 p-3 bg-white rounded shadow-sm" data-passenger="${i}">
                     <h6 class="fw-bold mb-3 text-primary">Personal Information - Person ${i}</h6>
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Type</label>
+                        <div class="col-md-8">
+                            <label class="form-label">Passenger Type</label>
                             <select class="form-select passenger-type" name="type" required>
                                 <option value="">Select Type</option>
                                 <option value="Regular">Regular/Adult</option>
@@ -57,9 +51,9 @@ document.addEventListener("DOMContentLoaded", function () {
                                 <option value="Below 3 years old">Below 3 years old</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label">Suffix</label>
-                            <input type="text" class="form-control" name="suffix">
+                            <input type="text" class="form-control" name="suffix" placeholder="Jr., Sr., III">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">First Name</label>
@@ -69,9 +63,13 @@ document.addEventListener("DOMContentLoaded", function () {
                             <label class="form-label">Last Name</label>
                             <input type="text" class="form-control last-name" name="last_name" required>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <label class="form-label">Middle Initial</label>
                             <input type="text" maxlength="1" class="form-control text-center" name="middle_initial">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Age</label>
+                            <input type="number" min="0" class="form-control" name="age" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Gender</label>
@@ -81,13 +79,9 @@ document.addEventListener("DOMContentLoaded", function () {
                                 <option>Female</option>
                             </select>
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-md-12">
                             <label class="form-label">Address</label>
                             <input type="text" class="form-control" name="address" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Age</label>
-                            <input type="number" min="0" class="form-control" name="age" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Contact Number</label>
@@ -123,9 +117,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Cot Number</label>
-                            <select class="form-select" name="cot_number" required>
-                                <option value="">Select Cot</option>
-                                ${cotOptions}
+                            <select class="form-select cot-select" name="cot_number" required disabled>
+                                <option value="">Select Accommodation First</option>
                             </select>
                         </div>
                     </div>
@@ -134,54 +127,53 @@ document.addEventListener("DOMContentLoaded", function () {
             passengerSections.insertAdjacentHTML("beforeend", passengerHTML);
         }
 
-        // After rendering, wire up cot-selection uniqueness among current selects
-        function updateCotOptions() {
-            const selects = document.querySelectorAll(
-                'select[name="cot_number"]'
-            );
-            // collect selected values
-            const chosen = [];
-            selects.forEach((s) => {
-                if (s.value) chosen.push(s.value);
-            });
-            // for each select, disable options that are chosen by other selects
-            selects.forEach((s) => {
-                const val = s.value;
-                Array.from(s.options).forEach((opt) => {
-                    if (!opt.value) return; // skip placeholder
-                    // enable by default unless globally unavailable
-                    if (unavailableCots.includes(opt.value)) {
-                        opt.disabled = true;
-                    } else {
-                        opt.disabled = false;
-                    }
-                });
-                selects.forEach((other) => {
-                    if (other === s) return;
-                    const otherVal = other.value;
-                    if (otherVal) {
-                        const optionToDisable = s.querySelector(
-                            'option[value="' + otherVal + '"]'
-                        );
-                        if (optionToDisable) optionToDisable.disabled = true;
-                    }
-                });
-                // keep currently selected value enabled so the select shows it
-                if (val) {
-                    const cur = s.querySelector('option[value="' + val + '"]');
-                    if (cur) cur.disabled = false;
+        // Attach event listeners for accommodation selection
+        document.querySelectorAll(".accommodation-select").forEach((select) => {
+            select.addEventListener("change", function () {
+                const passengerForm = this.closest(".passenger-form");
+                const cotSelect = passengerForm.querySelector(".cot-select");
+                const accommodationId = this.value;
+
+                if (!accommodationId) {
+                    cotSelect.disabled = true;
+                    cotSelect.innerHTML =
+                        '<option value="">Select Accommodation First</option>';
+                    return;
+                }
+
+                // Find the accommodation data
+                const accommodation = accommodationsWithCots.find(
+                    (acc) => acc.accommodation_id == accommodationId
+                );
+
+                if (accommodation && accommodation.available_cots) {
+                    // Populate cot options with only available cots
+                    cotSelect.disabled = false;
+                    cotSelect.innerHTML =
+                        '<option value="">Select Cot</option>' +
+                        accommodation.available_cots
+                            .map(
+                                (cot) =>
+                                    `<option value="${cot}">${cot}</option>`
+                            )
+                            .join("");
+
+                    // Update cot availability when selection changes
+                    updateCotAvailability();
+                } else {
+                    cotSelect.disabled = true;
+                    cotSelect.innerHTML =
+                        '<option value="">No available cots</option>';
                 }
             });
-        }
-
-        // Attach change listeners
-        document.querySelectorAll('select[name="cot_number"]').forEach((s) => {
-            s.addEventListener("change", updateCotOptions);
         });
 
-        // initial update
-        updateCotOptions();
+        // Attach change listeners for cot selects to prevent duplicate selections
+        document.querySelectorAll(".cot-select").forEach((s) => {
+            s.addEventListener("change", updateCotAvailability);
+        });
 
+        // Attach passenger type listeners
         document.querySelectorAll(".passenger-type").forEach((select) => {
             select.addEventListener("change", function () {
                 const passengerForm = this.closest(".passenger-form");
@@ -191,14 +183,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 if (this.value === "Regular") {
                     idFields.style.display = "none";
-                    // Remove required attribute for regular passengers
                     if (idNumberInput)
                         idNumberInput.removeAttribute("required");
                     if (idUploadInput)
                         idUploadInput.removeAttribute("required");
                 } else {
                     idFields.style.display = "block";
-                    // Add required attribute for non-regular passengers
                     if (idNumberInput)
                         idNumberInput.setAttribute("required", "required");
                     if (idUploadInput)
@@ -208,27 +198,81 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // Function to update cot availability across all passenger forms
+    function updateCotAvailability() {
+        const allCotSelects = document.querySelectorAll(".cot-select");
+        const selectedCots = new Set();
+
+        // Collect all selected cots
+        allCotSelects.forEach((select) => {
+            if (select.value) {
+                selectedCots.add(parseInt(select.value));
+            }
+        });
+
+        // Update each cot select to disable already selected cots
+        allCotSelects.forEach((select) => {
+            const currentValue = select.value ? parseInt(select.value) : null;
+            const passengerForm = select.closest(".passenger-form");
+            const accommodationSelect = passengerForm.querySelector(
+                ".accommodation-select"
+            );
+            const accommodationId = accommodationSelect.value;
+
+            if (!accommodationId) return;
+
+            const accommodation = accommodationsWithCots.find(
+                (acc) => acc.accommodation_id == accommodationId
+            );
+
+            if (!accommodation || !accommodation.available_cots) return;
+
+            // Rebuild options, hiding already selected cots
+            const options = ['<option value="">Select Cot</option>'];
+
+            accommodation.available_cots.forEach((cot) => {
+                // Only show cots that aren't selected by other passengers
+                // OR this cot is the current selection of this passenger
+                if (!selectedCots.has(cot) || cot === currentValue) {
+                    options.push(
+                        `<option value="${cot}"${
+                            cot === currentValue ? " selected" : ""
+                        }>${cot}</option>`
+                    );
+                }
+            });
+
+            select.innerHTML = options.join("");
+        });
+    }
+
     async function init() {
-        // try to fetch unavailable cots for this voyage (route_from, route_to, departure_date)
-        const routeFromEl = document.getElementById("routeFrom");
-        const routeToEl = document.getElementById("routeTo");
-        const departureDateEl = document.getElementById("departureDate");
-        if (routeFromEl && routeToEl && departureDateEl) {
+        // Fetch available cots per accommodation for this voyage
+        const voyageIdEl = document.getElementById("voyageId");
+
+        if (voyageIdEl && voyageIdEl.value) {
             try {
-                const q = new URLSearchParams({
-                    route_from: routeFromEl.value,
-                    route_to: routeToEl.value,
-                    departure_date: departureDateEl.value,
-                });
                 const resp = await fetch(
-                    "/voyage/unavailable-cots?" + q.toString()
+                    `/voyage/available-cots-by-accommodation?voyage_id=${voyageIdEl.value}`
                 );
                 const json = await resp.json();
-                if (json && json.success && Array.isArray(json.unavailable)) {
-                    unavailableCots = json.unavailable.map(String);
+
+                if (
+                    json &&
+                    json.success &&
+                    Array.isArray(json.accommodations)
+                ) {
+                    accommodationsWithCots = json.accommodations;
+                    console.log(
+                        "Loaded accommodation cot data:",
+                        accommodationsWithCots
+                    );
                 }
             } catch (err) {
-                console.error("Failed to fetch unavailable cots", err);
+                console.error(
+                    "Failed to fetch available cots by accommodation",
+                    err
+                );
             }
         }
 
@@ -321,6 +365,18 @@ document.addEventListener("DOMContentLoaded", function () {
                     'input[name="id_number"]'
                 );
 
+                // Get accommodation name from the selected option
+                const accommodationSelect = formEl.querySelector(
+                    ".accommodation-select"
+                );
+                const selectedOption =
+                    accommodationSelect.options[
+                        accommodationSelect.selectedIndex
+                    ];
+                const accommodationName = selectedOption
+                    ? selectedOption.dataset.name
+                    : "";
+
                 passengers.push({
                     type: passengerType,
                     suffix: formEl.querySelector('input[name="suffix"]').value,
@@ -345,9 +401,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             : idNumberInput
                             ? idNumberInput.value
                             : null,
-                    accommodation_type: formEl.querySelector(
-                        'select[name="accommodation_type"]'
-                    ).value,
+                    accommodation_type: accommodationName,
                     cot_number: formEl.querySelector(
                         'select[name="cot_number"]'
                     ).value,
