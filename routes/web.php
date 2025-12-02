@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\PromoController;
 use App\Http\Controllers\Admin\VesselController;
 use App\Http\Controllers\Admin\RoutePortController;
+use App\Http\Controllers\NotificationController;
 
 //STAFF CONTROLLERS
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
@@ -31,6 +32,17 @@ use App\Http\Controllers\CargoAutoPlacementController;
 
 // OCR route
 Route::post('/ocr/parse', [OcrController::class, 'parseImage'])->name('ocr.parse');
+
+// Notification API routes
+Route::prefix('api/notifications')->group(function () {
+    Route::get('/', [NotificationController::class, 'index']);
+    Route::get('/unread-count', [NotificationController::class, 'getUnreadCount']);
+    Route::post('/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+    Route::post('/clear-all', [NotificationController::class, 'clearAll']);
+    Route::delete('/{id}', [NotificationController::class, 'destroy']);
+    Route::post('/create', [NotificationController::class, 'store']);
+});
 
 Route::get('/', function () {
     return view('passenger.homepage');

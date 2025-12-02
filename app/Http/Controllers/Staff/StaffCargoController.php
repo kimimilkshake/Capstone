@@ -10,6 +10,7 @@ use App\Models\CargoReceipt;
 use App\Models\Voyage;
 use App\Models\Sender;
 use App\Models\Consignee;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 
 class StaffCargoController extends Controller
@@ -93,6 +94,17 @@ $consignee = Consignee::create([
 
         $cargoBooking->save();
     }
+
+    // Create notification for new cargo booking
+    Notification::create([
+        'cargo_receipt_id' => null,
+        'payment_id' => null,
+        'booking_ref_no' => $booking->booking_ref_no,
+        'notification_message' => "New cargo booking #{$booking->booking_ref_no} from {$sender->sender_name} is pending review",
+        'notification_type' => 'cargo booking approval',
+        'notification_status' => 'approved',
+        'notification_created' => now(),
+    ]);
 
     // Return with booking reference
     return redirect()->back()->with('success', 
@@ -185,6 +197,18 @@ public function edit($id)
             $receipt->save();
         }
 
+        // Create notification for approved cargo booking
+        $senderName = $booking->sender ? $booking->sender->sender_name : 'Customer';
+        Notification::create([
+            'cargo_receipt_id' => null,
+            'payment_id' => null,
+            'booking_ref_no' => $booking->booking_ref_no,
+            'notification_message' => "Cargo booking #{$booking->booking_ref_no} from {$senderName} has been approved",
+            'notification_type' => 'cargo booking approval',
+            'notification_status' => 'approved',
+            'notification_created' => now(),
+        ]);
+
         return redirect()->route('cargo.bookings.pending')
             ->with('success', 'Booking approved and added to cargo receipts.');
     }
@@ -197,6 +221,18 @@ public function edit($id)
         $booking = Booking::where('booking_ref_no', $id)->firstOrFail();
         $booking->booking_status = 'Canceled';
         $booking->save();
+
+        // Create notification for rejected cargo booking
+        $senderName = $booking->sender ? $booking->sender->sender_name : 'Customer';
+        Notification::create([
+            'cargo_receipt_id' => null,
+            'payment_id' => null,
+            'booking_ref_no' => $booking->booking_ref_no,
+            'notification_message' => "Cargo booking #{$booking->booking_ref_no} from {$senderName} has been rejected",
+            'notification_type' => 'cargo booking approval',
+            'notification_status' => 'rejected',
+            'notification_created' => now(),
+        ]);
 
         return redirect()->route('cargo.bookings.pending')
             ->with('success', 'Booking has been canceled.');
