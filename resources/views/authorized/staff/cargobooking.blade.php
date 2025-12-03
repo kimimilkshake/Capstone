@@ -10,7 +10,7 @@
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success text-center">{{ session('success') }}</div>
+        <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
     @endif
     @if ($errors->any())
         <div class="alert alert-danger text-center">
@@ -85,28 +85,30 @@
 
                         <div class="cargo-item border rounded p-3 mb-3">
 
-                            <label class="form-label">Cargo Classification <span class="text-danger">*</span></label>
-                            <select name="cargo_classification[]" class="form-select cargo-classification mb-2">
-                                <option value="">-- Select Classification --</option>
-                                @foreach($cargoItems->unique('cargo_item_classification') as $item)
-                                    <option value="{{ $item->cargo_item_classification }}" 
-                                            data-route_port="{{ $item->route_port_id }}">
-                                        {{ $item->cargo_item_classification }}
-                                    </option>
-                                @endforeach
-                            </select>
-
-                            <label class="form-label">Cargo Description <span class="text-danger">*</span></label>
-                            <select name="cargo_item_id[]" class="form-select cargo-description mb-2" required>
-                                <option value="">-- Select Description --</option>
-                                @foreach($cargoItems as $item)
-                                    <option value="{{ $item->cargo_item_id }}"
-                                            data-classification="{{ $item->cargo_item_classification }}"
-                                            data-route_port="{{ $item->route_port_id }}">
-                                        {{ $item->cargo_item_description }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <div class="row gx-2 mb-2">
+                                <div class="col-6">
+                                    <label class="form-label">Cargo Classification <span class="text-danger">*</span></label>
+                                    <select name="cargo_classification[]" class="form-select cargo-classification">
+                                        <option value="">-- Select Classification --</option>
+                                        @foreach($cargoItems->unique('cargo_item_classification') as $item)
+                                            <option value="{{ $item->cargo_item_classification }}" data-route_port="{{ $item->route_port_id }}">
+                                                {{ $item->cargo_item_classification }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Cargo Description <span class="text-danger">*</span></label>
+                                    <select name="cargo_item_id[]" class="form-select cargo-description" required>
+                                        <option value="">-- Select Description --</option>
+                                        @foreach($cargoItems as $item)
+                                            <option value="{{ $item->cargo_item_id }}" data-classification="{{ $item->cargo_item_classification }}" data-route_port="{{ $item->route_port_id }}">
+                                                {{ $item->cargo_item_description }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
 
                             <div class="d-flex gap-2 mb-2">
                                 <div class="flex-fill">
@@ -143,14 +145,6 @@
                                 </div>
                             </div>
 
-                            <label class="form-label">Upload Photo <span class="text-danger">*</span></label>
-                            <label class="btn btn-outline-secondary w-100 mb-2">
-                                <i class="bi bi-image me-2"></i> Add Photo
-                                <input type="file" name="cargo_picture[]" class="d-none cargo-photo" accept="image/*">
-                            </label>
-                            <small class="text-success photo-confirmation" style="display:none;">Photo selected!</small>
-                        </div>
-                    </div>
 
                     <div class="d-flex gap-2 my-3">
                         <button type="button" id="addCargoItem" class="btn btn-secondary">Add Cargo</button>

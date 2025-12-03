@@ -78,36 +78,36 @@
 
                             <div class="cargo-item border rounded p-3 mb-3">
 
-                                <!-- Classification Dropdown -->
-                                <div class="mb-2">
-                                    <label class="form-label">Classification <span class="text-danger">*</span></label>
-                                    <select class="form-control cargo-classification">
-                                        <option value="">-- Select Classification --</option>
-                                        @php
-                                            $classifications = $cargoItems
-                                                ->where('route_port_id', $voyage->routePort->route_port_id ?? null)
-                                                ->pluck('cargo_item_classification')
-                                                ->unique();
-                                        @endphp
-                                        @foreach($classifications as $class)
-                                            <option value="{{ $class }}">{{ $class }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <!-- Description Dropdown -->
-                                <div class="mb-3">
-                                    <label class="form-label">Description <span class="text-danger">*</span></label>
-                                    <select name="cargo_item_id[]" class="form-control cargo-description" required>
-                                        <option value="">-- Select Description --</option>
-                                        @foreach($cargoItems as $cargo)
-                                            @if($cargo->route_port_id == ($voyage->routePort->route_port_id ?? null))
-                                            <option value="{{ $cargo->cargo_item_id }}" data-classification="{{ $cargo->cargo_item_classification }}">
-                                                {{ $cargo->cargo_item_description }}
-                                            </option>
-                                            @endif
-                                        @endforeach
-                                    </select>
+                                <!-- Classification + Description in one row -->
+                                <div class="mb-3 row gx-2">
+                                    <div class="col-6">
+                                        <label class="form-label">Classification <span class="text-danger">*</span></label>
+                                        <select name="cargo_classification[]" class="form-control cargo-classification">
+                                            <option value="">-- Select Classification --</option>
+                                            @php
+                                                $classifications = $cargoItems
+                                                    ->where('route_port_id', $voyage->routePort->route_port_id ?? null)
+                                                    ->pluck('cargo_item_classification')
+                                                    ->unique();
+                                            @endphp
+                                            @foreach($classifications as $class)
+                                                <option value="{{ $class }}">{{ $class }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">Description <span class="text-danger">*</span></label>
+                                        <select name="cargo_item_id[]" class="form-control cargo-description" required>
+                                            <option value="">-- Select Description --</option>
+                                            @foreach($cargoItems as $cargo)
+                                                @if($cargo->route_port_id == ($voyage->routePort->route_port_id ?? null))
+                                                <option value="{{ $cargo->cargo_item_id }}" data-classification="{{ $cargo->cargo_item_classification }}">
+                                                    {{ $cargo->cargo_item_description }}
+                                                </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                    </div>
                                 </div>
 
                                 <!-- Quantity & Weight -->
