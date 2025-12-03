@@ -5,25 +5,23 @@
 @include('components.authHeader')
 @include('components.staff_nav')
 
-<div class="staff-body">
 
+    <div class="staff-body">
     <div class="svl-title">
         <h3>REVIEW CARGO BOOKINGS</h3>
     </div>
 
     {{-- ========================= --}}
-    {{-- BOOKING INFORMATION --}}
+    {{--    BOOKING INFORMATION    --}}
     {{-- ========================= --}}
     <div class="card shadow-sm p-4 mb-4">
         <h5 class="mb-3">Booking Information</h5>
-
         <div class="row">
             <div class="col-md-6">
                 <p><strong>Booking Ref #:</strong> {{ $booking->booking_ref_no }}</p>
                 <p><strong>Status:</strong> {{ $booking->booking_status }}</p>
                 <p><strong>Created:</strong> {{ $booking->created_at->format('M d, Y') }}</p>
             </div>
-
             <div class="col-md-6">
                 @if($booking->voyage)
                     <p><strong>Voyage Code:</strong> {{ $booking->voyage->voyage_code }}</p>
@@ -37,11 +35,10 @@
     </div>
 
     {{-- ========================= --}}
-    {{-- SENDER & CONSIGNEE --}}
+    {{--   SENDER & CONSIGNEE      --}}
     {{-- ========================= --}}
     <div class="card shadow-sm p-4 mb-4">
         <h5 class="mb-3">Sender & Consignee Information</h5>
-
         <div class="row">
             <div class="col-md-6">
                 <h6 class="fw-bold">Sender Information</h6>
@@ -49,7 +46,6 @@
                 <p><strong>Contact:</strong> {{ $booking->sender->sender_contactno }}</p>
                 <p><strong>Email:</strong> {{ $booking->sender->sender_email }}</p>
             </div>
-
             <div class="col-md-6">
                 <h6 class="fw-bold">Consignee Information</h6>
                 <p><strong>Name:</strong> {{ $booking->consignee->consignee_name }}</p>
@@ -59,69 +55,75 @@
     </div>
 
     {{-- ========================= --}}
-    {{-- CARGO PHOTO CAROUSEL --}}
+    {{--     CARGO PHOTO CAROUSEL  --}}
     {{-- ========================= --}}
     @php
         $cargoBookings = $booking->cargoBookings;
     @endphp
+@if ($cargoBookings->count() > 0)
+<div class="card shadow-sm p-4 mb-4">
+    <h4 class="fw-bold mb-3">Cargo Photos</h4>
 
-    @if ($cargoBookings->count() > 0)
-        <div class="card shadow-sm p-4 mb-4">
-            <h4 class="fw-bold mb-3">Cargo Photos</h4>
-
-            <div id="cargoCarousel" class="carousel slide" data-bs-ride="carousel">
-
-                {{-- Indicators --}}
-                <div class="carousel-indicators">
-                    @foreach($cargoBookings as $index => $c)
-                        @if($c->cargo_picture)
-                            <button type="button"
-                                data-bs-target="#cargoCarousel"
-                                data-bs-slide-to="{{ $index }}"
-                                class="{{ $index === 0 ? 'active' : '' }}">
-                            </button>
-                        @endif
-                    @endforeach
-                </div>
-
-                {{-- Slides --}}
-                <div class="carousel-inner">
-                    @foreach($cargoBookings as $c)
-                        @if($c->cargo_picture)
-                            <div class="carousel-item {{ $loop->first ? 'active' : '' }}">
-                                <img src="{{ asset('storage/cargo_pictures/' . $c->cargo_picture) }}"
-                                     class="d-block w-100 cargo-carousel-img">
-
-                                <div class="carousel-caption text-start">
-                                    {{ $c->quantity }}
-                                    {{ $c->cargoItem->cargo_item_classification }}
-                                    of
-                                    {{ $c->cargoItem->cargo_item_description }}
-                                </div>
-                            </div>
-                        @endif
-                    @endforeach
-                </div>
-
-                {{-- Controls --}}
-                <button class="carousel-control-prev" type="button" data-bs-target="#cargoCarousel" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon"></span>
-                </button>
-
-                <button class="carousel-control-next" type="button" data-bs-target="#cargoCarousel" data-bs-slide="next">
-                    <span class="carousel-control-next-icon"></span>
-                </button>
-
-            </div>
+    <div id="cargoCarousel" class="carousel slide" data-bs-ride="carousel">
+        
+        {{-- Indicators --}}
+        <div class="carousel-indicators">
+            @php $indicatorIndex = 0; @endphp
+            @foreach($cargoBookings as $index => $c)
+                @if($c->cargo_picture)
+                    <button type="button"
+                            data-bs-target="#cargoCarousel"
+                            data-bs-slide-to="{{ $indicatorIndex }}"
+                            class="{{ $indicatorIndex === 0 ? 'active' : '' }}"
+                            aria-current="{{ $indicatorIndex === 0 ? 'true' : 'false' }}">
+                    </button>
+                    @php $indicatorIndex++; @endphp
+                @endif
+            @endforeach
         </div>
-    @endif
+
+        {{-- Slides --}}
+        <div class="carousel-inner">
+            @php $slideIndex = 0; @endphp
+            @foreach($cargoBookings as $c)
+                @if($c->cargo_picture)
+                    @php
+                        // Ensure we only use the filename
+                        $filename = basename($c->cargo_picture);
+
+                        // Build full asset path
+                        $imgPath = file_exists(storage_path('app/public/cargo_pictures/' . $filename))
+                                    ? asset('storage/cargo_pictures/' . $filename)
+                                    : asset('images/no-image.png'); // fallback
+                    @endphp
+                    <div class="carousel-item {{ $slideIndex === 0 ? 'active' : '' }}">
+                        <img src="{{ $imgPath }}" class="d-block w-100 cargo-carousel-img">
+                        <div class="carousel-caption text-start">
+                            {{ $c->quantity }} {{ $c->cargoItem->cargo_item_classification ?? '' }} of {{ $c->cargoItem->cargo_item_description ?? '' }}
+                        </div>
+                    </div>
+                    @php $slideIndex++; @endphp
+                @endif
+            @endforeach
+        </div>
+
+        {{-- Controls --}}
+        <button class="carousel-control-prev" type="button" data-bs-target="#cargoCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#cargoCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </button>
+    </div>
+</div>
+@endif
+
 
     {{-- ========================= --}}
-    {{-- CARGO ITEMS TABLE --}}
+    {{--       CARGO ITEMS         --}}
     {{-- ========================= --}}
     <div class="card shadow-sm p-3 mb-4">
         <h5>Cargo Items</h5>
-
         <table class="table table-bordered table-striped mt-3">
             <thead class="table-dark">
                 <tr>
@@ -137,7 +139,6 @@
 
             <tbody>
                 @php $total = 0; @endphp
-
                 @foreach ($cargoBookings as $c)
                     @php
                         $freight = $c->cargoItem->cargo_item_freight;
@@ -148,8 +149,7 @@
                     @endphp
 
                     <tr>
-                        <td>
-                            {{ $c->cargoItem->cargo_item_description }} <br>
+                        <td>{{ $c->cargoItem->cargo_item_description }} <br>
                             <small class="text-muted">({{ $c->cargoItem->cargo_item_classification }})</small>
                         </td>
                         <td>{{ $c->quantity }}</td>
@@ -172,7 +172,7 @@
     </div>
 
     {{-- ========================= --}}
-    {{-- ACTION BUTTONS --}}
+    {{--      ACTION BUTTONS       --}}
     {{-- ========================= --}}
     @if($booking->booking_status === 'Pending')
         <div class="d-flex justify-content-center gap-3 mt-4">
@@ -180,7 +180,6 @@
                 @csrf
                 <button class="btn btn-success btn-lg px-4">Accept</button>
             </form>
-
             <form action="{{ route('cargo.bookings.reject', $booking->booking_ref_no) }}" method="POST">
                 @csrf
                 <button class="btn btn-danger btn-lg px-4">Reject</button>
@@ -195,10 +194,12 @@
     </div>
 
 </div>
+
 @endsection
 
 @section('styles')
 <style>
+    /* Carousel image styling (similar to VIEW RATES) */
     .cargo-carousel-img {
         max-height: 320px;
         object-fit: contain;

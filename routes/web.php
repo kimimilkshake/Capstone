@@ -248,6 +248,7 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     Route::post('/cargo-bookings/store', [StaffCargoController::class, 'store'])->name('cargo.bookings.store');
     // Show only pending cargo bookings
     Route::get('/cargo-bookings/pending', [StaffCargoController::class, 'pending'])->name('cargo.bookings.pending');
+    
     // View booking details
     Route::get('/cargo-bookings/{id}', [StaffCargoController::class, 'show'])->name('cargo.bookings.show');
     Route::get('/cargo-items/voyage/{id}', [StaffCargoController::class, 'getCargoItemsByVoyage']);

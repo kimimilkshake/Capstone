@@ -10,13 +10,16 @@
         <h3>REVIEW CARGO BOOKINGS</h3>
     </div>
 
-    <div class="search-filter-row" style="display:flex; gap:10px; margin-bottom:20px; align-items:center;">
-        <form class="search-bar d-flex" action="{{ route('cargo.bookings.pending') }}" method="GET" style="flex:1; gap:8px;">
-            <input type="text" name="search" class="form-control" placeholder="Search by Ref No. or Sender..." value="{{ request('search') }}">
-            <button type="submit" class="btn btn-primary">Search</button>
+<div class="search-filter-row mb-4" style="display:flex; gap:10px;">
+    <form class="search-bar d-flex gap-2" action="{{ route('cargo.bookings.pending') }}" method="GET" style="flex:1;">
+        <input type="text" name="search" class="form-control" placeholder="Search by Ref No., Sender, or Consignee..." value="{{ request('search') }}">
+        <button type="submit" class="btn btn-primary">Search</button>
+        @if(request('search'))
             <a href="{{ route('cargo.bookings.pending') }}" class="btn btn-outline-secondary">Clear</a>
-        </form>
-    </div>
+        @endif
+    </form>
+</div>
+
 
     <table class="cargo-item-table">
         <thead>
