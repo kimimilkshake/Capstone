@@ -260,9 +260,10 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     Route::get('/cargo-bookings/{id}/edit', [StaffCargoController::class, 'edit'])
         ->name('cargo.bookings.edit');
 
-    // Update cargo items
-    Route::post('/cargo-bookings/{id}/update', [StaffCargoController::class, 'update'])
-        ->name('cargo.bookings.update');
+// Update cargo items
+Route::put('/cargo-bookings/{id}/update', [StaffCargoController::class, 'update'])
+    ->name('cargo.bookings.update');
+
     // Semaphore Text SMS
     Route::get('/semaphore', [SemaphoreController::class, 'show'])->name('staff.semaphore');
     Route::post('/semaphore/send', [SemaphoreController::class, 'send'])->name('staff.semaphore.send')->middleware('auth');

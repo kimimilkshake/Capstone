@@ -7,11 +7,13 @@ use App\Models\Booking;
 use App\Models\CargoBooking;
 use App\Models\CargoItem;
 use App\Models\CargoReceipt;
+use App\Models\RoutePort;
 use App\Models\Voyage;
 use App\Models\Sender;
 use App\Models\Consignee;
 use App\Models\Notification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class StaffCargoController extends Controller
 {
@@ -115,12 +117,29 @@ $consignee = Consignee::create([
     /**
      * Show only pending cargo bookings
      */
-    public function pending()
+    public function pending(Request $request)
     {
-        $bookings = Booking::where('booking_status', 'Pending')
+        $search = $request->query('search');
+
+        $query = Booking::where('booking_status', 'Pending')
             ->where('booking_type', 'Cargo')
-            ->with(['sender', 'consignee', 'voyage', 'cargoBookings'])
-            ->paginate(10);
+            ->with(['sender', 'consignee', 'voyage', 'cargoBookings']);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('booking_ref_no', 'like', "%{$search}%")
+                  ->orWhereHas('sender', function ($q2) use ($search) {
+                      $q2->where('sender_name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('consignee', function ($q2) use ($search) {
+                      $q2->where('consignee_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $bookings = $query->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->only('search'));
 
         return view('authorized.staff.pendingcargo', compact('bookings'));
     }
@@ -142,15 +161,36 @@ $consignee = Consignee::create([
      */
 public function edit($id)
 {
-    $booking = Booking::where('booking_ref_no', $id)
-        ->with('cargoBookings')
-        ->firstOrFail();
+    $booking = Booking::with([
+        'sender',
+        'consignee',
+        'voyage.routePort',
+        'cargoBookings.cargoItem'
+    ])->where('booking_ref_no', $id)->firstOrFail();
 
-    // Load all cargo items for the dropdown
+    // For dropdowns (classification + descriptions)
+    $classifications = CargoItem::select('cargo_item_classification')
+        ->distinct()
+        ->pluck('cargo_item_classification');
+
+    $descriptions = CargoItem::select('cargo_item_description')
+        ->distinct()
+        ->pluck('cargo_item_description');
+
+    // For cargo item lookup (same as your original)
     $cargoItems = CargoItem::all();
+    
+    // Load all routes for the Route Destination dropdown
+    $routes = RoutePort::all(); // or whatever your model is called
 
-    return view('authorized.staff.editcargo', compact('booking', 'cargoItems'));
+    return view('authorized.staff.editcargo', compact(
+        'booking',
+        'cargoItems',
+        'classifications',
+        'descriptions'
+    ));
 }
+
 
     /**
      * Update cargo item details
@@ -208,6 +248,14 @@ public function edit($id)
             'notification_status' => 'approved',
             'notification_created' => now(),
         ]);
+        
+            Mail::to($booking->sender->sender_email)
+        ->send(new \App\Mail\CargoBookingApproved(
+            $booking,
+            $booking->sender,
+            $booking->consignee,
+            $booking->cargoBookings
+        ));
 
         return redirect()->route('cargo.bookings.pending')
             ->with('success', 'Booking approved and added to cargo receipts.');
@@ -233,6 +281,14 @@ public function edit($id)
             'notification_status' => 'rejected',
             'notification_created' => now(),
         ]);
+
+            Mail::to($booking->sender->sender_email)
+        ->send(new \App\Mail\CargoBookingRejected(
+            $booking,
+            $booking->sender,
+            $booking->consignee,
+            $booking->cargoBookings
+        ));
 
         return redirect()->route('cargo.bookings.pending')
             ->with('success', 'Booking has been canceled.');
