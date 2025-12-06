@@ -3,7 +3,7 @@
 2. Download Composer (preferably the latest version) <br>
 3. Download XAMPP (preferably the latest version) <br>
 
-   *XAMPP already has PHP so no need to download PHP* <br>
+   *XAMPP already has PHP, so no need to download PHP* <br>
 4. Download Node.js (preferably the latest version) <br>
 5. Open Git Bash, and go to your desired folder using Git Bash to clone the repository using the following command: <br>
 `git clone https://github.com/Tofudo/Capstone.git` <br>
@@ -27,12 +27,16 @@ or <br>
 ```php artisan db:seed```<br>
 16. Run the npm installation command: <br>
 ```npm install```<br>
-17. Run the PHP server using the following command: <br>
+17. Open a new terminal and run the following command: <br>
+```php artisan storage: link``` <br>
+18. Open a new terminal in VS Code and run the PHP server using the following command: <br>
 ```php artisan serve```<br>
     and click the link `http://127.0.0.1:8000` <br>
-18. Create a new terminal in VS Code and run the Node.js server using the following command: <br>
+19. Open a new terminal in VS Code and run the Node.js server using the following command: <br>
 ```npm run dev```<br>
-    and click the link `http://localhost:5173/`
+    and click the link `http://localhost:5173/` <br>
+20. Open a new terminal in VS Code and run the following command: <br>
+```php artisan queue:work``` <br>
 
 <h1 align="center">Running the Project</h1>
 
