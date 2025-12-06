@@ -28,7 +28,7 @@ or <br>
 16. Run the npm installation command: <br>
 ```npm install```<br>
 17. Open a new terminal and run the following command: <br>
-```php artisan storage: link``` <br>
+```php artisan storage:link``` <br>
 18. Open a new terminal in VS Code and run the PHP server using the following command: <br>
 ```php artisan serve```<br>
     and click the link `http://127.0.0.1:8000` <br>
