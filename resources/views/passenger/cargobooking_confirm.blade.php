@@ -12,18 +12,27 @@
             <h6>Booking Reference: <strong>{{ $booking->booking_ref_no }}</strong></h6>
             <p>Status: <strong>{{ $booking->booking_status }}</strong></p>
 
-            <hr>
+<hr>
 
-            <h6>Sender Information</h6>
-            <p>Sender Name : {{ $sender->sender_name }} </p>
-            <p>Sender Contact No: {{ $sender->sender_contactno }}</p>
-            <p>Sender Email: {{ $sender->sender_email }}</p>
+<div class="row">
+    {{-- Sender Information --}}
+    <div class="col-md-6">
+        <h6>Sender Information</h6>
+        <p><strong>Name:</strong> {{ $sender->sender_name }}</p>
+        <p><strong>Contact No:</strong> {{ $sender->sender_contactno }}</p>
+        <p><strong>Email:</strong> {{ $sender->sender_email }}</p>
+    </div>
 
-            <h6>Consignee Information</h6>
-            <p>Consignee Name : {{ $consignee->consignee_name }}</p>
-            <p>Consignee Contact No: {{ $consignee->consignee_contactno }}</p>
+    {{-- Consignee Information --}}
+    <div class="col-md-6">
+        <h6>Consignee Information</h6>
+        <p><strong>Name:</strong> {{ $consignee->consignee_name }}</p>
+        <p><strong>Contact No:</strong> {{ $consignee->consignee_contactno }}</p>
+    </div>
+</div>
 
-            <hr>
+<hr>
+
 
             <h6>Cargo Items</h6>
             <table class="table table-bordered">

@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\PromoController;
 use App\Http\Controllers\Admin\VesselController;
 use App\Http\Controllers\Admin\RoutePortController;
+use App\Http\Controllers\NotificationController;
 
 //STAFF CONTROLLERS
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
@@ -31,6 +32,17 @@ use App\Http\Controllers\CargoAutoPlacementController;
 
 // OCR route
 Route::post('/ocr/parse', [OcrController::class, 'parseImage'])->name('ocr.parse');
+
+// Notification API routes
+Route::prefix('api/notifications')->group(function () {
+    Route::get('/', [NotificationController::class, 'index']);
+    Route::get('/unread-count', [NotificationController::class, 'getUnreadCount']);
+    Route::post('/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+    Route::post('/clear-all', [NotificationController::class, 'clearAll']);
+    Route::delete('/{id}', [NotificationController::class, 'destroy']);
+    Route::post('/create', [NotificationController::class, 'store']);
+});
 
 Route::get('/', function () {
     return view('passenger.homepage');
@@ -238,6 +250,7 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     Route::post('/cargo-bookings/store', [StaffCargoController::class, 'store'])->name('cargo.bookings.store');
     // Show only pending cargo bookings
     Route::get('/cargo-bookings/pending', [StaffCargoController::class, 'pending'])->name('cargo.bookings.pending');
+    
     // View booking details
     Route::get('/cargo-bookings/{id}', [StaffCargoController::class, 'show'])->name('cargo.bookings.show');
     Route::get('/cargo-items/voyage/{id}', [StaffCargoController::class, 'getCargoItemsByVoyage']);
@@ -250,9 +263,10 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     Route::get('/cargo-bookings/{id}/edit', [StaffCargoController::class, 'edit'])
         ->name('cargo.bookings.edit');
 
-    // Update cargo items
-    Route::post('/cargo-bookings/{id}/update', [StaffCargoController::class, 'update'])
-        ->name('cargo.bookings.update');
+// Update cargo items
+Route::put('/cargo-bookings/{id}/update', [StaffCargoController::class, 'update'])
+    ->name('cargo.bookings.update');
+
     // Semaphore Text SMS
     Route::get('/semaphore', [SemaphoreController::class, 'show'])->name('staff.semaphore');
     Route::post('/semaphore/send', [SemaphoreController::class, 'send'])->name('staff.semaphore.send')->middleware('auth');

@@ -52,4 +52,5 @@ class Booking extends Model
     {
         return $this->belongsTo(CargoItem::class, 'cargo_item_id', 'cargo_item_id');
     }
+    
 }

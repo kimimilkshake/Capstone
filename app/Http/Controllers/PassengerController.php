@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Passenger;
 use App\Models\CargoItem; // ✅ Add this
 use App\Models\Voyage;
+use App\Models\Notification;
 use Carbon\Carbon;
 
 class PassengerController extends Controller
@@ -151,6 +152,18 @@ class PassengerController extends Controller
                     'updated_at' => now(),
                 ]);
             }
+
+            // Create notification for new cargo booking
+            $senderName = $request->sender_firstname . ' ' . $request->sender_lastname;
+            Notification::create([
+                'cargo_receipt_id' => null,
+                'payment_id' => null,
+                'booking_ref_no' => $bookingId,
+                'notification_message' => "New cargo booking #{$bookingId} from {$senderName} is pending review",
+                'notification_type' => 'cargo booking approval',
+                'notification_status' => 'approved',
+                'notification_created' => now(),
+            ]);
 
             DB::commit();
             return redirect()->route('cargobooking.show', ['booking_ref_no' => $bookingId]);

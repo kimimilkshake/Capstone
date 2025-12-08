@@ -7,10 +7,16 @@ use App\Models\Booking;
 use App\Models\CargoBooking;
 use App\Models\CargoItem;
 use App\Models\CargoReceipt;
+use App\Models\RoutePort;
 use App\Models\Voyage;
 use App\Models\Sender;
 use App\Models\Consignee;
+use App\Models\Notification;
 use Illuminate\Http\Request;
+use App\Mail\CargoBookingApproved;
+use App\Mail\CargoBookingRejected;
+use Illuminate\Support\Facades\Mail;
+
 
 class StaffCargoController extends Controller
 {
@@ -94,6 +100,17 @@ $consignee = Consignee::create([
         $cargoBooking->save();
     }
 
+    // Create notification for new cargo booking
+    Notification::create([
+        'cargo_receipt_id' => null,
+        'payment_id' => null,
+        'booking_ref_no' => $booking->booking_ref_no,
+        'notification_message' => "New cargo booking #{$booking->booking_ref_no} from {$sender->sender_name} is pending review",
+        'notification_type' => 'cargo booking approval',
+        'notification_status' => 'approved',
+        'notification_created' => now(),
+    ]);
+
     // Return with booking reference
     return redirect()->back()->with('success', 
         "Success! Your booking_ref_no: {$booking->booking_ref_no} is being queued for approval."
@@ -103,15 +120,27 @@ $consignee = Consignee::create([
     /**
      * Show only pending cargo bookings
      */
-    public function pending()
-    {
-        $bookings = Booking::where('booking_status', 'Pending')
-            ->where('booking_type', 'Cargo')
-            ->with(['sender', 'consignee', 'voyage', 'cargoBookings'])
-            ->paginate(10);
+public function pending(Request $request)
+{
+    $search = $request->input('search');
 
-        return view('authorized.staff.pendingcargo', compact('bookings'));
-    }
+    $bookings = Booking::where('booking_status', 'Pending')
+        ->where('booking_type', 'Cargo')
+        ->with(['sender', 'consignee', 'voyage', 'cargoBookings'])
+        ->when($search, function($query, $search) {
+            $query->where('booking_ref_no', 'like', "%{$search}%")
+                  ->orWhereHas('sender', function($q) use ($search) {
+                      $q->where('sender_name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('consignee', function($q) use ($search) {
+                      $q->where('consignee_name', 'like', "%{$search}%");
+                  });
+        })
+        ->orderBy('created_at', 'desc')
+        ->paginate(10);
+
+    return view('authorized.staff.pendingcargo', compact('bookings'));
+}
 
     /**
      * Show full booking (read-only)
@@ -130,15 +159,36 @@ $consignee = Consignee::create([
      */
 public function edit($id)
 {
-    $booking = Booking::where('booking_ref_no', $id)
-        ->with('cargoBookings')
-        ->firstOrFail();
+    $booking = Booking::with([
+        'sender',
+        'consignee',
+        'voyage.routePort',
+        'cargoBookings.cargoItem'
+    ])->where('booking_ref_no', $id)->firstOrFail();
 
-    // Load all cargo items for the dropdown
+    // For dropdowns (classification + descriptions)
+    $classifications = CargoItem::select('cargo_item_classification')
+        ->distinct()
+        ->pluck('cargo_item_classification');
+
+    $descriptions = CargoItem::select('cargo_item_description')
+        ->distinct()
+        ->pluck('cargo_item_description');
+
+    // For cargo item lookup (same as your original)
     $cargoItems = CargoItem::all();
+    
+    // Load all routes for the Route Destination dropdown
+    $routes = RoutePort::all(); // or whatever your model is called
 
-    return view('authorized.staff.editcargo', compact('booking', 'cargoItems'));
+    return view('authorized.staff.editcargo', compact(
+        'booking',
+        'cargoItems',
+        'classifications',
+        'descriptions'
+    ));
 }
+
 
     /**
      * Update cargo item details
@@ -167,46 +217,80 @@ public function edit($id)
     /**
      * Approve a booking
      */
-    public function approve($id)
-    {
-        $booking = Booking::where('booking_ref_no', $id)->firstOrFail();
-        $booking->booking_status = 'Confirmed';
-        $booking->save();
+public function approve($id)
+{
+    $booking = Booking::with(['sender', 'consignee', 'cargoBookings.cargoItem', 'voyage'])->where('booking_ref_no', $id)->firstOrFail();
+    $booking->booking_status = 'Confirmed';
+    $booking->save();
 
-        // Move cargo items to cargo_receipt
-        foreach ($booking->cargoBookings as $cargo) {
-            $receipt = new CargoReceipt();
-            $receipt->booking_ref_no = $booking->booking_ref_no;
-            $receipt->sender_id = $booking->sender_id;
-            $receipt->consignee_id = $booking->consignee_id;
-            $receipt->cargo_item_id = $cargo->cargo_item_id ?? null;
-            $receipt->voyage_id = $booking->voyage_id;
-            $receipt->cargo_item_qty = $cargo->quantity;
-            $receipt->save();
-        }
-
-        return redirect()->route('cargo.bookings.pending')
-            ->with('success', 'Booking approved and added to cargo receipts.');
+    // Move cargo items to cargo_receipt
+    foreach ($booking->cargoBookings as $cargo) {
+        $receipt = new CargoReceipt();
+        $receipt->booking_ref_no = $booking->booking_ref_no;
+        $receipt->sender_id = $booking->sender_id;
+        $receipt->consignee_id = $booking->consignee_id;
+        $receipt->cargo_item_id = $cargo->cargo_item_id ?? null;
+        $receipt->voyage_id = $booking->voyage_id;
+        $receipt->cargo_item_qty = $cargo->quantity;
+        $receipt->save();
     }
+
+    // Send email
+    Mail::to($booking->sender->sender_email)
+        ->send(new \App\Mail\CargoBookingApproved(
+            $booking,
+            $booking->sender,
+            $booking->consignee,
+            $booking->cargoBookings
+        ));
+
+    return redirect()->route('cargo.bookings.pending')
+        ->with('success', 'Booking approved, added to cargo receipts, and email sent.');
+}
+
 
     /**
      * Reject a booking
      */
-    public function reject($id)
-    {
-        $booking = Booking::where('booking_ref_no', $id)->firstOrFail();
-        $booking->booking_status = 'Canceled';
-        $booking->save();
+public function reject($id)
+{
+    $booking = Booking::with(['sender', 'consignee', 'cargoBookings.cargoItem', 'voyage'])->where('booking_ref_no', $id)->firstOrFail();
+    $booking->booking_status = 'Canceled';
+    $booking->save();
 
-        return redirect()->route('cargo.bookings.pending')
-            ->with('success', 'Booking has been canceled.');
-    }
-    public function getCargoItemsByVoyage($voyageId)
-    {
-    $voyage = Voyage::with('routePort')->findOrFail($voyageId);
+        // Create notification for rejected cargo booking
+        $senderName = $booking->sender ? $booking->sender->sender_name : 'Customer';
+        Notification::create([
+            'cargo_receipt_id' => null,
+            'payment_id' => null,
+            'booking_ref_no' => $booking->booking_ref_no,
+            'notification_message' => "Cargo booking #{$booking->booking_ref_no} from {$senderName} has been rejected",
+            'notification_type' => 'cargo booking approval',
+            'notification_status' => 'rejected',
+            'notification_created' => now(),
+        ]);
 
-    $cargoItems = CargoItem::where('route_port_id', $voyage->route_port_id)->get();
+            Mail::to($booking->sender->sender_email)
+        ->send(new \App\Mail\CargoBookingRejected(
+            $booking,
+            $booking->sender,
+            $booking->consignee,
+            $booking->cargoBookings
+        ));
 
-    return response()->json($cargoItems);
-    }
+    // Send rejection email
+    Mail::to($booking->sender->sender_email)
+        ->send(new \App\Mail\CargoBookingRejected(
+            $booking,
+            $booking->sender,
+            $booking->consignee,
+            $booking->cargoBookings
+        ));
+
+    return redirect()->route('cargo.bookings.pending')
+        ->with('success', 'Booking has been canceled and email sent to the sender.');
+}
+
+
+    
 }

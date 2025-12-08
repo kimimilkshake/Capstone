@@ -1,115 +1,147 @@
 @extends('layouts.app')
 @section('page-title', 'EDIT CARGO BOOKING')
-
 @section('content')
 @include('components.authHeader')
 @include('components.staff_nav')
 
-<div class="staff-body container my-5" style="max-width:1100px; margin:auto;">
-    <div class="svl-title text-center mb-4" style="margin-top:40px;">
-        <h3>EDIT CARGO BOOKING #{{ $booking->booking_ref_no }}</h3>
+<div class="staff-body">
+    <div class="svl-title">
+        <h3>EDIT CARGO ITEMS</h3>
     </div>
 
-    {{-- Success / Error Messages --}}
     @if(session('success'))
-        <div class="alert alert-success text-center">{{ session('success') }}</div>
-    @endif
-    @if ($errors->any())
-        <div class="alert alert-danger text-center">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
+        <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <form action="{{ route('cargo.bookings.update', $booking->booking_ref_no) }}" method="POST" enctype="multipart/form-data">
+    {{-- ========================= --}}
+    {{-- BOOKING INFORMATION --}}
+    {{-- ========================= --}}
+    <div class="card shadow-sm p-4 mb-4">
+        <h5>Booking Information</h5>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Booking Ref #:</strong> {{ $booking->booking_ref_no }}</p>
+                <p><strong>Status:</strong> {{ $booking->booking_status }}</p>
+                <p><strong>Created:</strong> {{ $booking->created_at->format('M d, Y') }}</p>
+            </div>
+            <div class="col-md-6">
+                @if($booking->voyage)
+                    <p><strong>Voyage Code:</strong> {{ $booking->voyage->voyage_code }}</p>
+                    <p><strong>Departure:</strong> {{ $booking->voyage->voyage_departure_date }}</p>
+                    <p><strong>Arrival:</strong> {{ $booking->voyage->voyage_arrival_date }}</p>
+                @else
+                    <p><strong>Voyage:</strong> N/A</p>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    {{-- ========================= --}}
+    {{-- SENDER & CONSIGNEE INFORMATION --}}
+    {{-- ========================= --}}
+    <div class="card shadow-sm p-4 mb-4">
+        <h5>Sender & Consignee Information</h5>
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="fw-bold">Sender Information</h6>
+                <p><strong>Name:</strong> {{ $booking->sender->sender_name }}</p>
+                <p><strong>Contact:</strong> {{ $booking->sender->sender_contactno }}</p>
+                <p><strong>Email:</strong> {{ $booking->sender->sender_email ?? '-' }}</p>
+            </div>
+            <div class="col-md-6">
+                <h6 class="fw-bold">Consignee Information</h6>
+                <p><strong>Name:</strong> {{ $booking->consignee->consignee_name }}</p>
+                <p><strong>Contact:</strong> {{ $booking->consignee->consignee_contactno }}</p>
+            </div>
+        </div>
+    </div>
+
+    {{-- ========================= --}}
+    {{-- EDIT CARGO ITEMS FORM --}}
+    {{-- ========================= --}}
+    <form action="{{ route('cargo.bookings.update', $booking->booking_ref_no) }}" method="POST">
         @csrf
+        @method('PUT')
 
-        {{-- Sender & Consignee --}}
-        <div class="card p-3 mb-4 shadow-sm">
-            <h5 class="mb-3">Sender Information</h5>
-            <p>{{ $booking->sender->sender_name ?? '-' }} | {{ $booking->sender->sender_contactno ?? '-' }} | {{ $booking->sender->sender_email ?? '-' }}</p>
+        @foreach($booking->cargoBookings as $index => $cargo)
+            <div class="card shadow-sm p-4 mb-4">
+                <h5>Cargo Item #{{ $index + 1 }}</h5>
 
-            <h5 class="mt-4 mb-3">Consignee Information</h5>
-            <p>{{ $booking->consignee->consignee_name ?? '-' }} | {{ $booking->consignee->consignee_contactno ?? '-' }}</p>
-        </div>
-
-        {{-- Cargo Items --}}
-        <div class="card p-3 mb-4 shadow-sm">
-            <h5 class="mb-3">Cargo Items</h5>
-            <div id="cargo-items-container">
-                @foreach($booking->cargoBookings as $index => $cargo)
-                <div class="cargo-item border rounded p-3 mb-3 position-relative">
-                    {{-- Cargo Description --}}
-                    <div class="mb-2">
-                        <label for="cargo_item_{{ $index }}">Cargo Description</label>
-                        <select name="cargo_item_id[]" id="cargo_item_{{ $index }}" class="form-select" required>
-                            @foreach($cargoItems as $item)
-                                <option value="{{ $item->cargo_item_id }}"
-                                    {{ $cargo->cargo_item_id == $item->cargo_item_id ? 'selected' : '' }}>
-                                    {{ $item->cargo_item_description }}
-                                </option>
-                            @endforeach
-                        </select>
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label>Classification</label>
+                            <select name="classification[]" required>
+                                <option value="">Select Classification</option>
+                                @foreach($classifications as $classification)
+                                    <option value="{{ $classification }}"
+                                        {{ $cargo->cargoItem->cargo_item_classification == $classification ? 'selected' : '' }}>
+                                        {{ $classification }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
 
-                    {{-- Dimensions & Quantity --}}
-                    <div class="mb-2 d-flex gap-2">
-                        <input type="number" name="quantity[]" class="form-control" value="{{ $cargo->quantity }}" placeholder="Quantity" required min="1">
-                        <input type="number" name="length[]" class="form-control" value="{{ $cargo->length }}" placeholder="Length (cm)" required>
-                    </div>
-                    <div class="mb-2 d-flex gap-2">
-                        <input type="number" name="width[]" class="form-control" value="{{ $cargo->width }}" placeholder="Width (cm)" required>
-                        <input type="number" name="height[]" class="form-control" value="{{ $cargo->height }}" placeholder="Height (cm)" required>
-                    </div>
-                    <div class="mb-2">
-                        <input type="number" name="weight[]" class="form-control" value="{{ $cargo->weight }}" placeholder="Weight (kg)" required>
-                    </div>
-
-                    {{-- Cargo Image --}}
-                    <div class="mb-2">
-                        @if($cargo->cargo_picture)
-                            <img src="{{ asset('storage/cargo_pictures/'.$cargo->cargo_picture) }}" alt="Cargo Image" style="max-width:150px;">
-                        @endif
-                        <label class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center mt-2">
-                            <i class="bi bi-image me-2"></i> Change Photo
-                            <input type="file" name="cargo_picture[]" class="d-none" accept="image/*">
-                        </label>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label>Description</label>
+                            <select name="description[]" required>
+                                <option value="">Select Description</option>
+                                @foreach($descriptions as $description)
+                                    <option value="{{ $description }}"
+                                        {{ $cargo->cargoItem->cargo_item_description == $description ? 'selected' : '' }}>
+                                        {{ $description }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                 </div>
-                @endforeach
-            </div>
 
-            {{-- Add/Remove Buttons --}}
-            <div class="d-flex gap-2 mb-3">
-                <button type="button" id="addCargoItem" class="btn btn-secondary">Add Another Cargo</button>
-                <button type="button" id="removeCargoItem" class="btn btn-danger">Remove Last Cargo</button>
-            </div>
-        </div>
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label>Quantity</label>
+                            <input type="number" name="quantity[]" value="{{ old('quantity.'.$index, $cargo->quantity) }}" min="1" required>
+                        </div>
+                    </div>
 
-        {{-- Form Actions --}}
-        <div class="text-center mb-5">
-            <button type="submit" class="btn btn-primary btn-lg">UPDATE CARGO BOOKING</button>
-            <a href="{{ route('cargo.bookings.pending') }}" class="btn btn-outline-danger btn-lg">CANCEL</a>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label>Length (cm)</label>
+                            <input type="number" step="0.01" name="length[]" value="{{ old('length.'.$index, $cargo->length) }}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label>Width (cm)</label>
+                            <input type="number" step="0.01" name="width[]" value="{{ old('width.'.$index, $cargo->width) }}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label>Height (cm)</label>
+                            <input type="number" step="0.01" name="height[]" value="{{ old('height.'.$index, $cargo->height) }}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label>Weight (kg)</label>
+                            <input type="number" step="0.01" name="weight[]" value="{{ old('weight.'.$index, $cargo->weight) }}" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+
+        <div class="form-actions mb-4">
+            <button type="submit" class="btn btn-primary">Update Cargo Items</button>
+            <a href="{{ route('cargo.bookings.show', $booking->booking_ref_no) }}" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
 </div>
-
-<script>
-const container = document.getElementById('cargo-items-container');
-
-document.getElementById('addCargoItem').addEventListener('click', () => {
-    const newItem = container.querySelector('.cargo-item').cloneNode(true);
-    newItem.querySelectorAll('input').forEach(i => i.value = '');
-    container.appendChild(newItem);
-});
-
-document.getElementById('removeCargoItem').addEventListener('click', () => {
-    const items = container.querySelectorAll('.cargo-item');
-    if(items.length > 1) items[items.length-1].remove();
-    else alert('At least one cargo item is required.');
-});
-</script>
 @endsection

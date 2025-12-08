@@ -21,6 +21,16 @@
 
                     <!-- LEFT SIDE -->
                     <div class="col-md-6 mb-3">
+                                              <h6 class="fw-bold mt-4">Voyage Information</h6>
+                        <div class="bg-white p-3 rounded shadow-sm mb-3 small">
+                            <p class="mb-1"><strong>Vessel Name:</strong> {{ $vesselName }}</p>
+                            <p class="mb-1"><strong>Route:</strong> {{ $routeFrom }} → {{ $routeTo }}</p>
+                            <p class="mb-1"><strong>Departure Date:</strong> {{ $departureDate }}</p>
+                            <p class="mb-1"><strong>Departure Time:</strong> {{ $departureTime }}</p>
+                            <p class="mb-0"><strong>Port of Origin:</strong> {{ $portOfOrigin }}</p>
+                        </div>
+
+                        <input type="hidden" name="voyage_id" value="{{ request()->voyage_id }}">
                         <h6 class="fw-bold">Sender Information</h6>
 
                         <div class="mb-2">
@@ -36,7 +46,7 @@
                             <input type="text" name="sender_contact" class="form-control" required>
                         </div>
                         <div class="mb-2">
-                            <label class="form-label">Email Address</label>
+                            <label class="form-label">Email Address<span class="text-danger">*</span></label>
                             <input type="email" name="sender_email" class="form-control">
                         </div>
                         <div class="mb-2">
@@ -58,15 +68,7 @@
                             <input type="text" name="consignee_contact" class="form-control" required>
                         </div>
 
-                        <h6 class="fw-bold mt-4">Voyage Information</h6>
-                        <div class="bg-white p-3 rounded shadow-sm mb-3 small">
-                            <p class="mb-1"><strong>Vessel Name:</strong> {{ $vesselName }}</p>
-                            <p class="mb-1"><strong>Route:</strong> {{ $routeFrom }} → {{ $routeTo }}</p>
-                            <p class="mb-1"><strong>Departure Date:</strong> {{ $departureDate }}</p>
-                            <p class="mb-1"><strong>Departure Time:</strong> {{ $departureTime }}</p>
-                            <p class="mb-0"><strong>Port of Origin:</strong> {{ $portOfOrigin }}</p>
-                        </div>
-                        <input type="hidden" name="voyage_id" value="{{ request()->voyage_id }}">
+ 
                     </div>
 
                     <!-- RIGHT SIDE (CARGO ITEMS) -->
@@ -76,36 +78,36 @@
 
                             <div class="cargo-item border rounded p-3 mb-3">
 
-                                <!-- Classification Dropdown -->
-                                <div class="mb-2">
-                                    <label class="form-label">Classification</label>
-                                    <select class="form-control cargo-classification">
-                                        <option value="">-- Select Classification --</option>
-                                        @php
-                                            $classifications = $cargoItems
-                                                ->where('route_port_id', $voyage->routePort->route_port_id ?? null)
-                                                ->pluck('cargo_item_classification')
-                                                ->unique();
-                                        @endphp
-                                        @foreach($classifications as $class)
-                                            <option value="{{ $class }}">{{ $class }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <!-- Description Dropdown -->
-                                <div class="mb-3">
-                                    <label class="form-label">Description <span class="text-danger">*</span></label>
-                                    <select name="cargo_item_id[]" class="form-control cargo-description" required>
-                                        <option value="">-- Select Description --</option>
-                                        @foreach($cargoItems as $cargo)
-                                            @if($cargo->route_port_id == ($voyage->routePort->route_port_id ?? null))
-                                            <option value="{{ $cargo->cargo_item_id }}" data-classification="{{ $cargo->cargo_item_classification }}">
-                                                {{ $cargo->cargo_item_description }}
-                                            </option>
-                                            @endif
-                                        @endforeach
-                                    </select>
+                                <!-- Classification + Description in one row -->
+                                <div class="mb-3 row gx-2">
+                                    <div class="col-6">
+                                        <label class="form-label">Classification <span class="text-danger">*</span></label>
+                                        <select name="cargo_classification[]" class="form-control cargo-classification">
+                                            <option value="">-- Select Classification --</option>
+                                            @php
+                                                $classifications = $cargoItems
+                                                    ->where('route_port_id', $voyage->routePort->route_port_id ?? null)
+                                                    ->pluck('cargo_item_classification')
+                                                    ->unique();
+                                            @endphp
+                                            @foreach($classifications as $class)
+                                                <option value="{{ $class }}">{{ $class }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">Description <span class="text-danger">*</span></label>
+                                        <select name="cargo_item_id[]" class="form-control cargo-description" required>
+                                            <option value="">-- Select Description --</option>
+                                            @foreach($cargoItems as $cargo)
+                                                @if($cargo->route_port_id == ($voyage->routePort->route_port_id ?? null))
+                                                <option value="{{ $cargo->cargo_item_id }}" data-classification="{{ $cargo->cargo_item_classification }}">
+                                                    {{ $cargo->cargo_item_description }}
+                                                </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                    </div>
                                 </div>
 
                                 <!-- Quantity & Weight -->
@@ -125,15 +127,15 @@
                                     <label class="form-label">Cargo Dimensions (cm) </label>
                                     <div class="d-flex gap-2">
                                         <div class="flex-fill">
-                                            <label class="form-label small">Length</label>
+                                            <label class="form-label small">Length <span class="text-danger">*</span></label>
                                             <input type="number" name="cargo_length[]" class="form-control dimension" step="0.01">
                                         </div>
                                         <div class="flex-fill">
-                                            <label class="form-label small">Width</label>
+                                            <label class="form-label small">Width <span class="text-danger">*</span></label>
                                             <input type="number" name="cargo_width[]" class="form-control dimension" step="0.01">
                                         </div>
                                         <div class="flex-fill">
-                                            <label class="form-label small">Height</label>
+                                            <label class="form-label small">Height <span class="text-danger">*</span></label>
                                             <input type="number" name="cargo_height[]" class="form-control dimension" step="0.01">
                                         </div>
                                         <div class="flex-fill">
@@ -146,7 +148,7 @@
                                 <!-- Photo Upload with confirmation -->
                                 <div class="mb-2">
                                     <label class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center mt-2">
-                                        <i class="bi bi-image me-2"></i> Add Photo
+                                        <i class="bi bi-image me-2"></i> Add Photo <span class="text-danger">*</span>
                                         <input type="file" name="cargo_picture[]" class="d-none cargo-photo" accept="image/*">
                                     </label>
                                     <small class="text-success photo-confirmation" style="display:none;">Photo selected!</small>
