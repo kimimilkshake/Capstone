@@ -2,7 +2,7 @@
     <ul class="snav justify-content-start">
 
         <li class="snav-item">
-            <a class="snav-link" id="sdash" href="{{ route('staff.dashboard') }}">
+            <a class="snav-link" id="sdash" href="<?php echo e(route('staff.dashboard')); ?>">
                 <i class="fa-solid fa-chart-simple me-1"></i>
                 <span class="snav-label">Dashboard</span>
             </a>
@@ -14,14 +14,14 @@
         </li>
 
         <li class="snav-item">
-            <a class="snav-link" href="{{ route('staff.passenger_booking.create') }}">
+            <a class="snav-link" href="<?php echo e(route('staff.passenger_booking.create')); ?>">
                 <i class="fa-solid fa-person-walking-luggage me-1"></i>
                 <span class="snav-label">Passenger Booking</span>
             </a>
         </li>
 
         <li class="snav-item">
-            <a class="snav-link" href="{{ route('staff.cargo_booking.create') }}">
+            <a class="snav-link" href="<?php echo e(route('staff.cargo_booking.create')); ?>">
                 <i class="fa-solid fa-truck-ramp-box me-1"></i>
                 <span class="snav-label">Cargo Booking</span>
             </a>
@@ -29,7 +29,7 @@
 
 
         <li class="snav-item">
-            <a class="snav-link" href="{{ route('cargo.bookings.pending') }}">
+            <a class="snav-link" href="<?php echo e(route('cargo.bookings.pending')); ?>">
                 <i class="fa-solid fa-eye me-1"></i>
                 <span class="snav-label">Review Cargo</span>
             </a>
@@ -41,13 +41,13 @@
         </li>
 
         <li class="snav-item">
-            <a class="snav-link" href="{{ route('staff.create_voyage') }}"><i class="fa-solid fa-route me-1"></i>
+            <a class="snav-link" href="<?php echo e(route('staff.create_voyage')); ?>"><i class="fa-solid fa-route me-1"></i>
                 <span class="snav-label">Create Voyage</span>
             </a>
         </li>
 
         <li class="snav-item">
-            <a class="snav-link" href="{{ route('staff.voyage_list') }}">
+            <a class="snav-link" href="<?php echo e(route('staff.voyage_list')); ?>">
                 <i class="fa-solid fa-magnifying-glass me-1"></i>
                 <span class="snav-label">Search Voyage</span>
             </a>
@@ -59,21 +59,21 @@
         </li>
 
         <li class="snav-item">
-            <a class="snav-link" href="{{ route('staff.cargo.placement') }}">
+            <a class="snav-link" href="<?php echo e(route('staff.cargo.placement')); ?>">
                 <i class="fa-solid fa-cubes me-1"></i>
                 <span class="snav-label">Auto Placement</span>
             </a>
         </li>
 
         <li class="snav-item">
-            <a class="snav-link" href="{{ route('staff.create_cargo_item') }}">
+            <a class="snav-link" href="<?php echo e(route('staff.create_cargo_item')); ?>">
                 <i class="fa-solid fa-boxes-stacked me-1"></i>
                 <span class="snav-label">Create Cargo Item</span>
             </a>
         </li>
 
         <li class="snav-item">
-            <a class="snav-link" href="{{ route('staff.cargo_item_list') }}">
+            <a class="snav-link" href="<?php echo e(route('staff.cargo_item_list')); ?>">
                 <i class="fa-solid fa-rectangle-list me-1"></i>
                 <span class="snav-label">View Rates</span>
             </a>
@@ -86,3 +86,4 @@
 
     </ul>
 </nav>
+<?php /**PATH C:\Users\Shem\Desktop\Capstone\resources\views/components/staff_nav.blade.php ENDPATH**/ ?>

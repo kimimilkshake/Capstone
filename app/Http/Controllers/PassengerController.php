@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Facades\DB;
 use App\Models\Passenger;
 use App\Models\CargoItem; // ✅ Add this
 use App\Models\Voyage;
@@ -33,7 +33,7 @@ class PassengerController extends Controller
         $departureTime = $voyage->voyage_estimated_TD;
         $portOfOrigin = $voyage->routePort->port_origin_name ?? 'Unknown Port';
         $accommodations = $voyage->vessel->accommodations ?? collect();
-        
+
         // Get cot plan image URL
         $cotPlanUrl = $voyage->vessel && $voyage->vessel->vessel_cot_plan_url
             ? asset('storage/' . $voyage->vessel->vessel_cot_plan_url)
@@ -89,12 +89,12 @@ class PassengerController extends Controller
 
     public function showCargoBookingForm()
     {
-    $cargoItems = CargoItem::all();
+        $cargoItems = CargoItem::all();
 
-    return view('passenger.cargobooking', compact('cargoItems'));
+        return view('passenger.cargobooking', compact('cargoItems'));
     }
 
-   // Step 1: POST form → save to session and create temporary booking
+    // Step 1: POST form → save to session and create temporary booking
     public function confirmCargo(Request $request)
     {
         $request->validate([
@@ -180,40 +180,40 @@ class PassengerController extends Controller
     }
 
     // Step 2: GET confirmation page
- // Show confirmation page
-public function showCargoConfirmation($bookingRef)
-{
-    // Fetch cargo items with freight & arrastre rates from cargo_item
-    $cargoItems = \DB::table('cargo_booking')
-        ->join('cargo_item', 'cargo_booking.cargo_item_id', '=', 'cargo_item.cargo_item_id')
-        ->select(
-            'cargo_booking.*',
-            'cargo_item.cargo_item_description',
-            'cargo_item.cargo_item_classification',
-            'cargo_item.cargo_item_freight as freight',
-            'cargo_item.cargo_item_arrastre as arrastre'
-        )
-        ->where('booking_ref_no', $bookingRef)
-        ->get();
+    // Show confirmation page
+    public function showCargoConfirmation($bookingRef)
+    {
+        // Fetch cargo items with freight & arrastre rates from cargo_item
+        $cargoItems = \DB::table('cargo_booking')
+            ->join('cargo_item', 'cargo_booking.cargo_item_id', '=', 'cargo_item.cargo_item_id')
+            ->select(
+                'cargo_booking.*',
+                'cargo_item.cargo_item_description',
+                'cargo_item.cargo_item_classification',
+                'cargo_item.cargo_item_freight as freight',
+                'cargo_item.cargo_item_arrastre as arrastre'
+            )
+            ->where('booking_ref_no', $bookingRef)
+            ->get();
 
-    $booking = \DB::table('booking')->where('booking_ref_no', $bookingRef)->first();
-    $sender = \DB::table('sender')->where('sender_id', $booking->sender_id)->first();
-    $consignee = \DB::table('consignee')->where('consignee_id', $booking->consignee_id)->first();
+        $booking = \DB::table('booking')->where('booking_ref_no', $bookingRef)->first();
+        $sender = \DB::table('sender')->where('sender_id', $booking->sender_id)->first();
+        $consignee = \DB::table('consignee')->where('consignee_id', $booking->consignee_id)->first();
 
-    return view('passenger.cargobooking_confirm', compact('booking', 'sender', 'consignee', 'cargoItems'));
-}
+        return view('passenger.cargobooking_confirm', compact('booking', 'sender', 'consignee', 'cargoItems'));
+    }
 
 
-// Cancel booking
-public function cancelCargo($bookingRef)
-{
-    \DB::table('booking')->where('booking_ref_no', $bookingRef)->update([
-        'booking_status' => 'Canceled',
-        'updated_at' => now(),
-    ]);
+    // Cancel booking
+    public function cancelCargo($bookingRef)
+    {
+        \DB::table('booking')->where('booking_ref_no', $bookingRef)->update([
+            'booking_status' => 'Canceled',
+            'updated_at' => now(),
+        ]);
 
-    return redirect()->route('cargobooking')->with('success', 'Cargo booking canceled.');
-}
+        return redirect()->route('cargobooking')->with('success', 'Cargo booking canceled.');
+    }
 
 
     // Step 4: Finalize booking (staff approval)

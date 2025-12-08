@@ -16,6 +16,7 @@ class TicketMailable extends Mailable
     use Queueable, SerializesModels;
 
     public $bookingRef;
+    public $recipientEmail;
     public $booking;
     public $payment;
     public $passengers;
@@ -26,9 +27,10 @@ class TicketMailable extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct($bookingRef)
+    public function __construct($bookingRef, $recipientEmail = null)
     {
         $this->bookingRef = $bookingRef;
+        $this->recipientEmail = $recipientEmail;
         $this->loadBookingData();
     }
 
@@ -44,13 +46,21 @@ class TicketMailable extends Mailable
         $this->payment = DB::table('payment')->where('booking_ref_no', $this->bookingRef)->first();
 
         // Load passenger tickets with passenger and voyage data
-        $tickets = DB::table('passenger_ticket')
-            ->where('booking_ref_no', $this->bookingRef)
-            ->get();
+        // If recipientEmail is provided, only load passengers with that email
+        $ticketsQuery = DB::table('passenger_ticket')
+            ->where('booking_ref_no', $this->bookingRef);
+
+        $tickets = $ticketsQuery->get();
 
         $this->passengers = [];
         foreach ($tickets as $ticket) {
             $passenger = DB::table('passenger')->where('passenger_id', $ticket->passenger_id)->first();
+
+            // If recipientEmail is specified, only include passengers with matching email
+            if ($this->recipientEmail && $passenger && $passenger->passenger_email !== $this->recipientEmail) {
+                continue;
+            }
+
             $this->passengers[] = [
                 'ticket' => $ticket,
                 'passenger' => $passenger,

@@ -1,8 +1,7 @@
-@extends('layouts.app')
-@section('page-title', 'PASSENGER BOOKING')
-@section('content')
-    @include('components.authHeader')
-    @include('components.staff_nav')
+<?php $__env->startSection('page-title', 'PASSENGER BOOKING'); ?>
+<?php $__env->startSection('content'); ?>
+    <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    <?php echo $__env->make('components.staff_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <div class="staff-body">
         <div class="svl-title text-center">
@@ -11,37 +10,39 @@
 
         <!-- Floating Toast Container - Below navbar on the right side -->
         <div class="toast-container position-fixed p-3" style="z-index: 9999; top: 80px; right: 20px;">
-            @if (session('success'))
+            <?php if(session('success')): ?>
                 <div class="toast align-items-center text-white bg-success border-0 show" role="alert" aria-live="assertive"
                     aria-atomic="true" id="successToast">
                     <div class="d-flex">
                         <div class="toast-body">
-                            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                            <i class="fas fa-check-circle me-2"></i><?php echo e(session('success')); ?>
+
                         </div>
                         <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
                             aria-label="Close"></button>
                     </div>
                 </div>
-            @endif
-            @if ($errors->any())
+            <?php endif; ?>
+            <?php if($errors->any()): ?>
                 <div class="toast align-items-center text-white bg-danger border-0 show" role="alert"
                     aria-live="assertive" aria-atomic="true" id="errorToast">
                     <div class="d-flex">
                         <div class="toast-body">
                             <i class="fas fa-exclamation-circle me-2"></i>
-                            @foreach ($errors->all() as $error)
-                                {{ $error }}
-                            @endforeach
+                            <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php echo e($error); ?>
+
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
                         <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
                             aria-label="Close"></button>
                     </div>
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
 
-        <form action="{{ route('staff.passenger_booking.store') }}" method="POST" id="passengerBookingForm">
-            @csrf
+        <form action="<?php echo e(route('staff.passenger_booking.store')); ?>" method="POST" id="passengerBookingForm">
+            <?php echo csrf_field(); ?>
 
             <!-- Voyage and Number Selection -->
             <div class="row mb-4">
@@ -49,23 +50,24 @@
                     <label class="form-label fw-bold">Select Voyage <span class="text-danger">*</span></label>
                     <select name="voyage_id" id="voyageSelect" class="form-select" required>
                         <option value="">-- Choose Voyage --</option>
-                        @foreach ($voyages as $voyage)
-                            <option value="{{ $voyage->voyage_id }}" data-vessel-id="{{ $voyage->vessel_id }}"
-                                data-cot-plan="{{ $voyage->vessel && $voyage->vessel->vessel_cot_plan_url ? asset('storage/' . $voyage->vessel->vessel_cot_plan_url) : asset('images/sample-cot-plan.jpg') }}">
-                                {{ $voyage->voyage_code }} |
-                                {{ $voyage->routePort->route_origin ?? 'N/A' }} →
-                                {{ $voyage->routePort->route_destination ?? 'N/A' }} |
-                                Departure: {{ \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('M d, Y') }}
+                        <?php $__currentLoopData = $voyages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $voyage): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($voyage->voyage_id); ?>" data-vessel-id="<?php echo e($voyage->vessel_id); ?>"
+                                data-cot-plan="<?php echo e($voyage->vessel && $voyage->vessel->vessel_cot_plan_url ? asset('storage/' . $voyage->vessel->vessel_cot_plan_url) : asset('images/sample-cot-plan.jpg')); ?>">
+                                <?php echo e($voyage->voyage_code); ?> |
+                                <?php echo e($voyage->routePort->route_origin ?? 'N/A'); ?> →
+                                <?php echo e($voyage->routePort->route_destination ?? 'N/A'); ?> |
+                                Departure: <?php echo e(\Carbon\Carbon::parse($voyage->voyage_departure_date)->format('M d, Y')); ?>
+
                             </option>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
                 <div class="col-lg-3">
                     <label class="form-label fw-bold">No. of Passengers</label>
                     <select id="numPassengers" class="form-select">
-                        @for ($i = 1; $i <= 20; $i++)
-                            <option value="{{ $i }}">{{ $i }}</option>
-                        @endfor
+                        <?php for($i = 1; $i <= 20; $i++): ?>
+                            <option value="<?php echo e($i); ?>"><?php echo e($i); ?></option>
+                        <?php endfor; ?>
                     </select>
                 </div>
             </div>
@@ -76,7 +78,7 @@
                 <!-- LEFT: Cot Plan Image -->
                 <div class="col-lg-6 mb-4 text-center">
                     <h5 class="fw-bold mb-3">Cot Plan Layout</h5>
-                    <img id="cotPlanImage" src="{{ $cotPlanUrl }}" alt="Cot Plan" class="img-fluid rounded shadow-sm"
+                    <img id="cotPlanImage" src="<?php echo e($cotPlanUrl); ?>" alt="Cot Plan" class="img-fluid rounded shadow-sm"
                         style="max-height: 500px; object-fit: contain;">
                     <p class="text-muted mt-2">Vessel cot plan layout</p>
                 </div>
@@ -94,7 +96,7 @@
                 <button type="button" id="bookButton" class="btn btn-primary btn-lg" disabled>
                     <i class="fas fa-arrow-right"></i> PROCEED TO PAYMENT
                 </button>
-                <a href="{{ route('staff.dashboard') }}" class="btn btn-outline-danger btn-lg">CANCEL</a>
+                <a href="<?php echo e(route('staff.dashboard')); ?>" class="btn btn-outline-danger btn-lg">CANCEL</a>
             </div>
         </form>
 
@@ -567,4 +569,6 @@
         }
     </style>
 
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Shem\Desktop\Capstone\resources\views/authorized/staff/passengerbooking.blade.php ENDPATH**/ ?>

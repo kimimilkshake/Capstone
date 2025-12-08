@@ -450,16 +450,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
             for (const form of passengerForms) {
                 const type = form.querySelector(".passenger-type").value;
-                console.log("Processing passenger type:", type);
+                const passengerNumber = form.dataset.passenger || "Unknown";
+                console.log(
+                    `Processing Passenger ${passengerNumber}, Type: ${type}`
+                );
 
                 if (type === "Regular") {
                     console.log(
-                        "Skipping ID verification for Regular passenger"
+                        `Skipping ID verification for Passenger ${passengerNumber} (Regular)`
                     );
                     continue;
                 }
 
-                console.log("Starting ID verification for", type);
+                console.log(
+                    `Starting ID verification for Passenger ${passengerNumber} (${type})`
+                );
 
                 const firstName = form
                     .querySelector(".first-name")
@@ -475,7 +480,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (!idFile) {
                     loader.style.display = "none";
                     alert(
-                        "Please upload an ID image for discount verification."
+                        `Passenger ${passengerNumber} (${type}): Please upload an ID image for discount verification.`
                     );
                     return;
                 }
@@ -483,6 +488,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 const formData = new FormData();
                 formData.append("file", idFile);
 
+                console.log(
+                    `Sending OCR request for Passenger ${passengerNumber}...`
+                );
                 const response = await fetch("/ocr/parse", {
                     method: "POST",
                     headers: {
@@ -492,9 +500,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
 
                 const data = await response.json();
-                if (!data.text) throw new Error("OCR failed");
+                if (!data.text)
+                    throw new Error(
+                        `OCR failed for Passenger ${passengerNumber}`
+                    );
 
                 const scanned = data.text.toLowerCase().replace(/_/g, "");
+                console.log(
+                    `OCR result for Passenger ${passengerNumber}:`,
+                    scanned.substring(0, 100) + "..."
+                );
+
                 if (
                     !scanned.includes(firstName) ||
                     !scanned.includes(lastName) ||
@@ -502,10 +518,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 ) {
                     loader.style.display = "none";
                     alert(
-                        "ID does not match. Please check your input or upload a clearer photo."
+                        `Passenger ${passengerNumber} (${firstName} ${lastName}): ID does not match. Please check your input or upload a clearer photo.`
                     );
                     return;
                 }
+
+                console.log(
+                    `✓ ID verification passed for Passenger ${passengerNumber}`
+                );
             }
 
             console.log(

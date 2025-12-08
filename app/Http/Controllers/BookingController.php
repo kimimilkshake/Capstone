@@ -199,6 +199,16 @@ class BookingController extends Controller
             abort(404, 'Booking not found');
         }
 
+        // If booking is already canceled or confirmed, redirect
+        if ($booking->booking_status !== 'Pending') {
+            return redirect()->route('bookingtype');
+        }
+
+        // Prevent browser caching of this page
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
         $payment = DB::table('payment')->where('booking_ref_no', $bookingRef)->first();
 
         $tickets = DB::table('passenger_ticket')

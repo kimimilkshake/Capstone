@@ -243,7 +243,7 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     Route::get('/cargo_items/{id}/edit', [CargoItemController::class, 'edit'])->name('staff.cargo_item_edit');
     Route::put('/cargo_items/{id}/update', [CargoItemController::class, 'update'])->name('staff.cargo_item_update');
     Route::delete('/cargo_items/{id}/delete', [CargoItemController::class, 'destroy'])->name('staff.cargo_item_delete');
-    
+
     //Cargo Booking
     // Show cargo booking form
     Route::get('/cargo-bookings/create', [StaffCargoController::class, 'create'])->name('staff.cargo_booking.create');
@@ -255,11 +255,19 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     //Passenger Booking (Staff)
     // Show passenger booking form for staff
     Route::get('/passenger-booking/create', [StaffPassengerController::class, 'create'])->name('staff.passenger_booking.create');
-    // Save new passenger booking
+    // Save new passenger booking (creates reservation)
     Route::post('/passenger-booking/store', [StaffPassengerController::class, 'store'])->name('staff.passenger_booking.store');
+    // Show reservation page
+    Route::get('/passenger-booking/reservation/{bookingRef}', [StaffPassengerController::class, 'showReservation'])->name('staff.passenger_booking.reservation');
     // AJAX endpoint for available cots
     Route::get('/passenger-booking/available-cots', [StaffPassengerController::class, 'getAvailableCots'])->name('staff.passenger_booking.available_cots');
-    
+    // Cancel reservation
+    Route::post('/passenger-booking/{bookingRef}/cancel', [StaffPassengerController::class, 'cancelReservation'])->name('staff.passenger_booking.cancel');
+    // Complete booking with Cash
+    Route::post('/passenger-booking/{bookingRef}/complete-cash', [StaffPassengerController::class, 'completeCash'])->name('staff.passenger_booking.complete_cash');
+    // Complete booking with GCash
+    Route::post('/passenger-booking/{bookingRef}/complete-gcash', [StaffPassengerController::class, 'completeGcash'])->name('staff.passenger_booking.complete_gcash');
+
     // View booking details
     Route::get('/cargo-bookings/{id}', [StaffCargoController::class, 'show'])->name('cargo.bookings.show');
     Route::get('/cargo-items/voyage/{id}', [StaffCargoController::class, 'getCargoItemsByVoyage']);
@@ -272,9 +280,9 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     Route::get('/cargo-bookings/{id}/edit', [StaffCargoController::class, 'edit'])
         ->name('cargo.bookings.edit');
 
-// Update cargo items
-Route::put('/cargo-bookings/{id}/update', [StaffCargoController::class, 'update'])
-    ->name('cargo.bookings.update');
+    // Update cargo items
+    Route::put('/cargo-bookings/{id}/update', [StaffCargoController::class, 'update'])
+        ->name('cargo.bookings.update');
 
     // Semaphore Text SMS
     Route::get('/semaphore', [SemaphoreController::class, 'show'])->name('staff.semaphore');

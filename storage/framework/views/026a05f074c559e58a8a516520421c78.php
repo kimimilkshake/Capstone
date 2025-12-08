@@ -1,6 +1,5 @@
-@extends('layouts.app')
-@section('content')
-    @include('components.hero')
+<?php $__env->startSection('content'); ?>
+    <?php echo $__env->make('components.hero', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <script>
         let isFormSubmitting = false;
@@ -9,30 +8,28 @@
         // This way, back button skips the form and goes directly to booking type
         if (window.history && window.history.replaceState) {
             // Replace the previous history entry (passenger form) with booking type
-            const bookingTypeUrl = '{{ route('bookingtype') }}';
+            const bookingTypeUrl = '<?php echo e(route('bookingtype')); ?>';
             window.history.replaceState(null, '', window.location.href);
-
+            
             // Push current state again so back button will trigger popstate
-            window.history.pushState({
-                page: 'confirmbooking'
-            }, '', window.location.href);
+            window.history.pushState({page: 'confirmbooking'}, '', window.location.href);
         }
 
         // Handle back button: cancel booking and redirect to booking type
         window.addEventListener('popstate', function(event) {
             if (!isFormSubmitting) {
-                const bookingRef = '{{ $booking->booking_ref_no }}';
-                const bookingStatus = '{{ strtolower($booking->booking_status) }}';
-
+                const bookingRef = '<?php echo e($booking->booking_ref_no); ?>';
+                const bookingStatus = '<?php echo e(strtolower($booking->booking_status)); ?>';
+                
                 // Cancel the booking
                 if (bookingStatus === 'pending') {
                     const formData = new FormData();
-                    formData.append('_token', '{{ csrf_token() }}');
-                    navigator.sendBeacon('{{ route('booking.cancel', $booking->booking_ref_no) }}', formData);
+                    formData.append('_token', '<?php echo e(csrf_token()); ?>');
+                    navigator.sendBeacon('<?php echo e(route('booking.cancel', $booking->booking_ref_no)); ?>', formData);
                 }
-
+                
                 // Redirect to booking type
-                window.location.href = '{{ route('bookingtype') }}';
+                window.location.href = '<?php echo e(route('bookingtype')); ?>';
             }
         });
 
@@ -42,17 +39,17 @@
                 return; // Allow legitimate form submission
             }
 
-            const bookingRef = '{{ $booking->booking_ref_no }}';
-            const bookingStatus = '{{ strtolower($booking->booking_status) }}';
-
+            const bookingRef = '<?php echo e($booking->booking_ref_no); ?>';
+            const bookingStatus = '<?php echo e(strtolower($booking->booking_status)); ?>';
+            
             // Only cancel if booking is still pending
             if (bookingStatus === 'pending') {
                 // Use sendBeacon for reliable background request
                 const formData = new FormData();
-                formData.append('_token', '{{ csrf_token() }}');
-
+                formData.append('_token', '<?php echo e(csrf_token()); ?>');
+                
                 navigator.sendBeacon(
-                    '{{ route('booking.cancel', $booking->booking_ref_no) }}',
+                    '<?php echo e(route('booking.cancel', $booking->booking_ref_no)); ?>',
                     formData
                 );
             }
@@ -68,10 +65,10 @@
 
         // Also check on page load if booking is still valid
         window.addEventListener('DOMContentLoaded', function() {
-            const bookingStatus = '{{ strtolower($booking->booking_status) }}';
+            const bookingStatus = '<?php echo e(strtolower($booking->booking_status)); ?>';
             if (bookingStatus !== 'pending') {
                 // Booking is no longer pending, redirect away
-                window.location.href = '{{ route('bookingtype') }}';
+                window.location.href = '<?php echo e(route('bookingtype')); ?>';
             }
         });
     </script>
@@ -84,26 +81,27 @@
                         <h5 class="mb-0">Confirm Booking</h5>
                     </div>
                     <div class="card-body">
-                        <h6>Booking Reference: {{ $booking->booking_ref_no }}</h6>
-                        <p>Status: <strong>{{ $booking->booking_status }}</strong></p>
+                        <h6>Booking Reference: <?php echo e($booking->booking_ref_no); ?></h6>
+                        <p>Status: <strong><?php echo e($booking->booking_status); ?></strong></p>
 
-                        @if ($payment)
-                            <p>Total: <strong>PHP {{ number_format($payment->total_amount, 2) }}</strong></p>
-                            <p>Payment Status: <strong>{{ $payment->payment_status }}</strong></p>
-                        @endif
+                        <?php if($payment): ?>
+                            <p>Total: <strong>PHP <?php echo e(number_format($payment->total_amount, 2)); ?></strong></p>
+                            <p>Payment Status: <strong><?php echo e($payment->payment_status); ?></strong></p>
+                        <?php endif; ?>
 
                         <hr>
 
                         <h6>Passengers</h6>
                         <ul class="list-group mb-3">
-                            @foreach ($passengers as $item)
+                            <?php $__currentLoopData = $passengers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <li class="list-group-item">
-                                    <strong>{{ $item['passenger']->passenger_firstname }}
-                                        {{ $item['passenger']->passenger_lastname }}</strong>
-                                    <div>Cot: {{ $item['ticket']->pt_cot_no }}</div>
-                                    <div>Price: PHP {{ number_format($item['ticket']->pt_ticket_price, 2) }}</div>
+                                    <strong><?php echo e($item['passenger']->passenger_firstname); ?>
+
+                                        <?php echo e($item['passenger']->passenger_lastname); ?></strong>
+                                    <div>Cot: <?php echo e($item['ticket']->pt_cot_no); ?></div>
+                                    <div>Price: PHP <?php echo e(number_format($item['ticket']->pt_ticket_price, 2)); ?></div>
                                 </li>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </ul>
 
                         <div class="mb-3">
@@ -111,30 +109,30 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            @php
+                            <?php
                                 $canCancel = strtolower($booking->booking_status) === 'pending';
                                 if ($payment && strtolower($payment->payment_status) === 'completed') {
                                     $canCancel = false; // Cannot cancel if payment is completed
                                 }
-                            @endphp
+                            ?>
 
-                            @if ($canCancel)
+                            <?php if($canCancel): ?>
                                 <button type="button" id="cancelBtn" class="btn btn-outline-secondary">Cancel</button>
-                            @else
+                            <?php else: ?>
                                 <button type="button" class="btn btn-outline-secondary" disabled>
-                                    @if (strtolower($booking->booking_status) === 'canceled')
+                                    <?php if(strtolower($booking->booking_status) === 'canceled'): ?>
                                         Already Canceled
-                                    @elseif (strtolower($booking->booking_status) === 'confirmed')
+                                    <?php elseif(strtolower($booking->booking_status) === 'confirmed'): ?>
                                         Cannot Cancel
-                                    @elseif (isset($payment) && strtolower($payment->payment_status) === 'completed')
+                                    <?php elseif(isset($payment) && strtolower($payment->payment_status) === 'completed'): ?>
                                         Payment Completed
-                                    @else
+                                    <?php else: ?>
                                         Cannot Cancel
-                                    @endif
+                                    <?php endif; ?>
                                 </button>
-                            @endif
+                            <?php endif; ?>
 
-                            @php
+                            <?php
                                 $canPay = false;
                                 if (
                                     isset($payment) &&
@@ -143,21 +141,22 @@
                                 ) {
                                     $canPay = true;
                                 }
-                            @endphp
+                            ?>
 
-                            @if ($canPay)
+                            <?php if($canPay): ?>
                                 <button id="payBtn" class="btn btn-primary">Pay with GCash (PayMongo)</button>
-                            @else
+                            <?php else: ?>
                                 <button class="btn btn-secondary" disabled>
-                                    @if (strtolower($booking->booking_status) === 'canceled')
+                                    <?php if(strtolower($booking->booking_status) === 'canceled'): ?>
                                         Booking canceled
-                                    @elseif (isset($payment) && strtolower($payment->payment_status) !== 'pending')
-                                        Payment: {{ $payment->payment_status ?? 'N/A' }}
-                                    @else
+                                    <?php elseif(isset($payment) && strtolower($payment->payment_status) !== 'pending'): ?>
+                                        Payment: <?php echo e($payment->payment_status ?? 'N/A'); ?>
+
+                                    <?php else: ?>
                                         Payment unavailable
-                                    @endif
+                                    <?php endif; ?>
                                 </button>
-                            @endif
+                            <?php endif; ?>
                         </div>
 
                     </div>
@@ -170,15 +169,15 @@
         // compute countdown from the earliest ticket valid-until-ts
         (function() {
             // Use server-provided epoch ms when available for robust parsing
-            const validUntilMs = @json($validUntilMs ?? null);
+            const validUntilMs = <?php echo json_encode($validUntilMs ?? null, 15, 512) ?>;
             let validUntil = null;
             if (validUntilMs) {
                 validUntil = new Date(validUntilMs);
             }
 
             // If no validUntil found, and booking is canceled or payment canceled, show Expired
-            const bookingStatus = '{{ strtolower($booking->booking_status) }}';
-            const paymentStatus = '{{ isset($payment) ? strtolower($payment->payment_status) : '' }}';
+            const bookingStatus = '<?php echo e(strtolower($booking->booking_status)); ?>';
+            const paymentStatus = '<?php echo e(isset($payment) ? strtolower($payment->payment_status) : ''); ?>';
             if (!validUntil) {
                 if (bookingStatus === 'canceled' || paymentStatus === 'canceled') {
                     document.getElementById('countdown').innerText = 'Expired';
@@ -207,7 +206,7 @@
         if (payBtnEl) {
             payBtnEl.addEventListener('click', async function(e) {
                 e.preventDefault();
-                const bookingRef = '{{ $booking->booking_ref_no }}';
+                const bookingRef = '<?php echo e($booking->booking_ref_no); ?>';
                 if (!bookingRef) {
                     alert('Missing booking reference.');
                     return;
@@ -221,11 +220,11 @@
                 payBtnEl.innerText = 'Initializing...';
 
                 try {
-                    const res = await fetch('{{ url('/paymongo/create-source') }}', {
+                    const res = await fetch('<?php echo e(url('/paymongo/create-source')); ?>', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>'
                         },
                         body: JSON.stringify({
                             booking_ref_no: bookingRef
@@ -291,7 +290,7 @@
                 // Set flag to prevent beforeunload cancellation
                 isFormSubmitting = true;
 
-                const bookingRef = '{{ $booking->booking_ref_no }}';
+                const bookingRef = '<?php echo e($booking->booking_ref_no); ?>';
                 if (!bookingRef) {
                     alert('Missing booking reference.');
                     return;
@@ -302,11 +301,11 @@
                 cancelBtnEl.innerText = 'Canceling...';
 
                 try {
-                    const res = await fetch(`{{ url('/booking/cancel') }}/${bookingRef}`, {
+                    const res = await fetch(`<?php echo e(url('/booking/cancel')); ?>/${bookingRef}`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>'
                         }
                     });
 
@@ -319,7 +318,7 @@
                     if (data.success) {
                         alert('Booking canceled successfully.');
                         // Redirect to booking type page
-                        window.location.href = data.redirect_url || '{{ route('bookingtype') }}';
+                        window.location.href = data.redirect_url || '<?php echo e(route('bookingtype')); ?>';
                     } else {
                         alert(data.message || 'Failed to cancel booking.');
                         // Restore button state
@@ -336,4 +335,6 @@
             });
         }
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Shem\Desktop\Capstone\resources\views/passenger/confirmbooking.blade.php ENDPATH**/ ?>
