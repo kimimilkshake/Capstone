@@ -320,21 +320,31 @@ class BookingController extends Controller
 
         $result = [];
         foreach ($accommodations as $accommodation) {
-            // Parse cot range (e.g., "1-50" or "51-100")
+            // Parse cot range (e.g., "1-50" or "1-50, 60-70" for comma-separated ranges)
             $cotRange = $accommodation->accommodation_cot_range;
             $availableCots = [];
 
-            if ($cotRange && strpos($cotRange, '-') !== false) {
-                list($start, $end) = explode('-', $cotRange);
-                $start = (int) trim($start);
-                $end = (int) trim($end);
+            if ($cotRange) {
+                // Split by comma to handle multiple ranges
+                $ranges = array_map('trim', explode(',', $cotRange));
 
-                // Generate all cots in range, excluding booked ones
-                for ($i = $start; $i <= $end; $i++) {
-                    if (!in_array($i, $bookedCots)) {
-                        $availableCots[] = $i;
+                foreach ($ranges as $range) {
+                    if (strpos($range, '-') !== false) {
+                        list($start, $end) = explode('-', $range);
+                        $start = (int) trim($start);
+                        $end = (int) trim($end);
+
+                        // Generate all cots in range, excluding booked ones
+                        for ($i = $start; $i <= $end; $i++) {
+                            if (!in_array($i, $bookedCots)) {
+                                $availableCots[] = $i;
+                            }
+                        }
                     }
                 }
+
+                // Sort the available cots for better UX
+                sort($availableCots);
             }
 
             $result[] = [
