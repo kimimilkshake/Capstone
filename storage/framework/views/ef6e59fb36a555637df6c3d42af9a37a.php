@@ -147,19 +147,19 @@
                             <?php $__currentLoopData = $vessel->accommodations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $acc): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <div class="accommodation-row">
                                     <div class="form-group acc-input">
-                                        <label>Name</label>
+                                        <label>Name <span class="text-danger">*</span></label>
                                         <input type="text" name="accommodations[<?php echo e($index); ?>][name]"
                                             value="<?php echo e($acc->accommodation_name); ?>" placeholder="Accommodation Name"
                                             required>
                                     </div>
                                     <div class="form-group acc-input">
-                                        <label>Regular Price</label>
+                                        <label>Regular Price <span class="text-danger">*</span></label>
                                         <input type="number" name="accommodations[<?php echo e($index); ?>][price]"
                                             value="<?php echo e($acc->accommodation_regular_price); ?>" step="0.01"
                                             inputmode="decimal" required>
                                     </div>
                                     <div class="form-group acc-input">
-                                        <label>Cot Range</label>
+                                        <label>Cot Range <span class="text-danger">*</span></label>
                                         <input type="text" name="accommodations[<?php echo e($index); ?>][cot_range]"
                                             value="<?php echo e($acc->accommodation_cot_range); ?>"
                                             placeholder="Cot Range (e.g., 1-5, 7-10)" required>
@@ -188,7 +188,7 @@
                     <div class="form-col" style="flex: 1;">
                         <div class="form-group vcot-plan"
                             style="display: flex; flex-direction: column; align-items: flex-start; width: 100%;">
-                            <label for="vessel_cot_plan_url" style="margin-bottom: 8px;">Cot Plan:</label>
+                            <label for="vessel_cot_plan_url" style="margin-bottom: 8px;">Cot Plan</label>
                             <?php if($vessel->vessel_cot_plan_url): ?>
                                 <img src="<?php echo e(asset('storage/' . $vessel->vessel_cot_plan_url)); ?>" alt="Cot Plan"
                                     style="width: 100%; max-height: 250px; object-fit: contain; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px;">
@@ -203,7 +203,7 @@
 
                     <div class="form-col" style="flex: 1;">
                         <div class="form-group" style="width: 100%;">
-                            <label for="vessel_status" style="margin-bottom: 8px;">Status:</label>
+                            <label for="vessel_status" style="margin-bottom: 8px;">Status <span class="text-danger">*</span></label>
                             <select name="vessel_status" id="vessel_status" required
                                 style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
                                 <option value="Active" <?php echo e($vessel->vessel_status === 'Active' ? 'selected' : ''); ?>>Active

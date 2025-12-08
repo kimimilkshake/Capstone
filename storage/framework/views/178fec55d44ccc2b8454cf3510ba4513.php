@@ -36,7 +36,7 @@
         </tr>
       </thead>
       <tbody>
-        <?php $__currentLoopData = $cargo_items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <?php $__empty_1 = true; $__currentLoopData = $cargo_items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
           <tr>
             <td><?php echo e($c->cargo_item_classification); ?></td>
             <td><?php echo e($c->cargo_item_description); ?></td>
@@ -44,12 +44,16 @@
             <td><?php echo e($c->cargo_item_arrastre); ?></td>
             <td><?php echo e($c->routePort->route_destination ?? 'N/A'); ?></td>
             <td>
-              <a href="<?php echo e(route('staff.cargo_item_edit', $c->cargo_item_id)); ?>" class="edit-icon">
+              <a href="<?php echo e(route('staff.cargo_item_edit', $c->cargo_item_id)); ?>" class="editRouteBtn link-btn" title="Edit Cargo Item">
                 <i class="fa fa-pencil" aria-hidden="true"></i>
               </a>
             </td>
           </tr>
-        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+          <tr>
+            <td colspan="6" class="text-center">No cargo items found.</td>
+          </tr>
+        <?php endif; ?>
       </tbody>
     </table>
     <div class="pagination-container">

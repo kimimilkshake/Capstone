@@ -52,6 +52,7 @@
             <button 
               type="button" 
               class="editRouteBtn link-btn"
+              title="Edit Route and Port"
               data-id="{{ $rp->route_port_id }}" 
               data-origin="{{ $rp->route_origin }}" 
               data-destination="{{ $rp->route_destination }}"

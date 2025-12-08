@@ -20,6 +20,7 @@
                                 </tr>
                             </thead>
                             <tbody class="text-center">
+                                
                                 <?php $__empty_1 = true; $__currentLoopData = $voyages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $voyage): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                     <tr>
                                         <td><?php echo e(\Carbon\Carbon::parse($voyage['departure_date'])->format('M d')); ?></td>

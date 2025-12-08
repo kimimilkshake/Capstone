@@ -52,7 +52,7 @@
                         <td><?php echo e($s->staff_email); ?></td>
                         <td><?php echo e($s->staff_status); ?></td>
                         <td>
-                        <a href="<?php echo e(route('admin.staff_edit', $s->staff_id)); ?>" class="edit-icon">
+                        <a href="<?php echo e(route('admin.staff_edit', $s->staff_id)); ?>" class="editRouteBtn link-btn" title="Edit Staff">
                             <!-- Using Font Awesome pencil icon -->
                             <i class="fa fa-pencil" aria-hidden="true"></i>
                         </a>

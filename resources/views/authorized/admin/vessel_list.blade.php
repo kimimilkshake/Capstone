@@ -40,7 +40,7 @@
             <td>{{ $v->vessel_total_passenger_capacity }}</td>
             <td>{{ $v->vessel_status }}</td>
             <td>
-              <a href="{{ route('admin.vessel_edit', $v->vessel_id) }}" class="edit-icon">
+              <a href="{{ route('admin.vessel_edit', $v->vessel_id) }}" class="editRouteBtn link-btn" title="Edit Vessel">
                 <i class="fa fa-pencil" aria-hidden="true"></i>
               </a>
             </td>

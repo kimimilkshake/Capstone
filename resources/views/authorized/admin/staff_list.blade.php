@@ -52,7 +52,7 @@
                         <td>{{ $s->staff_email }}</td>
                         <td>{{ $s->staff_status }}</td>
                         <td>
-                        <a href="{{ route('admin.staff_edit', $s->staff_id) }}" class="edit-icon">
+                        <a href="{{ route('admin.staff_edit', $s->staff_id) }}" class="editRouteBtn link-btn" title="Edit Staff">
                             <!-- Using Font Awesome pencil icon -->
                             <i class="fa fa-pencil" aria-hidden="true"></i>
                         </a>

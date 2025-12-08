@@ -53,6 +53,7 @@
             <button 
               type="button" 
               class="editRouteBtn link-btn"
+              title="Edit Route and Port"
               data-id="<?php echo e($rp->route_port_id); ?>" 
               data-origin="<?php echo e($rp->route_origin); ?>" 
               data-destination="<?php echo e($rp->route_destination); ?>"

@@ -55,9 +55,9 @@
             <td>{{ $voyage->vessel->vessel_name}}</td>
             <td>{{ $voyage->voyage_status }}</td>
             <td>
-              <a href="{{ route('staff.voyage_edit', $voyage->voyage_id) }}" title="Edit Voyage"><i class="fa fa-pencil me-1" ></i></a>
-              <a href="{{ route('staff.manifest', $voyage->voyage_id) }}" title="View Manifest" ><i class="fa-solid fa-file me-1"></i></a>
-              <a href="{{ route('staff.semaphore', $voyage->voyage_id) }}" title="Send Message" ><i class="fa-solid fa-message"></i></a>
+              <a href="{{ route('staff.voyage_edit', $voyage->voyage_id) }}" title="Edit Voyage" class="editRouteBtn link-btn"><i class="fa fa-pencil me-1"></i></a>
+              <a href="{{ route('staff.manifest', $voyage->voyage_id) }}" title="View Manifest" class="editRouteBtn link-btn"><i class="fa-solid fa-file me-1"></i></a>
+              <a href="{{ route('staff.semaphore', $voyage->voyage_id) }}" title="Send Message" class="editRouteBtn link-btn"><i class="fa-solid fa-message"></i></a>
             </td>
           </tr>
         @empty

@@ -147,19 +147,19 @@
                             @foreach ($vessel->accommodations as $index => $acc)
                                 <div class="accommodation-row">
                                     <div class="form-group acc-input">
-                                        <label>Name</label>
+                                        <label>Name <span class="text-danger">*</span></label>
                                         <input type="text" name="accommodations[{{ $index }}][name]"
                                             value="{{ $acc->accommodation_name }}" placeholder="Accommodation Name"
                                             required>
                                     </div>
                                     <div class="form-group acc-input">
-                                        <label>Regular Price</label>
+                                        <label>Regular Price <span class="text-danger">*</span></label>
                                         <input type="number" name="accommodations[{{ $index }}][price]"
                                             value="{{ $acc->accommodation_regular_price }}" step="0.01"
                                             inputmode="decimal" required>
                                     </div>
                                     <div class="form-group acc-input">
-                                        <label>Cot Range</label>
+                                        <label>Cot Range <span class="text-danger">*</span></label>
                                         <input type="text" name="accommodations[{{ $index }}][cot_range]"
                                             value="{{ $acc->accommodation_cot_range }}"
                                             placeholder="Cot Range (e.g., 1-5, 7-10)" required>
@@ -188,7 +188,7 @@
                     <div class="form-col" style="flex: 1;">
                         <div class="form-group vcot-plan"
                             style="display: flex; flex-direction: column; align-items: flex-start; width: 100%;">
-                            <label for="vessel_cot_plan_url" style="margin-bottom: 8px;">Cot Plan:</label>
+                            <label for="vessel_cot_plan_url" style="margin-bottom: 8px;">Cot Plan</label>
                             @if ($vessel->vessel_cot_plan_url)
                                 <img src="{{ asset('storage/' . $vessel->vessel_cot_plan_url) }}" alt="Cot Plan"
                                     style="width: 100%; max-height: 250px; object-fit: contain; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px;">
@@ -203,7 +203,7 @@
 
                     <div class="form-col" style="flex: 1;">
                         <div class="form-group" style="width: 100%;">
-                            <label for="vessel_status" style="margin-bottom: 8px;">Status:</label>
+                            <label for="vessel_status" style="margin-bottom: 8px;">Status <span class="text-danger">*</span></label>
                             <select name="vessel_status" id="vessel_status" required
                                 style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
                                 <option value="Active" {{ $vessel->vessel_status === 'Active' ? 'selected' : '' }}>Active

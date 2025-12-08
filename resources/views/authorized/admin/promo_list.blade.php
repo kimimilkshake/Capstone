@@ -40,7 +40,7 @@
               <td>{{ $p->promo_end_date }}</td>
               <td>{{ $p->promo_status }}</td>
               <td>
-                <a href="{{ route('admin.promo_edit', $p->promo_id) }}" class="edit-icon">
+                <a href="{{ route('admin.promo_edit', $p->promo_id) }}" class="editRouteBtn link-btn" title="Edit Promo">
                   <i class="fa fa-pencil" aria-hidden="true"></i>
                 </a>
               </td>

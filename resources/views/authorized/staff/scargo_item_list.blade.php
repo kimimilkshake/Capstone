@@ -44,7 +44,7 @@
             <td>{{ $c->cargo_item_arrastre }}</td>
             <td>{{ $c->routePort->route_destination ?? 'N/A' }}</td>
             <td>
-              <a href="{{ route('staff.cargo_item_edit', $c->cargo_item_id) }}" class="edit-icon">
+              <a href="{{ route('staff.cargo_item_edit', $c->cargo_item_id) }}" class="editRouteBtn link-btn" title="Edit Cargo Item">
                 <i class="fa fa-pencil" aria-hidden="true"></i>
               </a>
             </td>

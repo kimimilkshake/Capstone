@@ -34,7 +34,7 @@
           {{-- Route Dropdown --}}
           <div class="form-col">
             <div class="form-group">
-              <label for="route_port_id">Route</label>
+              <label for="route_port_id">Route <span class="text-danger">*</span></label>
               <select id="route_port_id" name="route_port_id" required>
                 <option value="" disabled selected>Select Route</option>
                 @foreach($route_port as $rp)
@@ -49,7 +49,7 @@
           {{-- Vessel Dropdown --}}
           <div class="form-col">
             <div class="form-group">
-              <label for="vessel_id">Vessel</label>
+              <label for="vessel_id">Vessel <span class="text-danger">*</span></label>
               <select id="vessel_id" name="vessel_id" required>
                 <option value="" disabled selected>Select Vessel</option>
                 @foreach($vessels as $vessel)
@@ -81,7 +81,7 @@
         <div class="form-row">
           <div class="form-col">
             <div class="form-group">
-              <label for="voyage_departure_date">Departure Date</label>
+              <label for="voyage_departure_date">Departure Date <span class="text-danger">*</span></label>
               <input 
                 id="voyage_departure_date" 
                 type="date" 
@@ -94,7 +94,7 @@
 
           <div class="form-col">
             <div class="form-group">
-              <label for="voyage_arrival_date">Arrival Date</label>
+              <label for="voyage_arrival_date">Arrival Date <span class="text-danger">*</span></label>
               <input 
                 id="voyage_arrival_date" 
                 type="date" 
@@ -111,14 +111,14 @@
         <div class="form-row">
           <div class="form-col">
             <div class="form-group">
-              <label for="voyage_estimated_TD">Estimated Time of Departure (ETD)</label>
+              <label for="voyage_estimated_TD">Estimated Time of Departure (ETD) <span class="text-danger">*</span></label>
               <input id="voyage_estimated_TD" type="time" name="voyage_estimated_TD" required>
             </div>
           </div>
 
           <div class="form-col">
             <div class="form-group">
-              <label for="voyage_estimated_TA">Estimated Time of Arrival (ETA)</label>
+              <label for="voyage_estimated_TA">Estimated Time of Arrival (ETA) <span class="text-danger">*</span></label>
               <input id="voyage_estimated_TA" type="time" name="voyage_estimated_TA" required>
             </div>
           </div>

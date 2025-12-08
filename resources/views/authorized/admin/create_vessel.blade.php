@@ -151,7 +151,7 @@
                 <div class="form-row" style="display: flex; gap: 2rem; align-items: flex-start; width: 100%;">
                     <div class="form-col" style="flex: 1;">
                         <div class="form-group vcot-plan">
-                            <label for="vessel_cot_plan_url">Cot Plan:</label>
+                            <label for="vessel_cot_plan_url">Cot Plan</label>
                             <input type="file" id="vessel_cot_plan_url" name="vessel_cot_plan_url" accept="image/*">
                         </div>
                     </div>
