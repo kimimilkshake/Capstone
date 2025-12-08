@@ -79,9 +79,23 @@ document.addEventListener("DOMContentLoaded", function () {
                                 <option>Female</option>
                             </select>
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Address</label>
-                            <input type="text" class="form-control" name="address" required>
+                        <div class="col-md-4">
+                            <label class="form-label">Province</label>
+                            <select class="form-select province-select" name="province" required>
+                                <option value="">Select Province</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">City/Municipality</label>
+                            <select class="form-select city-select" name="city" required disabled>
+                                <option value="">Select City/Municipality</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Barangay</label>
+                            <select class="form-select barangay-select" name="barangay" required disabled>
+                                <option value="">Select Barangay</option>
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Contact Number</label>
@@ -193,6 +207,147 @@ document.addEventListener("DOMContentLoaded", function () {
                         idNumberInput.setAttribute("required", "required");
                     if (idUploadInput)
                         idUploadInput.setAttribute("required", "required");
+                }
+            });
+        });
+
+        // Initialize address cascading dropdowns
+        initializeAddressDropdowns();
+    }
+
+    // PSGC API integration for Philippine addresses
+    const PSGC_API_BASE = "https://psgc.gitlab.io/api";
+    let provincesCache = null;
+    let citiesCache = {};
+    let barangaysCache = {};
+
+    async function fetchPSGC(endpoint) {
+        try {
+            const response = await fetch(`${PSGC_API_BASE}${endpoint}`);
+            if (!response.ok) throw new Error("Failed to fetch");
+            return await response.json();
+        } catch (error) {
+            console.error("PSGC API Error:", error);
+            return null;
+        }
+    }
+
+    async function initializeAddressDropdowns() {
+        const passengerForms = document.querySelectorAll(".passenger-form");
+
+        passengerForms.forEach(async (form) => {
+            const provinceSelect = form.querySelector(".province-select");
+            const citySelect = form.querySelector(".city-select");
+            const barangaySelect = form.querySelector(".barangay-select");
+
+            // Load all provinces once
+            if (!provincesCache) {
+                const provinces = await fetchPSGC("/provinces");
+                if (provinces) {
+                    provincesCache = provinces.sort((a, b) =>
+                        a.name.localeCompare(b.name)
+                    );
+                }
+            }
+
+            // Populate province dropdown
+            if (provincesCache) {
+                provincesCache.forEach((province) => {
+                    const option = document.createElement("option");
+                    option.value = province.code;
+                    option.textContent = province.name;
+                    option.dataset.name = province.name;
+                    provinceSelect.appendChild(option);
+                });
+            }
+
+            // Province change handler
+            provinceSelect.addEventListener("change", async function () {
+                const provinceCode = this.value;
+
+                citySelect.innerHTML =
+                    '<option value="">Loading cities...</option>';
+                barangaySelect.innerHTML =
+                    '<option value="">Select Barangay</option>';
+                barangaySelect.disabled = true;
+                citySelect.disabled = true;
+
+                if (provinceCode) {
+                    // Load cities/municipalities for selected province
+                    if (!citiesCache[provinceCode]) {
+                        const cities = await fetchPSGC(
+                            `/provinces/${provinceCode}/cities-municipalities`
+                        );
+                        if (cities) {
+                            citiesCache[provinceCode] = cities.sort((a, b) =>
+                                a.name.localeCompare(b.name)
+                            );
+                        }
+                    }
+
+                    citySelect.innerHTML =
+                        '<option value="">Select City/Municipality</option>';
+
+                    if (citiesCache[provinceCode]) {
+                        citiesCache[provinceCode].forEach((city) => {
+                            const option = document.createElement("option");
+                            option.value = city.code;
+                            option.textContent = city.name;
+                            option.dataset.name = city.name;
+                            citySelect.appendChild(option);
+                        });
+                        citySelect.disabled = false;
+                    }
+                } else {
+                    citySelect.innerHTML =
+                        '<option value="">Select City/Municipality</option>';
+                    citySelect.disabled = true;
+                }
+            });
+
+            // City change handler
+            citySelect.addEventListener("change", async function () {
+                const cityCode = this.value;
+
+                barangaySelect.innerHTML =
+                    '<option value="">Loading barangays...</option>';
+                barangaySelect.disabled = true;
+
+                if (cityCode) {
+                    // Load barangays for selected city
+                    if (!barangaysCache[cityCode]) {
+                        // Try both city and municipality endpoints
+                        let barangays = await fetchPSGC(
+                            `/cities/${cityCode}/barangays`
+                        );
+                        if (!barangays) {
+                            barangays = await fetchPSGC(
+                                `/municipalities/${cityCode}/barangays`
+                            );
+                        }
+                        if (barangays) {
+                            barangaysCache[cityCode] = barangays.sort((a, b) =>
+                                a.name.localeCompare(b.name)
+                            );
+                        }
+                    }
+
+                    barangaySelect.innerHTML =
+                        '<option value="">Select Barangay</option>';
+
+                    if (barangaysCache[cityCode]) {
+                        barangaysCache[cityCode].forEach((barangay) => {
+                            const option = document.createElement("option");
+                            option.value = barangay.name;
+                            option.textContent = barangay.name;
+                            barangaySelect.appendChild(option);
+                        });
+                        barangaySelect.disabled = false;
+                    }
+                } else {
+                    barangaySelect.innerHTML =
+                        '<option value="">Select Barangay</option>';
+                    barangaySelect.disabled = true;
                 }
             });
         });
@@ -388,8 +543,22 @@ document.addEventListener("DOMContentLoaded", function () {
                         .querySelector('input[name="middle_initial"]')
                         .value.trim(),
                     gender: formEl.querySelector('select[name="gender"]').value,
-                    address: formEl.querySelector('input[name="address"]')
-                        .value,
+                    province:
+                        formEl.querySelector(".province-select")
+                            .selectedOptions[0]?.dataset.name || "",
+                    city:
+                        formEl.querySelector(".city-select").selectedOptions[0]
+                            ?.dataset.name || "",
+                    barangay: formEl.querySelector(".barangay-select").value,
+                    address: [
+                        formEl.querySelector(".barangay-select").value,
+                        formEl.querySelector(".city-select").selectedOptions[0]
+                            ?.dataset.name || "",
+                        formEl.querySelector(".province-select")
+                            .selectedOptions[0]?.dataset.name || "",
+                    ]
+                        .filter(Boolean)
+                        .join(", "),
                     age: formEl.querySelector('input[name="age"]').value,
                     contact_number: formEl.querySelector(
                         'input[name="contact_number"]'
