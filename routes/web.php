@@ -22,6 +22,7 @@ use App\Http\Controllers\NotificationController;
 //STAFF CONTROLLERS
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\StaffCargoController;
+use App\Http\Controllers\Staff\StaffPassengerController;
 use App\Http\Controllers\Staff\SemaphoreController;
 
 // SHARED CONTROLLERS
@@ -242,14 +243,22 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     Route::get('/cargo_items/{id}/edit', [CargoItemController::class, 'edit'])->name('staff.cargo_item_edit');
     Route::put('/cargo_items/{id}/update', [CargoItemController::class, 'update'])->name('staff.cargo_item_update');
     Route::delete('/cargo_items/{id}/delete', [CargoItemController::class, 'destroy'])->name('staff.cargo_item_delete');
+    
     //Cargo Booking
-
     // Show cargo booking form
     Route::get('/cargo-bookings/create', [StaffCargoController::class, 'create'])->name('staff.cargo_booking.create');
     // Save new cargo booking
     Route::post('/cargo-bookings/store', [StaffCargoController::class, 'store'])->name('cargo.bookings.store');
     // Show only pending cargo bookings
     Route::get('/cargo-bookings/pending', [StaffCargoController::class, 'pending'])->name('cargo.bookings.pending');
+
+    //Passenger Booking (Staff)
+    // Show passenger booking form for staff
+    Route::get('/passenger-booking/create', [StaffPassengerController::class, 'create'])->name('staff.passenger_booking.create');
+    // Save new passenger booking
+    Route::post('/passenger-booking/store', [StaffPassengerController::class, 'store'])->name('staff.passenger_booking.store');
+    // AJAX endpoint for available cots
+    Route::get('/passenger-booking/available-cots', [StaffPassengerController::class, 'getAvailableCots'])->name('staff.passenger_booking.available_cots');
     
     // View booking details
     Route::get('/cargo-bookings/{id}', [StaffCargoController::class, 'show'])->name('cargo.bookings.show');

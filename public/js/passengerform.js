@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <h6 class="fw-bold mb-3 text-primary">Personal Information - Person ${i}</h6>
                     <div class="row g-3">
                         <div class="col-md-8">
-                            <label class="form-label">Passenger Type</label>
+                            <label class="form-label">Passenger Type <span class="text-danger">*</span></label>
                             <select class="form-select passenger-type" name="type" required>
                                 <option value="">Select Type</option>
                                 <option value="Regular">Regular/Adult</option>
@@ -56,11 +56,11 @@ document.addEventListener("DOMContentLoaded", function () {
                             <input type="text" class="form-control" name="suffix" placeholder="Jr., Sr., III">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">First Name</label>
+                            <label class="form-label">First Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control first-name" name="first_name" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Last Name</label>
+                            <label class="form-label">Last Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control last-name" name="last_name" required>
                         </div>
                         <div class="col-md-3">
@@ -68,11 +68,11 @@ document.addEventListener("DOMContentLoaded", function () {
                             <input type="text" maxlength="1" class="form-control text-center" name="middle_initial">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Age</label>
+                            <label class="form-label">Age <span class="text-danger">*</span></label>
                             <input type="number" min="0" class="form-control" name="age" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Gender</label>
+                            <label class="form-label">Gender <span class="text-danger">*</span></label>
                             <select class="form-select" name="gender" required>
                                 <option value="">Select Gender</option>
                                 <option>Male</option>
@@ -80,29 +80,29 @@ document.addEventListener("DOMContentLoaded", function () {
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Province</label>
+                            <label class="form-label">Province <span class="text-danger">*</span></label>
                             <select class="form-select province-select" name="province" required>
                                 <option value="">Select Province</option>
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">City/Municipality</label>
+                            <label class="form-label">City/Municipality <span class="text-danger">*</span></label>
                             <select class="form-select city-select" name="city" required disabled>
                                 <option value="">Select City/Municipality</option>
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Barangay</label>
+                            <label class="form-label">Barangay <span class="text-danger">*</span></label>
                             <select class="form-select barangay-select" name="barangay" required disabled>
                                 <option value="">Select Barangay</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Contact Number</label>
+                            <label class="form-label">Contact Number <span class="text-danger">*</span></label>
                             <input type="tel" class="form-control" name="contact_number" placeholder="09XXXXXXXXX" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Email Address</label>
+                            <label class="form-label">Email Address <span class="text-danger">*</span></label>
                             <input type="email" class="form-control" name="email" placeholder="name@email.com" required>
                         </div>
 
@@ -123,14 +123,14 @@ document.addEventListener("DOMContentLoaded", function () {
                     <h6 class="fw-bold mb-3 text-success">Accommodation - Person ${i}</h6>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Accommodation Type</label>
+                            <label class="form-label">Accommodation Type <span class="text-danger">*</span></label>
                             <select class="form-select accommodation-select" name="accommodation_type" required>
                                 <option value="">Select Accommodation</option>
                                 ${accommodationOptions}
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Cot Number</label>
+                            <label class="form-label">Cot Number <span class="text-danger">*</span></label>
                             <select class="form-select cot-select" name="cot_number" required disabled>
                                 <option value="">Select Accommodation First</option>
                             </select>
