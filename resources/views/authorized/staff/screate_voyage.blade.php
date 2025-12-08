@@ -82,14 +82,27 @@
           <div class="form-col">
             <div class="form-group">
               <label for="voyage_departure_date">Departure Date</label>
-              <input id="voyage_departure_date" type="date" name="voyage_departure_date" required>
+              <input 
+                id="voyage_departure_date" 
+                type="date" 
+                name="voyage_departure_date" 
+                required min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}"
+                max="{{ \Carbon\Carbon::today()->addDays(8)->format('Y-m-d') }}"
+              >
             </div>
           </div>
 
           <div class="form-col">
             <div class="form-group">
               <label for="voyage_arrival_date">Arrival Date</label>
-              <input id="voyage_arrival_date" type="date" name="voyage_arrival_date">
+              <input 
+                id="voyage_arrival_date" 
+                type="date" 
+                name="voyage_arrival_date" 
+                required 
+                min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}"
+                max="{{ \Carbon\Carbon::today()->addDays(8)->format('Y-m-d') }}"
+              >
             </div>
           </div>
         </div>
