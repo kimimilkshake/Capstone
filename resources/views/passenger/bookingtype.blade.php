@@ -21,6 +21,7 @@
                                 </tr>
                             </thead>
                             <tbody class="text-center">
+                                {{-- @var array $voyage --}}
                                 @forelse ($voyages as $voyage)
                                     <tr>
                                         <td>{{ \Carbon\Carbon::parse($voyage['departure_date'])->format('M d') }}</td>

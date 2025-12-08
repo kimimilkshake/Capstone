@@ -173,7 +173,7 @@ body {
 
 /* keyframes: visible -> fade -> collapse */
 @keyframes showThenHide {
-  0%   { opacity: 1; max-height: 200px; padding: 0.75rem 1rem; margin-bottom: 1rem; transform: translateY(0); }
+  0%   { opacity: 1; max-height: 200px; padding: 0.75rem 1re  m; margin-bottom: 1rem; transform: translateY(0); }
   80%  { opacity: 1; max-height: 200px; padding: 0.75rem 1rem; margin-bottom: 1rem; transform: translateY(0); }
   100% { opacity: 0; max-height: 0; padding: 0; margin-bottom: 0; transform: translateY(-4px); }
 }
@@ -252,4 +252,14 @@ body {
 
 .sms-button:hover {
     background-color: #485b8c;
+}
+
+.manifest-header {
+    margin-bottom: 20px;
+}
+
+.manifest-filters {
+    margin-top: 20px;
+    text-align: center;
+    margin-left:410px;
 }

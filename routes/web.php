@@ -285,7 +285,7 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
         ->name('cargo.bookings.update');
 
     // Semaphore Text SMS
-    Route::get('/semaphore', [SemaphoreController::class, 'show'])->name('staff.semaphore');
+    Route::get('/semaphore/{voyage}', [SemaphoreController::class, 'show'])->name('staff.semaphore');
     Route::post('/semaphore/send', [SemaphoreController::class, 'send'])->name('staff.semaphore.send')->middleware('auth');
 
     //MANIFEST

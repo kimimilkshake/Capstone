@@ -21,7 +21,6 @@
     <table class="vessel-table">
       <thead>
         <tr>
-          <th>Vessel No.</th>
           <th>Code</th>
           <th>Name</th>
           <th>No. of Hatches</th>
@@ -34,7 +33,6 @@
       <tbody>
         @forelse ($vessels as $index => $v)
           <tr>
-            <td>{{ $v->vessel_id }}</td>
             <td>{{ $v->vessel_code }}</td>
             <td>{{ $v->vessel_name }}</td>
             <td>{{ $v->hatches->count() }}</td>
@@ -49,7 +47,7 @@
           </tr>
         @empty
           <tr>
-            <td colspan="7" class="text-center">No vessels found.</td>
+            <td colspan="6" class="text-center">No vessels found.</td>
           </tr>
         @endforelse
       </tbody>
