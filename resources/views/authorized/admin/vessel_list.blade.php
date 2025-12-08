@@ -32,7 +32,7 @@
         </tr>
       </thead>
       <tbody>
-        @foreach ($vessels as $index => $v)
+        @forelse ($vessels as $index => $v)
           <tr>
             <td>{{ $v->vessel_id }}</td>
             <td>{{ $v->vessel_code }}</td>
@@ -47,7 +47,11 @@
               </a>
             </td>
           </tr>
-        @endforeach
+        @empty
+          <tr>
+            <td colspan="7" class="text-center">No vessels found.</td>
+          </tr>
+        @endforelse
       </tbody>
     </table>
     <div class="pagination-container">

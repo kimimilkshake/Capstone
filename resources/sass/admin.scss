@@ -244,8 +244,8 @@ body {
 }
 
 .staff-table th, .staff-table td, .promo-table th, .promo-table td, .vessel-table th, .vessel-table td, .voyage-table th, .voyage-table td, .rp-table th, .rp-table td, .manifest-table td, .manifest-table th, .cargo-item-table th, .cargo-item-table td {
-    padding: 10px;
-    text-align: center;
+    padding: 15px;
+    text-align: left;
 }
 
 .staff-table th, .promo-table th, .vessel-table th, .voyage-table th, .rp-table th, .manifest-table th, .cargo-item-table th{
@@ -257,7 +257,7 @@ body {
   border-style: solid;
   border-color: rgba(0,0,0,0.1);
   border-width: 1px;
-  padding: 10px;
+  padding: 15px;
   margin: 10px;
 }
 

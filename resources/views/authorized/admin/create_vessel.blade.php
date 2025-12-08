@@ -35,7 +35,7 @@
 
                     <div class="form-col">
                         <div class="form-group">
-                            <label for="vessel_code">Vessel Code:</label>
+                            <label for="vessel_code">Vessel Code <span class="text-danger">*</span></label>
                             <input type="text" id="vessel_code" name="vessel_code" placeholder="Enter Vessel Code"
                                 required>
                         </div>
@@ -43,7 +43,7 @@
 
                     <div class="form-col">
                         <div class="form-group">
-                            <label for="vessel_name">Vessel Name:</label>
+                            <label for="vessel_name">Vessel Name <span class="text-danger">*</span></label>
                             <input type="text" id="vessel_name" name="vessel_name" placeholder="Enter Vessel Name"
                                 required>
                         </div>
@@ -62,24 +62,24 @@
                                 <div class="hatch-row">
 
                                     <div class="form-group hatch-input">
-                                        <label>Label</label>
+                                        <label>Hatch Label <span class="text-danger">*</span></label>
                                         <input type="text" name="hatches[0][label]" placeholder="Hatch Label" required>
                                     </div>
 
                                     <div class="form-group hatch-input">
-                                        <label>Length (m)</label>
+                                        <label>Length (m) <span class="text-danger">*</span></label>
                                         <input type="number" name="hatches[0][length]" placeholder="Length (m)"
                                             step="0.01" inputmode="decimal" required>
                                     </div>
 
                                     <div class="form-group hatch-input">
-                                        <label>Width (m)</label>
+                                        <label>Width (m) <span class="text-danger">*</span></label>
                                         <input type="number" name="hatches[0][width]" placeholder="Width (m)"
                                             step="0.01" inputmode="decimal" required>
                                     </div>
 
                                     <div class="form-group hatch-input">
-                                        <label>Height (m)</label>
+                                        <label>Height (m) <span class="text-danger">*</span></label>
                                         <input type="number" name="hatches[0][height]" placeholder="Height (m)"
                                             step="0.01" inputmode="decimal" required>
                                     </div>
@@ -91,13 +91,13 @@
                                     </div>
 
                                     <div class="form-group hatch-input">
-                                        <label>Area Capacity (m³)</label>
+                                        <label>Area Capacity (m³) <span class="text-danger">*</span></label>
                                         <input type="number" name="hatches[0][area_capacity]"
                                             placeholder="Area Capacity (  )" step="0.01" inputmode="decimal" required>
                                     </div>
 
                                     <div class="form-group hatch-input">
-                                        <label>Hold Capacity (Tons)</label>
+                                        <label>Hold Capacity (Tons) <span class="text-danger">*</span></label>
                                         <input type="number" name="hatches[0][capacity_per_hold]"
                                             placeholder="Capacity Per Hold (Tons)" step="0.01" inputmode="decimal"
                                             required>
@@ -122,19 +122,19 @@
                             <div class="accommodation-row">
 
                                 <div class="form-group acc-input">
-                                    <label>Accommodation Label</label>
+                                    <label>Accommodation Label <span class="text-danger">*</span></label>
                                     <input type="text" name="accommodations[0][name]" placeholder="Accommodation Name"
                                         required>
                                 </div>
 
                                 <div class="form-group acc-input">
-                                    <label>Regular Price</label>
+                                    <label>Regular Price <span class="text-danger">*</span></label>
                                     <input type="number" name="accommodations[0][price]" placeholder="Regular Price"
                                         step="0.01" inputmode="decimal" required>
                                 </div>
 
                                 <div class="form-group acc-input">
-                                    <label>Cot Range</label>
+                                    <label>Cot Range <span class="text-danger">*</span></label>
                                     <input type="text" name="accommodations[0][cot_range]"
                                         placeholder="Cot Range (e.g., 1-5, 7-10)" required>
                                 </div>

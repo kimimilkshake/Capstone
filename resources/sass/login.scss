@@ -36,8 +36,8 @@ h2, p{
 
 .back-icon {
   position: absolute;
-  top: 20px;     // distance from top of card
-  left: 20px;    // distance from left of card
+  top: 20px; 
+  left: 20px;
   color: #485B8C;
   font-size: 1.2rem;
 
@@ -48,8 +48,10 @@ h2, p{
 }
 
 .card {
-  position: relative; // important so the icon positions inside the card
+  position: relative;
   border-radius: 1rem; 
   background-color: #ffffff; 
   color: #485B8C;
 }
+
+

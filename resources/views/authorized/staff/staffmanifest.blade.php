@@ -4,7 +4,7 @@
     @include('components.authHeader')
     @include('components.staff_nav') {{--NAVBAR--}}
 
-    <div class="admin-body">
+    <div class="staff-body">
         <div class="manifest-header text-center">
             <h2 class="manifest-title">
                 Voyage Number: {{ $voyage->voyage_code ?? '-' }}

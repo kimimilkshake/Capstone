@@ -31,7 +31,7 @@
           </tr>
         </thead>
         <tbody>
-          @foreach ($promos as $index => $p)
+          @forelse ($promos as $index => $p)
             <tr>
               <td>{{ $p->promo_name }}</td>
               <td>{{ $p->promo_code }}</td>
@@ -45,7 +45,11 @@
                 </a>
               </td>
             </tr>
-          @endforeach
+          @empty
+            <tr>
+              <td colspan="7" class="text-center">No promos fuond.</td>
+            </tr>
+          @endforelse
         </tbody>
       </table>
       <div class="pagination-container">

@@ -66,7 +66,7 @@ return new class extends Migration {
             $table->date('promo_start_date');
             $table->date('promo_end_date');
             $table->enum('promo_status', ['Active', 'Inactive']);
-            $table->decimal('promo_discount_rate', 5, 2);
+            $table->decimal('promo_discount_rate', 5, 2)->nullable();
             $table->timestamps();
         });
 

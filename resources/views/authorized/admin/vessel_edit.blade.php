@@ -24,7 +24,7 @@
                 <div class="form-row">
                     <div class="form-col">
                         <div class="form-group">
-                            <label for="vessel_code">Vessel Code:</label>
+                            <label for="vessel_code">Vessel Code <span class="text-danger">*</span></label>
                             <input type="text" id="vessel_code" name="vessel_code" value="{{ $vessel->vessel_code }}"
                                 required>
                         </div>
@@ -32,7 +32,7 @@
 
                     <div class="form-col">
                         <div class="form-group">
-                            <label for="vessel_name">Vessel Name:</label>
+                            <label for="vessel_name">Vessel Name <span class="text-danger">*</span></label>
                             <input type="text" id="vessel_name" name="vessel_name" value="{{ $vessel->vessel_name }}"
                                 required>
                         </div>
@@ -48,24 +48,24 @@
                                 @foreach ($vessel->hatches as $index => $hatch)
                                     <div class="hatch-row">
                                         <div class="form-group hatch-input">
-                                            <label>Label</label>
+                                            <label>Hatch Label <span class="text-danger">*</span></label>
                                             <input type="text" name="hatches[{{ $index }}][label]"
                                                 value="{{ $hatch->hatch_label }}" placeholder="Hatch Label" required>
                                         </div>
                                         <div class="form-group hatch-input">
-                                            <label>Length (m)</label>
+                                            <label>Length (m) <span class="text-danger">*</span></label>
                                             <input type="number" name="hatches[{{ $index }}][length]"
                                                 value="{{ $hatch->hatch_length }}" step="0.01" inputmode="decimal"
                                                 required>
                                         </div>
                                         <div class="form-group hatch-input">
-                                            <label>Width (m)</label>
+                                            <label>Width (m) <span class="text-danger">*</span></label>
                                             <input type="number" name="hatches[{{ $index }}][width]"
                                                 value="{{ $hatch->hatch_width }}" step="0.01" inputmode="decimal"
                                                 required>
                                         </div>
                                         <div class="form-group hatch-input">
-                                            <label>Height (m)</label>
+                                            <label>Height (m) <span class="text-danger">*</span></label>
                                             <input type="number" name="hatches[{{ $index }}][height]"
                                                 value="{{ $hatch->hatch_height }}" step="0.01" inputmode="decimal"
                                                 required>
@@ -77,13 +77,13 @@
                                                 inputmode="decimal">
                                         </div>
                                         <div class="form-group hatch-input">
-                                            <label>Area Capacity (m³)</label>
+                                            <label>Area Capacity (m³) <span class="text-danger">*</span></label>
                                             <input type="number" name="hatches[{{ $index }}][area_capacity]"
                                                 value="{{ $hatch->hatch_area_capacity }}" step="0.01"
                                                 inputmode="decimal" required>
                                         </div>
                                         <div class="form-group hatch-input">
-                                            <label>Capacity per Hold (Tons)</label>
+                                            <label>Capacity per Hold (Tons) <span class="text-danger">*</span></label>
                                             <input type="number" name="hatches[{{ $index }}][capacity_per_hold]"
                                                 value="{{ $hatch->hatch_capacity_per_hold }}" step="0.01"
                                                 inputmode="decimal" required>
@@ -95,22 +95,22 @@
                                 @if ($vessel->hatches->isEmpty())
                                     <div class="hatch-row">
                                         <div class="form-group hatch-input">
-                                            <label>Label</label>
+                                            <label>Hatch Label <span class="text-danger">*</span></label>
                                             <input type="text" name="hatches[0][label]" placeholder="Hatch Label"
                                                 required>
                                         </div>
                                         <div class="form-group hatch-input">
-                                            <label>Length (m)</label>
+                                            <label>Length (m) <span class="text-danger">*</span></label>
                                             <input type="number" name="hatches[0][length]" placeholder="Length (m)"
                                                 step="0.01" inputmode="decimal" required>
                                         </div>
                                         <div class="form-group hatch-input">
-                                            <label>Width (m)</label>
+                                            <label>Width (m) <span class="text-danger">*</span></label>
                                             <input type="number" name="hatches[0][width]" placeholder="Width (m)"
                                                 step="0.01" inputmode="decimal" required>
                                         </div>
                                         <div class="form-group hatch-input">
-                                            <label>Height (m)</label>
+                                            <label>Height (m) <span class="text-danger">*</span></label>
                                             <input type="number" name="hatches[0][height]" placeholder="Height (m)"
                                                 step="0.01" inputmode="decimal" required>
                                         </div>
@@ -120,13 +120,13 @@
                                                 placeholder="Weight Capacity (%)" step="0.01" inputmode="decimal">
                                         </div>
                                         <div class="form-group hatch-input">
-                                            <label>Area Capacity (m³)</label>
+                                            <label>Area Capacity (m³) <span class="text-danger">*</span></label>
                                             <input type="number" name="hatches[0][area_capacity]"
                                                 placeholder="Area Capacity (m³)" step="0.01" inputmode="decimal"
                                                 required>
                                         </div>
                                         <div class="form-group hatch-input">
-                                            <label>Capacity per Hold (Tons)</label>
+                                            <label>Capacity per Hold (Tons) <span class="text-danger">*</span></label>
                                             <input type="number" name="hatches[0][capacity_per_hold]"
                                                 placeholder="Capacity Per Hold (Tons)" step="0.01" inputmode="decimal"
                                                 required>

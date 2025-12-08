@@ -39,7 +39,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($staff as $index => $s)
+                @forelse ($staff as $index => $s)
                     <tr>
                         <td>{{ $s->staff_id }}</td>
                         <td>{{ $s->staff_name }}</td>
@@ -58,7 +58,11 @@
                         </a>
                     </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="9" class="text-center">No staff accounts found.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
         <div class="pagination-container">

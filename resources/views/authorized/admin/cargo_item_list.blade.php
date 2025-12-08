@@ -36,7 +36,7 @@
         </tr>
       </thead>
       <tbody>
-        @foreach ($cargo_items as $index => $c)
+        @forelse ($cargo_items as $index => $c)
           <tr>
             <td>{{ $c->cargo_item_classification }}</td>
             <td>{{ $c->cargo_item_description }}</td>
@@ -49,7 +49,11 @@
               </a>
             </td>
           </tr>
-        @endforeach
+        @empty
+          <tr>
+            <td colspan="6" class="text-center">No cargo items found.</td>
+          </tr>
+        @endforelse
       </tbody>
     </table>
     <div class="pagination-container">

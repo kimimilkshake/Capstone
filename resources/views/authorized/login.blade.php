@@ -16,7 +16,7 @@
 
                                 {{-- Display errors --}}
                                 @if ($errors->any())
-                                    <div class="alert alert-danger text-center">
+                                    <div class="alert alert-danger" style="text-align: center;">
                                         {{ $errors->first() }}
                                     </div>
                                 @endif

@@ -18,14 +18,14 @@
         <div class="form-row">
           <div class="form-col">
             <div class="form-group">
-              <label>Classification</label>
+              <label>Classification <span class="text-danger">*</span></label>
               <input type="text" name="cargo_item_classification" value="{{ old('cargo_item_classification', $cargo_item->cargo_item_classification) }}" required>
             </div>
           </div>
           
           <div class="form-col">
             <div class="form-group">
-              <label>Description</label>
+              <label>Description <span class="text-danger">*</span></label>
               <input type="text" name="cargo_item_description" value="{{ old('cargo_item_description', $cargo_item->cargo_item_description) }}"  required>
             </div>
           </div>
@@ -34,21 +34,21 @@
         <div class="form-row">
           <div class="form-col">
             <div class="form-group">
-              <label>Freight</label>
+              <label>Freight <span class="text-danger">*</span></label>
               <input type="number" name="cargo_item_freight" value="{{ old('cargo_item_freight', $cargo_item->cargo_item_freight) }}"  required>
             </div>
           </div>
 
           <div class="form-col">
             <div class="form-group">
-              <label>Arrastre</label>
+              <label>Arrastre <span class="text-danger">*</span></label>
               <input type="number" name="cargo_item_arrastre" value="{{ old('cargo_item_arrastre', $cargo_item->cargo_item_arrastre) }}" required>
             </div>
           </div>
 
           <div class="form-col">
               <div class="form-group">
-                  <label>Route Destination</label>
+                  <label>Route Destination <span class="text-danger">*</span></label>
                   <select name="route_port_id" required>
                       <option value="">Select Destination</option>
                       @foreach ($routes as $route)
