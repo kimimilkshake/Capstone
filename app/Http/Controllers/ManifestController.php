@@ -19,6 +19,17 @@ use App\Models\Payment;
 
 class ManifestController extends Controller
 {
+
+    // Helper methods to check which guard is logged in
+    private function isStaff()
+    {
+        return auth()->guard('staff')->check();
+    }
+
+    private function isAdmin()
+    {
+        return auth()->guard('admin')->check();
+    }
     /**
      * Show the manifest for a voyage with server-side filter options.
      *
@@ -122,6 +133,10 @@ class ManifestController extends Controller
         }
 
         // Render the view
-        return view('authorized.admin.adminmanifest', compact('voyage', 'showPassenger', 'showCargo', 'passengers', 'cargos'));
+        return $this->isStaff()
+            ? view('authorized.staff.staffmanifest', compact('voyage', 'showPassenger', 'showCargo', 'passengers', 'cargos'))
+            : view('authorized.admin.adminmanifest', compact('voyage', 'showPassenger', 'showCargo', 'passengers', 'cargos'));
     }
 }
+
+
