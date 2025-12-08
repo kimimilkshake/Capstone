@@ -784,8 +784,7 @@ body {
 .manifest-header {
     margin-bottom: 1.5rem;
     color: #000;
-     padding-top: 3px;
-     margin-bottom: -3rem;
+    padding-top: 3px;
 
     .manifest-title {
         font-weight: bold;
@@ -805,7 +804,6 @@ body {
     }
 }
 
-
 .manifest-header h2 {
     font-weight: bold;
     font-size: 1.5rem;
@@ -818,10 +816,15 @@ body {
     font-size: 0.95rem;
 }
 
+.manifest-filters {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
 .passenger-manifest,
 .cargo-manifest {
     margin-top: 2rem;
-    margin:5rem;
 }
 
 .passenger-manifest h4,
@@ -839,15 +842,7 @@ body {
     margin-bottom: 13px;
 }
 
-.form-check-label{
+.form-check-label {
     font-size: 14px;
-    margin-top: -25.5px;
     align-items: center;
 }
-
-.manifest-filters{
-    margin-bottom: 30px;
-    margin-left:410px; 
-}
-
-

@@ -20,28 +20,22 @@
                     <p><strong>Status: </strong> {{ $voyage->voyage_status ?? '-' }}</p>
                 </div>
             </div>
+        </div>
 
-            <div class="manifest-filters mt-4">
-               {{-- Added ID for easier targeting if needed later --}}
-                 <form method="GET" action="{{ url()->current() }}" class="d-flex gap-5 align-items-center" id="manifestFilterForm">
-                 {{-- ensure a value is always submitted: hidden default 0, checkbox overrides with 1 --}}
-                 <input type="hidden" name="show_passenger" value="0">
-                     <div class="form-check">
-                    {{-- Added onchange="this.form.submit()" to auto-filter --}}
-                     <input class="form-check-input" type="checkbox" name="show_passenger" id="filterPassenger" value="1" {{ ($showPassenger ?? true) ? 'checked' : '' }} onchange="this.form.submit()">
+        <div class="manifest-filters mt-4">
+            <form method="GET" action="{{ url()->current() }}" class="d-flex gap-5 align-items-center" id="manifestFilterForm">
+                <input type="hidden" name="show_passenger" value="0">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="show_passenger" id="filterPassenger" value="1" {{ ($showPassenger ?? true) ? 'checked' : '' }} onchange="this.form.submit()">
                     <label class="form-check-label" for="filterPassenger">Show Passenger Manifest</label>
-                    </div>
-                    <input type="hidden" name="show_cargo" value="0">
-                    <div class="form-check">
-                {{-- Added onchange="this.form.submit()" to auto-filter --}}
-                <input class="form-check-input" type="checkbox" name="show_cargo" id="filterCargo" value="1" {{ ($showCargo ?? true) ? 'checked' : '' }} onchange="this.form.submit()">
-                <label class="form-check-label" for="filterCargo">Show Cargo Manifest</label>
                 </div>
-
-                {{-- REMOVED THE SUBMIT BUTTON --}}
-                </form>
-             </div>
-             </div>
+                <input type="hidden" name="show_cargo" value="0">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="show_cargo" id="filterCargo" value="1" {{ ($showCargo ?? true) ? 'checked' : '' }} onchange="this.form.submit()">
+                    <label class="form-check-label" for="filterCargo">Show Cargo Manifest</label>
+                </div>
+            </form>
+        </div>
 
         {{-- PASSENGERS --}}
         @if(!empty($showPassenger))
