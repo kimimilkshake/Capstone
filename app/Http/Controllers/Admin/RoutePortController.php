@@ -10,6 +10,16 @@ class RoutePortController extends Controller
 {
     public function index(Request $request)
     {
+
+        /*
+        dd([
+            'staff_guard' => auth()->guard('staff')->check(),
+            'admin_guard' => auth()->guard('admin')->check(),
+            'staff_user' => auth()->guard('staff')->user(),
+            'admin_user' => auth()->guard('admin')->user(),
+        ]);
+        */
+        
         $search = $request->input('search');
 
         $route_port = RoutePort::when($search, function ($query, $search) {
@@ -39,6 +49,8 @@ class RoutePortController extends Controller
             ]);
 
             $route_port = RoutePort::create($validated);
+
+            
 
             return response()->json([
                 'status' => 'success',
