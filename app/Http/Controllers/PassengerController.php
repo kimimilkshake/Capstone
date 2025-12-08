@@ -33,6 +33,11 @@ class PassengerController extends Controller
         $departureTime = $voyage->voyage_estimated_TD;
         $portOfOrigin = $voyage->routePort->port_origin_name ?? 'Unknown Port';
         $accommodations = $voyage->vessel->accommodations ?? collect();
+        
+        // Get cot plan image URL
+        $cotPlanUrl = $voyage->vessel && $voyage->vessel->vessel_cot_plan_url
+            ? asset('storage/' . $voyage->vessel->vessel_cot_plan_url)
+            : asset('images/sample-cot-plan.jpg');
 
         if ($departureTime) {
             $departureTime = Carbon::parse($departureTime)->format('g:i A');
@@ -56,7 +61,8 @@ class PassengerController extends Controller
             'portOfOrigin',
             'cargoItems', // ✅ Pass it to Blade
             'voyage',
-            'accommodations'
+            'accommodations',
+            'cotPlanUrl'
         ));
     }
 

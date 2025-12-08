@@ -5,12 +5,12 @@
     <div class="container my-5">
         <div class="row justify-content-center align-items-start">
 
-            <!-- LEFT SIDE (Cot Plan Image Placeholder) -->
+            <!-- LEFT SIDE (Cot Plan Image) -->
             <div class="col-md-6 mb-4 text-center">
                 <h4 class="mb-3">Cot Plan Layout</h4>
-                <img src="{{ asset('images/sample-cot-plan.jpg') }}" alt="Cot Plan" class="img-fluid rounded shadow-sm"
+                <img src="{{ $cotPlanUrl }}" alt="Cot Plan" class="img-fluid rounded shadow-sm"
                     style="max-height: 500px; object-fit: contain;">
-                <p class="text-muted mt-2">Cot plan image placeholder</p>
+                <p class="text-muted mt-2">Vessel cot plan layout</p>
             </div>
 
             <!-- RIGHT SIDE (Passenger Form) -->

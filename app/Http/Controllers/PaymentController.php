@@ -289,9 +289,9 @@ class PaymentController extends Controller
             }
         }
 
-        // If payment succeeded, show a short success prompt then redirect to homepage.
+        // If payment succeeded, redirect to homepage with success message
         if (!empty($status) && in_array($status, ['paid', 'succeeded'])) {
-            return view('payments.success', ['bookingRef' => $bookingRef]);
+            return redirect()->route('homepage')->with('success', "Payment successful! Your booking reference is: {$bookingRef}");
         }
 
         // Otherwise redirect to confirmbooking which will show updated booking/payment status

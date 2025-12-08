@@ -14,7 +14,7 @@
     </li>
 
     <li class="snav-item">
-      <a class="snav-link" href="{{ url('/') }}">
+      <a class="snav-link" href="{{ route('staff.passenger_booking.create') }}">
         <i class="fa-solid fa-person-walking-luggage me-1"></i>
         <span class="snav-label">Passenger Booking</span>
       </a>
