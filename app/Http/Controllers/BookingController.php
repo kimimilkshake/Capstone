@@ -88,6 +88,7 @@ class BookingController extends Controller
             $bookingId = DB::table('booking')->insertGetId([
                 'booking_date' => now(),
                 'booking_status' => 'Pending',
+                'booking_type' => 'passenger',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -277,6 +278,75 @@ class BookingController extends Controller
         $cots = $rows->pluck('pt_cot_no')->unique()->values()->all();
 
         return response()->json(['success' => true, 'unavailable' => $cots]);
+    }
+
+    /**
+     * Get available cots per accommodation for a specific voyage
+     */
+    public function getAvailableCotsByAccommodation(Request $request)
+    {
+        $voyageId = $request->query('voyage_id');
+
+        if (!$voyageId) {
+            return response()->json(['success' => false, 'message' => 'Missing voyage_id'], 422);
+        }
+
+        // Get the voyage with its vessel and accommodations
+        $voyage = DB::table('voyage')
+            ->where('voyage_id', $voyageId)
+            ->first();
+
+        if (!$voyage) {
+            return response()->json(['success' => false, 'message' => 'Voyage not found'], 404);
+        }
+
+        // Get accommodations for this vessel with their cot ranges
+        $accommodations = DB::table('accommodation')
+            ->where('vessel_id', $voyage->vessel_id)
+            ->get();
+
+        // Get all booked cots for this voyage (exclude canceled bookings)
+        $bookedCots = DB::table('passenger_ticket')
+            ->join('booking', 'passenger_ticket.booking_ref_no', '=', 'booking.booking_ref_no')
+            ->where('passenger_ticket.voyage_id', $voyageId)
+            ->whereRaw("LOWER(booking.booking_status) <> ?", ['canceled'])
+            ->pluck('passenger_ticket.pt_cot_no')
+            ->map(function ($cot) {
+                return (int) $cot;
+            })
+            ->unique()
+            ->values()
+            ->all();
+
+        $result = [];
+        foreach ($accommodations as $accommodation) {
+            // Parse cot range (e.g., "1-50" or "51-100")
+            $cotRange = $accommodation->accommodation_cot_range;
+            $availableCots = [];
+
+            if ($cotRange && strpos($cotRange, '-') !== false) {
+                list($start, $end) = explode('-', $cotRange);
+                $start = (int) trim($start);
+                $end = (int) trim($end);
+
+                // Generate all cots in range, excluding booked ones
+                for ($i = $start; $i <= $end; $i++) {
+                    if (!in_array($i, $bookedCots)) {
+                        $availableCots[] = $i;
+                    }
+                }
+            }
+
+            $result[] = [
+                'accommodation_id' => $accommodation->accommodation_id,
+                'accommodation_name' => $accommodation->accommodation_name,
+                'accommodation_price' => $accommodation->accommodation_regular_price,
+                'cot_range' => $cotRange,
+                'available_cots' => $availableCots
+            ];
+        }
+
+        return response()->json(['success' => true, 'accommodations' => $result]);
     }
 
     /**
