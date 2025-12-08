@@ -209,7 +209,7 @@ body {
 }
 
 .form-group input,
-.form-group select, 
+.form-group select,
 .form-group textarea {
   width: 100%;
   padding: 8px;
@@ -330,11 +330,11 @@ body {
 }
 
 .add-promo a {
-    display: inline-block;        
-    text-decoration: none;   
-    color: #fff;           
-    background-color: #485b8c; 
-    padding: 8px 16px; 
+    display: inline-block;
+    text-decoration: none;
+    color: #fff;
+    background-color: #485b8c;
+    padding: 8px 16px;
     border-radius: 5px;
     font-size: 14px;
     font-weight: 500;
@@ -365,7 +365,7 @@ body {
 .acs-cancel-btn:hover {
   background-color: #8b2635;
   color: #ffffff;
-  text-decoration: none; 
+  text-decoration: none;
 }
 
 //VESSEL
@@ -377,10 +377,14 @@ body {
   border-radius: 6px;
   cursor: pointer;
   font-weight: 700;
-  padding: 4px 8px;     
+  padding: 6px 8px;
   transition: background-color 0.2s;
-  width: auto;
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
   flex: none;
+  height: fit-content;
+  margin-bottom: 8px;
 }
 
 .add-vessel a {
@@ -426,11 +430,15 @@ body {
 
 .hatch-row,
 .accommodation-row {
-  display: grid;
-  grid-auto-flow: column;
+  display: flex;
   gap: 8px;
   margin-bottom: 10px;
-  align-items: center;
+  align-items: end;
+}
+
+.hatch-row .form-group,
+.accommodation-row .form-group {
+  flex: 1;
 }
 
 .hatch-row input,
@@ -544,10 +552,10 @@ body {
   border: none;
   cursor: pointer;
   font: inherit;
-  display: inline-block;        
-  text-decoration: none;   
-  color: #fff;           
-  padding: 8px 16px; 
+  display: inline-block;
+  text-decoration: none;
+  color: #fff;
+  padding: 8px 16px;
   border-radius: 5px;
   font-size: 14px;
   font-weight: 500;
@@ -710,7 +718,7 @@ body {
 
 
 
-//PAGINATION 
+//PAGINATION
 .pagination-container {
   display: flex;
   justify-content: center;
