@@ -55,6 +55,16 @@
         flex-direction: column;
         gap: 1.25rem; // Reduced gap between sections
 
+        .booking-header {
+            @media (max-width: 991px) {
+                justify-content: center !important;
+
+                h4 {
+                    text-align: center;
+                }
+            }
+        }
+
         .text-center {
             margin-bottom: 0;
 
@@ -259,5 +269,208 @@
         background-color: #6c757d;
         opacity: 0.65;
         cursor: not-allowed;
+    }
+}
+
+/* Ticket Request Modal */
+.ticket-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: none;
+    will-change: opacity;
+
+    .ticket-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0);
+        transition: background-color 0.2s ease-out;
+        will-change: background-color;
+    }
+
+    .ticket-modal-content {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.9);
+        background-color: #ffffff;
+        border-radius: 1rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        width: 90%;
+        max-width: 500px;
+        opacity: 0;
+        transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+        will-change: transform, opacity;
+        backface-visibility: hidden;
+    }
+
+    &.active {
+        .ticket-modal-overlay {
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+
+        .ticket-modal-content {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+    }
+
+    .ticket-modal-header {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 1rem 1rem 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        h5 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        .ticket-modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.15s ease;
+
+            &:hover {
+                background-color: rgba(255, 255, 255, 0.2);
+            }
+
+            &:active {
+                background-color: rgba(255, 255, 255, 0.3);
+            }
+        }
+    }
+
+    .ticket-modal-body {
+        padding: 2rem;
+
+        .form-label {
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            border-radius: 0.5rem;
+            border: 1px solid #ced4da;
+            padding: 0.75rem;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+            &:focus {
+                border-color: #0d6efd;
+                box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+            }
+        }
+
+        .btn-primary {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+            }
+
+            &:active {
+                transform: translateY(0);
+            }
+        }
+    }
+}
+
+/* Request ticket link styling */
+#requestTicketLink {
+    transition: color 0.15s ease;
+
+    &:hover {
+        color: #0a58ca !important;
+        text-decoration: underline !important;
+    }
+}
+
+/* Mobile Ticket Request Card */
+.mobile-ticket-request-card {
+    background-color: #ffffff;
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    margin-bottom: 2rem;
+
+    .mobile-ticket-header {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        color: white;
+        padding: 1.25rem;
+
+        h5 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+    }
+
+    .mobile-ticket-body {
+        padding: 1.5rem;
+
+        .form-label {
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            border-radius: 0.5rem;
+            border: 1px solid #ced4da;
+            padding: 0.75rem;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+            &:focus {
+                border-color: #0d6efd;
+                box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+            }
+        }
+
+        .btn-primary {
+            padding: 0.85rem 1.5rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+            }
+
+            &:active {
+                transform: translateY(0);
+            }
+        }
+
+        p {
+            font-size: 0.9rem;
+        }
     }
 }
