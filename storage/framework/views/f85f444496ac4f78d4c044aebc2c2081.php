@@ -1,8 +1,7 @@
-@extends('layouts.app')
-@section('page-title', 'CARGO BOOKING')
+<?php $__env->startSection('page-title', 'CARGO BOOKING'); ?>
 
-@section('content')
-    @include('components.hero')
+<?php $__env->startSection('content'); ?>
+    <?php echo $__env->make('components.hero', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <div class="container my-5">
         <div class="card shadow-sm mx-auto" style="max-width:1100px; background-color:#f0f0f0;">
@@ -11,26 +10,26 @@
             </div>
 
             <div class="card-body">
-                @if (session('error'))
-                    <div class="alert alert-danger">{{ session('error') }}</div>
-                @endif
+                <?php if(session('error')): ?>
+                    <div class="alert alert-danger"><?php echo e(session('error')); ?></div>
+                <?php endif; ?>
 
-                <form id="passengerCargoForm" action="{{ route('cargobooking.confirm') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
+                <form id="passengerCargoForm" action="<?php echo e(route('cargobooking.confirm')); ?>" method="POST" enctype="multipart/form-data">
+                    <?php echo csrf_field(); ?>
                     <div class="row">
 
                         <!-- LEFT SIDE -->
                         <div class="col-md-6 mb-3">
                             <h6 class="fw-bold mt-4">Voyage Information</h6>
                             <div class="bg-white p-3 rounded shadow-sm mb-3 small">
-                                <p class="mb-1"><strong>Vessel Name:</strong> {{ $vesselName }}</p>
-                                <p class="mb-1"><strong>Route:</strong> {{ $routeFrom }} → {{ $routeTo }}</p>
-                                <p class="mb-1"><strong>Departure Date:</strong> {{ $departureDate }}</p>
-                                <p class="mb-1"><strong>Departure Time:</strong> {{ $departureTime }}</p>
-                                <p class="mb-0"><strong>Port of Origin:</strong> {{ $portOfOrigin }}</p>
+                                <p class="mb-1"><strong>Vessel Name:</strong> <?php echo e($vesselName); ?></p>
+                                <p class="mb-1"><strong>Route:</strong> <?php echo e($routeFrom); ?> → <?php echo e($routeTo); ?></p>
+                                <p class="mb-1"><strong>Departure Date:</strong> <?php echo e($departureDate); ?></p>
+                                <p class="mb-1"><strong>Departure Time:</strong> <?php echo e($departureTime); ?></p>
+                                <p class="mb-0"><strong>Port of Origin:</strong> <?php echo e($portOfOrigin); ?></p>
                             </div>
 
-                            <input type="hidden" name="voyage_id" value="{{ request()->voyage_id }}">
+                            <input type="hidden" name="voyage_id" value="<?php echo e(request()->voyage_id); ?>">
                             <h6 class="fw-bold">Sender Information</h6>
 
                             <div class="mb-2">
@@ -85,7 +84,7 @@
                                                     class="text-danger">*</span></label>
                                             <select name="cargo_classification[]" class="form-control cargo-classification">
                                                 <option value="">-- Select Classification --</option>
-                                                @php
+                                                <?php
                                                     $classifications = $cargoItems
                                                         ->where(
                                                             'route_port_id',
@@ -93,24 +92,25 @@
                                                         )
                                                         ->pluck('cargo_item_classification')
                                                         ->unique();
-                                                @endphp
-                                                @foreach ($classifications as $class)
-                                                    <option value="{{ $class }}">{{ $class }}</option>
-                                                @endforeach
+                                                ?>
+                                                <?php $__currentLoopData = $classifications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $class): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <option value="<?php echo e($class); ?>"><?php echo e($class); ?></option>
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </select>
                                         </div>
                                         <div class="col-6">
                                             <label class="form-label">Description <span class="text-danger">*</span></label>
                                             <select name="cargo_item_id[]" class="form-control cargo-description" required>
                                                 <option value="">-- Select Description --</option>
-                                                @foreach ($cargoItems as $cargo)
-                                                    @if ($cargo->route_port_id == ($voyage->routePort->route_port_id ?? null))
-                                                        <option value="{{ $cargo->cargo_item_id }}"
-                                                            data-classification="{{ $cargo->cargo_item_classification }}">
-                                                            {{ $cargo->cargo_item_description }}
+                                                <?php $__currentLoopData = $cargoItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cargo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <?php if($cargo->route_port_id == ($voyage->routePort->route_port_id ?? null)): ?>
+                                                        <option value="<?php echo e($cargo->cargo_item_id); ?>"
+                                                            data-classification="<?php echo e($cargo->cargo_item_classification); ?>">
+                                                            <?php echo e($cargo->cargo_item_description); ?>
+
                                                         </option>
-                                                    @endif
-                                                @endforeach
+                                                    <?php endif; ?>
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </select>
                                         </div>
                                     </div>
@@ -186,7 +186,7 @@
                     </div>
 
                     <div class="d-flex justify-content-end mt-4 gap-3">
-                        <a href="{{ route('bookingtype') }}" class="btn btn-outline-danger fw-bold py-3"
+                        <a href="<?php echo e(route('bookingtype')); ?>" class="btn btn-outline-danger fw-bold py-3"
                             style="width:180px;">
                             CANCEL BOOKING
                         </a>
@@ -272,4 +272,6 @@
         }
     </script>
 
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/passenger/cargobooking.blade.php ENDPATH**/ ?>

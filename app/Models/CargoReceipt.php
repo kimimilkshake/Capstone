@@ -14,7 +14,7 @@ class CargoReceipt extends Model
 
     protected $fillable = [
         'booking_ref_no', 'sender_id', 'consignee_id',
-        'cargo_item_id', 'voyage_id', 'cargo_item_qty'
+        'cargo_item_id', 'voyage_id', 'cargo_item_qty', 'total'
     ];
 
     // Relationship to Booking

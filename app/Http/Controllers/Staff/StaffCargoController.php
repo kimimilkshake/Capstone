@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\CargoBooking;
 use App\Models\CargoItem;
 use App\Models\CargoReceipt;
+use App\Models\Payment;
 use App\Models\RoutePort;
 use App\Models\Voyage;
 use App\Models\Sender;
@@ -37,11 +38,12 @@ class StaffCargoController extends Controller
 public function store(Request $request)
 {
     // Validate input
-    $request->validate([
+        $request->validate([
         'sender_firstname' => 'required|string|max:255',
         'sender_lastname' => 'required|string|max:255',
         'sender_contact' => 'required|string|max:20',
-        'sender_email' => 'nullable|email',
+            'sender_email' => 'nullable|email',
+            'sender_tin' => 'nullable|string|max:50',
         'consignee_firstname' => 'required|string|max:255',
         'consignee_lastname' => 'required|string|max:255',
         'consignee_contact' => 'required|string|max:20',
@@ -55,18 +57,30 @@ public function store(Request $request)
         'cargo_picture.*' => 'nullable|image|max:2048',
     ]);
 
-// Create Sender
-$sender = Sender::create([
-    'sender_name' => $request->sender_firstname . ' ' . $request->sender_lastname,
-    'sender_contactno' => $request->sender_contact,
-    'sender_email' => $request->sender_email,
-]);
+        // Verify voyage date within next 30 days and not in the past
+        $voyage = Voyage::find($request->voyage_id);
+        if ($voyage) {
+            $dep = \Carbon\Carbon::parse($voyage->voyage_departure_date)->startOfDay();
+            $today = \Carbon\Carbon::today();
+            $max = $today->copy()->addDays(30);
+            if ($dep->lt($today) || $dep->gt($max)) {
+                return back()->withErrors(['voyage_id' => 'Selected voyage must be within the next 30 days and not before today.'])->withInput();
+            }
+        }
 
-// Create Consignee
-$consignee = Consignee::create([
-    'consignee_name' => $request->consignee_firstname . ' ' . $request->consignee_lastname,
-    'consignee_contactno' => $request->consignee_contact,
-]);
+        // Create Sender
+        $sender = Sender::create([
+            'sender_name' => $request->sender_firstname . ' ' . $request->sender_lastname,
+            'sender_contactno' => $request->sender_contact,
+            'sender_email' => $request->sender_email,
+            'sender_tin' => $request->sender_tin ?? null,
+        ]);
+
+        // Create Consignee (no TIN)
+        $consignee = Consignee::create([
+            'consignee_name' => $request->consignee_firstname . ' ' . $request->consignee_lastname,
+            'consignee_contactno' => $request->consignee_contact,
+        ]);
 
 
     // Create Booking (status: Pending)
@@ -151,7 +165,9 @@ public function pending(Request $request)
             ->with(['sender', 'consignee', 'voyage', 'cargoBookings'])
             ->firstOrFail();
 
-        return view('authorized.staff.showcargo', compact('booking'));
+        $payment = Payment::where('booking_ref_no', $id)->first();
+
+        return view('authorized.staff.showcargo', compact('booking', 'payment'));
     }
 
     /**
@@ -223,6 +239,25 @@ public function approve($id)
     $booking->booking_status = 'Confirmed';
     $booking->save();
 
+    // Calculate total cost
+    $totalCost = 0;
+    foreach ($booking->cargoBookings as $cargo) {
+        $freight = $cargo->cargoItem->cargo_item_freight;
+        $arrastre = $cargo->cargoItem->cargo_item_arrastre;
+        $cbm = ($cargo->length * $cargo->width * $cargo->height) / 1000000;
+        $subtotal = ($freight + $arrastre) * $cbm * $cargo->quantity;
+        $totalCost += $subtotal;
+    }
+
+    // Create payment record with mode='Cash' and status='Completed'
+    Payment::create([
+        'booking_ref_no' => $booking->booking_ref_no,
+        'mode_of_payment' => 'Cash',
+        'payment_status' => 'Completed',
+        'total_amount' => $totalCost,
+        'payment_date' => now(),
+    ]);
+
     // Move cargo items to cargo_receipt
     foreach ($booking->cargoBookings as $cargo) {
         $receipt = new CargoReceipt();
@@ -245,7 +280,7 @@ public function approve($id)
         ));
 
     return redirect()->route('cargo.bookings.pending')
-        ->with('success', 'Booking approved, added to cargo receipts, and email sent.');
+        ->with('success', 'Booking approved, payment recorded, and email sent.');
 }
 
 

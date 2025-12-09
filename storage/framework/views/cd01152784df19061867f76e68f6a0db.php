@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cargo Booking Rejected - #{{ $booking->booking_ref_no }}</title>
+    <title>Cargo Booking Rejected - #<?php echo e($booking->booking_ref_no); ?></title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
         .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; padding: 20px; }
@@ -20,20 +20,20 @@
 <body>
     <div class="container">
         <h2>❌ Cargo Booking Rejected</h2>
-        <p>Booking Reference: <strong>#{{ $booking->booking_ref_no }}</strong></p>
-        <p>Status: <strong>{{ $booking->booking_status }}</strong></p>
+        <p>Booking Reference: <strong>#<?php echo e($booking->booking_ref_no); ?></strong></p>
+        <p>Status: <strong><?php echo e($booking->booking_status); ?></strong></p>
 
         <div class="section">
             <div class="section-title">Sender Information</div>
-            <p>Name: {{ $sender->sender_name }}</p>
-            <p>Contact: {{ $sender->sender_contactno }}</p>
-            <p>Email: {{ $sender->sender_email ?? 'N/A' }}</p>
+            <p>Name: <?php echo e($sender->sender_name); ?></p>
+            <p>Contact: <?php echo e($sender->sender_contactno); ?></p>
+            <p>Email: <?php echo e($sender->sender_email ?? 'N/A'); ?></p>
         </div>
 
         <div class="section">
             <div class="section-title">Consignee Information</div>
-            <p>Name: {{ $consignee->consignee_name }}</p>
-            <p>Contact: {{ $consignee->consignee_contactno }}</p>
+            <p>Name: <?php echo e($consignee->consignee_name); ?></p>
+            <p>Contact: <?php echo e($consignee->consignee_contactno); ?></p>
         </div>
 
         <div class="section">
@@ -49,15 +49,15 @@
                     </tr>
                 </thead>
                 <tbody>
-                @foreach($cargoItems as $cargo)
+                <?php $__currentLoopData = $cargoItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cargo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <tr>
-                        <td>{{ $cargo->cargoItem->cargo_item_description }}</td>
-                        <td>{{ $cargo->cargoItem->cargo_item_classification }}</td>
-                        <td>{{ $cargo->quantity }}</td>
-                        <td>{{ $cargo->weight }} kg</td>
-                        <td>{{ $cargo->length }} × {{ $cargo->width }} × {{ $cargo->height }}</td>
+                        <td><?php echo e($cargo->cargoItem->cargo_item_description); ?></td>
+                        <td><?php echo e($cargo->cargoItem->cargo_item_classification); ?></td>
+                        <td><?php echo e($cargo->quantity); ?></td>
+                        <td><?php echo e($cargo->weight); ?> kg</td>
+                        <td><?php echo e($cargo->length); ?> × <?php echo e($cargo->width); ?> × <?php echo e($cargo->height); ?></td>
                     </tr>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </tbody>
             </table>
         </div>
@@ -69,3 +69,4 @@
 </body>
 
 </html>
+<?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/emails/cargo_booking_rejected.blade.php ENDPATH**/ ?>

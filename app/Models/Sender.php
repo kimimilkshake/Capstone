@@ -20,5 +20,6 @@ class Sender extends Model
         'sender_name',
         'sender_contactno',
         'sender_email',
+        'sender_tin',
     ];
 }

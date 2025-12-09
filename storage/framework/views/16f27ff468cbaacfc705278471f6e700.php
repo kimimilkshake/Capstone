@@ -1,29 +1,28 @@
-@extends('layouts.app')
-@section('page-title', 'CARGO BOOKING')
-@section('content')
-@include('components.authHeader')
-@include('components.staff_nav')
+<?php $__env->startSection('page-title', 'CARGO BOOKING'); ?>
+<?php $__env->startSection('content'); ?>
+<?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php echo $__env->make('components.staff_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-<div class="staff-body">   {{-- FIXED: Same wrapper as pending cargo --}}
+<div class="staff-body">   
     <div class="svl-title text-center">
         <h3>CARGO BOOKING</h3>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
-    @endif
-    @if ($errors->any())
+    <?php if(session('success')): ?>
+        <div class="alert alert-success text-center mx-auto w-75" role="alert"><?php echo e(session('success')); ?></div>
+    <?php endif; ?>
+    <?php if($errors->any()): ?>
         <div class="alert alert-danger text-center">
             <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
+                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <li><?php echo e($error); ?></li>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </ul>
         </div>
-    @endif
+    <?php endif; ?>
 
-    <form id="staffCargoForm" action="{{ route('cargo.bookings.store') }}" method="POST" enctype="multipart/form-data">
-        @csrf
+    <form id="staffCargoForm" action="<?php echo e(route('cargo.bookings.store')); ?>" method="POST" enctype="multipart/form-data">
+        <?php echo csrf_field(); ?>
 
         <!-- Loading overlay -->
         <div id="staffOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1055; align-items:center; justify-content:center;">
@@ -38,21 +37,22 @@
             <label class="form-label fw-bold">Select Voyage <span class="text-danger">*</span></label>
             <select name="voyage_id" class="form-select" required>
                 <option value="">-- Choose Voyage --</option>
-                @foreach($voyages as $voyage)
-                    @php
+                <?php $__currentLoopData = $voyages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $voyage): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php
                         $depDate = \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('M j, Y');
                         $depTime = $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:i A') : '';
-                    @endphp
-                    <option value="{{ $voyage->voyage_id }}" data-route_port="{{ $voyage->route_port_id ?? $voyage->routePort->route_port_id ?? '' }}">
-                        {{ $voyage->voyage_code }} - {{ $voyage->routePort->route_origin ?? 'N/A' }} → {{ $voyage->routePort->route_destination ?? 'N/A' }} - Departure: {{ $depDate }} {{ $depTime ? '(' . $depTime . ')' : '' }}
+                    ?>
+                    <option value="<?php echo e($voyage->voyage_id); ?>" data-route_port="<?php echo e($voyage->route_port_id ?? $voyage->routePort->route_port_id ?? ''); ?>">
+                        <?php echo e($voyage->voyage_code); ?> - <?php echo e($voyage->routePort->route_origin ?? 'N/A'); ?> → <?php echo e($voyage->routePort->route_destination ?? 'N/A'); ?> - Departure: <?php echo e($depDate); ?> <?php echo e($depTime ? '(' . $depTime . ')' : ''); ?>
+
                     </option>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </select>
         </div>
 
         <div class="row">
 
-            {{-- LEFT COLUMN --}}
+            
             <div class="col-lg-6 mb-3">
                 <div class="card p-3 shadow-sm">
                     <h5 class="fw-bold mb-3">Sender Information</h5>
@@ -85,7 +85,7 @@
                 </div>
             </div>
 
-            {{-- RIGHT COLUMN --}}
+            
             <div class="col-lg-6 mb-3">
                 <div class="card p-3 shadow-sm">
                     <h5 class="fw-bold mb-3">Cargo Items</h5>
@@ -99,22 +99,24 @@
                                     <label class="form-label">Cargo Classification <span class="text-danger">*</span></label>
                                     <select name="cargo_classification[]" class="form-select cargo-classification">
                                         <option value="">-- Select Classification --</option>
-                                        @foreach($cargoItems->unique('cargo_item_classification') as $item)
-                                            <option value="{{ $item->cargo_item_classification }}" data-route_port="{{ $item->route_port_id }}">
-                                                {{ $item->cargo_item_classification }}
+                                        <?php $__currentLoopData = $cargoItems->unique('cargo_item_classification'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($item->cargo_item_classification); ?>" data-route_port="<?php echo e($item->route_port_id); ?>">
+                                                <?php echo e($item->cargo_item_classification); ?>
+
                                             </option>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
                                 </div>
                                 <div class="col-6">
                                     <label class="form-label">Cargo Description <span class="text-danger">*</span></label>
                                     <select name="cargo_item_id[]" class="form-select cargo-description" required>
                                         <option value="">-- Select Description --</option>
-                                        @foreach($cargoItems as $item)
-                                            <option value="{{ $item->cargo_item_id }}" data-classification="{{ $item->cargo_item_classification }}" data-route_port="{{ $item->route_port_id }}">
-                                                {{ $item->cargo_item_description }}
+                                        <?php $__currentLoopData = $cargoItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($item->cargo_item_id); ?>" data-classification="<?php echo e($item->cargo_item_classification); ?>" data-route_port="<?php echo e($item->route_port_id); ?>">
+                                                <?php echo e($item->cargo_item_description); ?>
+
                                             </option>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
                                 </div>
                             </div>
@@ -164,11 +166,11 @@
                 </div>
             </div>
 
-        </div> {{-- END ROW --}}
+        </div> 
 
         <div class="text-center mt-4 mb-5">
             <button type="submit" class="btn btn-primary btn-lg">PROCEED</button>
-            <a href="{{ route('staff.dashboard') }}" class="btn btn-outline-danger btn-lg">CANCEL</a>
+            <a href="<?php echo e(route('staff.dashboard')); ?>" class="btn btn-outline-danger btn-lg">CANCEL</a>
         </div>
 
     </form>
@@ -267,4 +269,6 @@ if(staffForm){
 }
 </script>
 
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/authorized/staff/cargobooking.blade.php ENDPATH**/ ?>
