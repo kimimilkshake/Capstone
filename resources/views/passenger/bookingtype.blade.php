@@ -21,13 +21,12 @@
                                 </tr>
                             </thead>
                             <tbody class="text-center">
-                                {{-- @var array $voyage --}}
                                 @forelse ($voyages as $voyage)
                                     <tr>
-                                        <td>{{ \Carbon\Carbon::parse($voyage['departure_date'])->format('M d') }}</td>
-                                        <td>{{ $voyage['route_from'] }} - {{ $voyage['route_to'] }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($voyage['departure_time'])->format('h:i A') }}</td>
-                                        <td>{{ $voyage['vessel_name'] }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($voyage->departure_date)->format('M d') }}</td>
+                                        <td>{{ $voyage->route_from }} - {{ $voyage->route_to }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($voyage->departure_time)->format('h:i A') }}</td>
+                                        <td>{{ $voyage->vessel_name }}</td>
                                     </tr>
                                 @empty
                                     <tr>
@@ -298,16 +297,16 @@
         if (mobileForm) {
             mobileForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                
+
                 const btn = document.getElementById('requestTicketBtnMobile');
                 const originalText = btn.innerHTML;
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Searching...';
-                
+
                 const formData = new FormData(this);
-                
+
                 try {
-                    const response = await fetch('{{ route("ticket.request-copy") }}', {
+                    const response = await fetch('{{ route('ticket.request-copy') }}', {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -315,9 +314,9 @@
                         },
                         body: formData
                     });
-                    
+
                     const data = await response.json();
-                    
+
                     if (response.ok && data.success) {
                         alert('Ticket sent to your email!');
                         this.reset();

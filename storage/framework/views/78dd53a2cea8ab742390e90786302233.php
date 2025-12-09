@@ -20,13 +20,12 @@
                                 </tr>
                             </thead>
                             <tbody class="text-center">
-                                
                                 <?php $__empty_1 = true; $__currentLoopData = $voyages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $voyage): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                     <tr>
-                                        <td><?php echo e(\Carbon\Carbon::parse($voyage['departure_date'])->format('M d')); ?></td>
-                                        <td><?php echo e($voyage['route_from']); ?> - <?php echo e($voyage['route_to']); ?></td>
-                                        <td><?php echo e(\Carbon\Carbon::parse($voyage['departure_time'])->format('h:i A')); ?></td>
-                                        <td><?php echo e($voyage['vessel_name']); ?></td>
+                                        <td><?php echo e(\Carbon\Carbon::parse($voyage->departure_date)->format('M d')); ?></td>
+                                        <td><?php echo e($voyage->route_from); ?> - <?php echo e($voyage->route_to); ?></td>
+                                        <td><?php echo e(\Carbon\Carbon::parse($voyage->departure_time)->format('h:i A')); ?></td>
+                                        <td><?php echo e($voyage->vessel_name); ?></td>
                                     </tr>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                     <tr>
@@ -297,16 +296,16 @@
         if (mobileForm) {
             mobileForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                
+
                 const btn = document.getElementById('requestTicketBtnMobile');
                 const originalText = btn.innerHTML;
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Searching...';
-                
+
                 const formData = new FormData(this);
-                
+
                 try {
-                    const response = await fetch('<?php echo e(route("ticket.request-copy")); ?>', {
+                    const response = await fetch('<?php echo e(route('ticket.request-copy')); ?>', {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
@@ -314,9 +313,9 @@
                         },
                         body: formData
                     });
-                    
+
                     const data = await response.json();
-                    
+
                     if (response.ok && data.success) {
                         alert('Ticket sent to your email!');
                         this.reset();

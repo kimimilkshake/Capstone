@@ -1,7 +1,7 @@
 <?php
 
-require __DIR__.'/vendor/autoload.php';
-$app = require_once __DIR__.'/bootstrap/app.php';
+require __DIR__ . '/vendor/autoload.php';
+$app = require_once __DIR__ . '/bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 use App\Jobs\SendTicketEmail;
@@ -69,11 +69,11 @@ if (!$confirmedBookings->isEmpty()) {
     $testBooking = $confirmedBookings->first();
     $email = $testBooking->passenger_email;
     $departureDate = date('Y-m-d', strtotime($testBooking->voyage_departure_date));
-    
+
     echo "Testing with:\n";
     echo "  Email: $email\n";
     echo "  Date: $departureDate\n\n";
-    
+
     $result = DB::table('passenger_ticket as pt')
         ->join('passenger as p', 'pt.passenger_id', '=', 'p.passenger_id')
         ->join('voyage as v', 'pt.voyage_id', '=', 'v.voyage_id')
@@ -85,7 +85,7 @@ if (!$confirmedBookings->isEmpty()) {
         ->where('pay.payment_status', 'Completed')
         ->select('pt.booking_ref_no')
         ->first();
-    
+
     if ($result) {
         echo "✅ Query successful: Found booking {$result->booking_ref_no}\n";
     } else {
@@ -153,21 +153,21 @@ echo "----------------------------\n";
 $viewFile = __DIR__ . '/resources/views/passenger/bookingtype.blade.php';
 if (file_exists($viewFile)) {
     echo "✅ bookingtype.blade.php exists\n";
-    
+
     $content = file_get_contents($viewFile);
-    
+
     if (strpos($content, 'requestTicketLink') !== false) {
         echo "✅ Desktop ticket request link present\n";
     } else {
         echo "❌ Desktop ticket request link NOT FOUND\n";
     }
-    
+
     if (strpos($content, 'requestTicketFormMobile') !== false) {
         echo "✅ Mobile ticket request form present\n";
     } else {
         echo "❌ Mobile ticket request form NOT FOUND\n";
     }
-    
+
     if (strpos($content, 'ticketRequestModal') !== false) {
         echo "✅ Modal overlay present\n";
     } else {
@@ -185,15 +185,15 @@ echo "-----------------------------\n";
 $scssFile = __DIR__ . '/resources/sass/bookingtype.scss';
 if (file_exists($scssFile)) {
     echo "✅ bookingtype.scss exists\n";
-    
+
     $content = file_get_contents($scssFile);
-    
+
     if (strpos($content, '.ticket-modal') !== false) {
         echo "✅ Modal styles present\n";
     } else {
         echo "❌ Modal styles NOT FOUND\n";
     }
-    
+
     if (strpos($content, '.mobile-ticket-request-card') !== false) {
         echo "✅ Mobile card styles present\n";
     } else {
