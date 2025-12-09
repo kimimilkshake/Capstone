@@ -21,6 +21,22 @@ use Illuminate\Support\Facades\Mail;
 class StaffCargoController extends Controller
 {
     /**
+     * Check if user is staff
+     */
+    private function isStaff()
+    {
+        return auth()->guard('staff')->check();
+    }
+
+    /**
+     * Check if user is admin
+     */
+    private function isAdmin()
+    {
+        return auth()->guard('admin')->check();
+    }
+
+    /**
      * Show cargo booking form
      */
     public function create()
@@ -147,6 +163,11 @@ public function pending(Request $request)
      */
     public function show($id)
     {
+        // Check if admin is trying to access
+        if ($this->isAdmin()) {
+            return redirect()->back()->with('error', 'Please use a Staff account to approve Cargo Bookings');
+        }
+
         $booking = Booking::where('booking_ref_no', $id)
             ->with(['sender', 'consignee', 'voyage', 'cargoBookings'])
             ->firstOrFail();
@@ -234,6 +255,18 @@ public function approve($id)
         $receipt->cargo_item_qty = $cargo->quantity;
         $receipt->save();
     }
+
+    // Create notification for approved cargo booking
+    $senderName = $booking->sender ? $booking->sender->sender_name : 'Customer';
+    Notification::create([
+        'cargo_receipt_id' => null,
+        'payment_id' => null,
+        'booking_ref_no' => $booking->booking_ref_no,
+        'notification_message' => "Cargo booking #{$booking->booking_ref_no} from {$senderName} has been approved",
+        'notification_type' => 'cargo booking approval',
+        'notification_status' => 'approved',
+        'notification_created' => now(),
+    ]);
 
     // Send email
     Mail::to($booking->sender->sender_email)

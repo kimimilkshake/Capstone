@@ -27,7 +27,7 @@ class SendSemaphoreSmsJob implements ShouldQueue
 
     public function handle()
     {
-        $apiKey   = SEMAPHORE_API_KEY;
+        $apiKey   = config('services.semaphore.api_key');
         $sender   = config('services.semaphore.sender');
         $endpoint = config('services.semaphore.endpoint');
 

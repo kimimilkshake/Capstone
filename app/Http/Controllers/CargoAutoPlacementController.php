@@ -5,10 +5,15 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Models\Voyage;
+use App\Models\Vessel;
+use App\Models\Hatch;
+use App\Models\CargoReceipt;
+use App\Models\CargoBooking;
 
 class CargoAutoPlacementController extends Controller
 {
-     private function isStaff()
+    private function isStaff()
     {
         return auth()->guard('staff')->check();
     }
@@ -18,11 +23,47 @@ class CargoAutoPlacementController extends Controller
         return auth()->guard('admin')->check();
     }
 
-    public function show()
+    public function show(Request $request)
     {
+        $voyages = Voyage::with(['vessel', 'routePort'])
+            ->where('voyage_status', '!=', 'Completed')
+            ->orderBy('voyage_departure_date', 'desc')
+            ->get();
+
+        $selectedVoyageId = $request->input('voyage_id');
+        $placementData = null;
+
+        if ($selectedVoyageId) {
+            $placementData = $this->getVoyagePlacementData($selectedVoyageId);
+        }
+
         return $this->isStaff()
-            ? view('authorized.staff.staff_cargoautoplacement')
-            : view('authorized.admin.admin_cargoautoplacement');
+            ? view('authorized.staff.staff_cargoautoplacement', compact('voyages', 'selectedVoyageId', 'placementData'))
+            : view('authorized.admin.admin_cargoautoplacement', compact('voyages', 'selectedVoyageId', 'placementData'));
+    }
+
+    private function getVoyagePlacementData($voyageId)
+    {
+        $voyage = Voyage::with(['vessel.hatches', 'cargoReceipts.cargoBooking.cargoItem'])
+            ->findOrFail($voyageId);
+
+        $hatches = $voyage->vessel->hatches;
+        
+        if ($hatches->isEmpty()) {
+            return ['error' => 'No hatches found for this vessel.'];
+        }
+
+        $cargoReceipts = $voyage->cargoReceipts;
+        
+        if ($cargoReceipts->isEmpty()) {
+            return ['error' => 'No cargo bookings found for this voyage.'];
+        }
+
+        return [
+            'voyage' => $voyage,
+            'hatches' => $hatches,
+            'cargoReceipts' => $cargoReceipts,
+        ];
     }
 
 
@@ -31,34 +72,110 @@ class CargoAutoPlacementController extends Controller
      */
     public function place(Request $request)
     {
-        $data = $request->validate([
-            'hatch_width' => 'required|numeric',
-            'hatch_height' => 'required|numeric',
-            'hatch_depth' => 'required|numeric',
-            'items' => 'required|array|min:1',
-            'items.*.id' => 'required|string',
-            'items.*.w' => 'required|numeric',
-            'items.*.h' => 'required|numeric',
-            'items.*.d' => 'required|numeric',
-            'items.*.q' => 'nullable|integer|min:1',
+        $request->validate([
+            'voyage_id' => 'required|exists:voyage,voyage_id',
         ]);
 
+        $voyage = Voyage::with(['vessel.hatches', 'cargoReceipts.cargoBooking.cargoItem'])
+            ->findOrFail($request->voyage_id);
+
+        $hatches = $voyage->vessel->hatches;
+        
+        if ($hatches->isEmpty()) {
+            return back()->withErrors(['voyage' => 'No hatches found for this vessel.']);
+        }
+
+        $cargoReceipts = $voyage->cargoReceipts;
+        
+        if ($cargoReceipts->isEmpty()) {
+            return back()->withErrors(['voyage' => 'No cargo bookings found for this voyage.']);
+        }
+
+        // Prepare cargo items
+        $cargoItems = [];
+        foreach ($cargoReceipts as $receipt) {
+            $cargoBooking = CargoBooking::where('booking_ref_no', $receipt->booking_ref_no)->first();
+            
+            if ($cargoBooking && $cargoBooking->length && $cargoBooking->width && $cargoBooking->height) {
+                $cargoItems[] = [
+                    'id' => $receipt->cargo_receipt_id,
+                    'w' => (float) $cargoBooking->width,
+                    'h' => (float) $cargoBooking->height,
+                    'd' => (float) $cargoBooking->length,
+                    'weight' => (float) ($cargoBooking->weight ?? 0),
+                    'q' => (int) ($receipt->cargo_item_qty ?? 1),
+                    'item_name' => $receipt->cargoItem->cargo_item_description ?? 'Unknown',
+                    'booking_ref' => $receipt->booking_ref_no,
+                ];
+            }
+        }
+
+        if (empty($cargoItems)) {
+            return back()->withErrors(['voyage' => 'No valid cargo items with dimensions found.']);
+        }
+
+        // Process each hatch with 3DBinPacking API
         $username = config('services.3dbin.username') ?? env('3DBIN_USERNAME');
         $apiKey   = config('services.3dbin.api_key') ?? env('3DBIN_API_KEY');
 
         if (empty($username) || empty($apiKey)) {
-            return back()
-                ->withErrors(['api_credentials' => '3DBinPacking credentials are not configured.'])
-                ->withInput();
+            return back()->withErrors(['api_credentials' => '3DBinPacking credentials are not configured.']);
         }
 
+        $hatchResults = [];
+        $remainingItems = $cargoItems;
+        
+        foreach ($hatches as $index => $hatch) {
+            if (empty($remainingItems)) {
+                break;
+            }
+
+            $result = $this->callBinPackingAPI(
+                $username,
+                $apiKey,
+                $hatch,
+                $remainingItems
+            );
+
+            if (isset($result['error'])) {
+                $hatchResults[] = [
+                    'hatch' => $hatch,
+                    'error' => $result['error'],
+                ];
+                continue;
+            }
+
+            $hatchResults[] = [
+                'hatch' => $hatch,
+                'result' => $result,
+            ];
+
+            // Remove packed items from remaining items
+            if (isset($result['packed_items'])) {
+                $packedIds = array_column($result['packed_items'], 'id');
+                $remainingItems = array_filter($remainingItems, function($item) use ($packedIds) {
+                    return !in_array($item['id'], $packedIds);
+                });
+                $remainingItems = array_values($remainingItems);
+            }
+        }
+
+        return back()->with([
+            'placement_results' => $hatchResults,
+            'remaining_items' => $remainingItems,
+            'voyage_id' => $request->voyage_id,
+        ]);
+    }
+
+    private function callBinPackingAPI($username, $apiKey, $hatch, $items)
+    {
         $payload = [
             'username'  => $username,
             'api_key'   => $apiKey,
             'container' => [
-                'w' => (float) $data['hatch_width'],
-                'h' => (float) $data['hatch_height'],
-                'd' => (float) $data['hatch_depth'],
+                'w' => (float) $hatch->hatch_width,
+                'h' => (float) $hatch->hatch_height,
+                'd' => (float) $hatch->hatch_length,
             ],
             'items' => array_map(function ($it) {
                 return [
@@ -66,9 +183,9 @@ class CargoAutoPlacementController extends Controller
                     'w'  => (float) $it['w'],
                     'h'  => (float) $it['h'],
                     'd'  => (float) $it['d'],
-                    'q'  => isset($it['q']) ? (int) $it['q'] : 1,
+                    'q'  => (int) $it['q'],
                 ];
-            }, $data['items']),
+            }, $items),
         ];
 
         $endpoint = 'https://global-api.3dbinpacking.com/packer/fillContainer';
@@ -80,12 +197,10 @@ class CargoAutoPlacementController extends Controller
         } catch (\Exception $e) {
             Log::error('3DBinPacking request failed', [
                 'exception' => $e->getMessage(),
-                'payload' => $payload,
+                'hatch_id' => $hatch->hatch_id,
             ]);
 
-            return back()
-                ->withErrors(['api' => 'Unable to reach 3DBinPacking API. Please try again later.'])
-                ->withInput();
+            return ['error' => 'Unable to reach 3DBinPacking API.'];
         }
 
         if ($response->failed()) {
@@ -101,116 +216,38 @@ class CargoAutoPlacementController extends Controller
                 // ignore parse errors
             }
 
-            $errorMsg = $apiMessage ?? '3DBinPacking API request failed with status ' . $response->status();
-
-            Log::warning('3DBinPacking API returned an error', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
-
-            return back()
-                ->withErrors(['api' => $errorMsg])
-                ->withInput();
+            $errorMsg = $apiMessage ?? '3DBinPacking API request failed.';
+            return ['error' => $errorMsg];
         }
 
         try {
             $result = $response->json();
+            return $result;
         } catch (\Exception $e) {
             Log::error('Failed to parse 3DBinPacking response JSON', [
                 'exception' => $e->getMessage(),
                 'raw' => $response->body(),
             ]);
 
-            return back()
-                ->withErrors(['api' => 'Invalid response from 3DBinPacking API.'])
-                ->withInput();
-        }
-
-        return back()->with('result', $result);
-    }
-
-    /**
- * Add an empty item row and redirect back with input preserved.
- * Prevents adding multiple empty rows in a row.
- */
-public function addRow(Request $request)
-{
-    // Validate minimal structure so old() is preserved
-    $request->validate([
-        'hatch_width'  => 'nullable',
-        'hatch_height' => 'nullable',
-        'hatch_depth'  => 'nullable',
-        'items'        => 'nullable|array',
-    ]);
-
-    // Get posted items and normalize indexes
-    $items = array_values($request->input('items', []));
-
-    // Helper: check if an item is "empty" (all relevant fields blank)
-    $isEmptyItem = function ($it) {
-        if (!is_array($it)) return true;
-        $id = trim((string) ($it['id'] ?? ''));
-        $w  = trim((string) ($it['w'] ?? ''));
-        $h  = trim((string) ($it['h'] ?? ''));
-        $d  = trim((string) ($it['d'] ?? ''));
-        $q  = trim((string) ($it['q'] ?? ''));
-        // consider qty empty if blank; if user typed 0 it's invalid by validation anyway
-        return $id === '' && $w === '' && $h === '' && $d === '' && $q === '';
-    };
-
-    // Only append a new empty row if the last item is not already empty
-    $append = true;
-    if (!empty($items)) {
-        $last = end($items);
-        if ($isEmptyItem($last)) {
-            $append = false;
+            return ['error' => 'Invalid response from 3DBinPacking API.'];
         }
     }
 
-    if ($append) {
-        $items[] = ['id' => '', 'w' => '', 'h' => '', 'd' => '', 'q' => 1];
+    /**
+     * Add an empty item row and redirect back with input preserved.
+     * This is now simplified since we're using voyage-based placement.
+     */
+    public function addRow(Request $request)
+    {
+        return redirect()->route($this->isStaff() ? 'staff.cargo.placement' : 'admin.cargo.placement');
     }
-
-    // Build a minimal input payload to store in session old() — avoid using $request->all()
-    $input = [
-        'hatch_width'  => $request->input('hatch_width'),
-        'hatch_height' => $request->input('hatch_height'),
-        'hatch_depth'  => $request->input('hatch_depth'),
-        'items'        => $items,
-    ];
-
-    // Redirect back to the form route with the prepared input
-    return redirect()->route('cargo.placement')->withInput($input);
-}
-
 
     /**
- * Remove an item row by index and redirect back with input preserved.
- */
-public function removeRow(Request $request)
-{
-    $request->validate([
-        'items' => 'nullable|array',
-        'remove_index' => 'required|integer|min:0',
-    ]);
-
-    $items = array_values($request->input('items', []));
-    $index = (int) $request->input('remove_index');
-
-    if (isset($items[$index])) {
-        array_splice($items, $index, 1);
+     * Remove an item row by index and redirect back with input preserved.
+     * This is now simplified since we're using voyage-based placement.
+     */
+    public function removeRow(Request $request)
+    {
+        return redirect()->route($this->isStaff() ? 'staff.cargo.placement' : 'admin.cargo.placement');
     }
-
-    // Do NOT force an empty row when all items are removed.
-    // Let the form show zero rows; user can click Add Item to create rows.
-
-    $input = [
-        'hatch_width'  => $request->input('hatch_width'),
-        'hatch_height' => $request->input('hatch_height'),
-        'hatch_depth'  => $request->input('hatch_depth'),
-        'items'        => $items,
-    ];
-
-    return redirect()->route('cargo.placement')->withInput($input);
-}
 }
