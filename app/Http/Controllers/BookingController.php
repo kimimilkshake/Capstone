@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Jobs\CancelBookingHold;
+use App\Jobs\SendTicketEmail;
 use Carbon\Carbon;
 
 class BookingController extends Controller
@@ -469,6 +470,53 @@ class BookingController extends Controller
                 'success' => false,
                 'message' => $e->getMessage()
             ], 400);
+        }
+    }
+
+    public function requestTicketCopy(Request $request)
+    {
+        try {
+            $request->validate([
+                'email' => 'required|email',
+                'departure_date' => 'required|date'
+            ]);
+
+            $email = $request->email;
+            $departureDate = $request->departure_date;
+
+            // Search for tickets with this email and departure date
+            $tickets = DB::table('passenger_ticket as pt')
+                ->join('passenger as p', 'pt.passenger_id', '=', 'p.passenger_id')
+                ->join('voyage as v', 'pt.voyage_id', '=', 'v.voyage_id')
+                ->join('booking as b', 'pt.booking_ref_no', '=', 'b.booking_ref_no')
+                ->join('payment as pay', 'b.booking_ref_no', '=', 'pay.booking_ref_no')
+                ->where('p.passenger_email', $email)
+                ->whereDate('v.voyage_departure_date', $departureDate)
+                ->where('b.booking_status', 'Confirmed')
+                ->where('pay.payment_status', 'Completed')
+                ->select('pt.booking_ref_no')
+                ->first();
+
+            if (!$tickets) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No ticket found.'
+                ], 404);
+            }
+
+            // Send ticket email
+            SendTicketEmail::dispatch($tickets->booking_ref_no, $email);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Ticket copy has been sent to your email address.'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

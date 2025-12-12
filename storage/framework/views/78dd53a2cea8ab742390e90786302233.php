@@ -1,6 +1,5 @@
-@extends('layouts.app')
-@section('content')
-    @include('components.hero')
+<?php $__env->startSection('content'); ?>
+    <?php echo $__env->make('components.hero', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <div class="trip-booking-container container">
         <div class="row align-items-stretch">
@@ -21,14 +20,14 @@
                                 </tr>
                             </thead>
                             <tbody class="text-center">
-                                @forelse ($voyages as $voyage)
+                                <?php $__empty_1 = true; $__currentLoopData = $voyages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $voyage): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                     <tr>
-                                        <td>{{ \Carbon\Carbon::parse($voyage->departure_date)->format('M d') }}</td>
-                                        <td>{{ $voyage->route_from }} - {{ $voyage->route_to }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($voyage->departure_time)->format('h:i A') }}</td>
-                                        <td>{{ $voyage->vessel_name }}</td>
+                                        <td><?php echo e(\Carbon\Carbon::parse($voyage->departure_date)->format('M d')); ?></td>
+                                        <td><?php echo e($voyage->route_from); ?> - <?php echo e($voyage->route_to); ?></td>
+                                        <td><?php echo e(\Carbon\Carbon::parse($voyage->departure_time)->format('h:i A')); ?></td>
+                                        <td><?php echo e($voyage->vessel_name); ?></td>
                                     </tr>
-                                @empty
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                     <tr>
                                         <td colspan="4" class="text-center">
                                             <div class="text-muted">
@@ -37,7 +36,7 @@
                                             </div>
                                         </td>
                                     </tr>
-                                @endforelse
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -84,9 +83,9 @@
                                 <label class="form-label">From</label>
                                 <select id="routeFrom" class="form-select">
                                     <option value="">Select Origin</option>
-                                    @foreach (collect($voyages)->pluck('route_from')->unique() as $origin)
-                                        <option value="{{ $origin }}">{{ $origin }}</option>
-                                    @endforeach
+                                    <?php $__currentLoopData = collect($voyages)->pluck('route_from')->unique(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $origin): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($origin); ?>"><?php echo e($origin); ?></option>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
                             </div>
 
@@ -128,7 +127,7 @@
 
                     <!-- Proceed Button -->
                     <button id="proceedBtn" class="proceed-btn btn btn-primary btn-lg" type="button"
-                        data-passenger-url="{{ route('passengerbooking') }}" data-cargo-url="{{ route('cargobooking') }}"
+                        data-passenger-url="<?php echo e(route('passengerbooking')); ?>" data-cargo-url="<?php echo e(route('cargobooking')); ?>"
                         disabled>
                         <i class="bi bi-arrow-right-circle me-2"></i>PROCEED
                     </button>
@@ -150,7 +149,7 @@
                         </p>
 
                         <form id="requestTicketFormMobile">
-                            @csrf
+                            <?php echo csrf_field(); ?>
                             <div class="mb-3">
                                 <label for="ticketEmailMobile" class="form-label">Email Address <span
                                         class="text-danger">*</span></label>
@@ -190,7 +189,7 @@
                     copy.</p>
 
                 <form id="requestTicketForm">
-                    @csrf
+                    <?php echo csrf_field(); ?>
                     <div class="mb-3">
                         <label for="ticketEmail" class="form-label">Email Address <span
                                 class="text-danger">*</span></label>
@@ -212,8 +211,8 @@
         </div>
     </div>
 
-    <script type="application/json" id="voyages-data">{!! json_encode($voyages) !!}</script>
-    <script src="{{ asset('js/bookingtype.js') }}"></script>
+    <script type="application/json" id="voyages-data"><?php echo json_encode($voyages); ?></script>
+    <script src="<?php echo e(asset('js/bookingtype.js')); ?>"></script>
     <script>
         // Modal functionality
         const modal = document.getElementById('ticketRequestModal');
@@ -265,10 +264,10 @@
             const formData = new FormData(this);
 
             try {
-                const response = await fetch('{{ route('ticket.request-copy') }}', {
+                const response = await fetch('<?php echo e(route('ticket.request-copy')); ?>', {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
                         'Accept': 'application/json',
                     },
                     body: formData
@@ -306,10 +305,10 @@
                 const formData = new FormData(this);
 
                 try {
-                    const response = await fetch('{{ route('ticket.request-copy') }}', {
+                    const response = await fetch('<?php echo e(route('ticket.request-copy')); ?>', {
                         method: 'POST',
                         headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
                             'Accept': 'application/json',
                         },
                         body: formData
@@ -332,4 +331,6 @@
             });
         }
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Shem\Desktop\Capstone\resources\views/passenger/bookingtype.blade.php ENDPATH**/ ?>

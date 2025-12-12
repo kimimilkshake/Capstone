@@ -19,7 +19,7 @@
             <div class="col-md-6 my-5">
                 <img src="{{ asset('images/travel.svg') }}" alt="Body Image" class="img-fluid body-image">
             </div>
-            <div class="col-md-6 d-flex align-items-center">
+            <div class="col-md-6 d-flex align-items-center justify-content-center">
                 <p class="body-text">
                     <span class="highlight">CHOOSE</span>
                     <span class="newline">YOUR</span>
