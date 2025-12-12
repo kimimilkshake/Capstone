@@ -13,8 +13,9 @@ class NotificationController extends Controller
      */
     public function index()
     {
-        $notifications = Notification::recent(20)
+        $notifications = Notification::whereNotIn('notification_status', ['archived'])
             ->orderBy('notification_created', 'desc')
+            ->limit(20)
             ->get();
 
         return response()->json([
