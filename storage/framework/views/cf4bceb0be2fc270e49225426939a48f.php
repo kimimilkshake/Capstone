@@ -36,7 +36,7 @@
                 <div class="alert alert-warning"><?php echo e($placementData['error']); ?></div>
             <?php else: ?>
                 <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
+                    <div class="card-header text-white">
                         <h5>Voyage Information</h5>
                     </div>
                     <div class="card-body">
@@ -49,7 +49,7 @@
                 </div>
 
                 <div class="card mb-4">
-                    <div class="card-header bg-secondary text-white">
+                    <div class="card-header text-white">
                         <h5>Hatch Specifications</h5>
                     </div>
                     <div class="card-body">
@@ -79,7 +79,7 @@
                 </div>
 
                 <div class="card mb-4">
-                    <div class="card-header bg-info text-white">
+                    <div class="card-header text-white">
                         <h5>Cargo Items</h5>
                     </div>
                     <div class="card-body">
@@ -123,7 +123,7 @@
                 <form method="POST" action="<?php echo e(route('admin.cargo.place')); ?>">
                     <?php echo csrf_field(); ?>
                     <input type="hidden" name="voyage_id" value="<?php echo e($selectedVoyageId); ?>">
-                    <button type="submit" class="btn btn-success btn-lg btn-block">
+                    <button type="submit" class="btn btn-lg btn-block button-textcolor1">
                         <i class="fas fa-box-open"></i> Calculate Auto Placement
                     </button>
                 </form>
@@ -132,7 +132,7 @@
 
         <?php if(session('placement_results')): ?>
             <div class="card mt-4">
-                <div class="card-header bg-success text-white">
+                <div class="card-header text-white">
                     <h5>Placement Results</h5>
                 </div>
                 <div class="card-body">
