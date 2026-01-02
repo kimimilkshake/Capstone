@@ -16,13 +16,15 @@ class CargoBookingApproved extends Mailable
     public $sender;
     public $consignee;
     public $cargoItems;
+    public $payment;
 
-    public function __construct($booking, $sender, $consignee, $cargoItems)
+    public function __construct($booking, $sender, $consignee, $cargoItems, $payment = null)
     {
         $this->booking = $booking;
         $this->sender = $sender;
         $this->consignee = $consignee;
         $this->cargoItems = $cargoItems;
+        $this->payment = $payment;
     }
 
     public function envelope(): Envelope
@@ -41,6 +43,7 @@ class CargoBookingApproved extends Mailable
                 'sender' => $this->sender,
                 'consignee' => $this->consignee,
                 'cargoItems' => $this->cargoItems,
+                'payment' => $this->payment,
             ],
         );
     }

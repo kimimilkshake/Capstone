@@ -15,7 +15,7 @@
         <div class="col-lg-6">
             <div class="card shadow-sm p-4 mb-4">
                 <h5 class="mb-3">Booking Information</h5>
-                <p><strong>Booking Ref #:</strong> {{ $booking->booking_ref_no }}</p>
+                <p><strong>Booking Ref #:</strong> {{ $booking->booking_code }}</p>
                 <p><strong>Status:</strong> {{ $booking->booking_status }}</p>
                 <p><strong>Created:</strong> {{ $booking->created_at->format('M d, Y') }}</p>
 
@@ -25,6 +25,12 @@
                     <p><strong>Arrival:</strong> {{ $booking->voyage->voyage_arrival_date }}</p>
                 @else
                     <p><strong>Voyage:</strong> N/A</p>
+                @endif
+
+                @if($payment)
+                    <p><strong>Mode of Payment:</strong> {{ $payment->mode_of_payment }}</p>
+                    <p><strong>Payment Status:</strong> {{ $payment->payment_status }}</p>
+                    <p><strong>Amount Paid:</strong> ₱{{ number_format($payment->total_amount,2) }}</p>
                 @endif
             </div>
         </div>
@@ -183,10 +189,32 @@
                 <button class="btn btn-success btn-lg px-4">Accept</button>
             </form>
 
-            <form action="{{ route('cargo.bookings.reject', $booking->booking_ref_no) }}" method="POST">
-                @csrf
-                <button class="btn btn-danger btn-lg px-4">Reject</button>
-            </form>
+            <!-- Open modal to collect rejection reason -->
+            <button class="btn btn-danger btn-lg px-4" data-bs-toggle="modal" data-bs-target="#rejectModal">Reject</button>
+        </div>
+
+        <!-- Reject Modal -->
+        <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form action="{{ route('cargo.bookings.reject', $booking->booking_ref_no) }}" method="POST">
+                        @csrf
+                        <div class="modal-header">
+                            <h5 class="modal-title">Reason for Rejection</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Please provide the reason for rejecting this booking</label>
+                                <textarea name="reason" class="form-control" rows="4" required></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-danger">Submit Rejection</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     @endif
 

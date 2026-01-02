@@ -33,21 +33,28 @@
             </div>
         </div>
 
-        <!-- Voyage Selection -->
-        <div class="mb-4">
-            <label class="form-label fw-bold">Select Voyage <span class="text-danger">*</span></label>
-            <select name="voyage_id" class="form-select" required>
-                <option value="">-- Choose Voyage --</option>
-                @foreach($voyages as $voyage)
-                    @php
-                        $depDate = \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('M j, Y');
-                        $depTime = $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:i A') : '';
-                    @endphp
-                    <option value="{{ $voyage->voyage_id }}" data-route_port="{{ $voyage->route_port_id ?? $voyage->routePort->route_port_id ?? '' }}">
-                        {{ $voyage->voyage_code }} - {{ $voyage->routePort->route_origin ?? 'N/A' }} → {{ $voyage->routePort->route_destination ?? 'N/A' }} - Departure: {{ $depDate }} {{ $depTime ? '(' . $depTime . ')' : '' }}
-                    </option>
-                @endforeach
-            </select>
+        <!-- Voyage Selection + No. of Cargo -->
+        <div class="mb-4 d-flex gap-3 align-items-end">
+            <div style="flex:1">
+                <label class="form-label fw-bold">Select Voyage <span class="text-danger">*</span></label>
+                <select name="voyage_id" class="form-select" required>
+                    <option value="">-- Choose Voyage --</option>
+                    @foreach($voyages as $voyage)
+                        @php
+                            $depDate = \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('M j, Y');
+                            $depTime = $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:i A') : '';
+                        @endphp
+                        <option value="{{ $voyage->voyage_id }}" data-route_port="{{ $voyage->route_port_id ?? $voyage->routePort->route_port_id ?? '' }}">
+                            {{ $voyage->voyage_code }} - {{ $voyage->routePort->route_origin ?? 'N/A' }} → {{ $voyage->routePort->route_destination ?? 'N/A' }} - Departure: {{ $depDate }} {{ $depTime ? '(' . $depTime . ')' : '' }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div style="width:150px;">
+                <label class="form-label fw-bold">No. of Cargo <span class="text-danger">*</span></label>
+                <input type="number" name="no_of_cargo" id="no_of_cargo" class="form-control" min="1" value="1">
+            </div>
         </div>
 
         <div class="row">
@@ -89,6 +96,10 @@
             <div class="col-lg-6 mb-3">
                 <div class="card p-3 shadow-sm">
                     <h5 class="fw-bold mb-3">Cargo Items</h5>
+                    
+        <div class="mb-3">
+            <small class="text-muted">Note: You can only add numerous QTY to one cargo item if similar in dimensions.</small>
+        </div>
 
                     <div id="cargo-items-container">
 
@@ -153,11 +164,6 @@
                                 </div>
                             </div>
 
-                            <div class="d-flex gap-2 mt-3">
-                                <button type="button" class="btn-add-cargo btn btn-success btn-sm"><i class="bi bi-plus-circle me-1"></i> Add</button>
-                                <button type="button" class="btn-remove-cargo btn btn-danger btn-sm"><i class="bi bi-trash me-1"></i> Remove</button>
-                            </div>
-
                         </div>
                     </div>
 
@@ -196,26 +202,36 @@ container.addEventListener('input', e => {
     }
 });
 
-// Add/Remove cargo items - use class-based selectors to target specific buttons
-document.addEventListener('click', e => {
-    if(e.target.closest('.btn-add-cargo')) {
-        e.preventDefault();
-        const original = container.querySelector('.cargo-item');
-        const newItem = original.cloneNode(true);
-        newItem.querySelectorAll('input, select').forEach(el => el.value = '');
-        newItem.querySelector('.cbm-output').value = '0.0000';
-        container.appendChild(newItem);
-    }
-    if(e.target.closest('.btn-remove-cargo')) {
-        e.preventDefault();
-        const items = container.querySelectorAll('.cargo-item');
-        const button = e.target.closest('.btn-remove-cargo');
-        const cargoItem = button.closest('.cargo-item');
-        if(cargoItem && items.length > 1) {
-            cargoItem.remove();
+// Change number of cargo items based on No. of Cargo input
+const noInput = document.getElementById('no_of_cargo');
+if(noInput){
+    function syncCargoItems(){
+        let desired = parseInt(noInput.value) || 1;
+        if(desired < 1) { desired = 1; noInput.value = 1; }
+        const items = Array.from(container.querySelectorAll('.cargo-item'));
+        const current = items.length;
+        const original = items[0];
+
+        if(desired > current){
+            for(let i = current; i < desired; i++){
+                const newItem = original.cloneNode(true);
+                newItem.querySelectorAll('input, select').forEach(el => el.value = '');
+                newItem.querySelector('.cbm-output').value = '0.0000';
+                container.appendChild(newItem);
+            }
+        } else if(desired < current){
+            for(let i = current; i > desired; i--){
+                const last = container.querySelector('.cargo-item:last-child');
+                if(last) last.remove();
+            }
         }
     }
-});
+
+    noInput.addEventListener('change', syncCargoItems);
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', syncCargoItems);
+}
 
 
 // Classification filter for descriptions

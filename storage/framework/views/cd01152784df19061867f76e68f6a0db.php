@@ -20,8 +20,12 @@
 <body>
     <div class="container">
         <h2>❌ Cargo Booking Rejected</h2>
-        <p>Booking Reference: <strong>#<?php echo e($booking->booking_ref_no); ?></strong></p>
-        <p>Status: <strong><?php echo e($booking->booking_status); ?></strong></p>
+        <p>Booking Reference: <strong>#<?php echo e($booking->booking_code); ?></strong></p>
+         <div class="section" style="background:#fff1f2;">
+            <div class="section-title">Reason for Rejection</div>
+            <p style="color:#7b0b0b; font-weight:600;"><?php echo e($reason ?? 'No reason provided'); ?></p>
+        </div>
+
 
         <div class="section">
             <div class="section-title">Sender Information</div>
@@ -46,20 +50,36 @@
                         <th>Quantity</th>
                         <th>Weight</th>
                         <th>Dimensions (L×W×H cm)</th>
+                        <th>CBM</th>
+                        <th>Subtotal</th>
                     </tr>
                 </thead>
                 <tbody>
+                <?php $total = 0; ?>
                 <?php $__currentLoopData = $cargoItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cargo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php
+                        $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
+                        $arrastre = $cargo->cargoItem->cargo_item_arrastre ?? 0;
+                        $cbm = ($cargo->length * $cargo->width * $cargo->height) / 1000000;
+                        $subtotal = ($freight + $arrastre) * $cbm * $cargo->quantity;
+                        $total += $subtotal;
+                    ?>
                     <tr>
                         <td><?php echo e($cargo->cargoItem->cargo_item_description); ?></td>
                         <td><?php echo e($cargo->cargoItem->cargo_item_classification); ?></td>
                         <td><?php echo e($cargo->quantity); ?></td>
                         <td><?php echo e($cargo->weight); ?> kg</td>
                         <td><?php echo e($cargo->length); ?> × <?php echo e($cargo->width); ?> × <?php echo e($cargo->height); ?></td>
+                        <td><?php echo e(number_format($cbm,4)); ?></td>
+                        <td>₱<?php echo e(number_format($subtotal,2)); ?></td>
                     </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </tbody>
             </table>
+
+            <div style="margin-top:15px; text-align:right;">
+                <p><strong>Estimated Total:</strong> ₱<?php echo e(number_format($total,2)); ?></p>
+            </div>
         </div>
 
         <div style="text-align:center; margin-top: 20px;">

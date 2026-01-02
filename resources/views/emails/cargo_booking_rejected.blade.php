@@ -20,8 +20,12 @@
 <body>
     <div class="container">
         <h2>❌ Cargo Booking Rejected</h2>
-        <p>Booking Reference: <strong>#{{ $booking->booking_ref_no }}</strong></p>
-        <p>Status: <strong>{{ $booking->booking_status }}</strong></p>
+        <p>Booking Reference: <strong>#{{ $booking->booking_code }}</strong></p>
+         <div class="section" style="background:#fff1f2;">
+            <div class="section-title">Reason for Rejection</div>
+            <p style="color:#7b0b0b; font-weight:600;">{{ $reason ?? 'No reason provided' }}</p>
+        </div>
+
 
         <div class="section">
             <div class="section-title">Sender Information</div>
@@ -46,20 +50,36 @@
                         <th>Quantity</th>
                         <th>Weight</th>
                         <th>Dimensions (L×W×H cm)</th>
+                        <th>CBM</th>
+                        <th>Subtotal</th>
                     </tr>
                 </thead>
                 <tbody>
+                @php $total = 0; @endphp
                 @foreach($cargoItems as $cargo)
+                    @php
+                        $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
+                        $arrastre = $cargo->cargoItem->cargo_item_arrastre ?? 0;
+                        $cbm = ($cargo->length * $cargo->width * $cargo->height) / 1000000;
+                        $subtotal = ($freight + $arrastre) * $cbm * $cargo->quantity;
+                        $total += $subtotal;
+                    @endphp
                     <tr>
                         <td>{{ $cargo->cargoItem->cargo_item_description }}</td>
                         <td>{{ $cargo->cargoItem->cargo_item_classification }}</td>
                         <td>{{ $cargo->quantity }}</td>
                         <td>{{ $cargo->weight }} kg</td>
                         <td>{{ $cargo->length }} × {{ $cargo->width }} × {{ $cargo->height }}</td>
+                        <td>{{ number_format($cbm,4) }}</td>
+                        <td>₱{{ number_format($subtotal,2) }}</td>
                     </tr>
                 @endforeach
                 </tbody>
             </table>
+
+            <div style="margin-top:15px; text-align:right;">
+                <p><strong>Estimated Total:</strong> ₱{{ number_format($total,2) }}</p>
+            </div>
         </div>
 
         <div style="text-align:center; margin-top: 20px;">
