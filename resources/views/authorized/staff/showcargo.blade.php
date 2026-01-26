@@ -14,7 +14,7 @@
         {{-- LEFT COLUMN: BOOKING INFO --}}
         <div class="col-lg-6">
             <div class="card shadow-sm p-4 mb-4">
-                <h5 class="mb-3">Booking Information</h5>
+                <h5 class="mb-2">Booking Information</h5>
                 <p><strong>Booking Ref #:</strong> {{ $booking->booking_code }}</p>
                 <p><strong>Status:</strong> {{ $booking->booking_status }}</p>
                 <p><strong>Created:</strong> {{ $booking->created_at->format('M d, Y') }}</p>
@@ -38,7 +38,6 @@
         {{-- RIGHT COLUMN: SENDER & CONSIGNEE --}}
         <div class="col-lg-6">
             <div class="card shadow-sm p-4 mb-4">
-                <h5 class="mb-3">Sender & Consignee Information</h5>
 
                 <h6 class="fw-bold">Sender Information</h6>
                 <p><strong>Name:</strong> {{ $booking->sender->sender_name }}</p>
@@ -67,59 +66,80 @@
         {{-- If NO PHOTOS --}}
         @if(!$hasPhotos)
             <p class="text-muted text-center fst-italic">
-                No Photos Attached, Booking was made in the Office
+                No photos were included since the booking was made by the staff
             </p>
-        @endif
+        @else
+            {{-- BOOTSTRAP CAROUSEL SLIDER WITH CAPTIONS --}}
+            <div id="cargoCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
+                <div class="carousel-indicators">
+                    @foreach ($cargoWithPhotos as $index => $cargo)
+                        <button type="button" 
+                                data-bs-target="#cargoCarousel" 
+                                data-bs-slide-to="{{ $index }}" 
+                                class="{{ $index === 0 ? 'active' : '' }}"
+                                aria-label="Slide {{ $index + 1 }}"></button>
+                    @endforeach
+                </div>
 
-        <div class="d-flex justify-content-center gap-3">
+                <div class="carousel-inner">
+                    @foreach ($cargoWithPhotos as $index => $cargo)
+                        @php
+                            $filename = basename($cargo->cargo_picture);
+                            $imgPath = file_exists(storage_path('app/public/cargo_pictures/' . $filename))
+                                        ? asset('storage/cargo_pictures/' . $filename)
+                                        : asset('images/no-image.png');
+                            $cargoDescription = $cargo->cargoItem->cargo_item_description ?? 'Unknown Cargo';
+                            $cargoClassification = $cargo->cargoItem->cargo_item_classification ?? '';
+                        @endphp
 
-            @for ($i = 0; $i < 3; $i++)
-                @php
-                    $has = isset($cargoWithPhotos[$i]);
-                    if($has) {
-                        $cargo = $cargoWithPhotos[$i];
-                        $filename = basename($cargo->cargo_picture);
-                        $imgPath = file_exists(storage_path('app/public/cargo_pictures/' . $filename))
-                                    ? asset('storage/cargo_pictures/' . $filename)
-                                    : asset('images/no-image.png');
-                    }
-                @endphp
+                        <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
+                            <div class="carousel-image-container">
+                                <img src="{{ $imgPath }}" 
+                                     class="d-block w-100 carousel-img"
+                                     alt="{{ $cargoDescription }}"
+                                     data-image="{{ $imgPath }}" 
+                                     data-description="{{ $cargoDescription }}"
+                                     data-classification="{{ $cargoClassification }}"
+                                     data-bs-toggle="modal"
+                                     data-bs-target="#photoModal"
+                                     style="cursor: pointer;">
+                                
+                                {{-- Zoom Overlay --}}
+                                <div class="carousel-zoom-overlay" 
+                                     data-image="{{ $imgPath }}" 
+                                     data-description="{{ $cargoDescription }}"
+                                     data-classification="{{ $cargoClassification }}"
+                                     data-bs-toggle="modal"
+                                     data-bs-target="#photoModal"
+                                     style="cursor: pointer;">
+                                    <div class="zoom-content">
+                                    </div>
+                                </div>
 
-                <div class="cargo-photo-card">
-                    @if($has)
-                        <img src="{{ $imgPath }}"
-                             class="cargo-photo-thumbnail"
-                             data-bs-toggle="modal"
-                             data-bs-target="#photoModal"
-                             onclick="openPhoto('{{ $imgPath }}')">
-                    @else
-                        <div class="empty-photo">
-                            <i class="bi bi-image"></i>
+                                {{-- Caption Overlay at Bottom --}}
+                                <div class="carousel-caption-overlay">
+                                    <h5 class="carousel-cargo-title">{{ $cargoDescription }}</h5>
+                                    <p class="carousel-cargo-classification">{{ $cargoClassification }}</p>
+                                </div>
+                            </div>
                         </div>
-                    @endif
+                    @endforeach
                 </div>
 
-            @endfor
-
-        </div>
-    </div>
-
-    {{-- Modal --}}
-    <div class="modal fade" id="photoModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content bg-dark">
-                <div class="modal-body text-center p-3">
-                    <img id="modalPhoto" class="img-fluid" style="max-height:650px; object-fit:contain;">
-                </div>
+                {{-- Navigation Controls --}}
+                @if($cargoWithPhotos->count() > 1)
+                    <button class="carousel-control-prev" type="button" data-bs-target="#cargoCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#cargoCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                @endif
             </div>
-        </div>
+        @endif
     </div>
-
-    <script>
-        function openPhoto(src) {
-            document.getElementById('modalPhoto').src = src;
-        }
-    </script>
 
     {{-- =============== --}}
     {{-- CARGO ITEMS --}}
@@ -184,13 +204,13 @@
     {{-- ACTION BUTTONS --}}
     @if($booking->booking_status === 'Pending')
         <div class="d-flex justify-content-center gap-3 mt-4">
-            <form action="{{ route('cargo.bookings.approve', $booking->booking_ref_no) }}" method="POST">
+            <form action="{{ route('cargo.bookings.approve', $booking->booking_ref_no) }}" method="POST" class="w-100" style="max-width: 200px;">
                 @csrf
-                <button class="btn btn-success btn-lg px-4">Accept</button>
+                <button class="btn btn-success btn-lg px-4 w-100">Accept</button>
             </form>
 
             <!-- Open modal to collect rejection reason -->
-            <button class="btn btn-danger btn-lg px-4" data-bs-toggle="modal" data-bs-target="#rejectModal">Reject</button>
+            <button class="btn btn-danger btn-lg px-4" data-bs-toggle="modal" data-bs-target="#rejectModal" style="width: 200px;">Reject</button>
         </div>
 
         <!-- Reject Modal -->
@@ -218,6 +238,23 @@
         </div>
     @endif
 
+    {{-- Full Photo Modal --}}
+    <div class="modal fade" id="photoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-dark">
+                <div class="modal-body p-0 position-relative" style="height: 600px;">
+                    <img id="modalCargoPhoto" class="w-100 h-100" style="object-fit: contain;" alt="Cargo Photo">
+                    
+                    {{-- Caption at bottom lower left --}}
+                    <div class="position-absolute bottom-0 start-0 p-3 bg-dark bg-opacity-90 text-white" style="border-radius: 0 8px 0 0;">
+                        <h6 id="modalPhotoCaption" class="mb-1">Cargo Item</h6>
+                        <small id="modalPhotoClassification" class="text-muted">Classification: --</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="text-center mt-4">
         <a href="{{ route('cargo.bookings.pending') }}" class="btn btn-outline-primary btn-lg px-4">
             Back to Pending Bookings
@@ -229,37 +266,333 @@
 
 @section('styles')
 <style>
-    .cargo-photo-card {
-        background: #fbf8ed;
-        width: 90px;
-        height: 90px;
+    /* Bootstrap Carousel Customization */
+    #cargoCarousel {
+        background: #f8f9fa;
+        border-radius: 12px;
+        overflow: hidden;
+        padding: 20px;
+    }
+
+    .carousel-inner {
         border-radius: 8px;
         overflow: hidden;
+        background: white;
+    }
+
+    .carousel-item {
+        height: 500px;
+    }
+
+    .carousel-image-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
+        background: #e9ecef;
+        overflow: hidden;
     }
 
-    .cargo-photo-thumbnail {
+    .carousel-img {
+        object-fit: contain;
+        padding: 30px;
+        transition: transform 0.3s ease;
+        cursor: pointer;
+    }
+
+    .carousel-item:hover .carousel-img {
+        transform: scale(1.05);
+    }
+
+    /* Zoom Overlay */
+    .carousel-zoom-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
         height: 100%;
-        object-fit: cover;
-        transition: transform .25s ease;
-    }
-
-    .cargo-photo-thumbnail:hover {
-        transform: scale(1.15);
-    }
-
-    .empty-photo {
-        width: 100%;
-        height: 100%;
-        background: #f3efdf;
+        background: rgba(0, 0, 0, 0.5);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #b7b7b7;
-        font-size: 1.8rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .carousel-item:hover .carousel-zoom-overlay {
+        opacity: 1;
+    }
+
+    .zoom-content {
+        text-align: center;
+        color: white;
+    }
+
+    .zoom-content i {
+        font-size: 3.5rem;
+        display: block;
+        margin-bottom: 12px;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    }
+
+    .zoom-content p {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Caption Overlay at Bottom */
+    .carousel-caption-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.6) 70%, rgba(0, 0, 0, 0));
+        color: white;
+        padding: 30px 20px 20px;
+        text-align: center;
+    }
+
+    .carousel-cargo-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin: 0 0 10px 0;
+        line-height: 1.3;
+    }
+
+    .carousel-cargo-classification {
+        font-size: 1rem;
+        color: #e0e0e0;
+        margin: 0;
+        font-weight: 500;
+    }
+
+    /* Indicators */
+    .carousel-indicators {
+        bottom: -50px;
+        padding: 20px 0 0;
+    }
+
+    .carousel-indicators button {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background-color: #dee2e6;
+        border: 2px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+
+    .carousel-indicators button:hover {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .carousel-indicators button.active {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Navigation Controls */
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 50px;
+        height: 50px;
+        background: rgba(13, 110, 253, 0.9);
+        border-radius: 50%;
+        top: 50%;
+        transform: translateY(-50%);
+        transition: all 0.3s ease;
+        opacity: 1;
+    }
+
+    .carousel-control-prev:hover,
+    .carousel-control-next:hover {
+        background: rgba(13, 110, 253, 1);
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+    }
+
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+        filter: brightness(1.3);
+        font-size: 1.5rem;
+    }
+
+    .carousel-control-prev {
+        left: 20px;
+    }
+
+    .carousel-control-next {
+        right: 20px;
+    }
+
+    /* Fade Animation */
+    .carousel-fade .carousel-item {
+        opacity: 0;
+        transition-property: opacity;
+        transition-duration: 0.6s;
+    }
+
+    .carousel-fade .carousel-item.active {
+        opacity: 1;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 992px) {
+        #cargoCarousel {
+            padding: 15px;
+        }
+
+        .carousel-item {
+            height: 400px;
+        }
+
+        .carousel-img {
+            padding: 25px;
+        }
+
+        .carousel-cargo-title {
+            font-size: 1.4rem;
+        }
+
+        .carousel-cargo-classification {
+            font-size: 0.95rem;
+        }
+
+        .carousel-control-prev {
+            left: 10px;
+        }
+
+        .carousel-control-next {
+            right: 10px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        #cargoCarousel {
+            padding: 12px;
+        }
+
+        .carousel-item {
+            height: 320px;
+        }
+
+        .carousel-img {
+            padding: 20px;
+        }
+
+        .zoom-content i {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+        }
+
+        .zoom-content p {
+            font-size: 0.95rem;
+        }
+
+        .carousel-cargo-title {
+            font-size: 1.2rem;
+            padding: 0 10px;
+        }
+
+        .carousel-cargo-classification {
+            font-size: 0.85rem;
+        }
+
+        .carousel-control-prev,
+        .carousel-control-next {
+            width: 44px;
+            height: 44px;
+        }
+
+        .carousel-control-prev-icon,
+        .carousel-control-next-icon {
+            font-size: 1.25rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        #cargoCarousel {
+            padding: 10px;
+        }
+
+        .carousel-item {
+            height: 250px;
+        }
+
+        .carousel-img {
+            padding: 15px;
+        }
+
+        .carousel-caption-overlay {
+            padding: 20px 15px 15px;
+        }
+
+        .zoom-content i {
+            font-size: 2rem;
+            margin-bottom: 6px;
+        }
+
+        .zoom-content p {
+            font-size: 0.85rem;
+        }
+
+        .carousel-cargo-title {
+            font-size: 1rem;
+            padding: 0 8px;
+        }
+
+        .carousel-cargo-classification {
+            font-size: 0.75rem;
+        }
+
+        .carousel-control-prev,
+        .carousel-control-next {
+            width: 40px;
+            height: 40px;
+        }
+
+        .carousel-control-prev {
+            left: 5px;
+        }
+
+        .carousel-control-next {
+            right: 5px;
+        }
+
+        .carousel-indicators {
+            bottom: -40px;
+        }
+
+        .carousel-indicators button {
+            width: 12px;
+            height: 12px;
+        }
+
+        .carousel-indicators button.active {
+            width: 14px;
+            height: 14px;
+        }
     }
 </style>
+
+<script>
+    // Modal image data handling
+    document.querySelectorAll('[data-bs-target="#photoModal"]').forEach(element => {
+        element.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const image = this.getAttribute('data-image');
+            const description = this.getAttribute('data-description');
+            const classification = this.getAttribute('data-classification');
+            
+            document.getElementById('modalCargoPhoto').src = image;
+            document.getElementById('modalPhotoCaption').textContent = description;
+            document.getElementById('modalPhotoClassification').textContent = 'Classification: ' + classification;
+        });
+    });
+</script>
 @endsection

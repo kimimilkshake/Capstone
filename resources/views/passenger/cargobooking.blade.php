@@ -15,7 +15,7 @@
                     <div class="alert alert-danger">{{ session('error') }}</div>
                 @endif
 
-                <form id="passengerCargoForm" action="{{ route('cargobooking.confirm') }}" method="POST" enctype="multipart/form-data">
+                <form id="passengerCargoForm" action="{{ route('cargobooking.confirm') }}" method="POST" enctype="multipart/form-data" novalidate>
                     @csrf
                     <div class="row">
 
@@ -35,19 +35,43 @@
 
                             <div class="mb-2">
                                 <label class="form-label">First Name <span class="text-danger">*</span></label>
-                                <input type="text" name="sender_firstname" class="form-control" required>
+                                <div class="input-group has-validation">
+                                    <input type="text" name="sender_firstname" class="form-control required-field" required>
+                                    <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                        <i class="bi bi-exclamation-circle-fill text-danger"></i>
+                                    </span>
+                                </div>
+                                <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">Last Name <span class="text-danger">*</span></label>
-                                <input type="text" name="sender_lastname" class="form-control" required>
+                                <div class="input-group has-validation">
+                                    <input type="text" name="sender_lastname" class="form-control required-field" required>
+                                    <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                        <i class="bi bi-exclamation-circle-fill text-danger"></i>
+                                    </span>
+                                </div>
+                                <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">Contact Number <span class="text-danger">*</span></label>
-                                <input type="text" name="sender_contact" class="form-control" required>
+                                <div class="input-group has-validation">
+                                    <input type="text" name="sender_contact" class="form-control required-field" required>
+                                    <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                        <i class="bi bi-exclamation-circle-fill text-danger"></i>
+                                    </span>
+                                </div>
+                                <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
                             </div>
                             <div class="mb-2">
-                                <label class="form-label">Email Address<span class="text-danger">*</span></label>
-                                <input type="email" name="sender_email" class="form-control">
+                                <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                                <div class="input-group has-validation">
+                                    <input type="email" name="sender_email" class="form-control required-field" required>
+                                    <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                        <i class="bi bi-exclamation-circle-fill text-danger"></i>
+                                    </span>
+                                </div>
+                                <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">TIN Number (Optional)</label>
@@ -57,15 +81,33 @@
                             <h6 class="fw-bold mt-4">Consignee Information</h6>
                             <div class="mb-2">
                                 <label class="form-label">First Name <span class="text-danger">*</span></label>
-                                <input type="text" name="consignee_firstname" class="form-control" required>
+                                <div class="input-group has-validation">
+                                    <input type="text" name="consignee_firstname" class="form-control required-field" required>
+                                    <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                        <i class="bi bi-exclamation-circle-fill text-danger"></i>
+                                    </span>
+                                </div>
+                                <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">Last Name <span class="text-danger">*</span></label>
-                                <input type="text" name="consignee_lastname" class="form-control" required>
+                                <div class="input-group has-validation">
+                                    <input type="text" name="consignee_lastname" class="form-control required-field" required>
+                                    <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                        <i class="bi bi-exclamation-circle-fill text-danger"></i>
+                                    </span>
+                                </div>
+                                <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">Contact Number <span class="text-danger">*</span></label>
-                                <input type="text" name="consignee_contact" class="form-control" required>
+                                <div class="input-group has-validation">
+                                    <input type="text" name="consignee_contact" class="form-control required-field" required>
+                                    <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                        <i class="bi bi-exclamation-circle-fill text-danger"></i>
+                                    </span>
+                                </div>
+                                <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
                             </div>
 
 
@@ -83,35 +125,47 @@
                                         <div class="col-6">
                                             <label class="form-label">Classification <span
                                                     class="text-danger">*</span></label>
-                                            <select name="cargo_classification[]" class="form-control cargo-classification">
-                                                <option value="">-- Select Classification --</option>
-                                                @php
-                                                    $classifications = $cargoItems
-                                                        ->where(
-                                                            'route_port_id',
-                                                            $voyage->routePort->route_port_id ?? null,
-                                                        )
-                                                        ->pluck('cargo_item_classification')
-                                                        ->unique();
-                                                @endphp
-                                                @foreach ($classifications as $class)
-                                                    <option value="{{ $class }}">{{ $class }}</option>
-                                                @endforeach
-                                            </select>
+                                            <div class="input-group has-validation">
+                                                <select name="cargo_classification[]" class="form-control cargo-classification required-field">
+                                                    <option value="">-- Select Classification --</option>
+                                                    @php
+                                                        $classifications = $cargoItems
+                                                            ->where(
+                                                                'route_port_id',
+                                                                $voyage->routePort->route_port_id ?? null,
+                                                            )
+                                                            ->pluck('cargo_item_classification')
+                                                            ->unique();
+                                                    @endphp
+                                                    @foreach ($classifications as $class)
+                                                        <option value="{{ $class }}">{{ $class }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                                    <i class="bi bi-exclamation-circle-fill text-danger"></i>
+                                                </span>
+                                            </div>
+                                            <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
                                         </div>
                                         <div class="col-6">
                                             <label class="form-label">Description <span class="text-danger">*</span></label>
-                                            <select name="cargo_item_id[]" class="form-control cargo-description" required>
-                                                <option value="">-- Select Description --</option>
-                                                @foreach ($cargoItems as $cargo)
-                                                    @if ($cargo->route_port_id == ($voyage->routePort->route_port_id ?? null))
-                                                        <option value="{{ $cargo->cargo_item_id }}"
-                                                            data-classification="{{ $cargo->cargo_item_classification }}">
-                                                            {{ $cargo->cargo_item_description }}
-                                                        </option>
-                                                    @endif
-                                                @endforeach
-                                            </select>
+                                            <div class="input-group has-validation">
+                                                <select name="cargo_item_id[]" class="form-control cargo-description required-field">
+                                                    <option value="">-- Select Description --</option>
+                                                    @foreach ($cargoItems as $cargo)
+                                                        @if ($cargo->route_port_id == ($voyage->routePort->route_port_id ?? null))
+                                                            <option value="{{ $cargo->cargo_item_id }}"
+                                                                data-classification="{{ $cargo->cargo_item_classification }}">
+                                                                {{ $cargo->cargo_item_description }}
+                                                            </option>
+                                                        @endif
+                                                    @endforeach
+                                                </select>
+                                                <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                                    <i class="bi bi-exclamation-circle-fill text-danger"></i>
+                                                </span>
+                                            </div>
+                                            <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
                                         </div>
                                     </div>
 
@@ -119,14 +173,26 @@
                                     <div class="mb-2 d-flex gap-2">
                                         <div class="flex-fill">
                                             <label class="form-label">Quantity <span class="text-danger">*</span></label>
-                                            <input type="number" name="cargo_quantity[]" class="form-control"
-                                                placeholder="Quantity" min="1" required>
+                                            <div class="input-group has-validation">
+                                                <input type="number" name="cargo_quantity[]" class="form-control required-field"
+                                                    placeholder="Quantity" min="1">
+                                                <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                                    <i class="bi bi-exclamation-circle-fill text-danger"></i>
+                                                </span>
+                                            </div>
+                                            <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
                                         </div>
                                         <div class="flex-fill">
                                             <label class="form-label">Weight (kg) <span
                                                     class="text-danger">*</span></label>
-                                            <input type="number" name="cargo_weight[]" class="form-control"
-                                                placeholder="Weight" step="0.01" required>
+                                            <div class="input-group has-validation">
+                                                <input type="number" name="cargo_weight[]" class="form-control required-field"
+                                                    placeholder="Weight" step="0.01">
+                                                <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                                    <i class="bi bi-exclamation-circle-fill text-danger"></i>
+                                                </span>
+                                            </div>
+                                            <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
                                         </div>
                                     </div>
 
@@ -137,20 +203,38 @@
                                             <div class="flex-fill">
                                                 <label class="form-label small">Length <span
                                                         class="text-danger">*</span></label>
-                                                <input type="number" name="cargo_length[]"
-                                                    class="form-control dimension" step="0.01">
+                                                <div class="input-group has-validation">
+                                                    <input type="number" name="cargo_length[]"
+                                                        class="form-control dimension required-field" step="0.01">
+                                                    <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                                        <i class="bi bi-exclamation-circle-fill text-danger"></i>
+                                                    </span>
+                                                </div>
+                                                <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
                                             </div>
                                             <div class="flex-fill">
                                                 <label class="form-label small">Width <span
                                                         class="text-danger">*</span></label>
-                                                <input type="number" name="cargo_width[]" class="form-control dimension"
-                                                    step="0.01">
+                                                <div class="input-group has-validation">
+                                                    <input type="number" name="cargo_width[]" class="form-control dimension required-field"
+                                                        step="0.01">
+                                                    <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                                        <i class="bi bi-exclamation-circle-fill text-danger"></i>
+                                                    </span>
+                                                </div>
+                                                <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
                                             </div>
                                             <div class="flex-fill">
                                                 <label class="form-label small">Height <span
                                                         class="text-danger">*</span></label>
-                                                <input type="number" name="cargo_height[]"
-                                                    class="form-control dimension" step="0.01">
+                                                <div class="input-group has-validation">
+                                                    <input type="number" name="cargo_height[]"
+                                                        class="form-control dimension required-field" step="0.01">
+                                                    <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                                        <i class="bi bi-exclamation-circle-fill text-danger"></i>
+                                                    </span>
+                                                </div>
+                                                <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
                                             </div>
                                             <div class="flex-fill">
                                                 <label class="form-label small">CBM</label>
@@ -162,14 +246,21 @@
 
                                     <!-- Photo Upload with confirmation -->
                                     <div class="mb-2">
-                                        <label
-                                            class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center mt-2">
-                                            <i class="bi bi-image me-2"></i> Add Photo <span class="text-danger">*</span>
-                                            <input type="file" name="cargo_picture[]" class="d-none cargo-photo"
-                                                accept="image/*">
-                                        </label>
+                                        <label class="form-label">Photo <span class="text-danger">*</span></label>
+                                        <div class="photo-input-wrapper">
+                                            <label
+                                                class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center mt-2">
+                                                <i class="bi bi-image me-2"></i> Add Photo
+                                                <input type="file" name="cargo_picture[]" class="d-none cargo-photo required-field"
+                                                    accept="image/*">
+                                            </label>
+                                            <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da; margin-top: 0.5rem; border-radius: 0.25rem; padding: 0.375rem 0.75rem;">
+                                                <i class="bi bi-exclamation-circle-fill text-danger"></i>
+                                            </span>
+                                        </div>
                                         <small class="text-success photo-confirmation" style="display:none;">Photo
                                             selected!</small>
+                                        <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
                                     </div>
 
                                 </div> <!-- end cargo-item -->
@@ -209,6 +300,230 @@
 
     <script>
         const container = document.getElementById('cargo-items-container');
+
+        // Clear all error states
+        function clearAllErrors() {
+            document.querySelectorAll('.required-field').forEach(field => {
+                if (field.type === 'file') {
+                    const wrapper = field.closest('.photo-input-wrapper');
+                    if (wrapper) {
+                        const errorIcon = wrapper.querySelector('.error-icon');
+                        const errorMessage = wrapper.nextElementSibling;
+                        if (errorIcon) errorIcon.style.display = 'none';
+                        if (errorMessage && errorMessage.classList.contains('error-message')) {
+                            errorMessage.style.display = 'none';
+                            errorMessage.textContent = '';
+                        }
+                    }
+                } else {
+                    const inputGroup = field.parentElement;
+                    const errorIcon = inputGroup.querySelector('.error-icon');
+                    const errorMessage = inputGroup.nextElementSibling;
+
+                    if (errorIcon) errorIcon.style.display = 'none';
+                    if (errorMessage && errorMessage.classList.contains('error-message')) {
+                        errorMessage.style.display = 'none';
+                        errorMessage.textContent = '';
+                    }
+                    field.classList.remove('is-invalid');
+                }
+            });
+        }
+
+        // Show error on specific field
+        function showFieldError(field, message) {
+            // Handle file inputs differently
+            if (field.type === 'file') {
+                const wrapper = field.closest('.photo-input-wrapper');
+                if (wrapper) {
+                    const errorIcon = wrapper.querySelector('.error-icon');
+                    const errorMessage = wrapper.nextElementSibling;
+                    
+                    if (errorIcon) errorIcon.style.display = 'flex';
+                    if (errorMessage && errorMessage.classList.contains('error-message')) {
+                        errorMessage.textContent = message;
+                        errorMessage.style.display = 'block';
+                    }
+                }
+            } else {
+                const inputGroup = field.parentElement;
+                const errorIcon = inputGroup.querySelector('.error-icon');
+                const errorMessage = inputGroup.nextElementSibling;
+
+                if (errorIcon) errorIcon.style.display = 'flex';
+                if (errorMessage && errorMessage.classList.contains('error-message')) {
+                    errorMessage.textContent = message;
+                    errorMessage.style.display = 'block';
+                }
+            }
+        }
+
+        // Form validation
+        function validateForm() {
+            clearAllErrors();
+            let isValid = true;
+
+            const form = document.getElementById('passengerCargoForm');
+
+            // Sender fields
+            const senderFirstname = form.querySelector('input[name="sender_firstname"]');
+            const senderLastname = form.querySelector('input[name="sender_lastname"]');
+            const senderContact = form.querySelector('input[name="sender_contact"]');
+            const senderEmail = form.querySelector('input[name="sender_email"]');
+
+            if (!senderFirstname.value.trim()) {
+                showFieldError(senderFirstname, 'First Name is required');
+                isValid = false;
+            }
+            if (!senderLastname.value.trim()) {
+                showFieldError(senderLastname, 'Last Name is required');
+                isValid = false;
+            }
+            if (!senderContact.value.trim()) {
+                showFieldError(senderContact, 'Contact Number is required');
+                isValid = false;
+            }
+            if (!senderEmail.value.trim()) {
+                showFieldError(senderEmail, 'Email Address is required');
+                isValid = false;
+            }
+
+            // Consignee fields
+            const consigneeFirstname = form.querySelector('input[name="consignee_firstname"]');
+            const consigneeLastname = form.querySelector('input[name="consignee_lastname"]');
+            const consigneeContact = form.querySelector('input[name="consignee_contact"]');
+
+            if (!consigneeFirstname.value.trim()) {
+                showFieldError(consigneeFirstname, 'First Name is required');
+                isValid = false;
+            }
+            if (!consigneeLastname.value.trim()) {
+                showFieldError(consigneeLastname, 'Last Name is required');
+                isValid = false;
+            }
+            if (!consigneeContact.value.trim()) {
+                showFieldError(consigneeContact, 'Contact Number is required');
+                isValid = false;
+            }
+
+            // Cargo items
+            const cargoItems = document.querySelectorAll('.cargo-item');
+            cargoItems.forEach((item, index) => {
+                const classification = item.querySelector('[name="cargo_classification[]"]');
+                const description = item.querySelector('[name="cargo_item_id[]"]');
+                const quantity = item.querySelector('[name="cargo_quantity[]"]');
+                const weight = item.querySelector('[name="cargo_weight[]"]');
+                const length = item.querySelector('[name="cargo_length[]"]');
+                const width = item.querySelector('[name="cargo_width[]"]');
+                const height = item.querySelector('[name="cargo_height[]"]');
+                const photo = item.querySelector('[name="cargo_picture[]"]');
+
+                if (!classification.value.trim()) {
+                    showFieldError(classification, 'Classification is required');
+                    isValid = false;
+                }
+                if (!description.value.trim()) {
+                    showFieldError(description, 'Description is required');
+                    isValid = false;
+                }
+                if (!quantity.value.trim()) {
+                    showFieldError(quantity, 'Quantity is required');
+                    isValid = false;
+                }
+                if (!weight.value.trim()) {
+                    showFieldError(weight, 'Weight is required');
+                    isValid = false;
+                }
+                if (!length.value.trim()) {
+                    showFieldError(length, 'Length is required');
+                    isValid = false;
+                }
+                if (!width.value.trim()) {
+                    showFieldError(width, 'Width is required');
+                    isValid = false;
+                }
+                if (!height.value.trim()) {
+                    showFieldError(height, 'Height is required');
+                    isValid = false;
+                }
+                if (photo.files.length === 0) {
+                    showFieldError(photo, 'Photo is required');
+                    isValid = false;
+                }
+            });
+
+            if (!isValid) {
+                window.scrollTo(0, 0);
+            }
+
+            return isValid;
+        }
+
+        // Add blur validation to all required fields
+        document.querySelectorAll('.required-field').forEach(field => {
+            field.addEventListener('blur', function() {
+                // Special handling for file inputs
+                if (this.type === 'file') {
+                    const wrapper = this.closest('.photo-input-wrapper');
+                    if (wrapper) {
+                        const errorIcon = wrapper.querySelector('.error-icon');
+                        const errorMessage = wrapper.nextElementSibling;
+
+                        if (this.files.length === 0) {
+                            if (errorIcon) errorIcon.style.display = 'flex';
+                            if (errorMessage && errorMessage.classList.contains('error-message')) {
+                                errorMessage.textContent = 'Photo is required';
+                                errorMessage.style.display = 'block';
+                            }
+                        } else {
+                            if (errorIcon) errorIcon.style.display = 'none';
+                            if (errorMessage && errorMessage.classList.contains('error-message')) {
+                                errorMessage.style.display = 'none';
+                            }
+                        }
+                    }
+                } else if (this.value.trim() === '') {
+                    const inputGroup = this.parentElement;
+                    const errorIcon = inputGroup.querySelector('.error-icon');
+                    const errorMessage = inputGroup.nextElementSibling;
+
+                    this.classList.add('is-invalid');
+                    if (errorIcon) errorIcon.style.display = 'flex';
+
+                    // Create appropriate error message
+                    let message = '';
+                    const fieldName = this.name;
+                    if (fieldName.includes('firstname')) message = 'First Name is required';
+                    else if (fieldName.includes('lastname')) message = 'Last Name is required';
+                    else if (fieldName.includes('contact')) message = 'Contact Number is required';
+                    else if (fieldName.includes('email')) message = 'Email Address is required';
+                    else if (fieldName.includes('classification')) message = 'Classification is required';
+                    else if (fieldName.includes('item_id')) message = 'Description is required';
+                    else if (fieldName.includes('quantity')) message = 'Quantity is required';
+                    else if (fieldName.includes('weight')) message = 'Weight is required';
+                    else if (fieldName.includes('length')) message = 'Length is required';
+                    else if (fieldName.includes('width')) message = 'Width is required';
+                    else if (fieldName.includes('height')) message = 'Height is required';
+                    else message = 'This field is required';
+
+                    if (errorMessage && errorMessage.classList.contains('error-message')) {
+                        errorMessage.textContent = message;
+                        errorMessage.style.display = 'block';
+                    }
+                } else {
+                    // Clear error if field has value
+                    const inputGroup = this.parentElement;
+                    const errorIcon = inputGroup.querySelector('.error-icon');
+                    const errorMessage = inputGroup.nextElementSibling;
+
+                    this.classList.remove('is-invalid');
+                    if (errorIcon) errorIcon.style.display = 'none';
+                    if (errorMessage && errorMessage.classList.contains('error-message')) {
+                        errorMessage.style.display = 'none';
+                    }
+                }
+            });
+        });
 
         // CBM calculation
         container.addEventListener('input', function(e) {
@@ -265,7 +580,11 @@
         // Show loading overlay on submit
         const passengerForm = document.getElementById('passengerCargoForm');
         if(passengerForm){
-            passengerForm.addEventListener('submit', function(){
+            passengerForm.addEventListener('submit', function(e){
+                if (!validateForm()) {
+                    e.preventDefault();
+                    return false;
+                }
                 const overlay = document.getElementById('passengerOverlay');
                 if(overlay){ overlay.style.display = 'flex'; }
             });
@@ -273,3 +592,28 @@
     </script>
 
 @endsection
+
+<style>
+    /* Error state styling */
+    .form-control.is-invalid,
+    .form-select.is-invalid {
+        border-color: #dc3545;
+        background-image: none;
+        padding-right: calc(1.5em + 0.75rem);
+    }
+
+    .form-control.is-invalid:focus,
+    .form-select.is-invalid:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+
+    .input-group .error-icon {
+        border-color: #dc3545;
+    }
+
+    .error-message {
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+</style>
