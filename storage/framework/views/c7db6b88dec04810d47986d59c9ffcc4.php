@@ -20,13 +20,16 @@
                                 </tr>
                             </thead>
                             <tbody class="text-center">
-                                
                                 <?php $__empty_1 = true; $__currentLoopData = $voyages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $voyage): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                     <tr>
-                                        <td><?php echo e(\Carbon\Carbon::parse($voyage['departure_date'])->format('M d')); ?></td>
-                                        <td><?php echo e($voyage['route_from']); ?> - <?php echo e($voyage['route_to']); ?></td>
-                                        <td><?php echo e(\Carbon\Carbon::parse($voyage['departure_time'])->format('h:i A')); ?></td>
-                                        <td><?php echo e($voyage['vessel_name']); ?></td>
+                                        <?php
+                                            $depDate = data_get($voyage, 'departure_date');
+                                            $depTime = data_get($voyage, 'departure_time');
+                                        ?>
+                                        <td><?php echo e($depDate ? \Carbon\Carbon::parse($depDate)->format('M d') : '-'); ?></td>
+                                        <td><?php echo e(data_get($voyage, 'route_from', '-')); ?> - <?php echo e(data_get($voyage, 'route_to', '-')); ?></td>
+                                        <td><?php echo e($depTime ? \Carbon\Carbon::parse($depTime)->format('h:i A') : '-'); ?></td>
+                                        <td><?php echo e(data_get($voyage, 'vessel_name', '-')); ?></td>
                                     </tr>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                     <tr>
@@ -49,8 +52,13 @@
             <div class="col-lg-6">
                 <div class="booking-selection-content d-flex flex-column">
 
-                    <div class="text-center">
-                        <h4 class="text-primary">Select Route & Schedule</h4>
+                    <div class="d-flex justify-content-between align-items-center mb-3 booking-header">
+                        <h4 class="text-primary mb-0">Select Route & Schedule</h4>
+                        <a href="#" id="requestTicketLink"
+                            class="text-decoration-none text-primary fw-semibold d-none d-lg-block"
+                            style="font-size: 0.9rem;">
+                            <i class="fas fa-ticket-alt me-1"></i>Request Ticket Copy
+                        </a>
                     </div>
 
                     <!-- Booking Type -->
@@ -132,10 +140,201 @@
             </div>
 
         </div>
+
+        <!-- Mobile-only Ticket Request Section -->
+        <div class="row d-lg-none mt-4">
+            <div class="col-12">
+                <div class="mobile-ticket-request-card">
+                    <div class="mobile-ticket-header">
+                        <h5><i class="fas fa-ticket-alt me-2"></i>Request Ticket Copy</h5>
+                    </div>
+                    <div class="mobile-ticket-body">
+                        <p class="text-muted mb-3">Lost your ticket? Enter your email and departure date to receive a copy.
+                        </p>
+
+                        <form id="requestTicketFormMobile">
+                            <?php echo csrf_field(); ?>
+                            <div class="mb-3">
+                                <label for="ticketEmailMobile" class="form-label">Email Address <span
+                                        class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="ticketEmailMobile" name="email" required
+                                    placeholder="your.email@example.com">
+                            </div>
+                            <div class="mb-3">
+                                <label for="departureDateMobile" class="form-label">Departure Date <span
+                                        class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="departureDateMobile" name="departure_date"
+                                    required>
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary w-100" id="requestTicketBtnMobile">
+                                    <i class="fas fa-paper-plane me-2"></i>Request Ticket Copy
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Overlay for Request Ticket Copy -->
+    <div id="ticketRequestModal" class="ticket-modal" style="display: none;">
+        <div class="ticket-modal-overlay"></div>
+        <div class="ticket-modal-content">
+            <div class="ticket-modal-header">
+                <h5><i class="fas fa-ticket-alt me-2"></i>Request Ticket Copy</h5>
+                <button type="button" class="ticket-modal-close" id="closeTicketModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="ticket-modal-body">
+                <p class="text-muted text-center mb-4">Lost your ticket? Enter your email and departure date to receive a
+                    copy.</p>
+
+                <form id="requestTicketForm">
+                    <?php echo csrf_field(); ?>
+                    <div class="mb-3">
+                        <label for="ticketEmail" class="form-label">Email Address <span
+                                class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="ticketEmail" name="email" required
+                            placeholder="your.email@example.com">
+                    </div>
+                    <div class="mb-3">
+                        <label for="departureDate" class="form-label">Departure Date <span
+                                class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="departureDate" name="departure_date" required>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary w-100" id="requestTicketBtn">
+                            <i class="fas fa-paper-plane me-2"></i>Request Ticket Copy
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <script type="application/json" id="voyages-data"><?php echo json_encode($voyages); ?></script>
     <script src="<?php echo e(asset('js/bookingtype.js')); ?>"></script>
+    <script>
+        // Modal functionality
+        const modal = document.getElementById('ticketRequestModal');
+        const openLink = document.getElementById('requestTicketLink');
+        const closeBtn = document.getElementById('closeTicketModal');
+        const overlay = modal.querySelector('.ticket-modal-overlay');
+
+        // Open modal (only on desktop)
+        if (openLink) {
+            openLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                modal.style.display = 'block';
+                // Force reflow for smooth animation
+                modal.offsetHeight;
+                modal.classList.add('active');
+            });
+        }
+
+        // Close modal function
+        function closeModal() {
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 200);
+        }
+
+        // Close button click
+        closeBtn.addEventListener('click', closeModal);
+
+        // Click overlay to close
+        overlay.addEventListener('click', closeModal);
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.classList.contains('active')) {
+                closeModal();
+            }
+        });
+
+        // Form submission
+        document.getElementById('requestTicketForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('requestTicketBtn');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Searching...';
+
+            const formData = new FormData(this);
+
+            try {
+                const response = await fetch('<?php echo e(route('ticket.request-copy')); ?>', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+                        'Accept': 'application/json',
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Close modal and show success alert
+                    closeModal();
+                    alert('Ticket sent to your email!');
+                    this.reset();
+                } else {
+                    alert(data.message || 'No ticket found.');
+                }
+            } catch (error) {
+                alert('An error occurred. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+
+        // Mobile form submission (same logic)
+        const mobileForm = document.getElementById('requestTicketFormMobile');
+        if (mobileForm) {
+            mobileForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const btn = document.getElementById('requestTicketBtnMobile');
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Searching...';
+
+                const formData = new FormData(this);
+
+                try {
+                    const response = await fetch('<?php echo e(route('ticket.request-copy')); ?>', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+                            'Accept': 'application/json',
+                        },
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        alert('Ticket sent to your email!');
+                        this.reset();
+                    } else {
+                        alert(data.message || 'No ticket found.');
+                    }
+                } catch (error) {
+                    alert('An error occurred. Please try again.');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            });
+        }
+    </script>
 <?php $__env->stopSection(); ?>
 
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/passenger/bookingtype.blade.php ENDPATH**/ ?>

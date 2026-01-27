@@ -21,24 +21,40 @@
         </div>
     <?php endif; ?>
 
-    <form action="<?php echo e(route('cargo.bookings.store')); ?>" method="POST" enctype="multipart/form-data">
+    <form id="staffCargoForm" action="<?php echo e(route('cargo.bookings.store')); ?>" method="POST" enctype="multipart/form-data">
         <?php echo csrf_field(); ?>
 
-        <!-- Voyage Selection -->
-        <div class="mb-4">
-            <label class="form-label fw-bold">Select Voyage <span class="text-danger">*</span></label>
-            <select name="voyage_id" class="form-select" required>
-                <option value="">-- Choose Voyage --</option>
-                <?php $__currentLoopData = $voyages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $voyage): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <option value="<?php echo e($voyage->voyage_id); ?>">
-                        <?php echo e($voyage->voyage_code); ?> | 
-                        <?php echo e($voyage->routePort->route_origin ?? 'N/A'); ?> →
-                        <?php echo e($voyage->routePort->route_destination ?? 'N/A'); ?> |
-                        Departure: <?php echo e($voyage->voyage_departure_date); ?>
+        <!-- Loading overlay -->
+        <div id="staffOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1055; align-items:center; justify-content:center;">
+            <div class="text-center text-white">
+                <div class="spinner-border text-light" role="status" style="width:3rem; height:3rem;"></div>
+                <div class="mt-3">Loading... please wait</div>
+            </div>
+        </div>
 
-                    </option>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-            </select>
+        <!-- Voyage Selection + No. of Cargo -->
+        <div class="mb-4 d-flex gap-3 align-items-end">
+            <div style="flex:1">
+                <label class="form-label fw-bold">Select Voyage <span class="text-danger">*</span></label>
+                <select name="voyage_id" class="form-select" required>
+                    <option value="">-- Choose Voyage --</option>
+                    <?php $__currentLoopData = $voyages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $voyage): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php
+                            $depDate = \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('M j, Y');
+                            $depTime = $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:i A') : '';
+                        ?>
+                        <option value="<?php echo e($voyage->voyage_id); ?>" data-route_port="<?php echo e($voyage->route_port_id ?? $voyage->routePort->route_port_id ?? ''); ?>">
+                            <?php echo e($voyage->voyage_code); ?> - <?php echo e($voyage->routePort->route_origin ?? 'N/A'); ?> → <?php echo e($voyage->routePort->route_destination ?? 'N/A'); ?> - Departure: <?php echo e($depDate); ?> <?php echo e($depTime ? '(' . $depTime . ')' : ''); ?>
+
+                        </option>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </select>
+            </div>
+
+            <div style="width:150px;">
+                <label class="form-label fw-bold">No. of Cargo <span class="text-danger">*</span></label>
+                <input type="number" name="no_of_cargo" id="no_of_cargo" class="form-control" min="1" value="1">
+            </div>
         </div>
 
         <div class="row">
@@ -80,6 +96,10 @@
             <div class="col-lg-6 mb-3">
                 <div class="card p-3 shadow-sm">
                     <h5 class="fw-bold mb-3">Cargo Items</h5>
+                    
+        <div class="mb-3">
+            <small class="text-muted">Note: You can only add numerous QTY to one cargo item if similar in dimensions.</small>
+        </div>
 
                     <div id="cargo-items-container">
 
@@ -112,19 +132,18 @@
                                 </div>
                             </div>
 
-                            <div class="d-flex gap-2 mb-2">
-                                <div class="flex-fill">
-                                    <label class="form-label">Quantity <span class="text-danger">*</span></label>
-                                    <input type="number" name="cargo_quantity[]" class="form-control" required min="1">
+                                <div class="row gx-2 mb-2">
+                                    <div class="col-6">
+                                        <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                                        <input type="number" name="cargo_quantity[]" class="form-control" placeholder="Qty" min="1" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">Weight (kg) <span class="text-danger">*</span></label>
+                                        <input type="number" name="cargo_weight[]" class="form-control" placeholder="Weight" step="0.01" required>
+                                    </div>
                                 </div>
 
-                                <div class="flex-fill">
-                                    <label class="form-label">Weight (kg) <span class="text-danger">*</span></label>
-                                    <input type="number" name="cargo_weight[]" class="form-control" required>
-                                </div>
-                            </div>
-
-                            <label class="form-label">Cargo Dimensions (cm) <span class="text-danger">*</span></label>
+                                <label class="form-label">Cargo Dimensions (cm) <span class="text-danger">*</span></label>
                             <div class="d-flex gap-2 mb-2 align-items-end">
                                 <div class="flex-fill">
                                     <label class="form-label">Length <span class="text-danger">*</span></label>
@@ -147,11 +166,9 @@
                                 </div>
                             </div>
 
-
-                    <div class="d-flex gap-2 my-3">
-                        <button type="button" id="addCargoItem" class="btn btn-secondary">Add Cargo</button>
-                        <button type="button" id="removeCargoItem" class="btn btn-danger">Remove</button>
+                        </div>
                     </div>
+
                 </div>
             </div>
 
@@ -187,28 +204,36 @@ container.addEventListener('input', e => {
     }
 });
 
-// Add/Remove cargo items
-document.getElementById('addCargoItem').addEventListener('click', () => {
-    const original = container.querySelector('.cargo-item');
-    const newItem = original.cloneNode(true);
+// Change number of cargo items based on No. of Cargo input
+const noInput = document.getElementById('no_of_cargo');
+if(noInput){
+    function syncCargoItems(){
+        let desired = parseInt(noInput.value) || 1;
+        if(desired < 1) { desired = 1; noInput.value = 1; }
+        const items = Array.from(container.querySelectorAll('.cargo-item'));
+        const current = items.length;
+        const original = items[0];
 
-    // Clear all input/select values in the cloned item
-    newItem.querySelectorAll('input, select').forEach(el => {
-        el.value = '';
-    });
-
-    // Reset CBM
-    newItem.querySelector('.cbm-output').value = '0.0000';
-
-    container.appendChild(newItem);
-});
-
-document.getElementById('removeCargoItem').addEventListener('click', () => {
-    const items = container.querySelectorAll('.cargo-item');
-    if(items.length > 1) {
-        items[items.length - 1].remove();
+        if(desired > current){
+            for(let i = current; i < desired; i++){
+                const newItem = original.cloneNode(true);
+                newItem.querySelectorAll('input, select').forEach(el => el.value = '');
+                newItem.querySelector('.cbm-output').value = '0.0000';
+                container.appendChild(newItem);
+            }
+        } else if(desired < current){
+            for(let i = current; i > desired; i--){
+                const last = container.querySelector('.cargo-item:last-child');
+                if(last) last.remove();
+            }
+        }
     }
-});
+
+    noInput.addEventListener('change', syncCargoItems);
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', syncCargoItems);
+}
 
 
 // Classification filter for descriptions
@@ -249,6 +274,15 @@ voyageSelect.addEventListener('change', () => {
 });
 
 // Photo upload removed for staff UI — no JS needed
+
+// Show loading overlay on submit
+const staffForm = document.getElementById('staffCargoForm');
+if(staffForm){
+    staffForm.addEventListener('submit', function(){
+        const overlay = document.getElementById('staffOverlay');
+        if(overlay){ overlay.style.display = 'flex'; }
+    });
+}
 </script>
 
 <?php $__env->stopSection(); ?>
