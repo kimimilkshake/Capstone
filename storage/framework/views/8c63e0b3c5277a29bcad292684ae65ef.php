@@ -45,17 +45,19 @@
         <table>
             <thead>
                 <tr>
-                    <th>Description</th>
+                    <th>QTY</th>
                     <th>Classification</th>
-                    <th>Quantity</th>
+                    <th>Description</th>
+                    <th>Dimensions</th>
                     <th>Weight</th>
-                    <th>Dimensions (L×W×H cm)</th>
-                    <th>CBM</th>
                     <th>Subtotal</th>
                 </tr>
             </thead>
             <tbody>
-                <?php $total = 0; ?>
+                <?php 
+                    $total = 0;
+                    $totalQuantity = 0;
+                ?>
                 <?php $__currentLoopData = $cargoItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cargo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <?php
                         $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
@@ -63,24 +65,44 @@
                         $cbm = ($cargo->length * $cargo->width * $cargo->height) / 1000000;
                         $subtotal = ($freight + $arrastre) * $cbm * $cargo->quantity;
                         $total += $subtotal;
+                        $totalQuantity += $cargo->quantity;
+                        
+                        // Determine unit of measurement
+                        $unit = $cargo->measurement_unit ?? 'cm';
+                        $unitDisplay = ($unit === 'in') ? 'inches' : 'cm';
+                        
+                        // For display, show dimensions in the unit chosen by customer
+                        if ($unit === 'in') {
+                            $displayLength = round($cargo->length / 2.54, 2);
+                            $displayWidth = round($cargo->width / 2.54, 2);
+                            $displayHeight = round($cargo->height / 2.54, 2);
+                        } else {
+                            $displayLength = $cargo->length;
+                            $displayWidth = $cargo->width;
+                            $displayHeight = $cargo->height;
+                        }
                     ?>
                     <tr>
-                        <td><?php echo e($cargo->cargoItem->cargo_item_description); ?></td>
-                        <td><?php echo e($cargo->cargoItem->cargo_item_classification); ?></td>
                         <td><?php echo e($cargo->quantity); ?></td>
+                        <td><?php echo e($cargo->cargoItem->cargo_item_classification); ?></td>
+                        <td><?php echo e($cargo->cargoItem->cargo_item_description); ?></td>
+                        <td><?php echo e($displayLength); ?> × <?php echo e($displayWidth); ?> × <?php echo e($displayHeight); ?> <?php echo e($unitDisplay); ?></td>
                         <td><?php echo e($cargo->weight); ?> kg</td>
-                        <td><?php echo e($cargo->length); ?> × <?php echo e($cargo->width); ?> × <?php echo e($cargo->height); ?></td>
-                        <td><?php echo e(number_format($cbm,4)); ?></td>
                         <td>₱<?php echo e(number_format($subtotal,2)); ?></td>
                     </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                <tr style="background-color: #f9f9f9; font-weight: bold;">
+                    <td colspan="2">Total Items</td>
+                    <td colspan="2"><?php echo e($totalQuantity); ?></td>
+                    <td colspan="2"></td>
+                </tr>
             </tbody>
         </table>
 
         <div style="margin-top:15px; text-align:left;">
             <p><strong>Mode of Payment:</strong> <?php echo e($payment->mode_of_payment ?? 'N/A'); ?></p>
             <p><strong>Payment Status:</strong> <?php echo e($payment->payment_status ?? 'N/A'); ?></p>
-            <p><strong>Total Amount:</strong> ₱<?php echo e(number_format($payment->total_amount ?? $total,2)); ?></p>
+            <p style="font-size: 16px; color: #28a745;"><strong>Total Overall: ₱<?php echo e(number_format($payment->total_amount ?? $total,2)); ?></strong></p>
         </div>
     </div>
 

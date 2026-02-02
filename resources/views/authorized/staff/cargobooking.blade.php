@@ -141,7 +141,7 @@
                                     </div>
                                 </div>
 
-                                <label class="form-label">Cargo Dimensions (cm) <span class="text-danger">*</span></label>
+                                <label class="form-label">Cargo Dimensions <span class="text-danger">*</span></label>
                             <div class="d-flex gap-2 mb-2 align-items-end">
                                 <div class="flex-fill">
                                     <label class="form-label">Length <span class="text-danger">*</span></label>
@@ -156,6 +156,14 @@
                                 <div class="flex-fill">
                                     <label class="form-label">Height <span class="text-danger">*</span></label>
                                     <input type="number" name="cargo_height[]" class="form-control dimension" required>
+                                </div>
+
+                                <div style="width: 150px;">
+                                    <label class="form-label">Unit</label>
+                                    <select name="measurement_unit[]" class="form-select unitSelect">
+                                        <option value="cm">cm</option>
+                                        <option value="in">in</option>
+                                    </select> 
                                 </div>
 
                                 <div class="flex-fill">
@@ -188,15 +196,33 @@ const voyageSelect = document.querySelector('select[name="voyage_id"]');
 
 // Calculate CBM for a cargo item
 function calculateCBM(item){
-    const l = parseFloat(item.querySelector('[name="cargo_length[]"]').value) || 0;
-    const w = parseFloat(item.querySelector('[name="cargo_width[]"]').value) || 0;
-    const h = parseFloat(item.querySelector('[name="cargo_height[]"]').value) || 0;
+    const unitEl = item.querySelector('.unitSelect');
+    const unit = unitEl ? unitEl.value : 'cm';
+    let l = parseFloat(item.querySelector('[name="cargo_length[]"]').value) || 0;
+    let w = parseFloat(item.querySelector('[name="cargo_width[]"]').value) || 0;
+    let h = parseFloat(item.querySelector('[name="cargo_height[]"]').value) || 0;
+    
+    // Convert inches to centimeters if needed
+    if (unit === 'in') {
+        l = l * 2.54;
+        w = w * 2.54;
+        h = h * 2.54;
+    }
+    
     item.querySelector('.cbm-output').value = ((l*w*h)/1000000).toFixed(4);
 }
 
 // CBM listener
 container.addEventListener('input', e => {
     if(e.target.classList.contains('dimension')){
+        const item = e.target.closest('.cargo-item');
+        calculateCBM(item);
+    }
+});
+
+// Recalculate CBM when unit changes
+container.addEventListener('change', e => {
+    if(e.target.classList.contains('unitSelect')){
         const item = e.target.closest('.cargo-item');
         calculateCBM(item);
     }
