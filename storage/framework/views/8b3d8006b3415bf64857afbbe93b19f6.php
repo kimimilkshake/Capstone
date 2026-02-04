@@ -4,7 +4,7 @@
     <?php echo $__env->make('components.hero', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <div class="container my-5">
-        <div class="card shadow-sm mx-auto" style="max-width:1100px; background-color:#f0f0f0;">
+        <div class="card shadow-sm mx-auto passenger-cargo-card" style="max-width:1300px; background-color:#f0f0f0;">
             <div class="card-header bg-dark text-white text-center mb-1">
                 <h5 class="mb-0">CARGO BOOKING FORM</h5>
             </div>
@@ -16,6 +16,9 @@
 
                 <form id="passengerCargoForm" action="<?php echo e(route('cargobooking.confirm')); ?>" method="POST" enctype="multipart/form-data" novalidate>
                     <?php echo csrf_field(); ?>
+
+                    <!-- top controls removed — No. of Cargo moved into Cargo Information column; unit selector is per-item -->
+
                     <div class="row">
 
                         <!-- LEFT SIDE -->
@@ -115,7 +118,14 @@
                         <!-- RIGHT SIDE (CARGO ITEMS) -->
                         <div class="col-md-6 mb-3">
                             <h6 class="fw-bold">Cargo Information</h6>
-                            <div id="cargo-items-container">
+
+                                <div class="mb-3 d-flex align-items-center gap-3">
+                                    <label class="form-label mb-0">No. of Cargo <span class="text-danger">*</span></label>
+                                    <input type="number" name="no_of_cargo" id="no_of_cargo" class="form-control form-control-sm" min="1" max="5" value="1" style="max-width:120px;">
+                                    <small class="text-muted mb-0">Maximum 5 items</small>
+                                </div>
+
+                                <div id="cargo-items-container">
 
                                 <div class="cargo-item border rounded p-3 mb-3">
 
@@ -198,8 +208,8 @@
 
                                     <!-- Dimensions + CBM -->
                                     <div class="mb-2">
-                                        <label class="form-label">Cargo Dimensions (cm) </label>
-                                        <div class="d-flex gap-2">
+                                        <label class="form-label">Cargo Dimensions</label>
+                                        <div class="d-flex gap-2 align-items-end">
                                             <div class="flex-fill">
                                                 <label class="form-label small">Length <span
                                                         class="text-danger">*</span></label>
@@ -236,6 +246,13 @@
                                                 </div>
                                                 <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
                                             </div>
+                                                                                        <div style="width:140px;">
+                                                                                            <label class="form-label small">Unit</label>
+                                                                                            <select name="measurement_unit[]" class="form-select unitSelect">
+                                                                                                <option value="cm">cm</option>
+                                                                                                <option value="in">in</option>
+                                                                                            </select>
+                                                                                        </div>
                                             <div class="flex-fill">
                                                 <label class="form-label small">CBM</label>
                                                 <input type="text" class="form-control cbm-output" readonly
@@ -267,15 +284,6 @@
 
                             </div>
 
-                            <div class="d-flex gap-2 mt-2">
-                                <button type="button" id="addCargoItem" class="btn btn-secondary">Add Another
-                                    Cargo</button>
-                                <button type="button" id="removeCargoItem" class="btn btn-danger">Remove Last
-                                    Cargo</button>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="d-flex justify-content-end mt-4 gap-3">
                         <a href="<?php echo e(route('bookingtype')); ?>" class="btn btn-outline-danger fw-bold py-3"
                             style="width:180px;">
@@ -300,8 +308,9 @@
 
     <script>
         const container = document.getElementById('cargo-items-container');
+        const noInput = document.getElementById('no_of_cargo');
+        const MAX_ITEMS = 5;
 
-        // Clear all error states
         function clearAllErrors() {
             document.querySelectorAll('.required-field').forEach(field => {
                 if (field.type === 'file') {
@@ -317,8 +326,8 @@
                     }
                 } else {
                     const inputGroup = field.parentElement;
-                    const errorIcon = inputGroup.querySelector('.error-icon');
-                    const errorMessage = inputGroup.nextElementSibling;
+                    const errorIcon = inputGroup ? inputGroup.querySelector('.error-icon') : null;
+                    const errorMessage = inputGroup ? inputGroup.nextElementSibling : null;
 
                     if (errorIcon) errorIcon.style.display = 'none';
                     if (errorMessage && errorMessage.classList.contains('error-message')) {
@@ -330,15 +339,14 @@
             });
         }
 
-        // Show error on specific field
         function showFieldError(field, message) {
-            // Handle file inputs differently
+            if (!field) return;
             if (field.type === 'file') {
                 const wrapper = field.closest('.photo-input-wrapper');
                 if (wrapper) {
                     const errorIcon = wrapper.querySelector('.error-icon');
                     const errorMessage = wrapper.nextElementSibling;
-                    
+
                     if (errorIcon) errorIcon.style.display = 'flex';
                     if (errorMessage && errorMessage.classList.contains('error-message')) {
                         errorMessage.textContent = message;
@@ -347,68 +355,91 @@
                 }
             } else {
                 const inputGroup = field.parentElement;
-                const errorIcon = inputGroup.querySelector('.error-icon');
-                const errorMessage = inputGroup.nextElementSibling;
+                const errorIcon = inputGroup ? inputGroup.querySelector('.error-icon') : null;
+                const errorMessage = inputGroup ? inputGroup.nextElementSibling : null;
 
                 if (errorIcon) errorIcon.style.display = 'flex';
                 if (errorMessage && errorMessage.classList.contains('error-message')) {
                     errorMessage.textContent = message;
                     errorMessage.style.display = 'block';
                 }
+                field.classList.add('is-invalid');
             }
         }
 
-        // Form validation
+        function calculateCBM(item) {
+            const unitEl = item.querySelector('.unitSelect');
+            const unit = unitEl ? unitEl.value : 'cm';
+            let l = parseFloat(item.querySelector('[name="cargo_length[]"]').value) || 0;
+            let w = parseFloat(item.querySelector('[name="cargo_width[]"]').value) || 0;
+            let h = parseFloat(item.querySelector('[name="cargo_height[]"]').value) || 0;
+
+            if (unit === 'in') { l = l * 2.54; w = w * 2.54; h = h * 2.54; }
+
+            const cbm = (l * w * h) / 1000000;
+            item.querySelector('.cbm-output').value = cbm.toFixed(4);
+            return cbm;
+        }
+
+        function syncCargoItems() {
+            if (!noInput) return;
+            let desired = parseInt(noInput.value) || 1;
+            if (desired < 1) { desired = 1; noInput.value = 1; }
+            if (desired > MAX_ITEMS) { desired = MAX_ITEMS; noInput.value = MAX_ITEMS; }
+            const items = Array.from(container.querySelectorAll('.cargo-item'));
+            const current = items.length;
+            const original = items[0];
+
+            if (desired > current) {
+                for (let i = current; i < desired; i++) {
+                    const newItem = original.cloneNode(true);
+                    newItem.querySelectorAll('input').forEach(el => { if(el.type==='file') el.value = null; else el.value = ''; });
+                    newItem.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
+                    newItem.querySelector('.cbm-output').value = '0.0000';
+                    container.appendChild(newItem);
+                }
+            } else if (desired < current) {
+                for (let i = current; i > desired; i--) {
+                    const last = container.querySelector('.cargo-item:last-child');
+                    if (last) last.remove();
+                }
+            }
+            toggleAddButton();
+        }
+
+        function toggleAddButton(){
+            const addBtn = document.getElementById('addCargoItem');
+            const items = container.querySelectorAll('.cargo-item');
+            if(addBtn) addBtn.disabled = items.length >= MAX_ITEMS;
+            const removeBtn = document.getElementById('removeCargoItem');
+            if(removeBtn) removeBtn.disabled = items.length <= 1;
+        }
+
         function validateForm() {
             clearAllErrors();
             let isValid = true;
-
             const form = document.getElementById('passengerCargoForm');
 
-            // Sender fields
             const senderFirstname = form.querySelector('input[name="sender_firstname"]');
             const senderLastname = form.querySelector('input[name="sender_lastname"]');
             const senderContact = form.querySelector('input[name="sender_contact"]');
             const senderEmail = form.querySelector('input[name="sender_email"]');
 
-            if (!senderFirstname.value.trim()) {
-                showFieldError(senderFirstname, 'First Name is required');
-                isValid = false;
-            }
-            if (!senderLastname.value.trim()) {
-                showFieldError(senderLastname, 'Last Name is required');
-                isValid = false;
-            }
-            if (!senderContact.value.trim()) {
-                showFieldError(senderContact, 'Contact Number is required');
-                isValid = false;
-            }
-            if (!senderEmail.value.trim()) {
-                showFieldError(senderEmail, 'Email Address is required');
-                isValid = false;
-            }
+            if (!senderFirstname.value.trim()) { showFieldError(senderFirstname, 'First Name is required'); isValid = false; }
+            if (!senderLastname.value.trim()) { showFieldError(senderLastname, 'Last Name is required'); isValid = false; }
+            if (!senderContact.value.trim()) { showFieldError(senderContact, 'Contact Number is required'); isValid = false; }
+            if (!senderEmail.value.trim()) { showFieldError(senderEmail, 'Email Address is required'); isValid = false; }
 
-            // Consignee fields
             const consigneeFirstname = form.querySelector('input[name="consignee_firstname"]');
             const consigneeLastname = form.querySelector('input[name="consignee_lastname"]');
             const consigneeContact = form.querySelector('input[name="consignee_contact"]');
 
-            if (!consigneeFirstname.value.trim()) {
-                showFieldError(consigneeFirstname, 'First Name is required');
-                isValid = false;
-            }
-            if (!consigneeLastname.value.trim()) {
-                showFieldError(consigneeLastname, 'Last Name is required');
-                isValid = false;
-            }
-            if (!consigneeContact.value.trim()) {
-                showFieldError(consigneeContact, 'Contact Number is required');
-                isValid = false;
-            }
+            if (!consigneeFirstname.value.trim()) { showFieldError(consigneeFirstname, 'First Name is required'); isValid = false; }
+            if (!consigneeLastname.value.trim()) { showFieldError(consigneeLastname, 'Last Name is required'); isValid = false; }
+            if (!consigneeContact.value.trim()) { showFieldError(consigneeContact, 'Contact Number is required'); isValid = false; }
 
-            // Cargo items
             const cargoItems = document.querySelectorAll('.cargo-item');
-            cargoItems.forEach((item, index) => {
+            cargoItems.forEach((item) => {
                 const classification = item.querySelector('[name="cargo_classification[]"]');
                 const description = item.querySelector('[name="cargo_item_id[]"]');
                 const quantity = item.querySelector('[name="cargo_quantity[]"]');
@@ -418,138 +449,70 @@
                 const height = item.querySelector('[name="cargo_height[]"]');
                 const photo = item.querySelector('[name="cargo_picture[]"]');
 
-                if (!classification.value.trim()) {
-                    showFieldError(classification, 'Classification is required');
-                    isValid = false;
-                }
-                if (!description.value.trim()) {
-                    showFieldError(description, 'Description is required');
-                    isValid = false;
-                }
-                if (!quantity.value.trim()) {
-                    showFieldError(quantity, 'Quantity is required');
-                    isValid = false;
-                }
-                if (!weight.value.trim()) {
-                    showFieldError(weight, 'Weight is required');
-                    isValid = false;
-                }
-                if (!length.value.trim()) {
-                    showFieldError(length, 'Length is required');
-                    isValid = false;
-                }
-                if (!width.value.trim()) {
-                    showFieldError(width, 'Width is required');
-                    isValid = false;
-                }
-                if (!height.value.trim()) {
-                    showFieldError(height, 'Height is required');
-                    isValid = false;
-                }
-                if (photo.files.length === 0) {
-                    showFieldError(photo, 'Photo is required');
-                    isValid = false;
-                }
+                if (!classification.value.trim()) { showFieldError(classification, 'Classification is required'); isValid = false; }
+                if (!description.value.trim()) { showFieldError(description, 'Description is required'); isValid = false; }
+                if (!quantity.value.trim()) { showFieldError(quantity, 'Quantity is required'); isValid = false; }
+                if (!weight.value.trim()) { showFieldError(weight, 'Weight is required'); isValid = false; }
+                if (!length.value.trim()) { showFieldError(length, 'Length is required'); isValid = false; }
+                if (!width.value.trim()) { showFieldError(width, 'Width is required'); isValid = false; }
+                if (!height.value.trim()) { showFieldError(height, 'Height is required'); isValid = false; }
+                if (photo && photo.files.length === 0) { showFieldError(photo, 'Photo is required'); isValid = false; }
+
+                const cbm = calculateCBM(item);
+                if (cbm < 0.06) { showFieldError(length, 'Minimum CBM per item is 0.06'); isValid = false; }
             });
 
-            if (!isValid) {
-                window.scrollTo(0, 0);
-            }
-
+            if (!isValid) { window.scrollTo(0, 0); }
             return isValid;
         }
 
-        // Add blur validation to all required fields
-        document.querySelectorAll('.required-field').forEach(field => {
-            field.addEventListener('blur', function() {
-                // Special handling for file inputs
-                if (this.type === 'file') {
-                    const wrapper = this.closest('.photo-input-wrapper');
-                    if (wrapper) {
-                        const errorIcon = wrapper.querySelector('.error-icon');
-                        const errorMessage = wrapper.nextElementSibling;
-
-                        if (this.files.length === 0) {
-                            if (errorIcon) errorIcon.style.display = 'flex';
-                            if (errorMessage && errorMessage.classList.contains('error-message')) {
-                                errorMessage.textContent = 'Photo is required';
-                                errorMessage.style.display = 'block';
-                            }
-                        } else {
-                            if (errorIcon) errorIcon.style.display = 'none';
-                            if (errorMessage && errorMessage.classList.contains('error-message')) {
-                                errorMessage.style.display = 'none';
-                            }
-                        }
-                    }
-                } else if (this.value.trim() === '') {
-                    const inputGroup = this.parentElement;
-                    const errorIcon = inputGroup.querySelector('.error-icon');
-                    const errorMessage = inputGroup.nextElementSibling;
-
-                    this.classList.add('is-invalid');
-                    if (errorIcon) errorIcon.style.display = 'flex';
-
-                    // Create appropriate error message
-                    let message = '';
-                    const fieldName = this.name;
-                    if (fieldName.includes('firstname')) message = 'First Name is required';
-                    else if (fieldName.includes('lastname')) message = 'Last Name is required';
-                    else if (fieldName.includes('contact')) message = 'Contact Number is required';
-                    else if (fieldName.includes('email')) message = 'Email Address is required';
-                    else if (fieldName.includes('classification')) message = 'Classification is required';
-                    else if (fieldName.includes('item_id')) message = 'Description is required';
-                    else if (fieldName.includes('quantity')) message = 'Quantity is required';
-                    else if (fieldName.includes('weight')) message = 'Weight is required';
-                    else if (fieldName.includes('length')) message = 'Length is required';
-                    else if (fieldName.includes('width')) message = 'Width is required';
-                    else if (fieldName.includes('height')) message = 'Height is required';
-                    else message = 'This field is required';
-
-                    if (errorMessage && errorMessage.classList.contains('error-message')) {
-                        errorMessage.textContent = message;
-                        errorMessage.style.display = 'block';
-                    }
-                } else {
-                    // Clear error if field has value
-                    const inputGroup = this.parentElement;
-                    const errorIcon = inputGroup.querySelector('.error-icon');
-                    const errorMessage = inputGroup.nextElementSibling;
-
-                    this.classList.remove('is-invalid');
-                    if (errorIcon) errorIcon.style.display = 'none';
-                    if (errorMessage && errorMessage.classList.contains('error-message')) {
-                        errorMessage.style.display = 'none';
-                    }
-                }
-            });
-        });
-
-        // CBM calculation
-        container.addEventListener('input', function(e) {
-            if (e.target.classList.contains('dimension')) {
+        document.addEventListener('input', function(e){
+            if (e.target && e.target.classList && e.target.classList.contains('dimension')){
                 const item = e.target.closest('.cargo-item');
-                const length = parseFloat(item.querySelector('[name="cargo_length[]"]').value) || 0;
-                const width = parseFloat(item.querySelector('[name="cargo_width[]"]').value) || 0;
-                const height = parseFloat(item.querySelector('[name="cargo_height[]"]').value) || 0;
-                item.querySelector('.cbm-output').value = ((length * width * height) / 1000000).toFixed(4);
+                calculateCBM(item);
             }
         });
 
-        // Add/remove cargo items
-        document.getElementById('addCargoItem').addEventListener('click', function() {
-            const first = container.querySelector('.cargo-item');
-            const clone = first.cloneNode(true);
-            clone.querySelectorAll('input').forEach(i => i.value = '');
-            clone.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
-            container.appendChild(clone);
-        });
-        document.getElementById('removeCargoItem').addEventListener('click', function() {
-            const items = container.querySelectorAll('.cargo-item');
-            if (items.length > 1) items[items.length - 1].remove();
+        // Recalculate CBM when per-item unit changes
+        container.addEventListener('change', function(e){
+            if (e.target && e.target.classList && e.target.classList.contains('unitSelect')){
+                const item = e.target.closest('.cargo-item');
+                calculateCBM(item);
+            }
         });
 
-        // Classification filters Description
+        if (noInput) {
+            noInput.addEventListener('change', syncCargoItems);
+            window.addEventListener('DOMContentLoaded', syncCargoItems);
+        }
+
+        const addBtn = document.getElementById('addCargoItem');
+        const removeBtn = document.getElementById('removeCargoItem');
+        if (addBtn) {
+            addBtn.addEventListener('click', function() {
+                const items = container.querySelectorAll('.cargo-item');
+                if (items.length >= MAX_ITEMS) return;
+                const first = container.querySelector('.cargo-item');
+                const clone = first.cloneNode(true);
+                clone.querySelectorAll('input').forEach(i => { if(i.type === 'file') i.value = null; else i.value = ''; });
+                clone.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+                clone.querySelector('.cbm-output').value = '0.0000';
+                container.appendChild(clone);
+                if (noInput) noInput.value = container.querySelectorAll('.cargo-item').length;
+                toggleAddButton();
+            });
+        }
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function() {
+                const items = container.querySelectorAll('.cargo-item');
+                if (items.length > 1) {
+                    items[items.length - 1].remove();
+                    if (noInput) noInput.value = container.querySelectorAll('.cargo-item').length;
+                }
+                toggleAddButton();
+            });
+        }
+
         container.addEventListener('change', function(e) {
             if (!e.target.classList.contains('cargo-classification')) return;
             const item = e.target.closest('.cargo-item');
@@ -562,12 +525,9 @@
             descriptionSelect.value = '';
         });
 
-        // Photo confirmation
         container.addEventListener('change', function(e) {
             if (!e.target.classList.contains('cargo-photo')) return;
-
             const confirmation = e.target.closest('.cargo-item').querySelector('.photo-confirmation');
-
             if (e.target.files.length > 0) {
                 confirmation.style.display = 'inline';
                 confirmation.textContent = `Photo selected: ${e.target.files[0].name}`;
@@ -577,18 +537,16 @@
             }
         });
 
-        // Show loading overlay on submit
         const passengerForm = document.getElementById('passengerCargoForm');
         if(passengerForm){
             passengerForm.addEventListener('submit', function(e){
-                if (!validateForm()) {
-                    e.preventDefault();
-                    return false;
-                }
+                if (!validateForm()) { e.preventDefault(); return false; }
                 const overlay = document.getElementById('passengerOverlay');
                 if(overlay){ overlay.style.display = 'flex'; }
             });
         }
+
+        toggleAddButton();
     </script>
 
 <?php $__env->stopSection(); ?>
@@ -615,6 +573,44 @@
     .error-message {
         font-size: 0.875rem;
         margin-top: 0.25rem;
+    }
+
+    /* Passenger cargo card custom roundness */
+    .passenger-cargo-card {
+        border-radius: 0;
+        overflow: hidden;
+        max-width: 1300px;
+    }
+
+    .passenger-cargo-card .bg-white {
+        border-radius: 0;
+    }
+
+    /* Slightly larger inner padding for the passenger card to breathe with wider layout */
+    .passenger-cargo-card .card-body {
+        padding: 1.5rem;
+    }
+
+    .photo-input-wrapper .btn {
+        border-radius: 0;
+    }
+
+    /* Rounded inputs/selects inside passenger card to match system forms */
+    .passenger-cargo-card .form-control,
+    .passenger-cargo-card .form-select,
+    .passenger-cargo-card .input-group-text,
+    .passenger-cargo-card .btn {
+        border-radius: 0;
+    }
+
+    .passenger-cargo-card .input-group .form-control {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+    .passenger-cargo-card .input-group .input-group-text {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
     }
 </style>
 
