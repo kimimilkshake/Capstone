@@ -23,10 +23,14 @@
                             <tbody class="text-center">
                                 @forelse ($voyages as $voyage)
                                     <tr>
-                                        <td>{{ \Carbon\Carbon::parse($voyage->departure_date)->format('M d') }}</td>
-                                        <td>{{ $voyage->route_from }} - {{ $voyage->route_to }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($voyage->departure_time)->format('h:i A') }}</td>
-                                        <td>{{ $voyage->vessel_name }}</td>
+                                        @php
+                                            $depDate = data_get($voyage, 'departure_date');
+                                            $depTime = data_get($voyage, 'departure_time');
+                                        @endphp
+                                        <td>{{ $depDate ? \Carbon\Carbon::parse($depDate)->format('M d') : '-' }}</td>
+                                        <td>{{ data_get($voyage, 'route_from', '-') }} - {{ data_get($voyage, 'route_to', '-') }}</td>
+                                        <td>{{ $depTime ? \Carbon\Carbon::parse($depTime)->format('h:i A') : '-' }}</td>
+                                        <td>{{ data_get($voyage, 'vessel_name', '-') }}</td>
                                     </tr>
                                 @empty
                                     <tr>

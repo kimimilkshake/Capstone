@@ -36,7 +36,7 @@
         <tbody>
             @forelse($bookings as $b)
                 <tr>
-                    <td>{{ $b->booking_ref_no }}</td>
+                    <td>{{ $b->booking_code }}</td>
                     <td>{{ optional($b->sender)->sender_name ?? 'N/A' }}</td>
                     <td>{{ optional($b->consignee)->consignee_name ?? 'N/A' }}</td>
                     <td>{{ $b->booking_status }}</td>

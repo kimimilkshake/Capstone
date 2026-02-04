@@ -134,9 +134,42 @@
                             <input type="number" step="0.01" name="weight[]" value="{{ old('weight.'.$index, $cargo->weight) }}" required>
                         </div>
                     </div>
+
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label>CBM</label>
+                            <input type="number" step="0.0001" name="cbm[]" value="{{ old('cbm.'.$index, $cargo->cbm ?? 0) }}" placeholder="0.0000">
+                        </div>
+                    </div>
+
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label>Rate (per unit)</label>
+                            <input type="number" step="0.01" name="rate[]" value="{{ old('rate.'.$index, $cargo->rate ?? 0) }}" placeholder="0.00" class="cargo-rate" data-index="{{ $index }}">
+                        </div>
+                    </div>
+
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label>Value per Item</label>
+                            <input type="number" step="0.01" name="value_per_item[]" value="{{ old('value_per_item.'.$index, $cargo->value_per_item ?? 0) }}" placeholder="0.00" class="cargo-value-per-item" data-index="{{ $index }}" readonly style="background-color: #f5f5f5;">
+                        </div>
+                    </div>
                 </div>
             </div>
         @endforeach
+
+        <div class="card shadow-sm p-4 mb-4" style="background-color: #f9f9f9;">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Total Value Summary</h5>
+                </div>
+                <div class="col-md-6 text-end">
+                    <h5>Total Value: <strong id="totalValueDisplay">₱0.00</strong></h5>
+                    <input type="hidden" name="total_value" id="totalValueInput" value="0.00">
+                </div>
+            </div>
+        </div>
 
         <div class="form-actions mb-4">
             <button type="submit" class="btn btn-primary">Update Cargo Items</button>
@@ -144,4 +177,43 @@
         </div>
     </form>
 </div>
+
+<script>
+    function calculateValues() {
+        let totalValue = 0;
+        const valueInputs = document.querySelectorAll('.cargo-value-per-item');
+        
+        document.querySelectorAll('.cargo-rate').forEach((rateInput, index) => {
+            const quantityInput = document.querySelector(`input[name="quantity[${index}]"]`);
+            const valueInput = document.querySelector(`.cargo-value-per-item[data-index="${index}"]`);
+            
+            if (quantityInput && rateInput && valueInput) {
+                const quantity = parseFloat(quantityInput.value) || 0;
+                const rate = parseFloat(rateInput.value) || 0;
+                const value = quantity * rate;
+                valueInput.value = value.toFixed(2);
+                totalValue += value;
+            }
+        });
+        
+        const totalDisplay = document.getElementById('totalValueDisplay');
+        const totalInput = document.getElementById('totalValueInput');
+        if (totalDisplay) totalDisplay.textContent = '₱' + totalValue.toFixed(2);
+        if (totalInput) totalInput.value = totalValue.toFixed(2);
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        calculateValues();
+        
+        document.querySelectorAll('.cargo-rate').forEach(input => {
+            input.addEventListener('change', calculateValues);
+            input.addEventListener('input', calculateValues);
+        });
+        
+        document.querySelectorAll('input[name^="quantity["]').forEach(input => {
+            input.addEventListener('change', calculateValues);
+            input.addEventListener('input', calculateValues);
+        });
+    });
+</script>
 @endsection

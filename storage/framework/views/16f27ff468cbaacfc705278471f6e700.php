@@ -32,22 +32,29 @@
             </div>
         </div>
 
-        <!-- Voyage Selection -->
-        <div class="mb-4">
-            <label class="form-label fw-bold">Select Voyage <span class="text-danger">*</span></label>
-            <select name="voyage_id" class="form-select" required>
-                <option value="">-- Choose Voyage --</option>
-                <?php $__currentLoopData = $voyages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $voyage): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <?php
-                        $depDate = \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('M j, Y');
-                        $depTime = $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:i A') : '';
-                    ?>
-                    <option value="<?php echo e($voyage->voyage_id); ?>" data-route_port="<?php echo e($voyage->route_port_id ?? $voyage->routePort->route_port_id ?? ''); ?>">
-                        <?php echo e($voyage->voyage_code); ?> - <?php echo e($voyage->routePort->route_origin ?? 'N/A'); ?> → <?php echo e($voyage->routePort->route_destination ?? 'N/A'); ?> - Departure: <?php echo e($depDate); ?> <?php echo e($depTime ? '(' . $depTime . ')' : ''); ?>
+        <!-- Voyage Selection + No. of Cargo -->
+        <div class="mb-4 d-flex gap-3 align-items-end">
+            <div style="flex:1">
+                <label class="form-label fw-bold">Select Voyage <span class="text-danger">*</span></label>
+                <select name="voyage_id" class="form-select" required>
+                    <option value="">-- Choose Voyage --</option>
+                    <?php $__currentLoopData = $voyages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $voyage): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php
+                            $depDate = \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('M j, Y');
+                            $depTime = $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:i A') : '';
+                        ?>
+                        <option value="<?php echo e($voyage->voyage_id); ?>" data-route_port="<?php echo e($voyage->route_port_id ?? $voyage->routePort->route_port_id ?? ''); ?>">
+                            <?php echo e($voyage->voyage_code); ?> - <?php echo e($voyage->routePort->route_origin ?? 'N/A'); ?> → <?php echo e($voyage->routePort->route_destination ?? 'N/A'); ?> - Departure: <?php echo e($depDate); ?> <?php echo e($depTime ? '(' . $depTime . ')' : ''); ?>
 
-                    </option>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-            </select>
+                        </option>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </select>
+            </div>
+
+            <div style="width:150px;">
+                <label class="form-label fw-bold">No. of Cargo <span class="text-danger">*</span></label>
+                <input type="number" name="no_of_cargo" id="no_of_cargo" class="form-control" min="1" value="1">
+            </div>
         </div>
 
         <div class="row">
@@ -89,6 +96,10 @@
             <div class="col-lg-6 mb-3">
                 <div class="card p-3 shadow-sm">
                     <h5 class="fw-bold mb-3">Cargo Items</h5>
+                    
+        <div class="mb-3">
+            <small class="text-muted">Note: You can only add numerous QTY to one cargo item if similar in dimensions.</small>
+        </div>
 
                     <div id="cargo-items-container">
 
@@ -132,7 +143,7 @@
                                     </div>
                                 </div>
 
-                                <label class="form-label">Cargo Dimensions (cm) <span class="text-danger">*</span></label>
+                                <label class="form-label">Cargo Dimensions <span class="text-danger">*</span></label>
                             <div class="d-flex gap-2 mb-2 align-items-end">
                                 <div class="flex-fill">
                                     <label class="form-label">Length <span class="text-danger">*</span></label>
@@ -149,15 +160,18 @@
                                     <input type="number" name="cargo_height[]" class="form-control dimension" required>
                                 </div>
 
+                                <div style="width: 150px;">
+                                    <label class="form-label">Unit</label>
+                                    <select name="measurement_unit[]" class="form-select unitSelect">
+                                        <option value="cm">cm</option>
+                                        <option value="in">in</option>
+                                    </select>
+                                </div>
+
                                 <div class="flex-fill">
                                     <label class="form-label">CBM </label>
                                     <input type="text" class="form-control cbm-output" readonly placeholder="0.0000">
                                 </div>
-                            </div>
-
-                            <div class="d-flex gap-2 mt-3">
-                                <button type="button" class="btn-add-cargo btn btn-success btn-sm"><i class="bi bi-plus-circle me-1"></i> Add</button>
-                                <button type="button" class="btn-remove-cargo btn btn-danger btn-sm"><i class="bi bi-trash me-1"></i> Remove</button>
                             </div>
 
                         </div>
@@ -184,9 +198,19 @@ const voyageSelect = document.querySelector('select[name="voyage_id"]');
 
 // Calculate CBM for a cargo item
 function calculateCBM(item){
-    const l = parseFloat(item.querySelector('[name="cargo_length[]"]').value) || 0;
-    const w = parseFloat(item.querySelector('[name="cargo_width[]"]').value) || 0;
-    const h = parseFloat(item.querySelector('[name="cargo_height[]"]').value) || 0;
+    const unitEl = item.querySelector('.unitSelect');
+    const unit = unitEl ? unitEl.value : 'cm';
+    let l = parseFloat(item.querySelector('[name="cargo_length[]"]').value) || 0;
+    let w = parseFloat(item.querySelector('[name="cargo_width[]"]').value) || 0;
+    let h = parseFloat(item.querySelector('[name="cargo_height[]"]').value) || 0;
+    
+    // Convert inches to centimeters if needed
+    if (unit === 'in') {
+        l = l * 2.54;
+        w = w * 2.54;
+        h = h * 2.54;
+    }
+    
     item.querySelector('.cbm-output').value = ((l*w*h)/1000000).toFixed(4);
 }
 
@@ -198,26 +222,44 @@ container.addEventListener('input', e => {
     }
 });
 
-// Add/Remove cargo items - use class-based selectors to target specific buttons
-document.addEventListener('click', e => {
-    if(e.target.closest('.btn-add-cargo')) {
-        e.preventDefault();
-        const original = container.querySelector('.cargo-item');
-        const newItem = original.cloneNode(true);
-        newItem.querySelectorAll('input, select').forEach(el => el.value = '');
-        newItem.querySelector('.cbm-output').value = '0.0000';
-        container.appendChild(newItem);
-    }
-    if(e.target.closest('.btn-remove-cargo')) {
-        e.preventDefault();
-        const items = container.querySelectorAll('.cargo-item');
-        const button = e.target.closest('.btn-remove-cargo');
-        const cargoItem = button.closest('.cargo-item');
-        if(cargoItem && items.length > 1) {
-            cargoItem.remove();
-        }
+// Recalculate CBM when unit changes
+container.addEventListener('change', e => {
+    if(e.target.classList.contains('unitSelect')){
+        const item = e.target.closest('.cargo-item');
+        calculateCBM(item);
     }
 });
+
+// Change number of cargo items based on No. of Cargo input
+const noInput = document.getElementById('no_of_cargo');
+if(noInput){
+    function syncCargoItems(){
+        let desired = parseInt(noInput.value) || 1;
+        if(desired < 1) { desired = 1; noInput.value = 1; }
+        const items = Array.from(container.querySelectorAll('.cargo-item'));
+        const current = items.length;
+        const original = items[0];
+
+        if(desired > current){
+            for(let i = current; i < desired; i++){
+                const newItem = original.cloneNode(true);
+                newItem.querySelectorAll('input, select').forEach(el => el.value = '');
+                newItem.querySelector('.cbm-output').value = '0.0000';
+                container.appendChild(newItem);
+            }
+        } else if(desired < current){
+            for(let i = current; i > desired; i--){
+                const last = container.querySelector('.cargo-item:last-child');
+                if(last) last.remove();
+            }
+        }
+    }
+
+    noInput.addEventListener('change', syncCargoItems);
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', syncCargoItems);
+}
 
 
 // Classification filter for descriptions

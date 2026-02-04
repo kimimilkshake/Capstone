@@ -42,9 +42,13 @@ class StaffCargoController extends Controller
      */
     public function create()
     {
-    $voyages = Voyage::with('routePort')->get();
-    $cargoItems = collect(CargoItem::all()); // <-- wrap in collect()
-    return view('authorized.staff.cargobooking', compact('voyages', 'cargoItems'));
+        // Show only voyages scheduled for today (departures today)
+        $today = \Carbon\Carbon::today()->toDateString();
+        $voyages = Voyage::with('routePort')
+            ->whereDate('voyage_departure_date', $today)
+            ->get();
+        $cargoItems = collect(CargoItem::all()); // <-- wrap in collect()
+        return view('authorized.staff.cargobooking', compact('voyages', 'cargoItems'));
     }
 
 
@@ -271,7 +275,7 @@ public function approve($id)
     }
 
     // Create payment record with mode='Cash' and status='Completed'
-    Payment::create([
+    $payment = Payment::create([
         'booking_ref_no' => $booking->booking_ref_no,
         'mode_of_payment' => 'Cash',
         'payment_status' => 'Completed',
@@ -295,7 +299,7 @@ public function approve($id)
     $senderName = $booking->sender ? $booking->sender->sender_name : 'Customer';
     Notification::create([
         'cargo_receipt_id' => null,
-        'payment_id' => null,
+        'payment_id' => $payment->payment_id ?? null,
         'booking_ref_no' => $booking->booking_ref_no,
         'notification_message' => "Cargo booking #{$booking->booking_ref_no} from {$senderName} has been approved",
         'notification_type' => 'cargo booking approval',
@@ -303,13 +307,14 @@ public function approve($id)
         'notification_created' => now(),
     ]);
 
-    // Send email
+    // Send email with payment details
     Mail::to($booking->sender->sender_email)
         ->send(new \App\Mail\CargoBookingApproved(
             $booking,
             $booking->sender,
             $booking->consignee,
-            $booking->cargoBookings
+            $booking->cargoBookings,
+            $payment
         ));
 
     return redirect()->route('cargo.bookings.pending')
@@ -320,39 +325,36 @@ public function approve($id)
     /**
      * Reject a booking
      */
-public function reject($id)
+public function reject(Request $request, $id)
 {
+    $request->validate(['reason' => 'required|string|max:1000']);
+
     $booking = Booking::with(['sender', 'consignee', 'cargoBookings.cargoItem', 'voyage'])->where('booking_ref_no', $id)->firstOrFail();
     $booking->booking_status = 'Canceled';
     $booking->save();
 
-        // Create notification for rejected cargo booking
-        $senderName = $booking->sender ? $booking->sender->sender_name : 'Customer';
-        Notification::create([
-            'cargo_receipt_id' => null,
-            'payment_id' => null,
-            'booking_ref_no' => $booking->booking_ref_no,
-            'notification_message' => "Cargo booking #{$booking->booking_ref_no} from {$senderName} has been rejected",
-            'notification_type' => 'cargo booking approval',
-            'notification_status' => 'rejected',
-            'notification_created' => now(),
-        ]);
+    $reason = $request->input('reason');
 
-            Mail::to($booking->sender->sender_email)
-        ->send(new \App\Mail\CargoBookingRejected(
-            $booking,
-            $booking->sender,
-            $booking->consignee,
-            $booking->cargoBookings
-        ));
+    // Create notification for rejected cargo booking with reason
+    $senderName = $booking->sender ? $booking->sender->sender_name : 'Customer';
+    Notification::create([
+        'cargo_receipt_id' => null,
+        'payment_id' => null,
+        'booking_ref_no' => $booking->booking_ref_no,
+        'notification_message' => "Cargo booking #{$booking->booking_ref_no} from {$senderName} has been rejected: {$reason}",
+        'notification_type' => 'cargo booking approval',
+        'notification_status' => 'rejected',
+        'notification_created' => now(),
+    ]);
 
-    // Send rejection email
+    // Send rejection email (include reason)
     Mail::to($booking->sender->sender_email)
         ->send(new \App\Mail\CargoBookingRejected(
             $booking,
             $booking->sender,
             $booking->consignee,
-            $booking->cargoBookings
+            $booking->cargoBookings,
+            $reason
         ));
 
     return redirect()->route('cargo.bookings.pending')
