@@ -165,7 +165,7 @@
                                     <select name="measurement_unit[]" class="form-select unitSelect">
                                         <option value="cm">cm</option>
                                         <option value="in">in</option>
-                                    </select>
+                                    </select> 
                                 </div>
 
                                 <div class="flex-fill">

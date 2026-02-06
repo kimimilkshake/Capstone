@@ -272,6 +272,10 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
 
     // View booking details
     Route::get('/cargo-bookings/{id}', [StaffCargoController::class, 'show'])->name('cargo.bookings.show');
+    // Bill of Lading formatted view (HTML/printable)
+    Route::get('/cargo-bookings/{id}/bol', [StaffCargoController::class, 'bolView'])->name('cargo.bookings.bol');
+    // Bill of Lading PDF (for download/inline view)
+    Route::get('/cargo-bookings/{id}/bol.pdf', [StaffCargoController::class, 'bolPdf'])->name('cargo.bookings.bol.pdf');
     Route::get('/cargo-items/voyage/{id}', [StaffCargoController::class, 'getCargoItemsByVoyage']);
     // Approve booking
     Route::post('/cargo-bookings/{id}/approve', [StaffCargoController::class, 'approve'])->name('cargo.bookings.approve');

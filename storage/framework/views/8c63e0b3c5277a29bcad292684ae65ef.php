@@ -19,6 +19,7 @@
     <h2>✅ Cargo Booking Approved</h2>
     <p>Booking Reference: <strong>#<?php echo e($booking->booking_code); ?></strong></p>
     <p>Status: <strong><?php echo e($booking->booking_status); ?></strong></p>
+    <p>The Bill of Lading (B/L) for this booking is attached as a PDF for your records and printing.</p>
 
     <!-- Voyage Information -->
     <div class="section">

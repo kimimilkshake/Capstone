@@ -259,6 +259,58 @@
         <a href="{{ route('cargo.bookings.pending') }}" class="btn btn-outline-primary btn-lg px-4">
             Back to Pending Bookings
         </a>
+
+        <button class="btn btn-secondary btn-lg px-4 ms-3" data-bs-toggle="modal" data-bs-target="#billOfLadingModal">
+            Bill of Lading
+        </button>
+    </div>
+
+    <!-- Bill of Lading Modal -->
+    <div class="modal fade" id="billOfLadingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Bill of Lading - {{ $booking->booking_ref_no }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="billOfLadingContent">
+                    <div class="p-3">
+                        <h5>Shipping Information</h5>
+                        <p>Vessel Name: {{ $booking->voyage->vessel_name ?? 'Not specified' }}</p>
+                        <p>Voyage No.: {{ $booking->voyage->voyage_code ?? 'N/A' }}</p>
+                        <p>Bill of Lading (B/L) No.: {{ $booking->booking_ref_no }}</p>
+                        <p>Sailing Date: {{ $booking->voyage ? \Carbon\Carbon::parse($booking->voyage->voyage_departure_date)->format('M d, Y') : 'N/A' }}</p>
+                        <p>Loading Port: {{ $booking->voyage->loading_port ?? 'Not specified' }}</p>
+                        <p>Unloading Port: {{ $booking->voyage->unloading_port ?? 'Not specified' }}</p>
+
+                        <hr />
+                        <h5>Party Details</h5>
+                        <p><strong>Shipper:</strong> {{ $booking->sender->sender_name ?? '' }}</p>
+                        <p><strong>Shipper Contact Number :</strong> {{ $booking->sender->sender_contactno ?? '' }}</p>
+                        <p><strong>Shipper Email :</strong> {{ $booking->sender->sender_email ?? '' }}</p>
+
+                        <p><strong>Consignee:</strong> {{ $booking->consignee->consignee_name ?? '' }}</p>
+                        <p><strong>Consignee Contact Number :</strong> {{ $booking->consignee->consignee_contactno ?? '' }}</p>
+
+                        <hr />
+                        <h5>Cargo Description</h5>
+                        @foreach($booking->cargoBookings as $c)
+                            <div class="mb-2">
+                                <div><strong>Qty:</strong> {{ $c->quantity }}</div>
+                                <div><strong>Classification:</strong> {{ $c->cargoItem->cargo_item_classification ?? '' }}</div>
+                                <div><strong>Description:</strong> {{ $c->cargoItem->cargo_item_description ?? '' }}</div>
+                                <div><strong>Dimensions:</strong> {{ $c->length }} x {{ $c->width }} x {{ $c->height }}</div>
+                                <div><strong>Weight:</strong> {{ $c->weight }} kg</div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="{{ route('cargo.bookings.bol', $booking->booking_ref_no) }}" target="_blank" class="btn btn-outline-primary">Open PDF</a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
     </div>
 
 </div>
@@ -594,5 +646,15 @@
             document.getElementById('modalPhotoClassification').textContent = 'Classification: ' + classification;
         });
     });
+
+    function printBillOfLading() {
+        const content = document.getElementById('billOfLadingContent').innerHTML;
+        const w = window.open('', '_blank');
+        w.document.open();
+        w.document.write(`<!doctype html><html><head><title>Bill of Lading</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body>${content}</body></html>`);
+        w.document.close();
+        w.focus();
+        setTimeout(() => { w.print(); }, 300);
+    }
 </script>
 @endsection

@@ -17,6 +17,8 @@ use Illuminate\Http\Request;
 use App\Mail\CargoBookingApproved;
 use App\Mail\CargoBookingRejected;
 use Illuminate\Support\Facades\Mail;
+use App\Services\BillOfLadingPdf;
+use App\Models\BillOfLading;
 
 
 class StaffCargoController extends Controller
@@ -283,7 +285,8 @@ public function approve($id)
         'payment_date' => now(),
     ]);
 
-    // Move cargo items to cargo_receipt
+    // Move cargo items to cargo_receipt and create bill of lading
+    $cargoReceiptIds = [];
     foreach ($booking->cargoBookings as $cargo) {
         $receipt = new CargoReceipt();
         $receipt->booking_ref_no = $booking->booking_ref_no;
@@ -293,6 +296,22 @@ public function approve($id)
         $receipt->voyage_id = $booking->voyage_id;
         $receipt->cargo_item_qty = $cargo->quantity;
         $receipt->save();
+        
+        $cargoReceiptIds[] = $receipt->cargo_receipt_id;
+    }
+
+    // Create bill of lading records with voyage details (vessel name, loading port, unloading port)
+    $staffId = auth()->guard('staff')->user()->staff_id ?? 1; // fallback if needed
+    $voyage = $booking->voyage;
+    
+    foreach ($cargoReceiptIds as $receiptId) {
+        BillOfLading::create([
+            'cargo_receipt_id' => $receiptId,
+            'staff_id' => $staffId,
+            'bl_date_issued' => now()->toDateString(),
+            'bl_loading_port' => $voyage->loading_port ?? 'Not specified',
+            'bl_unloading_port' => $voyage->unloading_port ?? 'Not specified',
+        ]);
     }
 
     // Create notification for approved cargo booking
@@ -363,4 +382,32 @@ public function reject(Request $request, $id)
 
 
     
+        /**
+         * Return the Bill of Lading PDF for a booking (inline view)
+         */
+        public function bolPdf($id)
+        {
+            $booking = Booking::with(['sender', 'consignee', 'cargoBookings.cargoItem', 'voyage'])
+                ->where('booking_ref_no', $id)
+                ->firstOrFail();
+
+            $pdf = BillOfLadingPdf::generate($booking);
+
+            return response($pdf, 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="bill_of_lading_' . $id . '.pdf"');
+        }
+
+    /**
+     * Display the Bill of Lading in a formatted HTML view (printable)
+     */
+    public function bolView($id)
+    {
+        $booking = Booking::with(['sender', 'consignee', 'cargoBookings.cargoItem', 'voyage'])
+            ->where('booking_ref_no', $id)
+            ->firstOrFail();
+
+        return view('authorized.staff.bill_of_lading', compact('booking'));
+    }
+
 }
