@@ -36,7 +36,7 @@
         </tr>
       </thead>
       <tbody>
-        @foreach ($cargo_items as $index => $c)
+        @forelse ($cargo_items as $index => $c)
           <tr>
             <td>{{ $c->cargo_item_classification }}</td>
             <td>{{ $c->cargo_item_description }}</td>
@@ -44,12 +44,16 @@
             <td>{{ $c->cargo_item_arrastre }}</td>
             <td>{{ $c->routePort->route_destination ?? 'N/A' }}</td>
             <td>
-              <a href="{{ route('staff.cargo_item_edit', $c->cargo_item_id) }}" class="edit-icon">
+              <a href="{{ route('staff.cargo_item_edit', $c->cargo_item_id) }}" class="editRouteBtn link-btn" title="Edit Cargo Item">
                 <i class="fa fa-pencil" aria-hidden="true"></i>
               </a>
             </td>
           </tr>
-        @endforeach
+        @empty
+          <tr>
+            <td colspan="6" class="text-center">No cargo items found.</td>
+          </tr>
+        @endforelse
       </tbody>
     </table>
     <div class="pagination-container">

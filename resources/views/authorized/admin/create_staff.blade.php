@@ -9,7 +9,7 @@
     <h3>CREATE STAFF</h3>
   </div>
   <div class="acs-form_container">
-    ('@if ($errors->any())
+    @if ($errors->any())
       <div class="alert alert-danger" style="color: red; text-align: center;">
         <strong>All fields are required.</strong><br>
         @foreach ($errors->all() as $error)
@@ -22,19 +22,19 @@
       <div class="alert alert-success" style="color: green; text-align: center; margin-bottom: 1rem;">
         {{ session('success') }}
       </div>
-    @endif')
+    @endif
 
     <form action="{{ route('admin.storeStaff') }}" method="POST" class="create-staff-form">
       @csrf
       <div class="form-row">
         <div class="form-col">
           <div class="form-group">
-            <label for="staff_name">Full Name</label>
+            <label for="staff_name">Full Name <span class="text-danger">*</span></label>
             <input type="text" id="staff_name" name="staff_name" required>
           </div>
 
           <div class="form-group">
-            <label for="staff_gender">Gender</label>
+            <label for="staff_gender">Gender <span class="text-danger">*</span></label>
             <select id="staff_gender" name="staff_gender" required>
               <option value="">Select</option>
               <option value="M">Male</option>
@@ -43,7 +43,7 @@
           </div>
 
           <div class="form-group">
-            <label for="staff_dob">Date of Birth</label>
+            <label for="staff_dob">Date of Birth <span class="text-danger">*</span></label>
             <input type="date" id="staff_dob" name="staff_dob" required>
           </div>
         </div>
@@ -51,17 +51,17 @@
         <!-- Column 2 -->
         <div class="form-col">
           <div class="form-group">
-            <label for="staff_email">Email</label>
+            <label for="staff_email">Email <span class="text-danger">*</span></label>
             <input type="email" id="staff_email" name="staff_email" required>
           </div>
 
           <div class="form-group">
-            <label for="staff_user">Username</label>
+            <label for="staff_user">Username <span class="text-danger">*</span></label>
             <input type="text" id="staff_user" name="staff_user" required>
           </div>
 
           <div class="form-group">
-            <label for="staff_password">Password</label>
+            <label for="staff_password">Password <span class="text-danger">*</span></label>
             <input type="password" id="staff_password" name="staff_password" required>
           </div>
         </div>

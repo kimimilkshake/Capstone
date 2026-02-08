@@ -2,6 +2,80 @@
 @section('content')
     @include('components.hero')
 
+    <script>
+        let isFormSubmitting = false;
+
+        // Replace the passenger form in browser history with booking type page
+        // This way, back button skips the form and goes directly to booking type
+        if (window.history && window.history.replaceState) {
+            // Replace the previous history entry (passenger form) with booking type
+            const bookingTypeUrl = '{{ route('bookingtype') }}';
+            window.history.replaceState(null, '', window.location.href);
+
+            // Push current state again so back button will trigger popstate
+            window.history.pushState({
+                page: 'confirmbooking'
+            }, '', window.location.href);
+        }
+
+        // Handle back button: cancel booking and redirect to booking type
+        window.addEventListener('popstate', function(event) {
+            if (!isFormSubmitting) {
+                const bookingRef = '{{ $booking->booking_ref_no }}';
+                const bookingStatus = '{{ strtolower($booking->booking_status) }}';
+
+                // Cancel the booking
+                if (bookingStatus === 'pending') {
+                    const formData = new FormData();
+                    formData.append('_token', '{{ csrf_token() }}');
+                    navigator.sendBeacon('{{ route('booking.cancel', $booking->booking_ref_no) }}', formData);
+                }
+
+                // Redirect to booking type
+                window.location.href = '{{ route('bookingtype') }}';
+            }
+        });
+
+        // Cancel booking when user leaves the page (close tab, etc.)
+        window.addEventListener('beforeunload', function(e) {
+            if (isFormSubmitting) {
+                return; // Allow legitimate form submission
+            }
+
+            const bookingRef = '{{ $booking->booking_ref_no }}';
+            const bookingStatus = '{{ strtolower($booking->booking_status) }}';
+
+            // Only cancel if booking is still pending
+            if (bookingStatus === 'pending') {
+                // Use sendBeacon for reliable background request
+                const formData = new FormData();
+                formData.append('_token', '{{ csrf_token() }}');
+
+                navigator.sendBeacon(
+                    '{{ route('booking.cancel', $booking->booking_ref_no) }}',
+                    formData
+                );
+            }
+        });
+
+        // Prevent page from being cached and force reload on navigation
+        window.onpageshow = function(event) {
+            if (event.persisted || performance.navigation.type === 2) {
+                // Page was loaded from cache (back/forward button)
+                window.location.reload();
+            }
+        };
+
+        // Also check on page load if booking is still valid
+        window.addEventListener('DOMContentLoaded', function() {
+            const bookingStatus = '{{ strtolower($booking->booking_status) }}';
+            if (bookingStatus !== 'pending') {
+                // Booking is no longer pending, redirect away
+                window.location.href = '{{ route('bookingtype') }}';
+            }
+        });
+    </script>
+
     <div class="container my-5">
         <div class="row justify-content-center">
             <div class="col-md-8">
@@ -139,6 +213,9 @@
                     return;
                 }
 
+                // Set flag to prevent beforeunload cancellation
+                isFormSubmitting = true;
+
                 // Disable button to prevent double clicks
                 payBtnEl.disabled = true;
                 payBtnEl.innerText = 'Initializing...';
@@ -210,6 +287,9 @@
                 if (!confirm('Are you sure you want to cancel this booking?')) {
                     return;
                 }
+
+                // Set flag to prevent beforeunload cancellation
+                isFormSubmitting = true;
 
                 const bookingRef = '{{ $booking->booking_ref_no }}';
                 if (!bookingRef) {

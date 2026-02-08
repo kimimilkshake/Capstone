@@ -33,17 +33,17 @@
             <!-- Column 1 -->
             <div class="form-col">
               <div class="form-group">
-                <label for="promo_name">Promo Name</label>
+                <label for="promo_name">Promo Name <span class="text-danger">*</span></label>
                 <input type="text" id="promo_name" name="promo_name" value="{{ $promo->promo_name }}" required>
               </div>
 
               <div class="form-group">
-                <label for="promo_code">Promo Code</label>
+                <label for="promo_code">Promo Code <span class="text-danger">*</span></label>
                 <input type="text" id="promo_code" name="promo_code" value="{{ $promo->promo_code }}" required>
               </div>
 
               <div class="form-group">
-                <label for="promo_type">Type</label>
+                <label for="promo_type">Type <span class="text-danger">*</span></label>
                 <select id="promo_type" name="promo_type" required>
                   <option value="Discount" {{ $promo->promo_type == 'Discount' ? 'selected' : '' }}>Discount</option>
                   <option value="Freebie" {{ $promo->promo_type == 'Freebie' ? 'selected' : '' }}>Freebie</option>
@@ -54,12 +54,12 @@
             <!-- Column 2 -->
             <div class="form-col">
               <div class="form-group">
-                <label for="promo_start_date">Date Start</label>
+                <label for="promo_start_date">Date Start <span class="text-danger">*</span></label>
                 <input type="date" id="promo_start_date" name="promo_start_date" value="{{ $promo->promo_start_date }}" required>
               </div>
 
               <div class="form-group">
-                <label for="promo_end_date">Date End</label>
+                <label for="promo_end_date">Date End <span class="text-danger">*</span></label>
                 <input type="date" id="promo_end_date" name="promo_end_date" value="{{ $promo->promo_end_date }}" required>
               </div>
 
@@ -73,12 +73,12 @@
           <!-- Description & Status side by side -->
           <div class="form-row" style="display: flex; gap: 1rem;">
             <div class="form-group" style="flex: 1;">
-              <label for="promo_description">Promo Description</label>
+              <label for="promo_description">Promo Description <span class="text-danger">*</span></label>
               <textarea id="promo_description" name="promo_description" required>{{ $promo->promo_description }}</textarea>
             </div>
 
             <div class="form-group" style="flex: 1;">
-              <label for="promo_status">Status</label>
+              <label for="promo_status">Status <span class="text-danger">*</span></label>
               <select id="promo_status" name="promo_status" required>
                 <option value="Active" {{ $promo->promo_status == 'Active' ? 'selected' : '' }}>Active</option>
                 <option value="Inactive" {{ $promo->promo_status == 'Inactive' ? 'selected' : '' }}>Inactive</option>

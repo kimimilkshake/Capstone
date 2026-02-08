@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Facades\DB;
 use App\Models\Passenger;
 use App\Models\CargoItem; // ✅ Add this
 use App\Models\Voyage;
+use App\Models\Notification;
 use Carbon\Carbon;
 
 class PassengerController extends Controller
@@ -33,6 +34,11 @@ class PassengerController extends Controller
         $portOfOrigin = $voyage->routePort->port_origin_name ?? 'Unknown Port';
         $accommodations = $voyage->vessel->accommodations ?? collect();
 
+        // Get cot plan image URL
+        $cotPlanUrl = $voyage->vessel && $voyage->vessel->vessel_cot_plan_url
+            ? asset('storage/' . $voyage->vessel->vessel_cot_plan_url)
+            : asset('images/sample-cot-plan.jpg');
+
         if ($departureTime) {
             $departureTime = Carbon::parse($departureTime)->format('g:i A');
         }
@@ -55,7 +61,8 @@ class PassengerController extends Controller
             'portOfOrigin',
             'cargoItems', // ✅ Pass it to Blade
             'voyage',
-            'accommodations'
+            'accommodations',
+            'cotPlanUrl'
         ));
     }
 
@@ -82,18 +89,19 @@ class PassengerController extends Controller
 
     public function showCargoBookingForm()
     {
-    $cargoItems = CargoItem::all();
+        $cargoItems = CargoItem::all();
 
-    return view('passenger.cargobooking', compact('cargoItems'));
+        return view('passenger.cargobooking', compact('cargoItems'));
     }
 
-   // Step 1: POST form → save to session and create temporary booking
+    // Step 1: POST form → save to session and create temporary booking
     public function confirmCargo(Request $request)
     {
         $request->validate([
             'sender_firstname' => 'required|string|max:255',
             'sender_lastname' => 'required|string|max:255',
             'sender_contact' => 'required|string|max:20',
+            'sender_tin' => 'nullable|string|max:50',
             'consignee_firstname' => 'required|string|max:255',
             'consignee_lastname' => 'required|string|max:255',
             'consignee_contact' => 'required|string|max:20',
@@ -103,6 +111,17 @@ class PassengerController extends Controller
             'cargo_weight.*' => 'required|numeric|min:0',
         ]);
 
+        // Validate voyage date within 30 days and not in the past
+        $voyage = Voyage::find($request->voyage_id);
+        if ($voyage) {
+            $dep = \Carbon\Carbon::parse($voyage->voyage_departure_date)->startOfDay();
+            $today = \Carbon\Carbon::today();
+            $max = $today->copy()->addDays(30);
+            if ($dep->lt($today) || $dep->gt($max)) {
+                return back()->with('error', 'Selected voyage must be within the next 30 days and not before today.');
+            }
+        }
+
         // Store temporary booking in DB (status = Pending)
         DB::beginTransaction();
         try {
@@ -110,6 +129,7 @@ class PassengerController extends Controller
                 'sender_name' => $request->sender_firstname . ' ' . $request->sender_lastname,
                 'sender_contactno' => $request->sender_contact,
                 'sender_email' => $request->sender_email ?? null,
+                'sender_tin' => $request->sender_tin ?? null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -152,6 +172,18 @@ class PassengerController extends Controller
                 ]);
             }
 
+            // Create notification for new cargo booking
+            $senderName = $request->sender_firstname . ' ' . $request->sender_lastname;
+            Notification::create([
+                'cargo_receipt_id' => null,
+                'payment_id' => null,
+                'booking_ref_no' => $bookingId,
+                'notification_message' => "New cargo booking #{$bookingId} from {$senderName} is pending review",
+                'notification_type' => 'cargo booking approval',
+                'notification_status' => 'approved',
+                'notification_created' => now(),
+            ]);
+
             DB::commit();
             return redirect()->route('cargobooking.show', ['booking_ref_no' => $bookingId]);
         } catch (\Exception $e) {
@@ -161,40 +193,40 @@ class PassengerController extends Controller
     }
 
     // Step 2: GET confirmation page
- // Show confirmation page
-public function showCargoConfirmation($bookingRef)
-{
-    // Fetch cargo items with freight & arrastre rates from cargo_item
-    $cargoItems = \DB::table('cargo_booking')
-        ->join('cargo_item', 'cargo_booking.cargo_item_id', '=', 'cargo_item.cargo_item_id')
-        ->select(
-            'cargo_booking.*',
-            'cargo_item.cargo_item_description',
-            'cargo_item.cargo_item_classification',
-            'cargo_item.cargo_item_freight as freight',
-            'cargo_item.cargo_item_arrastre as arrastre'
-        )
-        ->where('booking_ref_no', $bookingRef)
-        ->get();
+    // Show confirmation page
+    public function showCargoConfirmation($bookingRef)
+    {
+        // Fetch cargo items with freight & arrastre rates from cargo_item
+        $cargoItems = \DB::table('cargo_booking')
+            ->join('cargo_item', 'cargo_booking.cargo_item_id', '=', 'cargo_item.cargo_item_id')
+            ->select(
+                'cargo_booking.*',
+                'cargo_item.cargo_item_description',
+                'cargo_item.cargo_item_classification',
+                'cargo_item.cargo_item_freight as freight',
+                'cargo_item.cargo_item_arrastre as arrastre'
+            )
+            ->where('booking_ref_no', $bookingRef)
+            ->get();
 
-    $booking = \DB::table('booking')->where('booking_ref_no', $bookingRef)->first();
-    $sender = \DB::table('sender')->where('sender_id', $booking->sender_id)->first();
-    $consignee = \DB::table('consignee')->where('consignee_id', $booking->consignee_id)->first();
+        $booking = \DB::table('booking')->where('booking_ref_no', $bookingRef)->first();
+        $sender = \DB::table('sender')->where('sender_id', $booking->sender_id)->first();
+        $consignee = \DB::table('consignee')->where('consignee_id', $booking->consignee_id)->first();
 
-    return view('passenger.cargobooking_confirm', compact('booking', 'sender', 'consignee', 'cargoItems'));
-}
+        return view('passenger.cargobooking_confirm', compact('booking', 'sender', 'consignee', 'cargoItems'));
+    }
 
 
-// Cancel booking
-public function cancelCargo($bookingRef)
-{
-    \DB::table('booking')->where('booking_ref_no', $bookingRef)->update([
-        'booking_status' => 'Canceled',
-        'updated_at' => now(),
-    ]);
+    // Cancel booking
+    public function cancelCargo($bookingRef)
+    {
+        \DB::table('booking')->where('booking_ref_no', $bookingRef)->update([
+            'booking_status' => 'Canceled',
+            'updated_at' => now(),
+        ]);
 
-    return redirect()->route('cargobooking')->with('success', 'Cargo booking canceled.');
-}
+        return redirect()->route('cargobooking')->with('success', 'Cargo booking canceled.');
+    }
 
 
     // Step 4: Finalize booking (staff approval)

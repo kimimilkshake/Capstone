@@ -31,7 +31,7 @@ body {
 .anav {
   list-style: none;
   margin: 0;
-  padding: 10px 15px;
+  padding: 15px 15px;
   flex-grow: 1;
   width: 100%;
   overflow: hidden;
@@ -209,7 +209,7 @@ body {
 }
 
 .form-group input,
-.form-group select, 
+.form-group select,
 .form-group textarea {
   width: 100%;
   padding: 8px;
@@ -244,8 +244,8 @@ body {
 }
 
 .staff-table th, .staff-table td, .promo-table th, .promo-table td, .vessel-table th, .vessel-table td, .voyage-table th, .voyage-table td, .rp-table th, .rp-table td, .manifest-table td, .manifest-table th, .cargo-item-table th, .cargo-item-table td {
-    padding: 10px;
-    text-align: center;
+    padding: 15px;
+    text-align: left;
 }
 
 .staff-table th, .promo-table th, .vessel-table th, .voyage-table th, .rp-table th, .manifest-table th, .cargo-item-table th{
@@ -257,7 +257,7 @@ body {
   border-style: solid;
   border-color: rgba(0,0,0,0.1);
   border-width: 1px;
-  padding: 10px;
+  padding: 15px;
   margin: 10px;
 }
 
@@ -275,18 +275,20 @@ body {
 .search-bar {
     display: flex;
     flex: 1;
+    gap: 0;
 }
 
 .search-bar input {
     flex: 1;
-    padding: 8px 12px;
+    padding: 10px 12px;
     border: 1px solid #ccc;
     border-radius: 5px 0 0 5px;
     font-size: 14px;
+    min-width: 0;
 }
 
 .search-bar button {
-    padding: 8px 12px;
+    padding: 10px 12px;
     border: 1px solid #ccc;
     border-left: none;
     border-radius: 0 5px 5px 0;
@@ -295,6 +297,8 @@ body {
     font-size: 14px;
     cursor: pointer;
     transition: background-color 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .search-bar button:hover {
@@ -319,16 +323,18 @@ body {
 
 //PROMOS
 .search-add-row{
+  display: flex;
+  gap: 10px;
   margin-top: 20px;
   margin-bottom: 20px;
 }
 
 .add-promo a {
-    display: inline-block;        
-    text-decoration: none;   
-    color: #fff;           
-    background-color: #485b8c; 
-    padding: 8px 16px; 
+    display: inline-block;
+    text-decoration: none;
+    color: #fff;
+    background-color: #485b8c;
+    padding: 8px 16px;
     border-radius: 5px;
     font-size: 14px;
     font-weight: 500;
@@ -359,155 +365,146 @@ body {
 .acs-cancel-btn:hover {
   background-color: #8b2635;
   color: #ffffff;
-  text-decoration: none; 
+  text-decoration: none;
 }
 
 //VESSEL
-.add-vessel a { 
-  display: inline-block; 
-  text-decoration: none; 
-  color: #fff; background-color: #485b8c; 
-  padding: 8px 16px; 
-  border-radius: 5px; 
-  font-size: 14px; 
-  font-weight: 500; 
-  transition: background-color 0.2s; 
-} 
+.hatch-btn,
+.accommodation-btn,
+.dynamic-add,
+.dynamic-remove {
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 6px 8px;
+  transition: background-color 0.2s;
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
+  flex: none;
+  height: fit-content;
+  margin-bottom: 8px;
+}
 
-.add-vessel a:hover { 
-  background-color: #2a364f; 
-} 
+.add-vessel a {
+    display: inline-block;
+    text-decoration: none;
+    color: #fff;
+    background-color: #485b8c;
+    padding: 10px 16px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+    border: none;
+    cursor: pointer;
+}.add-vessel a:hover {
+  background-color: #2a364f;
+}
 
-.hatch-row, .accommodation-row { 
-  display: flex; 
-  align-items: center; 
-  gap: 10px; 
-  margin-bottom: 10px; 
-} 
+.hatch-btn,
+.accommodation-btn,
+.dynamic-add {
+  background-color: #5ba270;
+  color: #fff;
+  font-weight: bold;
+}
 
-.hatch-row input, .accommodation-row input { 
-  flex: 1; 
-  padding: 6px 10px; 
-  border: 1px solid #ccc; 
-  border-radius: 6px; 
-} 
+.hatch-btn:hover,
+.accommodation-btn:hover,
+.dynamic-add:hover {
+  background-color: #3e885b;
+}
 
-.hatch-btn, .accommodation-btn { 
-  background-color: #5ba270; 
-  color: white; 
-  border: none; 
-  padding: 6px 10px; 
-  border-radius: 6px; 
-  cursor: pointer; 
-  font-size: 1rem; 
-  font-weight: bold; 
-} 
+.dynamic-remove {
+  background-color: #b03a48;
+  color: #fff;
+  text-decoration: none;
+}
 
-.hatch-btn:hover, .accommodation-btn:hover { 
-  background-color: #3e885b; 
-} 
+.dynamic-remove:hover {
+  background-color: #8b2635;
+}
 
-.ha-label { 
-  display: inline-block; 
-  margin-bottom: 0; 
-  font-weight: 600; 
-  color: #333; 
-  white-space: nowrap; 
-} 
+.hatch-row,
+.accommodation-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  align-items: end;
+}
 
-#hatch-container, #accommodation-container { 
-  margin-top: 0; 
-} 
+.hatch-row .form-group,
+.accommodation-row .form-group {
+  flex: 1;
+}
 
-.vcot-plan { 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  gap: 1rem; 
-  margin: 1.5rem auto; 
-  width: fit-content; 
-} 
+.hatch-row input,
+.accommodation-row input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
 
-.vcot-plan label { 
-  font-weight: 500; 
-  white-space: nowrap; 
-} 
 
-.vcot-plan input[type="file"] { 
-  border: 1px solid #ccc; 
-  padding: 8px; 
-  border-radius: 6px; 
-  background-color: #f9f9f9; 
-  cursor: pointer; 
-} 
-
-.dynamic-add { 
-  background-color: #5ba270; 
-  color: #fff; 
-  border: none; 
-  padding: 6px 10px; 
-  border-radius: 6px; 
-  cursor: pointer; 
-  font-weight: 700; 
-} 
-
-.dynamic-add:hover { 
-  background-color: #3e885b; 
-} 
-
-.dynamic-remove { 
-  background-color: #b03a48; 
-  color: #fff; 
-  border: none; 
-  padding: 6px 10px; 
-  border-radius: 6px; 
-  cursor: pointer; 
-  font-weight: 700; 
-  text-decoration: none; 
-} 
-
-.dynamic-remove:hover { 
-  background-color: #8b2635; 
-  color: #ffffff; 
-} 
-
-.hatch-row, .accommodation-row { 
-  display: flex; 
-  align-items: center; 
-  gap: 10px; 
-  margin-bottom: 10px; 
-} 
-
-.hatch-row input, .accommodation-row input { 
-  flex: 1; 
-  padding: 6px 10px; 
-  border: 1px solid #ccc; 
-  border-radius: 6px; 
+.hatch-input,
+.acc-input {
+  margin-bottom: 8px;
 }
 
 .hatch-input label,
 .acc-input label {
-    font-size: 0.8rem;
-    margin-bottom: 2px;
-    font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+  display: inline-block;
 }
 
 .hatch-input input,
 .acc-input input {
-    padding: 6px 8px;
-    font-size: 0.85rem;
+  padding: 6px 8px;
+  font-size: 0.85rem;
 }
 
-.hatch-input,
-.acc-input {
-    margin-bottom: 8px;
+.ha-label {
+  display: inline-block;
+  margin-bottom: 0;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
 }
 
-.hatch-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 8px;
+#hatch-container,
+#accommodation-container {
+  margin-top: 0;
 }
+
+.vcot-plan {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1.5rem auto;
+  width: fit-content;
+}
+
+.vcot-plan label {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.vcot-plan input[type="file"] {
+  border: 1px solid #ccc;
+  padding: 8px;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+  cursor: pointer;
+}
+
+
 
 
 //ROUTES AND PORTS
@@ -555,10 +552,10 @@ body {
   border: none;
   cursor: pointer;
   font: inherit;
-  display: inline-block;        
-  text-decoration: none;   
-  color: #fff;           
-  padding: 8px 16px; 
+  display: inline-block;
+  text-decoration: none;
+  color: #fff;
+  padding: 8px 16px;
   border-radius: 5px;
   font-size: 14px;
   font-weight: 500;
@@ -721,7 +718,7 @@ body {
 
 
 
-//PAGINATION 
+//PAGINATION
 .pagination-container {
   display: flex;
   justify-content: center;
@@ -784,8 +781,7 @@ body {
 .manifest-header {
     margin-bottom: 1.5rem;
     color: #000;
-     padding-top: 3px;
-     margin-bottom: -3rem;
+    padding-top: 3px;
 
     .manifest-title {
         font-weight: bold;
@@ -805,7 +801,6 @@ body {
     }
 }
 
-
 .manifest-header h2 {
     font-weight: bold;
     font-size: 1.5rem;
@@ -818,10 +813,15 @@ body {
     font-size: 0.95rem;
 }
 
+.manifest-filters {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
 .passenger-manifest,
 .cargo-manifest {
     margin-top: 2rem;
-    margin:5rem;
 }
 
 .passenger-manifest h4,
@@ -839,15 +839,7 @@ body {
     margin-bottom: 13px;
 }
 
-.form-check-label{
+.form-check-label {
     font-size: 14px;
-    margin-top: -25.5px;
     align-items: center;
 }
-
-.manifest-filters{
-    margin-bottom: 30px;
-    margin-left:410px; 
-}
-
-

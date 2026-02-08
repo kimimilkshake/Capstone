@@ -64,10 +64,17 @@ class SendTicketEmail implements ShouldQueue
                 return;
             }
 
-            // Send the ticket email
-            Mail::to($this->recipientEmail)->send(new TicketMailable($this->bookingRef));
+            // Count passengers with this email
+            $passengerCount = DB::table('passenger')
+                ->join('passenger_ticket', 'passenger.passenger_id', '=', 'passenger_ticket.passenger_id')
+                ->where('passenger_ticket.booking_ref_no', $this->bookingRef)
+                ->where('passenger.passenger_email', $this->recipientEmail)
+                ->count();
 
-            Log::info("SendTicketEmail: Successfully sent ticket email for booking {$this->bookingRef} to {$this->recipientEmail}");
+            // Send the ticket email (TicketMailable will only include passengers with this email)
+            Mail::to($this->recipientEmail)->send(new TicketMailable($this->bookingRef, $this->recipientEmail));
+
+            Log::info("SendTicketEmail: Successfully sent ticket email for booking {$this->bookingRef} to {$this->recipientEmail} ({$passengerCount} passenger(s))");
 
         } catch (\Exception $e) {
             Log::error("SendTicketEmail failed for booking {$this->bookingRef}: " . $e->getMessage());

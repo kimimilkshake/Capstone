@@ -1,6 +1,5 @@
 @extends('layouts.app')
 @section('page-title', 'CARGO BOOKING')
-
 @section('content')
 @include('components.authHeader')
 @include('components.staff_nav')
@@ -11,7 +10,7 @@
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success text-center">{{ session('success') }}</div>
+        <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
     @endif
     @if ($errors->any())
         <div class="alert alert-danger text-center">
@@ -23,23 +22,39 @@
         </div>
     @endif
 
-    <form action="{{ route('cargo.bookings.store') }}" method="POST" enctype="multipart/form-data">
+    <form id="staffCargoForm" action="{{ route('cargo.bookings.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
-        <!-- Voyage Selection -->
-        <div class="mb-4">
-            <label class="form-label fw-bold">Select Voyage <span class="text-danger">*</span></label>
-            <select name="voyage_id" class="form-select" required>
-                <option value="">-- Choose Voyage --</option>
-                @foreach($voyages as $voyage)
-                    <option value="{{ $voyage->voyage_id }}">
-                        {{ $voyage->voyage_code }} | 
-                        {{ $voyage->routePort->route_origin ?? 'N/A' }} →
-                        {{ $voyage->routePort->route_destination ?? 'N/A' }} |
-                        Departure: {{ $voyage->voyage_departure_date }}
-                    </option>
-                @endforeach
-            </select>
+        <!-- Loading overlay -->
+        <div id="staffOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1055; align-items:center; justify-content:center;">
+            <div class="text-center text-white">
+                <div class="spinner-border text-light" role="status" style="width:3rem; height:3rem;"></div>
+                <div class="mt-3">Loading... please wait</div>
+            </div>
+        </div>
+
+        <!-- Voyage Selection + No. of Cargo -->
+        <div class="mb-4 d-flex gap-3 align-items-end">
+            <div style="flex:1">
+                <label class="form-label fw-bold">Select Voyage <span class="text-danger">*</span></label>
+                <select name="voyage_id" class="form-select" required>
+                    <option value="">-- Choose Voyage --</option>
+                    @foreach($voyages as $voyage)
+                        @php
+                            $depDate = \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('M j, Y');
+                            $depTime = $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:i A') : '';
+                        @endphp
+                        <option value="{{ $voyage->voyage_id }}" data-route_port="{{ $voyage->route_port_id ?? $voyage->routePort->route_port_id ?? '' }}">
+                            {{ $voyage->voyage_code }} - {{ $voyage->routePort->route_origin ?? 'N/A' }} → {{ $voyage->routePort->route_destination ?? 'N/A' }} - Departure: {{ $depDate }} {{ $depTime ? '(' . $depTime . ')' : '' }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div style="width:150px;">
+                <label class="form-label fw-bold">No. of Cargo <span class="text-danger">*</span></label>
+                <input type="number" name="no_of_cargo" id="no_of_cargo" class="form-control" min="1" value="1">
+            </div>
         </div>
 
         <div class="row">
@@ -81,47 +96,52 @@
             <div class="col-lg-6 mb-3">
                 <div class="card p-3 shadow-sm">
                     <h5 class="fw-bold mb-3">Cargo Items</h5>
+                    
+        <div class="mb-3">
+            <small class="text-muted">Note: You can only add numerous QTY to one cargo item if similar in dimensions.</small>
+        </div>
 
                     <div id="cargo-items-container">
 
                         <div class="cargo-item border rounded p-3 mb-3">
 
-                            <label class="form-label">Cargo Classification <span class="text-danger">*</span></label>
-                            <select name="cargo_classification[]" class="form-select cargo-classification mb-2">
-                                <option value="">-- Select Classification --</option>
-                                @foreach($cargoItems->unique('cargo_item_classification') as $item)
-                                    <option value="{{ $item->cargo_item_classification }}" 
-                                            data-route_port="{{ $item->route_port_id }}">
-                                        {{ $item->cargo_item_classification }}
-                                    </option>
-                                @endforeach
-                            </select>
-
-                            <label class="form-label">Cargo Description <span class="text-danger">*</span></label>
-                            <select name="cargo_item_id[]" class="form-select cargo-description mb-2" required>
-                                <option value="">-- Select Description --</option>
-                                @foreach($cargoItems as $item)
-                                    <option value="{{ $item->cargo_item_id }}"
-                                            data-classification="{{ $item->cargo_item_classification }}"
-                                            data-route_port="{{ $item->route_port_id }}">
-                                        {{ $item->cargo_item_description }}
-                                    </option>
-                                @endforeach
-                            </select>
-
-                            <div class="d-flex gap-2 mb-2">
-                                <div class="flex-fill">
-                                    <label class="form-label">Quantity <span class="text-danger">*</span></label>
-                                    <input type="number" name="cargo_quantity[]" class="form-control" required min="1">
+                            <div class="row gx-2 mb-2">
+                                <div class="col-6">
+                                    <label class="form-label">Cargo Classification <span class="text-danger">*</span></label>
+                                    <select name="cargo_classification[]" class="form-select cargo-classification">
+                                        <option value="">-- Select Classification --</option>
+                                        @foreach($cargoItems->unique('cargo_item_classification') as $item)
+                                            <option value="{{ $item->cargo_item_classification }}" data-route_port="{{ $item->route_port_id }}">
+                                                {{ $item->cargo_item_classification }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
-
-                                <div class="flex-fill">
-                                    <label class="form-label">Weight (kg) <span class="text-danger">*</span></label>
-                                    <input type="number" name="cargo_weight[]" class="form-control" required>
+                                <div class="col-6">
+                                    <label class="form-label">Cargo Description <span class="text-danger">*</span></label>
+                                    <select name="cargo_item_id[]" class="form-select cargo-description" required>
+                                        <option value="">-- Select Description --</option>
+                                        @foreach($cargoItems as $item)
+                                            <option value="{{ $item->cargo_item_id }}" data-classification="{{ $item->cargo_item_classification }}" data-route_port="{{ $item->route_port_id }}">
+                                                {{ $item->cargo_item_description }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
 
-                            <label class="form-label">Cargo Dimensions (cm) <span class="text-danger">*</span></label>
+                                <div class="row gx-2 mb-2">
+                                    <div class="col-6">
+                                        <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                                        <input type="number" name="cargo_quantity[]" class="form-control" placeholder="Qty" min="1" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">Weight (kg) <span class="text-danger">*</span></label>
+                                        <input type="number" name="cargo_weight[]" class="form-control" placeholder="Weight" step="0.01" required>
+                                    </div>
+                                </div>
+
+                                <label class="form-label">Cargo Dimensions <span class="text-danger">*</span></label>
                             <div class="d-flex gap-2 mb-2 align-items-end">
                                 <div class="flex-fill">
                                     <label class="form-label">Length <span class="text-danger">*</span></label>
@@ -138,25 +158,23 @@
                                     <input type="number" name="cargo_height[]" class="form-control dimension" required>
                                 </div>
 
+                                <div style="width: 150px;">
+                                    <label class="form-label">Unit</label>
+                                    <select name="measurement_unit[]" class="form-select unitSelect">
+                                        <option value="cm">cm</option>
+                                        <option value="in">in</option>
+                                    </select> 
+                                </div>
+
                                 <div class="flex-fill">
                                     <label class="form-label">CBM </label>
                                     <input type="text" class="form-control cbm-output" readonly placeholder="0.0000">
                                 </div>
                             </div>
 
-                            <label class="form-label">Upload Photo <span class="text-danger">*</span></label>
-                            <label class="btn btn-outline-secondary w-100 mb-2">
-                                <i class="bi bi-image me-2"></i> Add Photo
-                                <input type="file" name="cargo_picture[]" class="d-none cargo-photo" accept="image/*">
-                            </label>
-                            <small class="text-success photo-confirmation" style="display:none;">Photo selected!</small>
                         </div>
                     </div>
 
-                    <div class="d-flex gap-2 my-3">
-                        <button type="button" id="addCargoItem" class="btn btn-secondary">Add Cargo</button>
-                        <button type="button" id="removeCargoItem" class="btn btn-danger">Remove</button>
-                    </div>
                 </div>
             </div>
 
@@ -178,9 +196,19 @@ const voyageSelect = document.querySelector('select[name="voyage_id"]');
 
 // Calculate CBM for a cargo item
 function calculateCBM(item){
-    const l = parseFloat(item.querySelector('[name="cargo_length[]"]').value) || 0;
-    const w = parseFloat(item.querySelector('[name="cargo_width[]"]').value) || 0;
-    const h = parseFloat(item.querySelector('[name="cargo_height[]"]').value) || 0;
+    const unitEl = item.querySelector('.unitSelect');
+    const unit = unitEl ? unitEl.value : 'cm';
+    let l = parseFloat(item.querySelector('[name="cargo_length[]"]').value) || 0;
+    let w = parseFloat(item.querySelector('[name="cargo_width[]"]').value) || 0;
+    let h = parseFloat(item.querySelector('[name="cargo_height[]"]').value) || 0;
+    
+    // Convert inches to centimeters if needed
+    if (unit === 'in') {
+        l = l * 2.54;
+        w = w * 2.54;
+        h = h * 2.54;
+    }
+    
     item.querySelector('.cbm-output').value = ((l*w*h)/1000000).toFixed(4);
 }
 
@@ -192,17 +220,45 @@ container.addEventListener('input', e => {
     }
 });
 
-// Add/Remove cargo items
-document.getElementById('addCargoItem').addEventListener('click', () => {
-    const newItem = container.querySelector('.cargo-item').cloneNode(true);
-    newItem.querySelectorAll('input, select').forEach(i => i.value = '');
-    newItem.querySelector('.photo-confirmation').style.display = 'none';
-    container.appendChild(newItem);
+// Recalculate CBM when unit changes
+container.addEventListener('change', e => {
+    if(e.target.classList.contains('unitSelect')){
+        const item = e.target.closest('.cargo-item');
+        calculateCBM(item);
+    }
 });
-document.getElementById('removeCargoItem').addEventListener('click', () => {
-    const items = container.querySelectorAll('.cargo-item');
-    if(items.length>1) items[items.length-1].remove();
-});
+
+// Change number of cargo items based on No. of Cargo input
+const noInput = document.getElementById('no_of_cargo');
+if(noInput){
+    function syncCargoItems(){
+        let desired = parseInt(noInput.value) || 1;
+        if(desired < 1) { desired = 1; noInput.value = 1; }
+        const items = Array.from(container.querySelectorAll('.cargo-item'));
+        const current = items.length;
+        const original = items[0];
+
+        if(desired > current){
+            for(let i = current; i < desired; i++){
+                const newItem = original.cloneNode(true);
+                newItem.querySelectorAll('input, select').forEach(el => el.value = '');
+                newItem.querySelector('.cbm-output').value = '0.0000';
+                container.appendChild(newItem);
+            }
+        } else if(desired < current){
+            for(let i = current; i > desired; i--){
+                const last = container.querySelector('.cargo-item:last-child');
+                if(last) last.remove();
+            }
+        }
+    }
+
+    noInput.addEventListener('change', syncCargoItems);
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', syncCargoItems);
+}
+
 
 // Classification filter for descriptions
 container.addEventListener('change', e => {
@@ -241,18 +297,16 @@ voyageSelect.addEventListener('change', () => {
     });
 });
 
-// Photo confirmation
-container.addEventListener('change', e => {
-    if(!e.target.classList.contains('cargo-photo')) return;
-    const confirmation = e.target.closest('.cargo-item').querySelector('.photo-confirmation');
-    if(e.target.files.length>0){
-        confirmation.style.display='inline';
-        confirmation.textContent = `Photo selected: ${e.target.files[0].name}`;
-    } else {
-        confirmation.style.display='none';
-        confirmation.textContent='';
-    }
-});
+// Photo upload removed for staff UI — no JS needed
+
+// Show loading overlay on submit
+const staffForm = document.getElementById('staffCargoForm');
+if(staffForm){
+    staffForm.addEventListener('submit', function(){
+        const overlay = document.getElementById('staffOverlay');
+        if(overlay){ overlay.style.display = 'flex'; }
+    });
+}
 </script>
 
 @endsection

@@ -17,8 +17,9 @@
 <body>
 <div class="container">
     <h2>✅ Cargo Booking Approved</h2>
-    <p>Booking Reference: <strong>#{{ $booking->booking_ref_no }}</strong></p>
+    <p>Booking Reference: <strong>#{{ $booking->booking_code }}</strong></p>
     <p>Status: <strong>{{ $booking->booking_status }}</strong></p>
+    <p>The Bill of Lading (B/L) for this booking is attached as a PDF for your records and printing.</p>
 
     <!-- Voyage Information -->
     <div class="section">
@@ -45,25 +46,65 @@
         <table>
             <thead>
                 <tr>
-                    <th>Description</th>
+                    <th>QTY</th>
                     <th>Classification</th>
-                    <th>Quantity</th>
+                    <th>Description</th>
+                    <th>Dimensions</th>
                     <th>Weight</th>
-                    <th>Dimensions (L×W×H cm)</th>
+                    <th>Subtotal</th>
                 </tr>
             </thead>
             <tbody>
+                @php 
+                    $total = 0;
+                    $totalQuantity = 0;
+                @endphp
                 @foreach($cargoItems as $cargo)
+                    @php
+                        $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
+                        $arrastre = $cargo->cargoItem->cargo_item_arrastre ?? 0;
+                        $cbm = ($cargo->length * $cargo->width * $cargo->height) / 1000000;
+                        $subtotal = ($freight + $arrastre) * $cbm * $cargo->quantity;
+                        $total += $subtotal;
+                        $totalQuantity += $cargo->quantity;
+                        
+                        // Determine unit of measurement
+                        $unit = $cargo->measurement_unit ?? 'cm';
+                        $unitDisplay = ($unit === 'in') ? 'inches' : 'cm';
+                        
+                        // For display, show dimensions in the unit chosen by customer
+                        if ($unit === 'in') {
+                            $displayLength = round($cargo->length / 2.54, 2);
+                            $displayWidth = round($cargo->width / 2.54, 2);
+                            $displayHeight = round($cargo->height / 2.54, 2);
+                        } else {
+                            $displayLength = $cargo->length;
+                            $displayWidth = $cargo->width;
+                            $displayHeight = $cargo->height;
+                        }
+                    @endphp
                     <tr>
-                        <td>{{ $cargo->cargoItem->cargo_item_description }}</td>
-                        <td>{{ $cargo->cargoItem->cargo_item_classification }}</td>
                         <td>{{ $cargo->quantity }}</td>
+                        <td>{{ $cargo->cargoItem->cargo_item_classification }}</td>
+                        <td>{{ $cargo->cargoItem->cargo_item_description }}</td>
+                        <td>{{ $displayLength }} × {{ $displayWidth }} × {{ $displayHeight }} {{ $unitDisplay }}</td>
                         <td>{{ $cargo->weight }} kg</td>
-                        <td>{{ $cargo->length }} × {{ $cargo->width }} × {{ $cargo->height }}</td>
+                        <td>₱{{ number_format($subtotal,2) }}</td>
                     </tr>
                 @endforeach
+                <tr style="background-color: #f9f9f9; font-weight: bold;">
+                    <td colspan="2">Total Items</td>
+                    <td colspan="2">{{ $totalQuantity }}</td>
+                    <td colspan="2"></td>
+                </tr>
             </tbody>
         </table>
+
+        <div style="margin-top:15px; text-align:left;">
+            <p><strong>Mode of Payment:</strong> {{ $payment->mode_of_payment ?? 'N/A' }}</p>
+            <p><strong>Payment Status:</strong> {{ $payment->payment_status ?? 'N/A' }}</p>
+            <p style="font-size: 16px; color: #28a745;"><strong>Total Overall: ₱{{ number_format($payment->total_amount ?? $total,2) }}</strong></p>
+        </div>
     </div>
 
     <p>Thank you for booking with LAPULAPU SHIPPING LINES. Your cargo booking has been confirmed.</p>

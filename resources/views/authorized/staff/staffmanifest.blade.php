@@ -4,7 +4,7 @@
     @include('components.authHeader')
     @include('components.staff_nav') {{--NAVBAR--}}
 
-    <div class="admin-body">
+    <div class="staff-body">
         <div class="manifest-header text-center">
             <h2 class="manifest-title">
                 Voyage Number: {{ $voyage->voyage_code ?? '-' }}
@@ -20,28 +20,22 @@
                     <p><strong>Status: </strong> {{ $voyage->voyage_status ?? '-' }}</p>
                 </div>
             </div>
+        </div>
 
-            <div class="manifest-filters mt-4">
-               {{-- Added ID for easier targeting if needed later --}}
-                 <form method="GET" action="{{ url()->current() }}" class="d-flex gap-5 align-items-center" id="manifestFilterForm">
-                 {{-- ensure a value is always submitted: hidden default 0, checkbox overrides with 1 --}}
-                 <input type="hidden" name="show_passenger" value="0">
-                     <div class="form-check">
-                    {{-- Added onchange="this.form.submit()" to auto-filter --}}
-                     <input class="form-check-input" type="checkbox" name="show_passenger" id="filterPassenger" value="1" {{ ($showPassenger ?? true) ? 'checked' : '' }} onchange="this.form.submit()">
+        <div class="manifest-filters text-center mt-4 ">
+            <form method="GET" action="{{ url()->current() }}" class="d-flex gap-5 align-items-center" id="manifestFilterForm">
+                <input type="hidden" name="show_passenger" value="0">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="show_passenger" id="filterPassenger" value="1" {{ ($showPassenger ?? true) ? 'checked' : '' }} onchange="this.form.submit()">
                     <label class="form-check-label" for="filterPassenger">Show Passenger Manifest</label>
-                    </div>
-                    <input type="hidden" name="show_cargo" value="0">
-                    <div class="form-check">
-                {{-- Added onchange="this.form.submit()" to auto-filter --}}
-                <input class="form-check-input" type="checkbox" name="show_cargo" id="filterCargo" value="1" {{ ($showCargo ?? true) ? 'checked' : '' }} onchange="this.form.submit()">
-                <label class="form-check-label" for="filterCargo">Show Cargo Manifest</label>
                 </div>
-
-                {{-- REMOVED THE SUBMIT BUTTON --}}
-                </form>
-             </div>
-             </div>
+                <input type="hidden" name="show_cargo" value="0">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="show_cargo" id="filterCargo" value="1" {{ ($showCargo ?? true) ? 'checked' : '' }} onchange="this.form.submit()">
+                    <label class="form-check-label" for="filterCargo">Show Cargo Manifest</label>
+                </div>
+            </form>
+        </div>
 
         {{-- PASSENGERS --}}
         @if(!empty($showPassenger))
@@ -107,7 +101,7 @@
                 <div class="d-flex align-items-center mb-3"><h4 class="manifest-section-title">Cargo Manifest</h4>
                      <i 
                      class="fas fa-print print-icon-fa" 
-                      onclick="printTable('passengerTable')"
+                      onclick="printTable('cargoTable')"
                     ></i>
                 </div>
                  <table id="cargoTable" class="manifest-table table table-striped">
@@ -117,7 +111,7 @@
                             <th>Qty</th>
                             <th>Classification / Item</th>
                             <th>Description</th>
-                            <th>Shippers</th>
+                            <th>Sender</th>
                             <th>TIN</th>
                             <th>Consignees</th>
                             <th>Freight</th>
@@ -136,17 +130,17 @@
                                 <tr>
                                     <td>{{ $c->bl_number ?? $c->booking_ref_no ?? $c->booking_ref ?? ($c->booking_ref_no ?? '-') }}</td>
                                     <td>{{ $c->quantity ?? $c->cargo_item_qty ?? '-' }}</td>
-                                    <td>{{ $c->classification ?? $c->cargo_item_id ?? '-' }}</td>
-                                    <td>{{ $c->cargoItem->cargo_item_description ?? 'N/A' }}</td>
-                                    <td>{{ $c->shippers ?? '-' }}</td>
+                                    <td>{{ $c->cargoItem->cargo_item_classification ?? 'N/A' }}</td>
+                                    <td>{{ $c->cargoItem->cargo_item_description ?? 'N/A'  }}</td>
+                                    <td>{{ $c->sender->sender_name ?? 'N/A' }}</td>
                                     <td>{{ $c->tin_number ?? '-' }}</td>
-                                    <td>{{ $c->consignees ?? '-' }}</td>
-                                    <td>{{ $c->freight ?? $c->freight_charge ?? '-' }}</td>
+                                    <td>{{ $c->consignee->consignee_name }}</td>
+                                    <td>{{ $c->cargoItem->cargo_item_freight ?? '-' }}</td>
                                     <td>{{ $c->vat ?? '-' }}</td>
                                     <td>{{ $c->stamp ?? '-' }}</td>
-                                    <td>{{ $c->total ?? '-' }}</td>
+                                    <td>{{ $c->payment->total_amount ?? 'N/A' }}</td>
                                     <td>{{ $c->receipt_no ?? ($c->cargo_receipt_id ?? '-') }}</td>
-                                    <td>{{ $c->net_arrastre ?? $c->arrastre ?? '-' }}</td>
+                                    <td>{{ $c->cargoItem->cargo_item_arrastre ?? '-' }}</td>
                                 </tr>
                             @endforeach
                         @endif

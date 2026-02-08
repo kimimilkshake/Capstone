@@ -39,7 +39,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($staff as $index => $s)
+                @forelse ($staff as $index => $s)
                     <tr>
                         <td>{{ $s->staff_id }}</td>
                         <td>{{ $s->staff_name }}</td>
@@ -52,13 +52,17 @@
                         <td>{{ $s->staff_email }}</td>
                         <td>{{ $s->staff_status }}</td>
                         <td>
-                        <a href="{{ route('admin.staff_edit', $s->staff_id) }}" class="edit-icon">
+                        <a href="{{ route('admin.staff_edit', $s->staff_id) }}" class="editRouteBtn link-btn" title="Edit Staff">
                             <!-- Using Font Awesome pencil icon -->
                             <i class="fa fa-pencil" aria-hidden="true"></i>
                         </a>
                     </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="9" class="text-center">No staff accounts found.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
         <div class="pagination-container">

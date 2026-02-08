@@ -21,7 +21,6 @@
     <table class="vessel-table">
       <thead>
         <tr>
-          <th>Vessel No.</th>
           <th>Code</th>
           <th>Name</th>
           <th>No. of Hatches</th>
@@ -32,9 +31,8 @@
         </tr>
       </thead>
       <tbody>
-        @foreach ($vessels as $index => $v)
+        @forelse ($vessels as $index => $v)
           <tr>
-            <td>{{ $v->vessel_id }}</td>
             <td>{{ $v->vessel_code }}</td>
             <td>{{ $v->vessel_name }}</td>
             <td>{{ $v->hatches->count() }}</td>
@@ -42,12 +40,16 @@
             <td>{{ $v->vessel_total_passenger_capacity }}</td>
             <td>{{ $v->vessel_status }}</td>
             <td>
-              <a href="{{ route('admin.vessel_edit', $v->vessel_id) }}" class="edit-icon">
+              <a href="{{ route('admin.vessel_edit', $v->vessel_id) }}" class="editRouteBtn link-btn" title="Edit Vessel">
                 <i class="fa fa-pencil" aria-hidden="true"></i>
               </a>
             </td>
           </tr>
-        @endforeach
+        @empty
+          <tr>
+            <td colspan="6" class="text-center">No vessels found.</td>
+          </tr>
+        @endforelse
       </tbody>
     </table>
     <div class="pagination-container">

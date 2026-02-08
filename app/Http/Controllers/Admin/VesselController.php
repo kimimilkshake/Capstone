@@ -19,8 +19,8 @@ class VesselController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('vessel_name', 'like', "%{$search}%")
-                  ->orWhere('vessel_code','like', "%{$search}%")
-                  ->orWhere('vessel_id', 'like', "%{$search}%");
+                    ->orWhere('vessel_code', 'like', "%{$search}%")
+                    ->orWhere('vessel_id', 'like', "%{$search}%");
             });
         }
 
@@ -32,6 +32,15 @@ class VesselController extends Controller
 
     public function create()
     {
+        /*
+        dd([
+            'staff_guard' => auth()->guard('staff')->check(),
+            'admin_guard' => auth()->guard('admin')->check(),
+            'staff_user' => auth()->guard('staff')->user(),
+            'admin_user' => auth()->guard('admin')->user(),
+        ]);
+        */
+        
         return view('authorized.admin.create_vessel');
     }
 
@@ -40,12 +49,34 @@ class VesselController extends Controller
         $request->validate([
             'vessel_code' => 'required|string|max:10',
             'vessel_name' => 'required|string|max:255',
-            'vessel_total_passenger_capacity' => 'required|integer|min:1'
         ]);
 
         $admin = Auth::guard('admin')->user();
         if (!$admin) {
             return back()->withErrors(['auth' => 'You must be logged in as an admin.']);
+        }
+
+        // Calculate total passenger capacity from accommodation cot ranges
+        $totalPassengerCapacity = 0;
+        if ($request->has('accommodations')) {
+            foreach ($request->accommodations as $accommodation) {
+                if (!empty($accommodation['cot_range'])) {
+                    // Parse comma-separated cot ranges (e.g., "1-50, 60-70")
+                    $ranges = array_map('trim', explode(',', $accommodation['cot_range']));
+
+                    foreach ($ranges as $range) {
+                        if (strpos($range, '-') !== false) {
+                            $parts = explode('-', $range);
+                            if (count($parts) === 2) {
+                                $start = (int) trim($parts[0]);
+                                $end = (int) trim($parts[1]);
+                                // Count cots in this range (e.g., 1-50 = 50 cots, 60-70 = 11 cots)
+                                $totalPassengerCapacity += ($end - $start + 1);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         $cotPlanPath = null;
@@ -57,14 +88,15 @@ class VesselController extends Controller
             'admin_id' => $admin->admin_id,
             'vessel_code' => $request->vessel_code,
             'vessel_name' => $request->vessel_name,
-            'vessel_total_passenger_capacity' => $request->vessel_total_passenger_capacity,
+            'vessel_total_passenger_capacity' => $totalPassengerCapacity,
             'vessel_cot_plan_url' => $cotPlanPath,
         ]);
 
 
         if ($request->has('hatches')) {
             foreach ($request->hatches as $hatch) {
-                if (!empty($hatch['label']) &&
+                if (
+                    !empty($hatch['label']) &&
                     isset($hatch['length']) &&
                     isset($hatch['width']) &&
                     isset($hatch['height']) &&
@@ -90,7 +122,8 @@ class VesselController extends Controller
 
         if ($request->has('accommodations')) {
             foreach ($request->accommodations as $accommodation) {
-                if (!empty($accommodation['name']) &&
+                if (
+                    !empty($accommodation['name']) &&
                     !empty($accommodation['price']) &&
                     !empty($accommodation['cot_range']) // replace capacity
                 ) {
@@ -102,9 +135,9 @@ class VesselController extends Controller
                 }
             }
         }
-        
+
         return redirect()->route('admin.vessel_list')
-                         ->with('success', 'Vessel created successfully!');
+            ->with('success', 'Vessel created successfully!');
     }
 
     public function edit($id)
@@ -120,9 +153,31 @@ class VesselController extends Controller
         $request->validate([
             'vessel_code' => 'required|string|max:10',
             'vessel_name' => 'required|string|max:255',
-            'vessel_total_passenger_capacity' => 'required|integer|min:1',
             'vessel_status' => 'required|in:Active,Inactive',
         ]);
+
+        // Calculate total passenger capacity from accommodation cot ranges
+        $totalPassengerCapacity = 0;
+        if ($request->has('accommodations')) {
+            foreach ($request->accommodations as $accommodation) {
+                if (!empty($accommodation['cot_range'])) {
+                    // Parse comma-separated cot ranges (e.g., "1-50, 60-70")
+                    $ranges = array_map('trim', explode(',', $accommodation['cot_range']));
+
+                    foreach ($ranges as $range) {
+                        if (strpos($range, '-') !== false) {
+                            $parts = explode('-', $range);
+                            if (count($parts) === 2) {
+                                $start = (int) trim($parts[0]);
+                                $end = (int) trim($parts[1]);
+                                // Count cots in this range (e.g., 1-50 = 50 cots, 60-70 = 11 cots)
+                                $totalPassengerCapacity += ($end - $start + 1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         $cotPlanPath = $vessel->vessel_cot_plan_url;
         if ($request->hasFile('vessel_cot_plan_url')) {
@@ -132,7 +187,7 @@ class VesselController extends Controller
         $vessel->update([
             'vessel_code' => $request->vessel_code,
             'vessel_name' => $request->vessel_name,
-            'vessel_total_passenger_capacity' => $request->vessel_total_passenger_capacity,
+            'vessel_total_passenger_capacity' => $totalPassengerCapacity,
             'vessel_status' => ucfirst($request->vessel_status),
             'vessel_cot_plan_url' => $cotPlanPath,
         ]);
@@ -142,21 +197,23 @@ class VesselController extends Controller
         if ($request->has('hatches')) {
             foreach ($request->hatches as $h) {
 
-                if (!empty($h['label']) &&
+                if (
+                    !empty($h['label']) &&
                     isset($h['length']) &&
                     isset($h['width']) &&
                     isset($h['height']) &&
                     isset($h['area_capacity']) &&
-                    isset($h['capacity_per_hold'])) {
+                    isset($h['capacity_per_hold'])
+                ) {
 
                     $vessel->hatches()->create([
-                        'hatch_label'            => $h['label'],
-                        'hatch_length'           => $h['length'],
-                        'hatch_width'            => $h['width'],
-                        'hatch_height'           => $h['height'],
-                        'hatch_area_capacity'    => $h['area_capacity'],
-                        'hatch_capacity_per_hold'=> $h['capacity_per_hold'],
-                        'hatch_weight_capacity'  => $h['weight_capacity'] ?? null,
+                        'hatch_label' => $h['label'],
+                        'hatch_length' => $h['length'],
+                        'hatch_width' => $h['width'],
+                        'hatch_height' => $h['height'],
+                        'hatch_area_capacity' => $h['area_capacity'],
+                        'hatch_capacity_per_hold' => $h['capacity_per_hold'],
+                        'hatch_weight_capacity' => $h['weight_capacity'] ?? null,
                     ]);
                 }
             }
@@ -177,6 +234,6 @@ class VesselController extends Controller
         }
 
         return redirect()->route('admin.vessel_list')
-                         ->with('success', 'Vessel updated successfully.');
+            ->with('success', 'Vessel updated successfully.');
     }
 }

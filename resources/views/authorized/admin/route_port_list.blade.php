@@ -27,7 +27,6 @@
 
   <table class="rp-table">
     <thead>
-      <th>RP No.</th>
       <th>Route Origin</th>
       <th>Route Destination</th>
       <th>Port Origin</th>
@@ -37,26 +36,23 @@
     <tbody>
       @forelse($route_port as $rp)
         <tr>
-          <td>{{ $rp->route_port_id }}</td>
           <td>{{ $rp->route_origin }}</td>
           <td>{{ $rp->route_destination }}</td>
-
           <td>
             {{ $rp->port_origin_name }},
             {{ $rp->port_origin_city }},
             {{ $rp->port_origin_province }}
           </td>
-
           <td>
             {{ $rp->port_destination_name }},
             {{ $rp->port_destination_city }},
             {{ $rp->port_destination_province }}
           </td>
-
           <td>
             <button 
               type="button" 
               class="editRouteBtn link-btn"
+              title="Edit Route and Port"
               data-id="{{ $rp->route_port_id }}" 
               data-origin="{{ $rp->route_origin }}" 
               data-destination="{{ $rp->route_destination }}"
@@ -73,7 +69,7 @@
         </tr>
       @empty
         <tr>
-          <td colspan="6" class="text-center">No routes found.</td>
+          <td colspan="6" class="text-center">No routes and ports found.</td>
         </tr>
       @endforelse
     </tbody>
@@ -97,11 +93,11 @@
       <!-- 2 columns for route -->
       <div class="rpmodal-row two-col">
         <div class="rpmodal-col">
-          <label>Route Origin:</label>
+          <label>Route Origin <span class="text-danger">*</span></label>
           <input type="text" name="route_origin" required>
         </div>
         <div class="rpmodal-col">
-          <label>Route Destination:</label>
+          <label>Route Destination <span class="text-danger">*</span></label>
           <input type="text" name="route_destination" required>
         </div>
       </div>
@@ -109,15 +105,15 @@
       <!-- 3 columns for Port Origin -->
       <div class="rpmodal-row three-col">
         <div class="rpmodal-col">
-          <label>Port Origin Name:</label>
+          <label>Port Origin Name <span class="text-danger">*</span></label>
           <input type="text" name="port_origin_name" required>
         </div>
         <div class="rpmodal-col">
-          <label>Port Origin City:</label>
+          <label>Port Origin City <span class="text-danger">*</span></label>
           <input type="text" name="port_origin_city" required>
         </div>
         <div class="rpmodal-col">
-          <label>Port Origin Province:</label>
+          <label>Port Origin Province <span class="text-danger">*</span></label>
           <input type="text" name="port_origin_province" required>
         </div>
       </div>
@@ -125,15 +121,15 @@
       <!-- 3 columns for Port Destination -->
       <div class="rpmodal-row three-col">
         <div class="rpmodal-col">
-          <label>Port Destination Name:</label>
+          <label>Port Destination Name <span class="text-danger">*</span></label>
           <input type="text" name="port_destination_name" required>
         </div>
         <div class="rpmodal-col">
-          <label>Port Destination City:</label>
+          <label>Port Destination City <span class="text-danger">*</span></label>
           <input type="text" name="port_destination_city" required>
         </div>
         <div class="rpmodal-col">
-          <label>Port Destination Province:</label>
+          <label>Port Destination Province<span class="text-danger">*</span></label>
           <input type="text" name="port_destination_province" required>
         </div>
       </div>
@@ -159,40 +155,40 @@
 
       <div class="rpmodal-row two-col">
         <div class="rpmodal-col">
-          <label>Route Origin:</label>
+          <label>Route Origin <span class="text-danger">*</span></label>
           <input type="text" name="route_origin" id="editRouteOrigin" required>
         </div>
         <div class="rpmodal-col">
-          <label>Route Destination:</label>
+          <label>Route Destination <span class="text-danger">*</span></label>
           <input type="text" name="route_destination" id="editRouteDestination" required>
         </div>
       </div>
 
       <div class="rpmodal-row three-col">
         <div class="rpmodal-col">
-          <label>Port Origin Name:</label>
+          <label>Port Origin Name <span class="text-danger">*</span></label>
           <input type="text" name="port_origin_name" id="editPortOriginName" required>
         </div>
         <div class="rpmodal-col">
-          <label>Port Origin City:</label>
+          <label>Port Origin City <span class="text-danger">*</span></label>
           <input type="text" name="port_origin_city" id="editPortOriginCity" required>
         </div>
         <div class="rpmodal-col">
-          <label>Port Origin Province:</label>
+          <label>Port Origin Province <span class="text-danger">*</span></label>
           <input type="text" name="port_origin_province" id="editPortOriginProvince" required>
         </div>
       </div>
       <div class="rpmodal-row three-col">
         <div class="rpmodal-col">
-          <label>Port Destination Name:</label>
+          <label>Port Destination Name <span class="text-danger">*</span></label>
           <input type="text" name="port_destination_name" id="editPortDestinationName" required>
         </div>
         <div class="rpmodal-col">
-          <label>Port Destination City:</label>
+          <label>Port Destination City <span class="text-danger">*</span></label>
           <input type="text" name="port_destination_city" id="editPortDestinationCity" required>
         </div>
         <div class="rpmodal-col">
-          <label>Port Destination Province:</label>
+          <label>Port Destination Province<span class="text-danger">*</span></label>
           <input type="text" name="port_destination_province" id="editPortDestinationProvince" required>
         </div>
       </div>

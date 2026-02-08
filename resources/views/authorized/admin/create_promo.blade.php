@@ -29,17 +29,17 @@
           <div class="form-row">
             <div class="form-col">
               <div class="form-group">
-                <label for="promo_name">Promo Name</label>
+                <label for="promo_name">Promo Name <span class="text-danger">*</span></label>
                 <input type="text" id="promo_name" name="promo_name" required>
               </div>
 
               <div class="form-group">
-                <label for="promo_code">Promo Code</label>
+                <label for="promo_code">Promo Code <span class="text-danger">*</span></label>
                 <input type="text" id="promo_code" name="promo_code" required>
               </div>
 
               <div class="form-group">
-                <label for="promo_type">Type</label>
+                <label for="promo_type">Type <span class="text-danger">*</span></label>
                 <select id="promo_type" name="promo_type" required>
                   <option value="">Select</option>
                   <option value="Discount">Discount</option>
@@ -52,25 +52,25 @@
             <div class="form-col">
 
               <div class="form-group">
-                <label for="promo_start_date">Date Start</label>
-                <input type="date" id="promo_start_date" name="promo_start_date" required>
+                <label for="promo_start_date">Date Start <span class="text-danger">*</span></label>
+                <input type="date" id="promo_start_date" name="promo_start_date" required min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}">
               </div>
 
               <div class="form-group">
-                <label for="promo_end_date">Date End</label>
+                <label for="promo_end_date">Date End <span class="text-danger">*</span></label>
                 <input type="date" id="promo_end_date" name="promo_end_date" required>
               </div>
 
               <div class="form-group">
                 <label for="promo_discount_rate">Discount Rate</label>
-                <input type="number" id="promo_discount_rate" name="promo_discount_rate" required>
+                <input type="number" id="promo_discount_rate" name="promo_discount_rate">
               </div>
 
             </div>
           </div>
           <div class="form-row">
             <div class="form-group" id="promo_desc">
-                <label for="promo_description">Promo Description</label>
+                <label for="promo_description">Promo Description <span class="text-danger">*</span></label>
                 <textarea id="promo_description" name="promo_description" placeholder="Enter promo description here"></textarea>
               </div>
           </div>
@@ -86,3 +86,32 @@
         </form>
       </div>
     </div>
+
+    <script>
+      const startDateInput = document.getElementById('promo_start_date');
+      const endDateInput = document.getElementById('promo_end_date');
+
+      startDateInput.addEventListener('change', function() {
+          const startDate = new Date(this.value);
+          if (startDate) {
+              // Set min of end date to one day after start date
+              const minEndDate = new Date(startDate);
+              minEndDate.setDate(minEndDate.getDate() + 1);
+              endDateInput.min = minEndDate.toISOString().split('T')[0];
+
+              // Optional: if end date is before new min, reset it
+              if (endDateInput.value && new Date(endDateInput.value) <= startDate) {
+                  endDateInput.value = '';
+              }
+          }
+      });
+
+      // Optional: set end date min on page load if start date has a value
+      if (startDateInput.value) {
+          const startDate = new Date(startDateInput.value);
+          const minEndDate = new Date(startDate);
+          minEndDate.setDate(minEndDate.getDate() + 1);
+          endDateInput.min = minEndDate.toISOString().split('T')[0];
+      }
+    </script>
+@endsection

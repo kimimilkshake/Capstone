@@ -27,7 +27,7 @@
         <div class="form-row">
           <div class="form-col">
             <div class="form-group">
-              <label for="route_port_id">Route</label>
+              <label for="route_port_id">Route <span class="text-danger">*</span></label>
               <select name="route_port_id" id="route_port_id" required>
                 @foreach($route_port as $rp)
                   <option value="{{ $rp->route_port_id }}" 
@@ -41,7 +41,7 @@
 
           <div class="form-col">
             <div class="form-group">
-              <label for="vessel_id">Vessel</label>
+              <label for="vessel_id">Vessel <span class="text-danger">*</span></label>
               <select name="vessel_id" id="vessel_id" required>
                 @foreach($vessels as $vessel)
                   <option value="{{ $vessel->vessel_id }}" 
@@ -75,7 +75,7 @@
         <div class="form-row">
           <div class="form-col">
             <div class="form-group">
-              <label for="voyage_departure_date">Departure Date</label>
+              <label for="voyage_departure_date">Departure Date <span class="text-danger">*</span></label>
               <input type="date" id="voyage_departure_date" name="voyage_departure_date" 
                 value="{{ $voyage->voyage_departure_date }}" required>
             </div>
@@ -83,7 +83,7 @@
 
           <div class="form-col">
             <div class="form-group">
-              <label for="voyage_estimated_TD">Estimated Time of Departure (ETD)</label>
+              <label for="voyage_estimated_TD">Estimated Time of Departure (ETD) <span class="text-danger">*</span></label>
               <input type="time" id="voyage_estimated_TD" name="voyage_estimated_TD" 
                 value="{{ $voyage->voyage_estimated_TD }}" required>
             </div>
@@ -102,7 +102,7 @@
         <div class="form-row">
           <div class="form-col">
             <div class="form-group">
-              <label for="voyage_arrival_date">Arrival Date</label>
+              <label for="voyage_arrival_date">Arrival Date <span class="text-danger">*</span></label>
               <input type="date" id="voyage_arrival_date" name="voyage_arrival_date" 
                 value="{{ $voyage->voyage_arrival_date }}" required>
             </div>
@@ -110,7 +110,7 @@
 
           <div class="form-col">
             <div class="form-group">
-              <label for="voyage_estimated_TA">Estimated Time of Arrival (ETA)</label>
+              <label for="voyage_estimated_TA">Estimated Time of Arrival (ETA) <span class="text-danger">*</span></label>
               <input type="time" id="voyage_estimated_TA" name="voyage_estimated_TA" 
                 value="{{ $voyage->voyage_estimated_TA }}" required>
             </div>
@@ -128,7 +128,7 @@
         <!-- ROW 5: DESCRIPTION -->
         <div class="form-row">
           <div class="form-group" style="width: 100%;">
-            <label for="voyage_description">Voyage Description</label>
+            <label for="voyage_description">Voyage Description <span class="text-danger">*</span></label>
             <textarea id="voyage_description" name="voyage_description" placeholder="Enter voyage description here">{{ $voyage->voyage_description }}</textarea>
           </div>
         </div>
