@@ -10,6 +10,7 @@ use App\Models\Vessel;
 use App\Models\Hatch;
 use App\Models\CargoReceipt;
 use App\Models\CargoBooking;
+use App\Models\Booking;
 
 class CargoAutoPlacementController extends Controller
 {
@@ -25,6 +26,7 @@ class CargoAutoPlacementController extends Controller
 
     public function show(Request $request)
     {
+        // Prevent browser caching of this page
         $voyages = Voyage::with(['vessel', 'routePort'])
             ->where('voyage_status', '!=', 'Completed')
             ->orderBy('voyage_departure_date', 'desc')
@@ -37,9 +39,14 @@ class CargoAutoPlacementController extends Controller
             $placementData = $this->getVoyagePlacementData($selectedVoyageId);
         }
 
-        return $this->isStaff()
+        $view = $this->isStaff()
             ? view('authorized.staff.staff_cargoautoplacement', compact('voyages', 'selectedVoyageId', 'placementData'))
             : view('authorized.admin.admin_cargoautoplacement', compact('voyages', 'selectedVoyageId', 'placementData'));
+
+        return response($view)
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     private function getVoyagePlacementData($voyageId)
@@ -48,13 +55,13 @@ class CargoAutoPlacementController extends Controller
             ->findOrFail($voyageId);
 
         $hatches = $voyage->vessel->hatches;
-        
+
         if ($hatches->isEmpty()) {
             return ['error' => 'No hatches found for this vessel.'];
         }
 
         $cargoReceipts = $voyage->cargoReceipts;
-        
+
         if ($cargoReceipts->isEmpty()) {
             return ['error' => 'No cargo bookings found for this voyage.'];
         }
@@ -80,13 +87,13 @@ class CargoAutoPlacementController extends Controller
             ->findOrFail($request->voyage_id);
 
         $hatches = $voyage->vessel->hatches;
-        
+
         if ($hatches->isEmpty()) {
             return back()->withErrors(['voyage' => 'No hatches found for this vessel.']);
         }
 
         $cargoReceipts = $voyage->cargoReceipts;
-        
+
         if ($cargoReceipts->isEmpty()) {
             return back()->withErrors(['voyage' => 'No cargo bookings found for this voyage.']);
         }
@@ -95,7 +102,7 @@ class CargoAutoPlacementController extends Controller
         $cargoItems = [];
         foreach ($cargoReceipts as $receipt) {
             $cargoBooking = CargoBooking::where('booking_ref_no', $receipt->booking_ref_no)->first();
-            
+
             if ($cargoBooking && $cargoBooking->length && $cargoBooking->width && $cargoBooking->height) {
                 $cargoItems[] = [
                     'id' => $receipt->cargo_receipt_id,
@@ -116,7 +123,7 @@ class CargoAutoPlacementController extends Controller
 
         // Process each hatch with 3DBinPacking API
         $username = config('services.3dbin.username') ?? env('3DBIN_USERNAME');
-        $apiKey   = config('services.3dbin.api_key') ?? env('3DBIN_API_KEY');
+        $apiKey = config('services.3dbin.api_key') ?? env('3DBIN_API_KEY');
 
         if (empty($username) || empty($apiKey)) {
             return back()->withErrors(['api_credentials' => '3DBinPacking credentials are not configured.']);
@@ -124,7 +131,7 @@ class CargoAutoPlacementController extends Controller
 
         $hatchResults = [];
         $remainingItems = $cargoItems;
-        
+
         foreach ($hatches as $index => $hatch) {
             if (empty($remainingItems)) {
                 break;
@@ -153,7 +160,7 @@ class CargoAutoPlacementController extends Controller
             // Remove packed items from remaining items
             if (isset($result['packed_items'])) {
                 $packedIds = array_column($result['packed_items'], 'id');
-                $remainingItems = array_filter($remainingItems, function($item) use ($packedIds) {
+                $remainingItems = array_filter($remainingItems, function ($item) use ($packedIds) {
                     return !in_array($item['id'], $packedIds);
                 });
                 $remainingItems = array_values($remainingItems);
@@ -170,8 +177,8 @@ class CargoAutoPlacementController extends Controller
     private function callBinPackingAPI($username, $apiKey, $hatch, $items)
     {
         $payload = [
-            'username'  => $username,
-            'api_key'   => $apiKey,
+            'username' => $username,
+            'api_key' => $apiKey,
             'container' => [
                 'w' => (float) $hatch->hatch_width,
                 'h' => (float) $hatch->hatch_height,
@@ -180,10 +187,10 @@ class CargoAutoPlacementController extends Controller
             'items' => array_map(function ($it) {
                 return [
                     'id' => (string) $it['id'],
-                    'w'  => (float) $it['w'],
-                    'h'  => (float) $it['h'],
-                    'd'  => (float) $it['d'],
-                    'q'  => (int) $it['q'],
+                    'w' => (float) $it['w'],
+                    'h' => (float) $it['h'],
+                    'd' => (float) $it['d'],
+                    'q' => (int) $it['q'],
                 ];
             }, $items),
         ];
@@ -231,6 +238,114 @@ class CargoAutoPlacementController extends Controller
 
             return ['error' => 'Invalid response from 3DBinPacking API.'];
         }
+    }
+
+    /**
+     * Get packing data for visualization (JSON API endpoint)
+     */
+    public function getPackingData(Request $request)
+    {
+        $request->validate([
+            'voyage_id' => 'required|exists:voyage,voyage_id',
+        ]);
+
+        $voyage = Voyage::with(['vessel.hatches', 'cargoReceipts.cargoBooking.cargoItem'])
+            ->findOrFail($request->voyage_id);
+
+        $hatches = $voyage->vessel->hatches;
+
+        // Prepare hatches with weight information
+        $hatchesData = [];
+        foreach ($hatches as $hatch) {
+            $maxWeight = (float) $hatch->hatch_weight_capacity;
+            $hatchesData[] = [
+                'id' => $hatch->hatch_id,
+                'label' => $hatch->hatch_label,
+                'width' => (float) $hatch->hatch_width,
+                'height' => (float) $hatch->hatch_height,
+                'depth' => (float) $hatch->hatch_length,
+                'maxWeight' => $maxWeight,
+                'maxWeightKg' => $maxWeight * 1000, // Convert tons to kg for display
+                'volume' => (float) $hatch->hatch_width * $hatch->hatch_height * $hatch->hatch_length,
+            ];
+        }
+
+        // Prefer confirmed bookings: one visual item per confirmed booking (assumes one cargoBooking per booking)
+        $cargoData = [];
+        $confirmedBookings = Booking::where('voyage_id', $voyage->voyage_id)
+            ->whereRaw("LOWER(booking.booking_status) = ?", ['confirmed'])
+            ->with('cargoBookings.cargoItem')
+            ->get();
+
+        foreach ($confirmedBookings as $booking) {
+            $cb = $booking->cargoBookings->first();
+            if ($cb && $cb->length && $cb->width && $cb->height) {
+                $quantity = (int) ($cb->quantity ?? 1);
+                $totalWeight = (float) ($cb->weight ?? 0);
+                $weightPerItem = $quantity > 0 ? $totalWeight / $quantity : 0;
+
+                // Create one visual item per quantity unit
+                for ($i = 0; $i < $quantity; $i++) {
+                    $cargoData[] = [
+                        'id' => (string) ($cb->cargo_booking_id ?? $booking->booking_ref_no) . '_' . $i,
+                        'booking_ref' => $booking->booking_ref_no,
+                        'width' => (float) $cb->width,
+                        'height' => (float) $cb->height,
+                        'depth' => (float) $cb->length,
+                        'weight' => $weightPerItem,
+                        'quantity' => 1,
+                        'description' => $cb->cargoItem->cargo_item_description ?? 'Cargo Item',
+                        'is_breakable' => (bool) ($cb->cargoItem->is_breakable ?? false),
+                    ];
+                }
+            }
+        }
+
+        // Fallback: if no confirmed bookings with cargo found, fall back to cargoReceipts as before
+        if (empty($cargoData)) {
+            $cargoReceipts = $voyage->cargoReceipts()->whereHas('booking', function ($q) {
+                $q->whereRaw("LOWER(booking.booking_status) = ?", ['confirmed']);
+            })->get();
+
+            if ($hatches->isEmpty() || $cargoReceipts->isEmpty()) {
+                return response()->json(['error' => 'Missing hatches or cargo'], 400);
+            }
+
+            foreach ($cargoReceipts as $receipt) {
+                $bookingRow = CargoBooking::where('booking_ref_no', $receipt->booking_ref_no)->first();
+                if ($bookingRow && $bookingRow->length && $bookingRow->width && $bookingRow->height) {
+                    $quantity = (int) ($bookingRow->quantity ?? 1);
+                    $totalWeight = (float) ($bookingRow->weight ?? 0);
+                    $weightPerItem = $quantity > 0 ? $totalWeight / $quantity : 0;
+
+                    // Create one visual item per quantity unit
+                    for ($i = 0; $i < $quantity; $i++) {
+                        $cargoData[] = [
+                            'id' => (string) $receipt->cargo_receipt_id . '_' . $i,
+                            'booking_ref' => $receipt->booking_ref_no,
+                            'width' => (float) $bookingRow->width,
+                            'height' => (float) $bookingRow->height,
+                            'depth' => (float) $bookingRow->length,
+                            'weight' => $weightPerItem,
+                            'quantity' => 1,
+                            'description' => $receipt->cargoItem->cargo_item_description ?? 'Cargo Item',
+                        ];
+                    }
+                }
+            }
+        }
+
+        return response()->json([
+            'voyage' => [
+                'id' => $voyage->voyage_id,
+                'code' => $voyage->voyage_code,
+                'vessel' => $voyage->vessel->vessel_name,
+            ],
+            'hatches' => $hatchesData,
+            'cargo' => $cargoData,
+        ])->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     /**

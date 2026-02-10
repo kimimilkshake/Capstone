@@ -49,14 +49,14 @@ class DatabaseSeeder extends Seeder
         DB::table('staff')->insert([
             [
                 'admin_id' => $adminIds[0],
-                'staff_name' => 'Staff User', 
-                'staff_user' => 'staff', 
-                'staff_password' => Hash::make('12345'), // hashed password 
-                'staff_dob' => '1990-01-10', 
-                'staff_gender' => 'M', 
-                'staff_email' => 'staff@example.com', 
-                'staff_status' => 'active', 
-                'created_at' => now(), 
+                'staff_name' => 'Staff User',
+                'staff_user' => 'staff',
+                'staff_password' => Hash::make('12345'), // hashed password
+                'staff_dob' => '1990-01-10',
+                'staff_gender' => 'M',
+                'staff_email' => 'staff@example.com',
+                'staff_status' => 'active',
+                'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
@@ -195,7 +195,7 @@ class DatabaseSeeder extends Seeder
                     ['name' => 'Aircon B', 'price' => 430.00, 'cot_range' => '401-468'],
                     ['name' => 'Economy A', 'price' => 370.00, 'cot_range' => '1-12, 15-107, 109, 111, 113'],
                     ['name' => 'Economy B', 'price' => 350.00, 'cot_range' => '301-336'],
-                    
+
                 ],
 
                 'hatches' => [
@@ -216,7 +216,7 @@ class DatabaseSeeder extends Seeder
                     ['name' => 'Economy A', 'price' => 520.00, 'cot_range' => '1-98'],
                     ['name' => 'Economy B', 'price' => 510.00, 'cot_range' => '141-250, 259-260'],
                     ['name' => 'Economy C', 'price' => 450.00, 'cot_range' => '261-303, 305-320, 329-377, 382, 395, 398'],
-                    
+
                 ],
 
                 'hatches' => [
@@ -281,5 +281,7 @@ class DatabaseSeeder extends Seeder
             }
         }
 
+        // Seed sample cargo data
+        $this->call(CargoSampleDataSeeder::class);
     }
 }

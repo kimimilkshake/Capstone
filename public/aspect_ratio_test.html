@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Aspect Ratio Test</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        table { border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+        th { background: #f0f0f0; }
+        .tree-like { background: #ffe0e0; }
+        .compact { background: #e0ffe0; }
+    </style>
+</head>
+<body>
+    <h1>Item Aspect Ratio Analysis</h1>
+    <p>Determining which items are "tree-like" (should lay flat first)</p>
+    
+    <table>
+        <tr>
+            <th>Item</th>
+            <th>Dimensions</th>
+            <th>Max / Min Ratio</th>
+            <th>Classification</th>
+            <th>Strategy</th>
+        </tr>
+    </table>
+
+    <script>
+        const items = [
+            { name: 'Glass Bottles', w: 0.6, h: 1.0, d: 0.8 },
+            { name: 'Electronics', w: 0.5, h: 0.8, d: 0.7 },
+            { name: 'Steel Coils', w: 1.2, h: 0.9, d: 1.5 },
+            { name: 'Wooden Pallets', w: 0.8, h: 1.0, d: 1.2 },
+            { name: 'Plastic Drums', w: 0.9, h: 1.1, d: 0.9 },
+            { name: 'Rice Sacks', w: 0.6, h: 1.2, d: 0.8 },
+            { name: 'Cement Bags', w: 0.5, h: 1.5, d: 0.4 },
+            { name: 'Textiles Rolls', w: 0.7, h: 0.6, d: 1.1 },
+            { name: 'Metal Parts', w: 0.9, h: 0.8, d: 0.95 },
+            { name: 'Rubber Sheets', w: 1.0, h: 0.5, d: 0.4 },
+        ];
+
+        const table = document.querySelector('table');
+        
+        items.forEach(item => {
+            const dims = [item.w, item.h, item.d];
+            const maxDim = Math.max(...dims);
+            const minDim = Math.min(...dims);
+            const ratio = (maxDim / minDim).toFixed(2);
+            
+            const isTreeLike = maxDim > 1.3 * minDim;
+            const classification = isTreeLike ? '🌳 TREE-LIKE' : '📦 COMPACT';
+            const strategy = isTreeLike ? 'Lay flat (horizontal)' : 'Standard placement';
+            const rowClass = isTreeLike ? 'tree-like' : 'compact';
+            
+            const row = `
+                <tr class="${rowClass}">
+                    <td>${item.name}</td>
+                    <td>${item.w} × ${item.h} × ${item.d}</td>
+                    <td>${ratio}</td>
+                    <td>${classification}</td>
+                    <td>${strategy}</td>
+                </tr>
+            `;
+            table.innerHTML += row;
+        });
+    </script>
+</body>
+</html>

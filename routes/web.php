@@ -31,6 +31,19 @@ use App\Http\Controllers\ManifestController;
 use App\Http\Controllers\CargoItemController;
 use App\Http\Controllers\CargoAutoPlacementController;
 
+// Development helper: debug visualizer page (no auth) — renders packing-data for voyage 1
+Route::get('/dev/visualizer-debug', function () {
+    $controller = new CargoAutoPlacementController();
+    $request = request()->merge(['voyage_id' => 1]);
+    $response = $controller->getPackingData($request);
+    // if response is JsonResponse, get data
+    $data = null;
+    if (is_object($response) && method_exists($response, 'getContent')) {
+        $data = json_decode($response->getContent(), true);
+    }
+    return view('debug_visualizer', ['data' => $data]);
+});
+
 // OCR route
 Route::post('/ocr/parse', [OcrController::class, 'parseImage'])->name('ocr.parse');
 
@@ -204,14 +217,14 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
 
     // Cargo Auto Placement
 
-    Route::post('/admin_cargo/place', [CargoAutoPlacementController::class, 'place'])
-        ->name('admin.cargo.place');
-
     Route::get('/admin_cargo/placement', [CargoAutoPlacementController::class, 'show'])
         ->name('admin.cargo.placement');
 
     Route::post('/admin_cargo/place', [CargoAutoPlacementController::class, 'place'])
         ->name('admin.cargo.place');
+
+    Route::get('/api/admin_cargo/packing-data', [CargoAutoPlacementController::class, 'getPackingData'])
+        ->name('admin.cargo.packing-data');
 
     Route::post('/admin_cargo/placement/add-row', [CargoAutoPlacementController::class, 'addRow'])
         ->name('admin.cargo.addRow');
@@ -299,14 +312,14 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
 
     // Cargo Auto Placement
 
-    Route::post('/staff_cargo/place', [CargoAutoPlacementController::class, 'place'])
-        ->name('staff.cargo.place');
-
     Route::get('/staff_cargo/placement', [CargoAutoPlacementController::class, 'show'])
         ->name('staff.cargo.placement');
 
     Route::post('/staff_cargo/place', [CargoAutoPlacementController::class, 'place'])
         ->name('staff.cargo.place');
+
+    Route::get('/api/staff_cargo/packing-data', [CargoAutoPlacementController::class, 'getPackingData'])
+        ->name('staff.cargo.packing-data');
 
     Route::post('/staff_cargo/placement/add-row', [CargoAutoPlacementController::class, 'addRow'])
         ->name('staff.cargo.addRow');
