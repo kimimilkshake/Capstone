@@ -35,7 +35,7 @@
         <tbody>
             <?php $__empty_1 = true; $__currentLoopData = $bookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $b): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                 <tr>
-                    <td><?php echo e($b->booking_ref_no); ?></td>
+                    <td><?php echo e($b->booking_code); ?></td>
                     <td><?php echo e(optional($b->sender)->sender_name ?? 'N/A'); ?></td>
                     <td><?php echo e(optional($b->consignee)->consignee_name ?? 'N/A'); ?></td>
                     <td><?php echo e($b->booking_status); ?></td>

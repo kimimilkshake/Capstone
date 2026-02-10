@@ -101,6 +101,7 @@ class PassengerController extends Controller
             'sender_firstname' => 'required|string|max:255',
             'sender_lastname' => 'required|string|max:255',
             'sender_contact' => 'required|string|max:20',
+            'sender_tin' => 'nullable|string|max:50',
             'consignee_firstname' => 'required|string|max:255',
             'consignee_lastname' => 'required|string|max:255',
             'consignee_contact' => 'required|string|max:20',
@@ -110,6 +111,17 @@ class PassengerController extends Controller
             'cargo_weight.*' => 'required|numeric|min:0',
         ]);
 
+        // Validate voyage date within 30 days and not in the past
+        $voyage = Voyage::find($request->voyage_id);
+        if ($voyage) {
+            $dep = \Carbon\Carbon::parse($voyage->voyage_departure_date)->startOfDay();
+            $today = \Carbon\Carbon::today();
+            $max = $today->copy()->addDays(30);
+            if ($dep->lt($today) || $dep->gt($max)) {
+                return back()->with('error', 'Selected voyage must be within the next 30 days and not before today.');
+            }
+        }
+
         // Store temporary booking in DB (status = Pending)
         DB::beginTransaction();
         try {
@@ -117,6 +129,7 @@ class PassengerController extends Controller
                 'sender_name' => $request->sender_firstname . ' ' . $request->sender_lastname,
                 'sender_contactno' => $request->sender_contact,
                 'sender_email' => $request->sender_email ?? null,
+                'sender_tin' => $request->sender_tin ?? null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

@@ -85,6 +85,8 @@ Route::post('/passenger/store', [PassengerController::class, 'store'])->name('pa
 // Form submission
 Route::post('/booking/submit', [BookingController::class, 'store'])->name('booking.submit');
 Route::post('/booking/cancel/{booking_ref_no}', [BookingController::class, 'cancel'])->name('booking.cancel');
+// Request ticket copy
+Route::post('/ticket/request-copy', [BookingController::class, 'requestTicketCopy'])->name('ticket.request-copy');
 // API: return unavailable cot numbers for a voyage (by route/date or voyage_id)
 Route::get('/voyage/unavailable-cots', [BookingController::class, 'unavailableCots'])->name('voyage.unavailable_cots');
 // API: return available cots per accommodation for a voyage
@@ -270,6 +272,10 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
 
     // View booking details
     Route::get('/cargo-bookings/{id}', [StaffCargoController::class, 'show'])->name('cargo.bookings.show');
+    // Bill of Lading formatted view (HTML/printable)
+    Route::get('/cargo-bookings/{id}/bol', [StaffCargoController::class, 'bolView'])->name('cargo.bookings.bol');
+    // Bill of Lading PDF (for download/inline view)
+    Route::get('/cargo-bookings/{id}/bol.pdf', [StaffCargoController::class, 'bolPdf'])->name('cargo.bookings.bol.pdf');
     Route::get('/cargo-items/voyage/{id}', [StaffCargoController::class, 'getCargoItemsByVoyage']);
     // Approve booking
     Route::post('/cargo-bookings/{id}/approve', [StaffCargoController::class, 'approve'])->name('cargo.bookings.approve');

@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\CargoBooking;
 use App\Models\CargoItem;
 use App\Models\CargoReceipt;
+use App\Models\Payment;
 use App\Models\RoutePort;
 use App\Models\Voyage;
 use App\Models\Sender;
@@ -16,6 +17,8 @@ use Illuminate\Http\Request;
 use App\Mail\CargoBookingApproved;
 use App\Mail\CargoBookingRejected;
 use Illuminate\Support\Facades\Mail;
+use App\Services\BillOfLadingPdf;
+use App\Models\BillOfLading;
 
 
 class StaffCargoController extends Controller
@@ -41,9 +44,13 @@ class StaffCargoController extends Controller
      */
     public function create()
     {
-    $voyages = Voyage::with('routePort')->get();
-    $cargoItems = collect(CargoItem::all()); // <-- wrap in collect()
-    return view('authorized.staff.cargobooking', compact('voyages', 'cargoItems'));
+        // Show only voyages scheduled for today (departures today)
+        $today = \Carbon\Carbon::today()->toDateString();
+        $voyages = Voyage::with('routePort')
+            ->whereDate('voyage_departure_date', $today)
+            ->get();
+        $cargoItems = collect(CargoItem::all()); // <-- wrap in collect()
+        return view('authorized.staff.cargobooking', compact('voyages', 'cargoItems'));
     }
 
 
@@ -53,11 +60,12 @@ class StaffCargoController extends Controller
 public function store(Request $request)
 {
     // Validate input
-    $request->validate([
+        $request->validate([
         'sender_firstname' => 'required|string|max:255',
         'sender_lastname' => 'required|string|max:255',
         'sender_contact' => 'required|string|max:20',
-        'sender_email' => 'nullable|email',
+            'sender_email' => 'nullable|email',
+            'sender_tin' => 'nullable|string|max:50',
         'consignee_firstname' => 'required|string|max:255',
         'consignee_lastname' => 'required|string|max:255',
         'consignee_contact' => 'required|string|max:20',
@@ -71,18 +79,30 @@ public function store(Request $request)
         'cargo_picture.*' => 'nullable|image|max:2048',
     ]);
 
-// Create Sender
-$sender = Sender::create([
-    'sender_name' => $request->sender_firstname . ' ' . $request->sender_lastname,
-    'sender_contactno' => $request->sender_contact,
-    'sender_email' => $request->sender_email,
-]);
+        // Verify voyage date within next 30 days and not in the past
+        $voyage = Voyage::find($request->voyage_id);
+        if ($voyage) {
+            $dep = \Carbon\Carbon::parse($voyage->voyage_departure_date)->startOfDay();
+            $today = \Carbon\Carbon::today();
+            $max = $today->copy()->addDays(30);
+            if ($dep->lt($today) || $dep->gt($max)) {
+                return back()->withErrors(['voyage_id' => 'Selected voyage must be within the next 30 days and not before today.'])->withInput();
+            }
+        }
 
-// Create Consignee
-$consignee = Consignee::create([
-    'consignee_name' => $request->consignee_firstname . ' ' . $request->consignee_lastname,
-    'consignee_contactno' => $request->consignee_contact,
-]);
+        // Create Sender
+        $sender = Sender::create([
+            'sender_name' => $request->sender_firstname . ' ' . $request->sender_lastname,
+            'sender_contactno' => $request->sender_contact,
+            'sender_email' => $request->sender_email,
+            'sender_tin' => $request->sender_tin ?? null,
+        ]);
+
+        // Create Consignee (no TIN)
+        $consignee = Consignee::create([
+            'consignee_name' => $request->consignee_firstname . ' ' . $request->consignee_lastname,
+            'consignee_contactno' => $request->consignee_contact,
+        ]);
 
 
     // Create Booking (status: Pending)
@@ -172,7 +192,9 @@ public function pending(Request $request)
             ->with(['sender', 'consignee', 'voyage', 'cargoBookings'])
             ->firstOrFail();
 
-        return view('authorized.staff.showcargo', compact('booking'));
+        $payment = Payment::where('booking_ref_no', $id)->first();
+
+        return view('authorized.staff.showcargo', compact('booking', 'payment'));
     }
 
     /**
@@ -244,7 +266,27 @@ public function approve($id)
     $booking->booking_status = 'Confirmed';
     $booking->save();
 
-    // Move cargo items to cargo_receipt
+    // Calculate total cost
+    $totalCost = 0;
+    foreach ($booking->cargoBookings as $cargo) {
+        $freight = $cargo->cargoItem->cargo_item_freight;
+        $arrastre = $cargo->cargoItem->cargo_item_arrastre;
+        $cbm = ($cargo->length * $cargo->width * $cargo->height) / 1000000;
+        $subtotal = ($freight + $arrastre) * $cbm * $cargo->quantity;
+        $totalCost += $subtotal;
+    }
+
+    // Create payment record with mode='Cash' and status='Completed'
+    $payment = Payment::create([
+        'booking_ref_no' => $booking->booking_ref_no,
+        'mode_of_payment' => 'Cash',
+        'payment_status' => 'Completed',
+        'total_amount' => $totalCost,
+        'payment_date' => now(),
+    ]);
+
+    // Move cargo items to cargo_receipt and create bill of lading
+    $cargoReceiptIds = [];
     foreach ($booking->cargoBookings as $cargo) {
         $receipt = new CargoReceipt();
         $receipt->booking_ref_no = $booking->booking_ref_no;
@@ -254,13 +296,29 @@ public function approve($id)
         $receipt->voyage_id = $booking->voyage_id;
         $receipt->cargo_item_qty = $cargo->quantity;
         $receipt->save();
+        
+        $cargoReceiptIds[] = $receipt->cargo_receipt_id;
+    }
+
+    // Create bill of lading records with voyage details (vessel name, loading port, unloading port)
+    $staffId = auth()->guard('staff')->user()->staff_id ?? 1; // fallback if needed
+    $voyage = $booking->voyage;
+    
+    foreach ($cargoReceiptIds as $receiptId) {
+        BillOfLading::create([
+            'cargo_receipt_id' => $receiptId,
+            'staff_id' => $staffId,
+            'bl_date_issued' => now()->toDateString(),
+            'bl_loading_port' => $voyage->loading_port ?? 'Not specified',
+            'bl_unloading_port' => $voyage->unloading_port ?? 'Not specified',
+        ]);
     }
 
     // Create notification for approved cargo booking
     $senderName = $booking->sender ? $booking->sender->sender_name : 'Customer';
     Notification::create([
         'cargo_receipt_id' => null,
-        'payment_id' => null,
+        'payment_id' => $payment->payment_id ?? null,
         'booking_ref_no' => $booking->booking_ref_no,
         'notification_message' => "Cargo booking #{$booking->booking_ref_no} from {$senderName} has been approved",
         'notification_type' => 'cargo booking approval',
@@ -268,56 +326,54 @@ public function approve($id)
         'notification_created' => now(),
     ]);
 
-    // Send email
+    // Send email with payment details
     Mail::to($booking->sender->sender_email)
         ->send(new \App\Mail\CargoBookingApproved(
             $booking,
             $booking->sender,
             $booking->consignee,
-            $booking->cargoBookings
+            $booking->cargoBookings,
+            $payment
         ));
 
     return redirect()->route('cargo.bookings.pending')
-        ->with('success', 'Booking approved, added to cargo receipts, and email sent.');
+        ->with('success', 'Booking approved, payment recorded, and email sent.');
 }
 
 
     /**
      * Reject a booking
      */
-public function reject($id)
+public function reject(Request $request, $id)
 {
+    $request->validate(['reason' => 'required|string|max:1000']);
+
     $booking = Booking::with(['sender', 'consignee', 'cargoBookings.cargoItem', 'voyage'])->where('booking_ref_no', $id)->firstOrFail();
     $booking->booking_status = 'Canceled';
     $booking->save();
 
-        // Create notification for rejected cargo booking
-        $senderName = $booking->sender ? $booking->sender->sender_name : 'Customer';
-        Notification::create([
-            'cargo_receipt_id' => null,
-            'payment_id' => null,
-            'booking_ref_no' => $booking->booking_ref_no,
-            'notification_message' => "Cargo booking #{$booking->booking_ref_no} from {$senderName} has been rejected",
-            'notification_type' => 'cargo booking approval',
-            'notification_status' => 'rejected',
-            'notification_created' => now(),
-        ]);
+    $reason = $request->input('reason');
 
-            Mail::to($booking->sender->sender_email)
-        ->send(new \App\Mail\CargoBookingRejected(
-            $booking,
-            $booking->sender,
-            $booking->consignee,
-            $booking->cargoBookings
-        ));
+    // Create notification for rejected cargo booking with reason
+    $senderName = $booking->sender ? $booking->sender->sender_name : 'Customer';
+    Notification::create([
+        'cargo_receipt_id' => null,
+        'payment_id' => null,
+        'booking_ref_no' => $booking->booking_ref_no,
+        'notification_message' => "Cargo booking #{$booking->booking_ref_no} from {$senderName} has been rejected: {$reason}",
+        'notification_type' => 'cargo booking approval',
+        'notification_status' => 'rejected',
+        'notification_created' => now(),
+    ]);
 
-    // Send rejection email
+    // Send rejection email (include reason)
     Mail::to($booking->sender->sender_email)
         ->send(new \App\Mail\CargoBookingRejected(
             $booking,
             $booking->sender,
             $booking->consignee,
-            $booking->cargoBookings
+            $booking->cargoBookings,
+            $reason
         ));
 
     return redirect()->route('cargo.bookings.pending')
@@ -326,4 +382,32 @@ public function reject($id)
 
 
     
+        /**
+         * Return the Bill of Lading PDF for a booking (inline view)
+         */
+        public function bolPdf($id)
+        {
+            $booking = Booking::with(['sender', 'consignee', 'cargoBookings.cargoItem', 'voyage'])
+                ->where('booking_ref_no', $id)
+                ->firstOrFail();
+
+            $pdf = BillOfLadingPdf::generate($booking);
+
+            return response($pdf, 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="bill_of_lading_' . $id . '.pdf"');
+        }
+
+    /**
+     * Display the Bill of Lading in a formatted HTML view (printable)
+     */
+    public function bolView($id)
+    {
+        $booking = Booking::with(['sender', 'consignee', 'cargoBookings.cargoItem', 'voyage'])
+            ->where('booking_ref_no', $id)
+            ->firstOrFail();
+
+        return view('authorized.staff.bill_of_lading', compact('booking'));
+    }
+
 }

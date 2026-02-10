@@ -26,6 +26,9 @@ class CargoBooking extends Model
         'freight',
         'arrastre',
         'total',
+        'cbm',
+        'rate',
+        'value_per_item',
     ];
     
 
