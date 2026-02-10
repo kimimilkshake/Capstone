@@ -1,8 +1,7 @@
-@extends('layouts.app')
-@section('page-title', 'CARGO')
-@section('content')
-  @include('components.authHeader')
-  @include('components.admin_nav')
+<?php $__env->startSection('page-title', 'CARGO'); ?>
+<?php $__env->startSection('content'); ?>
+  <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+  <?php echo $__env->make('components.admin_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
   <div class="admin-body">
     <div class="avl-title">
@@ -11,25 +10,26 @@
 
     <div class="aci-form_container">
 
-      {{-- ERROR ALERT --}}
-      @if ($errors->any())
+      
+      <?php if($errors->any()): ?>
         <div class="alert alert-danger">
           <strong>All fields are required.</strong><br>
-          @foreach ($errors->all() as $error)
-            {{ $error }}<br>
-          @endforeach
+          <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <?php echo e($error); ?><br>
+          <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </div>
-      @endif
+      <?php endif; ?>
 
-      {{-- SUCCESS ALERT --}}
-      @if (session('success'))
+      
+      <?php if(session('success')): ?>
         <div class="alert alert-success">
-          {{ session('success') }}
-        </div>
-      @endif
+          <?php echo e(session('success')); ?>
 
-      <form action="{{ route('admin.store_cargo_item') }}" method="POST" class="create-cargoitem-form">
-        @csrf
+        </div>
+      <?php endif; ?>
+
+      <form action="<?php echo e(route('admin.store_cargo_item')); ?>" method="POST" class="create-cargoitem-form">
+        <?php echo csrf_field(); ?>
 
         <div class="form-row"> <!-- First Row -->
 
@@ -38,11 +38,12 @@
               <label>Route Code <span class="text-danger">*</span></label>
               <select name="route_code_id" required>
                 <option value="">Select Route Code</option>
-                @foreach ($route_codes as $routeCode)
-                  <option value="{{ $routeCode->route_code_id }}">
-                    {{ $routeCode->route_code_name }}
+                <?php $__currentLoopData = $route_codes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $routeCode): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                  <option value="<?php echo e($routeCode->route_code_id); ?>">
+                    <?php echo e($routeCode->route_code_name); ?>
+
                   </option>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
               </select>
             </div>
           </div>
@@ -92,10 +93,10 @@
           </div>
         </div>
 
-        {{-- Measurement Range Section --}}
+        
         <div id="measurement-section" style="display: none;">
 
-          {{-- MIN LWH --}}
+          
           <div class="form-row">
             <div class="form-col">
               <div class="form-group">
@@ -123,17 +124,18 @@
                 <label>Unit</label>
                 <select name="measurement_unit_id">
                   <option value="">Select Unit</option>
-                  @foreach ($measurement_units as $unit)
-                    <option value="{{ $unit->measurement_unit_id }}">
-                      {{ $unit->measurement_unit_name }}
+                  <?php $__currentLoopData = $measurement_units; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $unit): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <option value="<?php echo e($unit->measurement_unit_id); ?>">
+                      <?php echo e($unit->measurement_unit_name); ?>
+
                     </option>
-                  @endforeach
+                  <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
               </div>
             </div>
           </div>
 
-          {{-- MAX LWH --}}
+          
           <div class="form-row">
             <div class="form-col">
               <div class="form-group">
@@ -161,11 +163,12 @@
                 <label>Unit</label>
                 <select name="measurement_unit_id_max">
                   <option value="">Select Unit</option>
-                  @foreach ($measurement_units as $unit)
-                    <option value="{{ $unit->measurement_unit_id }}">
-                      {{ $unit->measurement_unit_name }}
+                  <?php $__currentLoopData = $measurement_units; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $unit): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <option value="<?php echo e($unit->measurement_unit_id); ?>">
+                      <?php echo e($unit->measurement_unit_name); ?>
+
                     </option>
-                  @endforeach
+                  <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
               </div>
             </div>
@@ -183,7 +186,7 @@
     </div>
 
   </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -212,3 +215,5 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 });
 </script>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/authorized/admin/create_cargo_item.blade.php ENDPATH**/ ?>

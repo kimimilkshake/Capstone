@@ -1,8 +1,7 @@
-@extends('layouts.app')
-@section('page-title', 'VOYAGES')
-@section('content')
-@include('components.authHeader')
-@include('components.admin_nav')
+<?php $__env->startSection('page-title', 'VOYAGES'); ?>
+<?php $__env->startSection('content'); ?>
+<?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php echo $__env->make('components.admin_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
 <div class="admin-body">
   <div class="avl-title">
@@ -11,8 +10,8 @@
 
   <!--SEARCH BAR-->
   <div class="search-add-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
-    <form class="search-bar" action="{{ route('admin.route_port_list') }}" method="GET" style="flex: 1;">
-      <input type="text" name="search" placeholder="Search by origin, destination, or ports" value="{{ request('search') }}">
+    <form class="search-bar" action="<?php echo e(route('admin.route_port_list')); ?>" method="GET" style="flex: 1;">
+      <input type="text" name="search" placeholder="Search by origin, destination, or ports" value="<?php echo e(request('search')); ?>">
       <button type="submit">
         <i class="fa-solid fa-magnifying-glass me-2"></i>Search
       </button>
@@ -41,53 +40,56 @@
       <th>Action</th>
     </thead>
     <tbody>
-      @forelse($route_port as $rp)
+      <?php $__empty_1 = true; $__currentLoopData = $route_port; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
         <tr>
-          <td>{{ $rp->routeCode->route_code_name ?? 'N/A' }}</td>
-          <td>{{ $rp->route_origin }}</td>
-          <td>{{ $rp->route_destination }}</td>
+          <td><?php echo e($rp->routeCode->route_code_name ?? 'N/A'); ?></td>
+          <td><?php echo e($rp->route_origin); ?></td>
+          <td><?php echo e($rp->route_destination); ?></td>
           <td>
-            {{ $rp->port_origin_name }},
-            {{ $rp->port_origin_city }},
-            {{ $rp->port_origin_province }}
+            <?php echo e($rp->port_origin_name); ?>,
+            <?php echo e($rp->port_origin_city); ?>,
+            <?php echo e($rp->port_origin_province); ?>
+
           </td>
           <td>
-            {{ $rp->port_destination_name }},
-            {{ $rp->port_destination_city }},
-            {{ $rp->port_destination_province }}
+            <?php echo e($rp->port_destination_name); ?>,
+            <?php echo e($rp->port_destination_city); ?>,
+            <?php echo e($rp->port_destination_province); ?>
+
           </td>
           <td>
             <button 
                 type="button" 
                 class="editRouteBtn link-btn"
                 title="Edit Route and Port"
-                data-id="{{ $rp->route_port_id }}" 
-                data-origin="{{ $rp->route_origin }}" 
-                data-destination="{{ $rp->route_destination }}"
-                data-port_origin_name="{{ $rp->port_origin_name }}"
-                data-port_origin_city="{{ $rp->port_origin_city }}"
-                data-port_origin_province="{{ $rp->port_origin_province }}"
-                data-port_destination_name="{{ $rp->port_destination_name }}"
-                data-port_destination_city="{{ $rp->port_destination_city }}"
-                data-port_destination_province="{{ $rp->port_destination_province }}"
-                data-route_code_id="{{ $rp->route_code_id }}"
+                data-id="<?php echo e($rp->route_port_id); ?>" 
+                data-origin="<?php echo e($rp->route_origin); ?>" 
+                data-destination="<?php echo e($rp->route_destination); ?>"
+                data-port_origin_name="<?php echo e($rp->port_origin_name); ?>"
+                data-port_origin_city="<?php echo e($rp->port_origin_city); ?>"
+                data-port_origin_province="<?php echo e($rp->port_origin_province); ?>"
+                data-port_destination_name="<?php echo e($rp->port_destination_name); ?>"
+                data-port_destination_city="<?php echo e($rp->port_destination_city); ?>"
+                data-port_destination_province="<?php echo e($rp->port_destination_province); ?>"
+                data-route_code_id="<?php echo e($rp->route_code_id); ?>"
             >
                 <i class="fa fa-pencil"></i>
             </button>
         </td>
 
         </tr>
-      @empty
+      <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
         <tr>
           <td colspan="6" class="text-center">No routes and ports found.</td>
         </tr>
-      @endforelse
+      <?php endif; ?>
     </tbody>
   </table>
 
   <div class="mt-3">
-    {{-- FIXED pagination variable --}}
-    {{ $route_port->appends(['search' => request('search')])->links('pagination::bootstrap-5') }}
+    
+    <?php echo e($route_port->appends(['search' => request('search')])->links('pagination::bootstrap-5')); ?>
+
   </div>
 </div>
 
@@ -98,7 +100,7 @@
     <h3>Add Route Code</h3>
 
     <form id="addRouteCodeForm">
-      @csrf
+      <?php echo csrf_field(); ?>
       <div class="rpmodal-row one-col">
         <div class="rpmodal-col">
           <label>Route Code Name <span class="text-danger">*</span></label>
@@ -120,7 +122,7 @@
     <h3>Add Route and Port</h3>
 
     <form id="addRoutePortForm">
-      @csrf
+      <?php echo csrf_field(); ?>
 
       <!-- 2 columns for route -->
       <div class="rpmodal-row three-col">
@@ -128,9 +130,9 @@
           <label>Route Code <span class="text-danger">*</span></label>
           <select name="route_code_id" id="route_code_id">
             <option value="">Select Route Code</option>
-            @foreach($route_codes as $code)
-                <option value="{{ $code->route_code_id }}">{{ $code->route_code_name }}</option>
-            @endforeach
+            <?php $__currentLoopData = $route_codes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $code): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <option value="<?php echo e($code->route_code_id); ?>"><?php echo e($code->route_code_name); ?></option>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
           </select>
         </div>
         <div class="rpmodal-col">
@@ -188,8 +190,8 @@
     <h3>Edit Route and Port</h3>
 
     <form id="editRoutePortForm">
-      @csrf
-      @method('PUT')
+      <?php echo csrf_field(); ?>
+      <?php echo method_field('PUT'); ?>
 
       <input type="hidden" name="route_port_id" id="editRoutePortId">
 
@@ -199,9 +201,9 @@
           <label>Route Code <span class="text-danger">*</span></label>
           <select name="route_code_id" id="editRouteCodeId">
             <option value="">Select Route Code</option>
-            @foreach($route_codes as $routeCode)
-                <option value="{{ $routeCode->route_code_id }}">{{ $routeCode->route_code_name }}</option>
-            @endforeach
+            <?php $__currentLoopData = $route_codes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $routeCode): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <option value="<?php echo e($routeCode->route_code_id); ?>"><?php echo e($routeCode->route_code_name); ?></option>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
           </select>
         </div>
         <div class="rpmodal-col">
@@ -247,8 +249,10 @@
   </div>
 </div>
 
-@endsection
+<?php $__env->stopSection(); ?>
 
-@push('scripts')
-<script src="{{ asset('js/route_port_modal.js') }}"></script>
-@endpush
+<?php $__env->startPush('scripts'); ?>
+<script src="<?php echo e(asset('js/route_port_modal.js')); ?>"></script>
+<?php $__env->stopPush(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/authorized/admin/route_port_list.blade.php ENDPATH**/ ?>

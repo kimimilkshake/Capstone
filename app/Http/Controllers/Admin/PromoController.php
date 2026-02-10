@@ -29,13 +29,13 @@ class PromoController extends Controller
         return view('authorized.admin.promo_list', compact('promos'));
     }
 
-    // ✅ Show create promo form
+    //Show create promo form
     public function create()
     {
         return view('authorized.admin.create_promo');
     }
 
-    // ✅ Store new promo
+    //Store new promo
     public function store(Request $request)
     {
         $request->validate([
@@ -54,14 +54,14 @@ class PromoController extends Controller
         return redirect()->route('admin.promo_list')->with('success', 'Promo created successfully!');
     }
 
-    // ✅ Show edit form
+    //Show edit form
     public function edit($id)
     {
         $promo = Promo::findOrFail($id);
         return view('authorized.admin.promo_edit', compact('promo'));
     }
 
-    // ✅ Update promo
+    //Update promo
     public function update(Request $request, $id)
     {
         $promo = Promo::findOrFail($id);
@@ -82,7 +82,7 @@ class PromoController extends Controller
         return redirect()->route('admin.promo_list')->with('success', 'Promo updated successfully!');
     }
 
-    // ✅ Optional delete function
+    //Optional delete function
     public function destroy($id)
     {
         $promo = Promo::findOrFail($id);

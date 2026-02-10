@@ -627,7 +627,8 @@ body {
   font-size: 0.9rem;
 }
 
-.rpmodal-col input {
+.rpmodal-col input,
+.rpmodal-col select {
   padding: 8px 10px;
   font-size: 0.9rem;
   border-radius: 5px;
@@ -663,6 +664,57 @@ body {
 
 .modal-content button[type="submit"]:hover {
   background: #2546a3;
+}
+
+#addRouteCodeModal {
+  .modal-content {
+    max-width: 500px; // optional, adjust modal width
+    width: 90%;       // responsive width
+
+    form {
+      .rpmodal-row.one-col {
+        display: flex;
+        flex-direction: column;
+        gap: 12px; // spacing between label/input
+
+        .rpmodal-col {
+          width: 100%;
+
+          label {
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: block;
+          }
+
+          input[type="text"] {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            box-sizing: border-box;
+          }
+        }
+      }
+
+      button[type="submit"] {
+        margin-top: 15px;
+        padding: 10px 15px;
+        border: none;
+        background: #1b3b8b;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        width: 100%;
+        transition: background-color 0.2s;
+
+        &:hover {
+          background: #2546a3;
+        }
+      }
+    }
+  }
 }
 
 @media screen and (max-width: 600px) {
@@ -708,6 +760,35 @@ body {
     margin-bottom: 4px;
     display: block;
 }
+
+.inline-radio {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.inline-radio .inline-label {
+  display: flex;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.inline-radio .radio-group {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.inline-radio .radio-option {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+}
+
+.inline-radio .radio-option input {
+  margin: 0;
+}
+
 
 @media (max-width: 900px) {
     .aci-form_container .form-row {
