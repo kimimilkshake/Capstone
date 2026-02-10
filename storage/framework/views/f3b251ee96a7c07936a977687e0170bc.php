@@ -33,14 +33,14 @@
         <div class="form-row">
           <div class="form-col">
             <div class="form-group">
-              <label>Classification</label>
+              <label>Classification <span class="text-danger">*</span></label>
               <input type="text" name="cargo_item_classification" required>
             </div>
           </div>
           
           <div class="form-col">
             <div class="form-group">
-              <label>Description</label>
+              <label>Description <span class="text-danger">*</span></label>
               <input type="text" name="cargo_item_description" required>
             </div>
           </div>
@@ -49,21 +49,21 @@
         <div class="form-row">
           <div class="form-col">
             <div class="form-group">
-              <label>Freight</label>
+              <label>Freight <span class="text-danger">*</span></label>
               <input type="number" name="cargo_item_freight" step="0.01" required>
             </div>
           </div>
 
           <div class="form-col">
             <div class="form-group">
-              <label>Arrastre</label>
+              <label>Arrastre <span class="text-danger">*</span></label>
               <input type="number" name="cargo_item_arrastre" step="0.01" required>
             </div>
           </div>
 
           <div class="form-col">
             <div class="form-group">
-              <label>Route Destination</label>
+              <label>Route Destination <span class="text-danger">*</span></label>
               <select name="route_port_id" required>
                 <option value="">Select Destination</option>
                 <?php $__currentLoopData = $routes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $route): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
