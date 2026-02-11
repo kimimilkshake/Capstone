@@ -80,7 +80,7 @@ class CargoItemController extends Controller
         $measurement_units = MeasurementUnit::all(); // for measurement units dropdown
 
         if ($this->isStaff()) {
-            return view('authorized.staff.cargo_item_edit', compact('cargo_item', 'route_codes', 'measurement_units'));
+            return view('authorized.staff.scargo_item_edit', compact('cargo_item', 'route_codes', 'measurement_units'));
         } else {
             return view('authorized.admin.cargo_item_edit', compact('cargo_item', 'route_codes', 'measurement_units'));
         }

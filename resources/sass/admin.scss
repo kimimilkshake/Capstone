@@ -22,7 +22,6 @@ body {
   overflow-x: hidden;
 }
 
-
 /* === COLLAPSED SIDEBAR === */
 .admin-nav.collapsed {
   width: 60px;
@@ -100,6 +99,29 @@ body {
   transform: translateY(0) scale(1);
   transition: all 0.25s ease-in-out;
 }
+
+
+/* === SUCCESS AND ERROR MESSAGES === */
+.alert {
+    max-width: 800px;
+    width: 100%;
+    margin: 15px auto;
+    text-align: center;
+    padding: 14px 18px;
+    border-radius: 8px;
+}
+
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
 
 /* === DASHBOARD CONTENT === */
 .admin-body {
@@ -666,16 +688,16 @@ body {
   background: #2546a3;
 }
 
-#addRouteCodeModal {
+#addRouteCodeModal #aaddCargoClassificationModal {
   .modal-content {
-    max-width: 500px; // optional, adjust modal width
-    width: 90%;       // responsive width
+    max-width: 500px;
+    width: 90%;
 
     form {
       .rpmodal-row.one-col {
         display: flex;
         flex-direction: column;
-        gap: 12px; // spacing between label/input
+        gap: 12px;
 
         .rpmodal-col {
           width: 100%;
@@ -789,6 +811,41 @@ body {
   margin: 0;
 }
 
+#aaddCargoClassificationModal .rpmodal-row.one-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#aaddCargoClassificationModal .rpmodal-row.one-col .rpmodal-col {
+    width: 100%;
+}
+
+#aaddCargoClassificationModal .rpmodal-col input {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+#saddCargoClassificationModal .rpmodal-row.one-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#saddCargoClassificationModal .rpmodal-row.one-col .rpmodal-col {
+    width: 100%;
+}
+
+#saddCargoClassificationModal .rpmodal-col input {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
 
 @media (max-width: 900px) {
     .aci-form_container .form-row {
@@ -796,7 +853,6 @@ body {
         gap: 15px;
     }
 }
-
 
 
 //PAGINATION

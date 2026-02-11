@@ -6,13 +6,36 @@
     <div class="avl-title">
       <h3>VIEW RATES</h3>
     </div>
+    
+    
+    <?php if($errors->any()): ?>
+      <div class="alert-wrapper">
+        <div class="alert alert-danger">
+          <strong>All fields are required.</strong><br>
+          <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <?php echo e($error); ?><br>
+          <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        </div>
+      </div>
+    <?php endif; ?>
+
+    
+    <?php if(session('success')): ?>
+      <div class="alert-wrapper">
+        <div class="alert alert-success">
+          <?php echo e(session('success')); ?>
+
+        </div>
+      </div>
+    <?php endif; ?>
 
     <div class="search-filter-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
+
       <form class="search-bar" action="<?php echo e(route('admin.cargo_item_list')); ?>"  method="GET" style="flex: 1;">
 
         <input type="text" name="search" placeholder="Search..." value="<?php echo e(request('search')); ?>" style="margin-right: 10px;">
         <select name="route_code_id">
-          <option value="">Select Route Code</option>
+          <option value="">All Route Codes</option>
           <?php $__currentLoopData = $route_codes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $routeCode): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
               <option value="<?php echo e($routeCode->route_code_id); ?>">
                     <?php echo e($routeCode->route_code_name); ?>
@@ -22,6 +45,13 @@
         </select>
         <button type="submit">Filter</button>
       </form>
+
+      <div class="add-vessel">
+        <button type="button" id="aaddCargoClassificationBtn" class="add-link-btn" title="Add Cargo Classification">
+          <i class="fa-solid fa-plus me-2"></i><i class="fa-solid fa-boxes-packing"></i>
+        </button>
+      </div>
+
     </div>
 
     <table class="cargo-item-table">
@@ -61,6 +91,55 @@
 
     </div>
   </div>
+
+  <!-- Add Cargo Classification Modal -->
+  <div id="aaddCargoClassificationModal" class="modal-overlay" style="display: none">
+    <div class="modal-content">
+      
+      <span class="close-btn" id="acloseCargoClassificationModal">&times;</span>
+      <h3>Add Cargo Classification</h3>
+      <form id="aaddCargoClassificationForm" 
+            action="<?php echo e(route('admin.cargo_classification_store')); ?>"
+            method="POST">
+        <?php echo csrf_field(); ?>
+        <div class="rpmodal-row one-col">
+          <div class="rpmodal-col">
+            <label>Cargo Classification Name <span class="text-danger">*</span></label>
+            <input type="text" name="cargo_classification_name" required>
+          </div>
+        </div>
+        <button type="submit">Add Cargo Classification</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const openBtn = document.getElementById('aaddCargoClassificationBtn');
+        const modal = document.getElementById('aaddCargoClassificationModal');
+        const closeBtn = document.getElementById('acloseCargoClassificationModal');
+
+        // Open modal
+        openBtn.addEventListener('click', function () {
+            modal.style.display = 'flex';
+        });
+
+        // Close modal (X button)
+        closeBtn.addEventListener('click', function () {
+            modal.style.display = 'none';
+        });
+
+        // Close modal when clicking outside content
+        window.addEventListener('click', function (e) {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+    });
+    </script>
+
 
 <?php $__env->stopSection(); ?>
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/authorized/admin/cargo_item_list.blade.php ENDPATH**/ ?>

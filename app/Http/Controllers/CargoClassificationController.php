@@ -18,8 +18,8 @@ class CargoClassificationController extends Controller
         $classifications = CargoClassification::orderBy('cargo_classification_name', 'asc')->paginate(10);
 
         return $this->isAdmin()
-            ? view('authorized.admin.cargo_classification_list', compact('classifications'))
-            : view('authorized.staff.cargo_classification_list', compact('classifications'));
+            ? view('authorized.admin.cargo_item_list', compact('classifications'))
+            : view('authorized.staff.cargo_item_list', compact('classifications'));
     }
 
     // Show create form
@@ -39,7 +39,7 @@ class CargoClassificationController extends Controller
 
         CargoClassification::create($request->only('cargo_classification_name'));
 
-        return redirect()->route($this->isAdmin() ? 'admin.cargo_classification_list' : 'staff.cargo_classification_list')
+        return redirect()->route($this->isAdmin() ? 'admin.cargo_item_list' : 'staff.cargo_item_list')
                          ->with('success', 'Cargo Classification added successfully!');
     }
 
