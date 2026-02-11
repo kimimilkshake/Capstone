@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Cargo Booking Approved - #{{ $booking->booking_ref_no }}</title>
+    <title>Cargo Booking Approved - #<?php echo e($booking->booking_ref_no); ?></title>
     <style>
         body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
         .container { max-width: 700px; margin: auto; background: #fff; border-radius: 10px; padding: 20px; }
@@ -17,27 +17,27 @@
 <body>
 <div class="container">
     <h2>✅ Cargo Booking Approved</h2>
-    <p>Booking Reference: <strong>#{{ $booking->booking_code }}</strong></p>
-    <p>Status: <strong>{{ $booking->booking_status }}</strong></p>
+    <p>Booking Reference: <strong>#<?php echo e($booking->booking_code); ?></strong></p>
+    <p>Status: <strong><?php echo e($booking->booking_status); ?></strong></p>
     <p>The Bill of Lading (B/L) for this booking is attached as a PDF for your records and printing.</p>
 
     <!-- Voyage Information -->
     <div class="section">
         <div class="section-title">🚢 Voyage Information</div>
-        @if($booking->voyage)
-            <p>Voyage Code: {{ $booking->voyage->voyage_code }}</p>
-            <p>Departure: {{ \Carbon\Carbon::parse($booking->voyage->voyage_departure_date)->format('M d, Y (D)') }}</p>
-            <p>Arrival: {{ \Carbon\Carbon::parse($booking->voyage->voyage_arrival_date)->format('M d, Y (D)') }}</p>
-        @else
+        <?php if($booking->voyage): ?>
+            <p>Voyage Code: <?php echo e($booking->voyage->voyage_code); ?></p>
+            <p>Departure: <?php echo e(\Carbon\Carbon::parse($booking->voyage->voyage_departure_date)->format('M d, Y (D)')); ?></p>
+            <p>Arrival: <?php echo e(\Carbon\Carbon::parse($booking->voyage->voyage_arrival_date)->format('M d, Y (D)')); ?></p>
+        <?php else: ?>
             <p>Voyage information not available.</p>
-        @endif
+        <?php endif; ?>
     </div>
 
     <!-- Sender & Consignee -->
     <div class="section">
         <div class="section-title">📦 Sender & Consignee</div>
-        <p><strong>Sender:</strong> {{ $sender->sender_name }} ({{ $sender->sender_contactno }})</p>
-        <p><strong>Consignee:</strong> {{ $consignee->consignee_name }} ({{ $consignee->consignee_contactno }})</p>
+        <p><strong>Sender:</strong> <?php echo e($sender->sender_name); ?> (<?php echo e($sender->sender_contactno); ?>)</p>
+        <p><strong>Consignee:</strong> <?php echo e($consignee->consignee_name); ?> (<?php echo e($consignee->consignee_contactno); ?>)</p>
     </div>
 
     <!-- Cargo Items -->
@@ -55,12 +55,12 @@
                 </tr>
             </thead>
             <tbody>
-                @php 
+                <?php 
                     $total = 0;
                     $totalQuantity = 0;
-                @endphp
-                @foreach($cargoItems as $cargo)
-                    @php
+                ?>
+                <?php $__currentLoopData = $cargoItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cargo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php
                         $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
                         $arrastre = $cargo->cargoItem->cargo_item_arrastre ?? 0;
                         $cbm = ($cargo->length * $cargo->width * $cargo->height) / 1000000;
@@ -82,28 +82,28 @@
                             $displayWidth = $cargo->width;
                             $displayHeight = $cargo->height;
                         }
-                    @endphp
+                    ?>
                     <tr>
-                        <td>{{ $cargo->quantity }}</td>
-                        <td>{{ $cargo->cargoItem->cargo_item_classification }}</td>
-                        <td>{{ $cargo->cargoItem->cargo_item_description }}</td>
-                        <td>{{ $displayLength }} × {{ $displayWidth }} × {{ $displayHeight }} {{ $unitDisplay }}</td>
-                        <td>{{ $cargo->weight }} kg</td>
-                        <td>₱{{ number_format($subtotal,2) }}</td>
+                        <td><?php echo e($cargo->quantity); ?></td>
+                        <td><?php echo e($cargo->cargoItem->cargo_item_classification); ?></td>
+                        <td><?php echo e($cargo->cargoItem->cargo_item_description); ?></td>
+                        <td><?php echo e($displayLength); ?> × <?php echo e($displayWidth); ?> × <?php echo e($displayHeight); ?> <?php echo e($unitDisplay); ?></td>
+                        <td><?php echo e($cargo->weight); ?> kg</td>
+                        <td>₱<?php echo e(number_format($subtotal,2)); ?></td>
                     </tr>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 <tr style="background-color: #f9f9f9; font-weight: bold;">
                     <td colspan="2">Total Items</td>
-                    <td colspan="2">{{ $totalQuantity }}</td>
+                    <td colspan="2"><?php echo e($totalQuantity); ?></td>
                     <td colspan="2"></td>
                 </tr>
             </tbody>
         </table>
 
         <div style="margin-top:15px; text-align:left;">
-            <p><strong>Mode of Payment:</strong> {{ $payment->mode_of_payment ?? 'N/A' }}</p>
-            <p><strong>Payment Status:</strong> {{ $payment->payment_status ?? 'N/A' }}</p>
-            <p style="font-size: 16px; color: #28a745;"><strong>Total Overall: ₱{{ number_format($payment->total_amount ?? $total,2) }}</strong></p>
+            <p><strong>Mode of Payment:</strong> <?php echo e($payment->mode_of_payment ?? 'N/A'); ?></p>
+            <p><strong>Payment Status:</strong> <?php echo e($payment->payment_status ?? 'N/A'); ?></p>
+            <p style="font-size: 16px; color: #28a745;"><strong>Total Overall: ₱<?php echo e(number_format($payment->total_amount ?? $total,2)); ?></strong></p>
         </div>
     </div>
 
@@ -111,3 +111,4 @@
 </div>
 </body>
 </html>
+<?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/emails/cargo_booking_approved.blade.php ENDPATH**/ ?>

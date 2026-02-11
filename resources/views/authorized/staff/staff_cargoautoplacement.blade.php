@@ -37,7 +37,7 @@
                 <div class="alert alert-warning">{{ $placementData['error'] }}</div>
             @else
                 <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
+                    <div class="card-header text-white">
                         <h5>Voyage Information</h5>
                     </div>
                     <div class="card-body">
@@ -50,7 +50,7 @@
                 </div>
 
                 <div class="card mb-4">
-                    <div class="card-header bg-secondary text-white">
+                    <div class="card-header text-white">
                         <h5>Hatch Specifications</h5>
                     </div>
                     <div class="card-body">
@@ -80,7 +80,7 @@
                 </div>
 
                 <div class="card mb-4">
-                    <div class="card-header bg-info text-white">
+                    <div class="card-header text-white">
                         <h5>Cargo Items</h5>
                     </div>
                     <div class="card-body">
@@ -123,7 +123,7 @@
                 <form method="POST" action="{{ route('staff.cargo.place') }}">
                     @csrf
                     <input type="hidden" name="voyage_id" value="{{ $selectedVoyageId }}">
-                    <button type="submit" class="btn btn-success btn-lg btn-block">
+                    <button type="submit" class="btn button-textcolor1 btn-lg btn-block">
                         <i class="fas fa-box-open"></i> Calculate Auto Placement
                     </button>
                 </form>
@@ -132,7 +132,7 @@
 
         @if(session('placement_results'))
             <div class="card mt-4">
-                <div class="card-header bg-success text-white">
+                <div class="card-header text-white">
                     <h5>Placement Results</h5>
                 </div>
                 <div class="card-body">

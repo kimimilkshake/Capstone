@@ -46,7 +46,7 @@
                       onclick="printTable('passengerTable')"
                     ></i>
                 </div>
-                <table id="passengerTable" class="manifest-table table table-striped">
+                <table id="passengerTable" class="manifest-table table">
                     <thead>
                         <tr>
                             <th>Ticket / Ref</th>
