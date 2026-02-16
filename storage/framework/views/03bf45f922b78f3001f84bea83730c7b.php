@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bill of Lading - {{ $booking->booking_ref_no }}</title>
+    <title>Bill of Lading - <?php echo e($booking->booking_ref_no); ?></title>
     <style>
         * {
             margin: 0;
@@ -277,22 +277,22 @@
     <div class="info-row">
         <div class="info-item">
             <label>Vessel:</label>
-            <span>{{ $booking->voyage->vessel_name ?? 'Not specified' }}</span>
+            <span><?php echo e($booking->voyage->vessel_name ?? 'Not specified'); ?></span>
         </div>
         <div class="info-item">
             <label>B/L No.:</label>
-            <span>{{ $booking->booking_ref_no }}</span>
+            <span><?php echo e($booking->booking_ref_no); ?></span>
         </div>
     </div>
 
     <div class="info-row">
         <div class="info-item">
             <label>Voyage No.:</label>
-            <span>{{ $booking->voyage->voyage_code ?? 'N/A' }}</span>
+            <span><?php echo e($booking->voyage->voyage_code ?? 'N/A'); ?></span>
         </div>
         <div class="info-item">
             <label>Sailing Date:</label>
-            <span>{{ $booking->voyage ? \Carbon\Carbon::parse($booking->voyage->voyage_departure_date)->format('F d, Y') : 'N/A' }}</span>
+            <span><?php echo e($booking->voyage ? \Carbon\Carbon::parse($booking->voyage->voyage_departure_date)->format('F d, Y') : 'N/A'); ?></span>
         </div>
     </div>
 
@@ -301,16 +301,16 @@
         <div class="section-box">
             <div class="section-label">SHIPPER</div>
             <div class="section-content">
-                <p><strong>{{ $booking->sender->sender_name ?? '' }}</strong></p>
-                <p>{{ $booking->sender->sender_contactno ?? '' }}</p>
-                <p>{{ $booking->sender->sender_email ?? '' }}</p>
+                <p><strong><?php echo e($booking->sender->sender_name ?? ''); ?></strong></p>
+                <p><?php echo e($booking->sender->sender_contactno ?? ''); ?></p>
+                <p><?php echo e($booking->sender->sender_email ?? ''); ?></p>
             </div>
         </div>
         <div class="section-box">
             <div class="section-label">CONSIGNEE</div>
             <div class="section-content">
-                <p><strong>{{ $booking->consignee->consignee_name ?? '' }}</strong></p>
-                <p>{{ $booking->consignee->consignee_contactno ?? '' }}</p>
+                <p><strong><?php echo e($booking->consignee->consignee_name ?? ''); ?></strong></p>
+                <p><?php echo e($booking->consignee->consignee_contactno ?? ''); ?></p>
             </div>
         </div>
     </div>
@@ -320,13 +320,13 @@
         <div class="section-box">
             <div class="section-label">Loading Port</div>
             <div class="section-content">
-                <p>{{ $booking->voyage->loading_port ?? 'Not specified' }}</p>
+                <p><?php echo e($booking->voyage->loading_port ?? 'Not specified'); ?></p>
             </div>
         </div>
         <div class="section-box">
             <div class="section-label">Unloading Port</div>
             <div class="section-content">
-                <p>{{ $booking->voyage->unloading_port ?? 'Not specified' }}</p>
+                <p><?php echo e($booking->voyage->unloading_port ?? 'Not specified'); ?></p>
             </div>
         </div>
     </div>
@@ -345,15 +345,15 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($booking->cargoBookings as $cargo)
+                <?php $__currentLoopData = $booking->cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cargo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <tr>
-                        <td>{{ $cargo->quantity }}</td>
-                        <td>{{ $cargo->cargoClassification->cargo_classification_name ?? '' }}</td>
-                        <td>{{ $cargo->cargoItem->cargo_item_description ?? '' }}</td>
-                        <td>{{ $cargo->length }} × {{ $cargo->width }} × {{ $cargo->height }}</td>
-                        <td>{{ $cargo->weight }}</td>
+                        <td><?php echo e($cargo->quantity); ?></td>
+                        <td><?php echo e($cargo->cargoItem->cargo_item_classification ?? ''); ?></td>
+                        <td><?php echo e($cargo->cargoItem->cargo_item_description ?? ''); ?></td>
+                        <td><?php echo e($cargo->length); ?> × <?php echo e($cargo->width); ?> × <?php echo e($cargo->height); ?></td>
+                        <td><?php echo e($cargo->weight); ?></td>
                     </tr>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </tbody>
         </table>
     </div>
@@ -404,3 +404,4 @@
 
 </body>
 </html>
+<?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/authorized/staff/bill_of_lading.blade.php ENDPATH**/ ?>

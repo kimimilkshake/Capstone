@@ -130,7 +130,7 @@
                                 <tr>
                                     <td>{{ $c->bl_number ?? $c->booking_ref_no ?? $c->booking_ref ?? ($c->booking_ref_no ?? '-') }}</td>
                                     <td>{{ $c->quantity ?? $c->cargo_item_qty ?? '-' }}</td>
-                                    <td>{{ $c->cargoItem->cargo_item_classification ?? 'N/A' }}</td>
+                                    <td>{{ $c->cargoClassification->cargo_classification_name ?? 'N/A' }}</td>
                                     <td>{{ $c->cargoItem->cargo_item_description ?? 'N/A'  }}</td>
                                     <td>{{ $c->sender->sender_name ?? 'N/A' }}</td>
                                     <td>{{ $c->tin_number ?? '-' }}</td>
