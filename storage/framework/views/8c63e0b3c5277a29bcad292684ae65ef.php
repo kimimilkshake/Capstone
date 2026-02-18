@@ -85,7 +85,7 @@
                     ?>
                     <tr>
                         <td><?php echo e($cargo->quantity); ?></td>
-                        <td><?php echo e($cargo->cargoItem->cargo_item_classification); ?></td>
+                        <td><?php echo e($cargo->cargoClassification->cargo_classification_name ?? 'N/A'); ?></td>
                         <td><?php echo e($cargo->cargoItem->cargo_item_description); ?></td>
                         <td><?php echo e($displayLength); ?> × <?php echo e($displayWidth); ?> × <?php echo e($displayHeight); ?> <?php echo e($unitDisplay); ?></td>
                         <td><?php echo e($cargo->weight); ?> kg</td>

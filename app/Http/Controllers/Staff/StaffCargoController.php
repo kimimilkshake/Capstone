@@ -122,7 +122,6 @@ public function store(Request $request)
     // Create Cargo Items
     foreach ($request->cargo_item_id as $index => $cargoId) {
         $cargoItem = CargoItem::find($cargoId);
-        
         $cargoBooking = new CargoBooking();
         $cargoBooking->booking_ref_no = $booking->booking_ref_no;
         $cargoBooking->cargo_item_id = $cargoId;
@@ -132,6 +131,15 @@ public function store(Request $request)
         $cargoBooking->length = $request->cargo_length[$index];
         $cargoBooking->width = $request->cargo_width[$index];
         $cargoBooking->height = $request->cargo_height[$index];
+
+        // Save cargo_classification_id from selected name
+        $classificationName = $request->cargo_classification[$index] ?? null;
+        if ($classificationName) {
+            $classification = \App\Models\CargoClassification::where('cargo_classification_name', $classificationName)->first();
+            if ($classification) {
+                $cargoBooking->cargo_classification_id = $classification->cargo_classification_id;
+            }
+        }
 
         // Store measurement unit if provided
         if ($request->has("measurement_unit.$index") && $request->measurement_unit[$index]) {

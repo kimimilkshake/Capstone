@@ -258,10 +258,7 @@
 </head>
 <body>
 
-<div class="no-print">
-    <button onclick="window.print()">🖨️ Print</button>
-    <button onclick="window.history.back()">← Back</button>
-</div>
+
 
 <div class="page">
     <!-- Header -->
@@ -277,7 +274,7 @@
     <div class="info-row">
         <div class="info-item">
             <label>Vessel:</label>
-            <span><?php echo e($booking->voyage->vessel_name ?? 'Not specified'); ?></span>
+            <span><?php echo e($booking->voyage && $booking->voyage->vessel ? $booking->voyage->vessel->vessel_name : ($booking->voyage->vessel_name ?? 'Not specified')); ?></span>
         </div>
         <div class="info-item">
             <label>B/L No.:</label>
@@ -320,13 +317,13 @@
         <div class="section-box">
             <div class="section-label">Loading Port</div>
             <div class="section-content">
-                <p><?php echo e($booking->voyage->loading_port ?? 'Not specified'); ?></p>
+                <p><?php echo e($booking->voyage && $booking->voyage->routePort ? $booking->voyage->routePort->port_origin_name : 'Not specified'); ?></p>
             </div>
         </div>
         <div class="section-box">
             <div class="section-label">Unloading Port</div>
             <div class="section-content">
-                <p><?php echo e($booking->voyage->unloading_port ?? 'Not specified'); ?></p>
+                <p><?php echo e($booking->voyage && $booking->voyage->routePort ? $booking->voyage->routePort->port_destination_name : 'Not specified'); ?></p>
             </div>
         </div>
     </div>
@@ -337,21 +334,25 @@
         <table class="cargo-table" style="margin: 0; border-top: none;">
             <thead>
                 <tr>
-                    <th style="width: 10%;">QTY</th>
-                    <th style="width: 20%;">Classification</th>
-                    <th style="width: 25%;">Description</th>
+                    <th style="width: 8%;">QTY</th>
+                    <th style="width: 18%;">Classification</th>
+                    <th style="width: 24%;">Description</th>
                     <th style="width: 25%;">Dimensions (cm)</th>
-                    <th style="width: 20%;">Weight (kg)</th>
+                    <th style="width: 15%;">Weight (kg)</th>
                 </tr>
             </thead>
             <tbody>
                 <?php $__currentLoopData = $booking->cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cargo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php $unit = $cargo->measurement_unit ?? 'cm'; ?>
                     <tr>
-                        <td><?php echo e($cargo->quantity); ?></td>
-                        <td><?php echo e($cargo->cargoItem->cargo_item_classification ?? ''); ?></td>
+                        <td style="text-align:center;"><?php echo e($cargo->quantity); ?></td>
+                        <td><?php echo e($cargo->cargoClassification->cargo_classification_name ?? ''); ?></td>
                         <td><?php echo e($cargo->cargoItem->cargo_item_description ?? ''); ?></td>
-                        <td><?php echo e($cargo->length); ?> × <?php echo e($cargo->width); ?> × <?php echo e($cargo->height); ?></td>
-                        <td><?php echo e($cargo->weight); ?></td>
+                        <td>
+                            <?php echo e(number_format($cargo->length, 2) . $unit); ?> × <?php echo e(number_format($cargo->width, 2) . $unit); ?> × <?php echo e(number_format($cargo->height, 2) . $unit); ?>
+
+                        </td>
+                        <td style="text-align:center;"><?php echo e(number_format($cargo->weight, 2)); ?></td>
                     </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </tbody>
@@ -359,24 +360,39 @@
     </div>
 
     <!-- Charges Table -->
+    <?php
+        $freight = 0;
+        $arrastre = 0;
+        $tax = 0;
+        $stamp = 0;
+        foreach($booking->cargoBookings as $cargo) {
+            $freight += $cargo->freight ?? 0;
+            $arrastre += $cargo->arrastre ?? 0;
+            $tax += $cargo->tax ?? 0;
+            $stamp += $cargo->stamp ?? 0;
+        }
+        $total = $freight + $arrastre + $tax + $stamp;
+    ?>
     <table class="charges-table">
         <tr>
             <td class="label">FREIGHT CHARGES</td>
-            <td class="amount">₱__________</td>
+            <td class="amount">₱<?php echo e(number_format($freight + $arrastre, 2)); ?></td>
         </tr>
         <tr>
             <td class="label">Tax</td>
-            <td class="amount">₱__________</td>
+            <td class="amount">₱<?php echo e(number_format($tax, 2)); ?></td>
         </tr>
         <tr>
             <td class="label">Stamp</td>
-            <td class="amount">₱__________</td>
+            <td class="amount">₱<?php echo e(number_format($stamp, 2)); ?></td>
         </tr>
         <tr>
             <td class="label"><strong>Total</strong></td>
-            <td class="amount"><strong>₱__________</strong></td>
+            <td class="amount"><strong>₱<?php echo e(number_format($total, 2)); ?></strong></td>
         </tr>
     </table>
+
+    <!-- NOTE: If the PDF/email version does not match this view, check the BillOfLadingPdf service and the mail template for consistency. -->
 
     <!-- Signature Section -->
     <div class="signature-block">

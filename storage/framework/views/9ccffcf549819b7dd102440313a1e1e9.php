@@ -58,7 +58,13 @@
                             $totalExpense += $subtotal;
                         ?>
                         <tr>
-                            <td><?php echo e($item->cargo_item_description); ?> (<?php echo e($item->cargo_item_classification); ?>)</td>
+                            <td>
+                                <?php echo e($item->cargo_item_description); ?>
+
+                                <?php if(isset($item->cargo_item_classification)): ?>
+                                    (<?php echo e($item->cargo_item_classification); ?>)
+                                <?php endif; ?>
+                            </td>
                             <td><?php echo e($item->quantity); ?></td>
                             <td><?php echo e($item->length); ?> x <?php echo e($item->width); ?> x <?php echo e($item->height); ?></td>
                             <td><?php echo e(number_format($cbm, 3)); ?></td>

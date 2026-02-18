@@ -160,19 +160,16 @@
                                 <div class="flex-fill">
                                     <label class="form-label small">Length</label>
                                     <input type="number" name="cargo_length[]" class="form-control dimension" placeholder="Length" step="0.01" required>
-                                    <small class="text-muted dimension-range"></small>
                                 </div>
 
                                 <div class="flex-fill">
                                     <label class="form-label small">Width</label>
                                     <input type="number" name="cargo_width[]" class="form-control dimension" placeholder="Width" step="0.01" required>
-                                    <small class="text-muted dimension-range"></small>
                                 </div>
 
                                 <div class="flex-fill">
                                     <label class="form-label small">Height</label>
                                     <input type="number" name="cargo_height[]" class="form-control dimension" placeholder="Height" step="0.01" required>
-                                    <small class="text-muted dimension-range"></small>
                                 </div>
 
                                 <div style="width: 120px;">
@@ -245,10 +242,12 @@ container.addEventListener('change', e => {
 
 // Change number of cargo items based on No. of Cargo input
 const noInput = document.getElementById('no_of_cargo');
+const MAX_ITEMS = 5;
 if(noInput){
     function syncCargoItems(){
         let desired = parseInt(noInput.value) || 1;
         if(desired < 1) { desired = 1; noInput.value = 1; }
+        if(desired > MAX_ITEMS) { desired = MAX_ITEMS; noInput.value = MAX_ITEMS; }
         const items = Array.from(container.querySelectorAll('.cargo-item'));
         const current = items.length;
         const original = items[0];
@@ -258,7 +257,6 @@ if(noInput){
                 const newItem = original.cloneNode(true);
                 newItem.querySelectorAll('input, select').forEach(el => el.value = '');
                 newItem.querySelector('.cbm-output').value = '0.0000';
-                newItem.querySelector('.measurements-section').style.display = 'none';
                 container.appendChild(newItem);
             }
         } else if(desired < current){
@@ -274,63 +272,58 @@ if(noInput){
 }
 
 // Display min/max ranges when cargo description changes and apply measurement-required behavior
+
+// Passenger-style: When cargo description is selected, set dimension fields based on measurement requirement
 container.addEventListener('change', e => {
     if(!e.target.classList.contains('cargo-description')) return;
     const item = e.target.closest('.cargo-item');
-    const cargoItemId = e.target.value;
-    
-    // Get cargo item data via attributes stored in the option
     const selectedOption = e.target.options[e.target.selectedIndex];
+
+    // Get measurement requirement and min/max values
+    const measureRequired = (selectedOption.dataset.measureRequired || 'No').toString();
     const minLength = selectedOption.dataset.minLength || '';
     const maxLength = selectedOption.dataset.maxLength || '';
     const minWidth = selectedOption.dataset.minWidth || '';
     const maxWidth = selectedOption.dataset.maxWidth || '';
     const minHeight = selectedOption.dataset.minHeight || '';
     const maxHeight = selectedOption.dataset.maxHeight || '';
-    const measureRequired = (selectedOption.dataset.measureRequired || 'No').toString();
-    
-    // Update dimension range displays
-    const dimensionRanges = item.querySelectorAll('.dimension-range');
-    if(dimensionRanges[0]) dimensionRanges[0].textContent = minLength && maxLength ? `(${minLength} - ${maxLength})` : '';
-    if(dimensionRanges[1]) dimensionRanges[1].textContent = minWidth && maxWidth ? `(${minWidth} - ${maxWidth})` : '';
-    if(dimensionRanges[2]) dimensionRanges[2].textContent = minHeight && maxHeight ? `(${minHeight} - ${maxHeight})` : '';
-    
-    // Store min/max values on input fields for validation
+
+    // Get input fields
     const lengthInput = item.querySelector('[name="cargo_length[]"]');
     const widthInput = item.querySelector('[name="cargo_width[]"]');
     const heightInput = item.querySelector('[name="cargo_height[]"]');
-    if(lengthInput){ lengthInput.dataset.min = minLength || ''; lengthInput.dataset.max = maxLength || ''; }
-    if(widthInput){ widthInput.dataset.min = minWidth || ''; widthInput.dataset.max = maxWidth || ''; }
-    if(heightInput){ heightInput.dataset.min = minHeight || ''; heightInput.dataset.max = maxHeight || ''; }
 
-    // helpers to manage hidden inputs (we keep canonical names set to min so server/validation still works)
-    function ensureHidden(name, dataKey, val){
-        let hid = item.querySelector('input[type="hidden"][data-hidden-for="'+dataKey+'"]');
-        if(!hid){ hid = document.createElement('input'); hid.type = 'hidden'; hid.name = name; hid.dataset.hiddenFor = dataKey; item.appendChild(hid); }
-        hid.value = val || '';
-    }
-    function removeHidden(dataKey){ const h = item.querySelector('input[type="hidden"][data-hidden-for="'+dataKey+'"]'); if(h) h.remove(); }
-
-    if(measureRequired === 'Yes'){
-        if(lengthInput){ const wrap = lengthInput.closest('.flex-fill'); if(wrap) wrap.style.display = 'none'; lengthInput.removeAttribute('name'); ensureHidden('cargo_length[]','length_min', minLength); ensureHidden('cargo_length_max[]','length_max', maxLength); }
-        if(widthInput){ const wrap = widthInput.closest('.flex-fill'); if(wrap) wrap.style.display = 'none'; widthInput.removeAttribute('name'); ensureHidden('cargo_width[]','width_min', minWidth); ensureHidden('cargo_width_max[]','width_max', maxWidth); }
-        if(heightInput){ const wrap = heightInput.closest('.flex-fill'); if(wrap) wrap.style.display = 'none'; heightInput.removeAttribute('name'); ensureHidden('cargo_height[]','height_min', minHeight); ensureHidden('cargo_height_max[]','height_max', maxHeight); }
-
-        ensureHidden('cargo_length[]','length_min_canonical', minLength);
-        ensureHidden('cargo_width[]','width_min_canonical', minWidth);
-        ensureHidden('cargo_height[]','height_min_canonical', minHeight);
-
-        dimensionRanges.forEach(dr => { if(dr) dr.style.display = 'none'; });
-        calculateCBM(item);
+    if (measureRequired === 'Yes') {
+        // Set fields to min values and make readonly
+        if(lengthInput) {
+            lengthInput.value = minLength;
+            lengthInput.readOnly = true;
+        }
+        if(widthInput) {
+            widthInput.value = minWidth;
+            widthInput.readOnly = true;
+        }
+        if(heightInput) {
+            heightInput.value = minHeight;
+            heightInput.readOnly = true;
+        }
     } else {
-        if(lengthInput){ const wrap = lengthInput.closest('.flex-fill'); if(wrap) wrap.style.display = ''; lengthInput.name = 'cargo_length[]'; }
-        if(widthInput){ const wrap = widthInput.closest('.flex-fill'); if(wrap) wrap.style.display = ''; widthInput.name = 'cargo_width[]'; }
-        if(heightInput){ const wrap = heightInput.closest('.flex-fill'); if(wrap) wrap.style.display = ''; heightInput.name = 'cargo_height[]'; }
-        dimensionRanges.forEach((dr) => { if(dr) dr.style.display = ''; });
-
-        removeHidden('length_min'); removeHidden('length_max'); removeHidden('width_min'); removeHidden('width_max'); removeHidden('height_min'); removeHidden('height_max');
-        removeHidden('length_min_canonical'); removeHidden('width_min_canonical'); removeHidden('height_min_canonical');
+        // Clear fields and make editable
+        if(lengthInput) {
+            lengthInput.value = '';
+            lengthInput.readOnly = false;
+        }
+        if(widthInput) {
+            widthInput.value = '';
+            widthInput.readOnly = false;
+        }
+        if(heightInput) {
+            heightInput.value = '';
+            heightInput.readOnly = false;
+        }
     }
+
+    // No display of min/max range under dimension fields
 });
 
 // Handle voyage selection and filter cargo descriptions by route_code
@@ -351,10 +344,20 @@ if(voyageSelect) {
     });
 }
 
-// Show loading overlay on submit
+// Show loading overlay on submit and enforce 25kg max per booking
 const staffForm = document.getElementById('staffCargoForm');
 if(staffForm){
-    staffForm.addEventListener('submit', function(){
+    staffForm.addEventListener('submit', function(e){
+        // Enforce 25kg max
+        let totalWeight = 0;
+        document.querySelectorAll('input[name="cargo_weight[]"]').forEach(input => {
+            totalWeight += parseFloat(input.value) || 0;
+        });
+        if(totalWeight > 25){
+            e.preventDefault();
+            alert('Total weight per booking must not exceed 25kg.');
+            return false;
+        }
         const overlay = document.getElementById('staffOverlay');
         if(overlay){ overlay.style.display = 'flex'; }
     });

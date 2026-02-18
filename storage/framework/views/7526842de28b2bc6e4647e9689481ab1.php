@@ -150,8 +150,11 @@
             <thead class="table-dark">
                 <tr>
                     <th>Description</th>
+                    <th>Classification</th>
                     <th>Qty</th>
-                    <th>Dimensions</th>
+                    <th>Length</th>
+                    <th>Width</th>
+                    <th>Height</th>
                     <th>CBM</th>
                     <th>Freight</th>
                     <th>Arrastre</th>
@@ -169,15 +172,16 @@
                         $cbm = ($c->length * $c->width * $c->height) / 1000000;
                         $subtotal = ($freight + $arrastre) * $cbm * $c->quantity;
                         $total += $subtotal;
+                        $unit = $c->measurement_unit ?? 'cm';
                     ?>
 
                     <tr>
-                        <td><?php echo e($c->cargoItem->cargo_item_description); ?>
-
-                            <br><small class="text-muted">(<?php echo e($c->cargoClassification->cargo_classification_name ?? 'N/A'); ?>)</small>
-                        </td>
+                        <td><?php echo e($c->cargoItem->cargo_item_description); ?></td>
+                        <td><?php echo e($c->cargoClassification->cargo_classification_name ?? 'N/A'); ?></td>
                         <td><?php echo e($c->quantity); ?></td>
-                        <td><?php echo e($c->length); ?> × <?php echo e($c->width); ?> × <?php echo e($c->height); ?></td>
+                        <td><?php echo e(number_format($c->length, 2)); ?><?php echo e($unit); ?></td>
+                        <td><?php echo e(number_format($c->width, 2)); ?><?php echo e($unit); ?></td>
+                        <td><?php echo e(number_format($c->height, 2)); ?><?php echo e($unit); ?></td>
                         <td><?php echo e(number_format($cbm, 4)); ?></td>
                         <td>₱<?php echo e(number_format($freight, 2)); ?></td>
                         <td>₱<?php echo e(number_format($arrastre, 2)); ?></td>
@@ -188,7 +192,7 @@
 
             <tfoot>
                 <tr>
-                    <th colspan="6" class="text-end">TOTAL:</th>
+                    <th colspan="10" class="text-end">TOTAL:</th>
                     <th>
                         <?php if($payment && $payment->total_amount): ?>
                             ₱<?php echo e(number_format($payment->total_amount, 2)); ?>
@@ -282,8 +286,8 @@
                         <p>Voyage No.: <?php echo e($booking->voyage->voyage_code ?? 'N/A'); ?></p>
                         <p>Bill of Lading (B/L) No.: <?php echo e($booking->booking_ref_no); ?></p>
                         <p>Sailing Date: <?php echo e($booking->voyage ? \Carbon\Carbon::parse($booking->voyage->voyage_departure_date)->format('M d, Y') : 'N/A'); ?></p>
-                        <p>Loading Port: <?php echo e($booking->voyage->loading_port ?? 'Not specified'); ?></p>
-                        <p>Unloading Port: <?php echo e($booking->voyage->unloading_port ?? 'Not specified'); ?></p>
+                        <p>Loading Port: <?php echo e($booking->voyage && $booking->voyage->routePort ? $booking->voyage->routePort->port_origin_name : 'Not specified'); ?></p>
+                        <p>Unloading Port: <?php echo e($booking->voyage && $booking->voyage->routePort ? $booking->voyage->routePort->port_destination_name : 'Not specified'); ?></p>
 
                         <hr />
                         <h5>Party Details</h5>
@@ -297,12 +301,13 @@
                         <hr />
                         <h5>Cargo Description</h5>
                         <?php $__currentLoopData = $booking->cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php $unit = $c->measurement_unit ?? 'cm'; ?>
                             <div class="mb-2">
                                 <div><strong>Qty:</strong> <?php echo e($c->quantity); ?></div>
                                 <div><strong>Classification:</strong> <?php echo e($c->cargoClassification->cargo_classification_name ?? 'N/A'); ?></div>
                                 <div><strong>Description:</strong> <?php echo e($c->cargoItem->cargo_item_description ?? ''); ?></div>
-                                <div><strong>Dimensions:</strong> <?php echo e($c->length); ?> x <?php echo e($c->width); ?> x <?php echo e($c->height); ?></div>
-                                <div><strong>Weight:</strong> <?php echo e($c->weight); ?> kg</div>
+                                <div><strong>Dimensions:</strong> <?php echo e(number_format($c->length, 2) . $unit); ?> x <?php echo e(number_format($c->width, 2) . $unit); ?> x <?php echo e(number_format($c->height, 2) . $unit); ?></div>
+                                <div><strong>Weight:</strong> <?php echo e(number_format($c->weight, 2)); ?> kg</div>
                             </div>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
