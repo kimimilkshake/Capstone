@@ -1,9 +1,9 @@
 <?php $__env->startSection('page-title', 'MANIFEST'); ?>
 <?php $__env->startSection('content'); ?>
     <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-    <?php echo $__env->make('components.staff_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?> 
+    <?php echo $__env->make('components.admin_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?> 
 
-    <div class="staff-body">
+    <div class="admin-body">
         <div class="manifest-header text-center">
             <h2 class="manifest-title">
                 Voyage Number: <?php echo e($voyage->voyage_code ?? '-'); ?>
@@ -26,7 +26,7 @@
             </div>
         </div>
 
-        <div class="manifest-filters text-center mt-4 ">
+        <div class="manifest-filters mt-4">
             <form method="GET" action="<?php echo e(url()->current()); ?>" class="d-flex gap-5 align-items-center" id="manifestFilterForm">
                 <input type="hidden" name="show_passenger" value="0">
                 <div class="form-check">
@@ -50,7 +50,7 @@
                       onclick="printTable('passengerTable')"
                     ></i>
                 </div>
-                <table id="passengerTable" class="manifest-table table ">
+                <table id="passengerTable" class="manifest-table table">
                     <thead>
                         <tr>
                             <th>Ticket / Ref</th>
@@ -109,7 +109,7 @@
                 <div class="d-flex align-items-center mb-3"><h4 class="manifest-section-title">Cargo Manifest</h4>
                      <i 
                      class="fas fa-print print-icon-fa" 
-                      onclick="printTable('cargoTable')"
+                      onclick="printTable('passengerTable')"
                     ></i>
                 </div>
                  <table id="cargoTable" class="manifest-table table table-striped">
@@ -204,4 +204,4 @@
 </script>
 
 <?php $__env->stopSection(); ?>
-<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/authorized/staff/staffmanifest.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/authorized/admin/adminmanifest.blade.php ENDPATH**/ ?>

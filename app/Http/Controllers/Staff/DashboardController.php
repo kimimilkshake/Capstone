@@ -9,8 +9,27 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
+    private function isStaff()
+    {
+        return auth()->guard('staff')->check();
+    }
+
     public function index()
     {
+
+        /*
+        dd([
+            'staff_guard' => auth()->guard('staff')->check(),
+            'admin_guard' => auth()->guard('admin')->check(),
+            'staff_user' => auth()->guard('staff')->user(),
+            'admin_user' => auth()->guard('admin')->user(),
+        ]);
+        */
+
+        if (!$this->isStaff()) {
+            abort(403);
+        }
+        
         // Get today's date
         $today = Carbon::today();
 

@@ -7,6 +7,20 @@
     <div class="svl-title">
       <h3>SEARCH VOYAGE</h3>
     </div>
+
+    {{-- Display Success / Error Messages --}}
+    @if(session('success'))
+      <div class="alert alert-success mb-3">
+          {{ session('success') }}
+      </div>
+    @endif
+
+    @if(session('error'))
+      <div class="alert alert-danger mb-3">
+          {{ session('error') }}
+      </div>
+    @endif
+
     <div class="search-add-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
       <form class="search-bar" action="{{ route('staff.voyage_list') }}" method="GET" style="flex: 1;">
           <input 

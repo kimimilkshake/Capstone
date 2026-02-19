@@ -8,9 +8,27 @@ use App\Models\Promo;
 
 class PromoController extends Controller
 {
+    private function isAdmin()
+    {
+        return auth()->guard('admin')->check();
+    }
+
     //Show list of promos with optional search
     public function index(Request $request)
     {
+        /*
+        dd([
+            'staff_guard' => auth()->guard('staff')->check(),
+            'admin_guard' => auth()->guard('admin')->check(),
+            'staff_user' => auth()->guard('staff')->user(),
+            'admin_user' => auth()->guard('admin')->user(),
+        ]);
+        */
+
+        if (!$this->isAdmin()) {
+            abort(403);
+        }
+
         $query = Promo::query();
 
         if ($request->has('search') && $request->search != '') {
