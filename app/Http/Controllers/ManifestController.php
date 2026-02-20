@@ -62,6 +62,12 @@ class ManifestController extends Controller
         // --------------------
         if ($showPassenger) {
             if (Schema::hasTable('passenger_ticket') && Schema::hasColumn('passenger_ticket', 'voyage_id')) {
+                // Fetch accommodations for the vessel
+                $accommodations = DB::table('accommodation')
+                    ->where('vessel_id', $voyage->vessel_id)
+                    ->get()
+                    ->keyBy('accommodation_id');
+
                 // join passenger_ticket -> passenger (use voyage_id, since your data has that)
                 $passengers = DB::table('passenger_ticket as pt')
                     ->join('passenger as p', 'p.passenger_id', '=', 'pt.passenger_id')
@@ -74,7 +80,38 @@ class ManifestController extends Controller
                         'pt.pt_cot_no',
                         'pt.created_at as ticket_created_at'
                     )
-                    ->get();
+                    ->get()
+                    ->map(function ($passenger) use ($accommodations) {
+                        // Match cot number with accommodation cot range
+                        $matchedAccommodation = null;
+                        
+                        if ($passenger->pt_cot_no) {
+                            foreach ($accommodations as $accom) {
+                                if ($accom->accommodation_cot_range) {
+                                    $ranges = array_map('trim', explode(',', $accom->accommodation_cot_range));
+                                    foreach ($ranges as $range) {
+                                        if (strpos($range, '-') !== false) {
+                                            // Handle range like "1-10"
+                                            [$start, $end] = array_map('trim', explode('-', $range));
+                                            if ($passenger->pt_cot_no >= (int)$start && $passenger->pt_cot_no <= (int)$end) {
+                                                $matchedAccommodation = $accom;
+                                                break 2;
+                                            }
+                                        } else {
+                                            // Handle single cot like "15"
+                                            if ((int)$range === $passenger->pt_cot_no) {
+                                                $matchedAccommodation = $accom;
+                                                break 2;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        $passenger->accommodation_name = $matchedAccommodation?->accommodation_name;
+                        return $passenger;
+                    });
             } else {
                 // Fallback: try to find passenger data on booking rows or bookings that link to passenger model
                 $bookingTable = (new Booking)->getTable();
