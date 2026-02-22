@@ -9,8 +9,27 @@ use App\Models\RouteCode;
 
 class RoutePortController extends Controller
 {
+    private function isAdmin()
+    {
+        return auth()->guard('admin')->check();
+    }
+
     public function index(Request $request)
     {
+
+        /*
+        dd([
+            'staff_guard' => auth()->guard('staff')->check(),
+            'admin_guard' => auth()->guard('admin')->check(),
+            'staff_user' => auth()->guard('staff')->user(),
+            'admin_user' => auth()->guard('admin')->user(),
+        ]);
+        */
+
+        if (!$this->isAdmin()) {
+            abort(403);
+        }
+
         $search = $request->input('search');
 
         $route_port = RoutePort::when($search, function ($query, $search) {

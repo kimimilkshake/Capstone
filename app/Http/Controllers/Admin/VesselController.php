@@ -11,8 +11,26 @@ use App\Models\Accommodation;
 
 class VesselController extends Controller
 {
+    private function isAdmin()
+    {
+        return auth()->guard('admin')->check();
+    }
+
     public function index(Request $request)
     {
+        /*
+        dd([
+            'staff_guard' => auth()->guard('staff')->check(),
+            'admin_guard' => auth()->guard('admin')->check(),
+            'staff_user' => auth()->guard('staff')->user(),
+            'admin_user' => auth()->guard('admin')->user(),
+        ]);
+        */
+
+        if (!$this->isAdmin()) {
+            abort(403);
+        }
+        
         $query = Vessel::with(['hatches', 'accommodations']);
 
         if ($request->filled('search')) {

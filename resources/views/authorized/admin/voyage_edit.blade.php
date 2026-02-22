@@ -29,7 +29,7 @@
           <div class="form-col">
             <div class="form-group">
               <label for="route_port_id">Route <span class="text-danger">*</span></label>
-              <select name="route_port_id" id="route_port_id" required>
+              <select name="route_port_id" id="route_port_id" required @if($isCompleted) disabled @endif>
                 @foreach($route_port as $rp)
                   <option value="{{ $rp->route_port_id }}" 
                     {{ $voyage->route_port_id == $rp->route_id ? 'selected' : '' }}>
@@ -43,7 +43,7 @@
           <div class="form-col">
             <div class="form-group">
               <label for="vessel_id">Vessel <span class="text-danger">*</span></label>
-              <select name="vessel_id" id="vessel_id" required>
+              <select name="vessel_id" id="vessel_id" required @if($isCompleted) disabled @endif>
                 @foreach($vessels as $vessel)
                   <option value="{{ $vessel->vessel_id }}" 
                     {{ $voyage->vessel_id == $vessel->vessel_id ? 'selected' : '' }}>
@@ -54,6 +54,7 @@
             </div>
           </div>
         </div>
+        
 
         <!--ROW 2: PORT OF ORIGIN AND PORT OF DESTINATION-->
         <div class="form-row">
@@ -81,9 +82,9 @@
                 type="date" 
                 id="voyage_departure_date" 
                 name="voyage_departure_date" 
-                value="{{ $voyage->voyage_departure_date }}" 
-                required
-              >
+                value="{{ $voyage->voyage_departure_date }}"
+                @if($isCompleted) disabled @endif 
+                required>
             </div>
           </div>
 
@@ -91,7 +92,9 @@
             <div class="form-group">
               <label for="voyage_estimated_TD">Estimated Time of Departure (ETD) <span class="text-danger">*</span></label>
               <input type="time" id="voyage_estimated_TD" name="voyage_estimated_TD" 
-                value="{{ $voyage->voyage_estimated_TD }}" required>
+                value="{{ $voyage->voyage_estimated_TD }}" 
+                @if($isCompleted) disabled @endif
+                required>
             </div>
           </div>
 
@@ -114,8 +117,8 @@
                 id="voyage_arrival_date" 
                 name="voyage_arrival_date" 
                 value="{{ $voyage->voyage_arrival_date }}" 
-                required 
-              >
+                @if($isCompleted) disabled @endif
+                required>
             </div>
           </div>
 
@@ -123,7 +126,9 @@
             <div class="form-group">
               <label for="voyage_estimated_TA">Estimated Time of Arrival (ETA) <span class="text-danger">*</span></label>
               <input type="time" id="voyage_estimated_TA" name="voyage_estimated_TA" 
-                value="{{ $voyage->voyage_estimated_TA }}" required>
+                value="{{ $voyage->voyage_estimated_TA }}" 
+                @if($isCompleted) disabled @endif
+                required>
             </div>
           </div>
 

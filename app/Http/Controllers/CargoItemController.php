@@ -70,7 +70,9 @@ class CargoItemController extends Controller
 
         CargoItem::create($validated);
 
-        return redirect()->back()->with('success', 'Cargo item added successfully.');
+        return redirect()->route($this->isStaff() ? 'staff.cargo_item_list' : 'admin.cargo_item_list')
+                 ->with('success', 'Cargo item added successfully.');
+
     }
 
     public function edit($id)

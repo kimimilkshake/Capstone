@@ -13,15 +13,29 @@ use Illuminate\Support\Facades\DB;
 
 class SemaphoreController extends Controller
 {
+
     private const CHUNK_SIZE = 100;
     
+    private function isStaff()
+    {
+        return auth()->guard('staff')->check();
+    }
+
     public function show($voyage)
     {
+        if (!$this->isStaff()) {
+            abort(403);
+        }
+
         return view('authorized.staff.semaphore', ['voyage_id' => $voyage]);
     }
 
     public function send(Request $request)
     {
+        if (!$this->isStaff()) {
+            abort(403);
+        }
+
         $request->validate([
             'message' => 'required|string|max:640',
             'voyage_id' => 'required|exists:voyage,voyage_id',
