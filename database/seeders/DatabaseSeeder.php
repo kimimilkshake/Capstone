@@ -326,8 +326,5 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         }
-
-        // Seed sample cargo data
-        $this->call(CargoSampleDataSeeder::class);
     }
 }

@@ -5,7 +5,7 @@
 class SimpleBinPacker {
     constructor() {
         this.bins = [];
-        this.gap = 0; // No gap - items pack tightly at corners
+        this.gap = 0.05; // Small gap between items to separate them
     }
 
     addBin(bin) {
@@ -362,25 +362,28 @@ class SimpleBinPacker {
             }
         });
 
-        // Find zone with least weight (prefer balancing)
-        // PRIORITY: Right zones (FR, BR) first if empty, then left zones by weight
+        // Find zone with least weight (prefer balancing weight evenly across all 4 zones)
+        // PRIORITY: Fill sequentially left-to-right, front-to-back
+        // Prefer zones with fewer items first, then lower weight for balance
         let preferredZone = zones.frontLeft;
-        let minWeight = Infinity;
+        let minScore = Infinity;
 
-        // Score zones: empty right zones get highest priority (lowest score)
+        // Score zones by item count first (to fill sequentially), then weight (to balance)
         const zoneScores = {
+            frontLeft:
+                zones.frontLeft.count * 1000 + zones.frontLeft.weight,
             frontRight:
-                zones.frontRight.weight === 0 ? -1000 : zones.frontRight.weight,
+                zones.frontRight.count * 1000 + zones.frontRight.weight,
+            backLeft:
+                zones.backLeft.count * 1000 + zones.backLeft.weight,
             backRight:
-                zones.backRight.weight === 0 ? -500 : zones.backRight.weight,
-            frontLeft: zones.frontLeft.weight,
-            backLeft: zones.backLeft.weight,
+                zones.backRight.count * 1000 + zones.backRight.weight,
         };
 
-        // Find zone with lowest score (empty right zones first)
+        // Find zone with lowest score (fewest items, then least weight)
         for (const [zoneName, score] of Object.entries(zoneScores)) {
-            if (score < minWeight) {
-                minWeight = score;
+            if (score < minScore) {
+                minScore = score;
                 preferredZone = zones[zoneName];
             }
         }
@@ -1074,7 +1077,7 @@ class SimpleBinPacker {
  * 3D Cargo Visualizer
  * Renders packed cargo in a 3D scene
  */
-export class CargoVisualizer {
+class CargoVisualizer {
     constructor(containerId) {
         this.container = document.getElementById(containerId);
         console.log(
@@ -1183,6 +1186,27 @@ export class CargoVisualizer {
 
         // Basic orbit controls - simple version
         this.setupControls();
+
+        // Add window resize listener for responsive behavior
+        this.onWindowResize = () => {
+            if (!this.container || !this.camera || !this.renderer) return;
+
+            const width = this.container.clientWidth;
+            const height = this.container.clientHeight;
+
+            if (width > 0 && height > 0) {
+                // Update camera aspect ratio
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+
+                // Update renderer size
+                this.renderer.setSize(width, height, false);
+
+                console.log(`CargoVisualizer: resized to ${width}×${height}`);
+            }
+        };
+
+        window.addEventListener('resize', this.onWindowResize);
 
         // Start animation loop
         this.animate();
@@ -1885,94 +1909,171 @@ export class CargoVisualizer {
             "cargo=",
             cargo.length,
         );
-        // Reset scene
+        // Reset scene but preserve sceneRoot
         this.packer = new SimpleBinPacker();
-        while (this.scene.children.length) {
-            this.scene.remove(this.scene.children[0]);
+        this.hatchMeshes = []; // Clear hatch tracking for proper indexing
+        
+        // Clear only sceneRoot children, not the entire scene
+        while (this.sceneRoot.children.length) {
+            this.sceneRoot.remove(this.sceneRoot.children[0]);
         }
 
-        // Re-add lighting (no grid)
+        // Ensure sceneRoot is in the scene
+        if (!this.scene.children.includes(this.sceneRoot)) {
+            this.scene.add(this.sceneRoot);
+        }
+
+        // Clear lights (but not sceneRoot itself)
+        const lightsToRemove = [];
+        this.scene.children.forEach(child => {
+            if (child instanceof THREE.Light) {
+                lightsToRemove.push(child);
+            }
+        });
+        lightsToRemove.forEach(light => this.scene.remove(light));
+
+        // Re-add lighting
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         this.scene.add(ambientLight);
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
         directionalLight.position.set(100, 100, 100);
         this.scene.add(directionalLight);
-        // const gridHelper = new THREE.GridHelper(200, 20);
-        // this.scene.add(gridHelper);
 
-        // Add hatches
-        hatches.forEach((hatch) => this.addHatch(hatch));
+        // Add hatches to visualization and to packer
+        hatches.forEach((hatch) => {
+            this.addHatch(hatch);
+            // Add hatch to packer for intelligent placement
+            this.packer.addBin({
+                id: hatch.id,
+                label: hatch.label,
+                width: hatch.width,
+                height: hatch.height,
+                depth: hatch.depth,
+                maxWeight: hatch.maxWeight || 1000,
+            });
+        });
 
         if (!cargo || cargo.length === 0) return;
 
-        // Treat each cargo entry as a single booked cargo for raw rendering
-        const expanded = (cargo || []).map((c) => ({
+        // Normalize cargo data for packing
+        const expandedCargo = (cargo || []).map((c) => ({
             id: `${c.id}`,
-            width: c.width || 0.1,
-            height: c.height || 0.1,
-            depth: c.depth || 0.1,
-            weight: c.weight || 0,
-            description: c.description || "",
-            originalQuantity: c.quantity || c.qty || 1,
+            width: parseFloat(c.width) || 0.1,
+            height: parseFloat(c.height) || 0.1,
+            depth: parseFloat(c.depth) || 0.1,
+            weight: parseFloat(c.weight) || 0,
+            description: c.description || "Cargo Item",
+            is_breakable: c.is_breakable === true || c.is_breakable === 1,
             booking_ref: c.booking_ref || c.bookingRef || null,
         }));
 
-        // Place items into first hatch in simple grid (no collision checks)
-        const firstHatch = hatches[0];
-        const gap = 0.1;
-        let cursorX = 0;
-        let cursorZ = 0;
-        let rowHeight = 0;
-        expanded.forEach((item, idx) => {
-            if (cursorX + item.width > firstHatch.width) {
-                cursorX = 0;
-                cursorZ += rowHeight + gap;
-                rowHeight = 0;
+        // Use packing algorithm to place items intelligently
+        const { packed, unpacked } = this.packer.pack(expandedCargo);
+
+        console.log(`📊 Packing Results: ${packed.length} packed, ${unpacked.length} unpacked`);
+
+        // Store packing results for stats display
+        this.lastPackingResults = { packed, unpacked, hatches };
+
+        // Render PACKED items (using calculated positions)
+        packed.forEach((packedItem) => {
+            // Find the hatch this item belongs to
+            const hatchIndex = hatches.findIndex(h => h.id === packedItem.binId);
+            if (hatchIndex === -1) {
+                console.warn(`Hatch ${packedItem.binId} not found for item ${packedItem.id}`);
+                return;
             }
 
-            if (cursorZ + item.depth > firstHatch.depth) {
-                // move up a layer
-                cursorZ = 0;
-                // for simplicity stack up by increasing Y
-            }
+            const hatch = hatches[hatchIndex];
+            
+            // Convert LOCAL position (relative to hatch origin 0,0,0) to WORLD position
+            // The hatch's local origin aligns with world coordinate:
+            // X: 0 (hatch starts at X=0 in world)
+            // Y: 0 (hatch starts at Y=0 in world)
+            // Z: hatchIndex * (hatch.depth + 1) (hatch starts at this Z in world)
+            
+            // Packer returns item position (corner), we need to convert to center position
+            const itemWorldX = packedItem.x + packedItem.width / 2;
+            const itemWorldY = packedItem.y + packedItem.height / 2;
+            const itemWorldZ = hatchIndex * (hatch.depth + 1) + packedItem.z + packedItem.depth / 2;
 
+            // Create colored mesh based on cargo type
+            const color = packedItem.is_breakable ? 0xff6b6b : 0x77a1ff; // Red for breakable, blue for normal
             const mesh = new THREE.Mesh(
-                new THREE.BoxGeometry(item.width, item.height, item.depth),
+                new THREE.BoxGeometry(packedItem.width, packedItem.height, packedItem.depth),
                 new THREE.MeshStandardMaterial({
-                    color: 0x77a1ff,
+                    color: color,
                     metalness: 0.3,
                     roughness: 0.5,
                     transparent: true,
-                    opacity: 0.75,
+                    opacity: 0.85,
                     side: THREE.DoubleSide,
                 }),
             );
-            mesh.position.set(
-                cursorX + item.width / 2,
-                item.height / 2,
-                cursorZ + item.depth / 2,
-            );
+            
+            mesh.position.set(itemWorldX, itemWorldY, itemWorldZ);
+            mesh.userData = {
+                itemId: packedItem.id,
+                description: packedItem.description,
+                bookingRef: packedItem.booking_ref,
+                isBreakable: packedItem.is_breakable,
+                hatchId: packedItem.binId,
+            };
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
             this.sceneRoot.add(mesh);
-            const helper = new THREE.BoxHelper(mesh, 0xff0000);
-            this.sceneRoot.add(helper);
-            this.addItemLabel(mesh, `U#${item.id}`);
-            console.log(
-                "Unpacked item visualized",
-                item.id,
-                "pos",
-                mesh.position,
-                "size",
-                item.width,
-                item.height,
-                item.depth,
-            );
 
-            cursorX += item.width + gap;
-            rowHeight = Math.max(rowHeight, item.depth);
+            console.log(
+                `✅ PACKED: ${packedItem.description} → Hatch ${hatch.label}`,
+                `Local: (${packedItem.x.toFixed(2)}, ${packedItem.y.toFixed(2)}, ${packedItem.z.toFixed(2)})`,
+                `World: (${itemWorldX.toFixed(2)}, ${itemWorldY.toFixed(2)}, ${itemWorldZ.toFixed(2)})`
+            );
         });
 
-        // Frame camera to show hatches and raw items
+        // Render UNPACKED items (items that couldn't fit) in a separate area with warning color
+        unpacked.forEach((unpackedItem, idx) => {
+            // Place unpacked items outside hatches as visual indicator
+            const mesh = new THREE.Mesh(
+                new THREE.BoxGeometry(unpackedItem.width, unpackedItem.height, unpackedItem.depth),
+                new THREE.MeshStandardMaterial({
+                    color: 0xff9999, // Light red for warning
+                    metalness: 0.2,
+                    roughness: 0.6,
+                    transparent: true,
+                    opacity: 0.6,
+                    side: THREE.DoubleSide,
+                }),
+            );
+
+            // Position unpacked items above hatches as visual warning
+            const spacing = 15;
+            const baseZ = hatches.length * (hatches[0]?.depth || 10 + 1);
+            mesh.position.set(
+                5 + idx * (unpackedItem.width + 0.5),
+                10 + unpackedItem.height / 2,
+                baseZ + 5
+            );
+
+            mesh.userData = {
+                itemId: unpackedItem.id,
+                description: unpackedItem.description,
+                bookingRef: unpackedItem.booking_ref,
+                isUnpacked: true,
+            };
+            this.sceneRoot.add(mesh);
+
+            const helper = new THREE.BoxHelper(mesh, 0xffaa00);
+            this.sceneRoot.add(helper);
+
+            console.log(`❌ UNPACKED (NO SPACE): ${unpackedItem.description}`);
+        });
+
+        // Frame camera to show all content
         this.frameScene();
+        
+        // Force a render immediately
+        console.log("CargoVisualizer: forcing render, scene children:", this.scene.children.length);
+        this.renderer.render(this.scene, this.camera);
     }
 
     /**
@@ -1987,6 +2088,15 @@ export class CargoVisualizer {
         if (this.isolatedItemId === itemIdStr) {
             // Toggle off - reset the view
             console.log("🔄 Toggling OFF - resetting view");
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.isolate-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.backgroundColor = '';
+                btn.style.borderColor = '';
+                btn.style.color = '';
+            });
+            
             this.resetIsolation();
             this.isolatedItemId = null;
             return false;
@@ -1997,6 +2107,16 @@ export class CargoVisualizer {
             console.log(
                 `🔄 Switching from item ${this.isolatedItemId} to ${itemIdStr}`,
             );
+            
+            // Remove active class from previously isolated button
+            const prevBtn = document.querySelector(`.isolate-btn[data-receipt-id="${this.isolatedItemId}"]`);
+            if (prevBtn) {
+                prevBtn.classList.remove('active');
+                prevBtn.style.backgroundColor = '';
+                prevBtn.style.borderColor = '';
+                prevBtn.style.color = '';
+            }
+            
             this.resetIsolation();
         }
 
@@ -2034,16 +2154,18 @@ export class CargoVisualizer {
                         child.material.opacity = 1.0;
                         child.material.needsUpdate = true; // Force material update
                     }
+                    child.visible = true; // Make sure mesh is visible
                     console.log(
                         `   ✅ HIGHLIGHTED: "${child.userData.description}" (ID: ${childItemId})`,
                     );
                 } else {
-                    // All other items - hide or make very transparent
+                    // All other items - hide completely
                     if (child.material) {
                         child.material.transparent = true;
-                        child.material.opacity = 0.05;
+                        child.material.opacity = 0; // Completely hide
                         child.material.needsUpdate = true; // Force material update
                     }
+                    child.visible = false; // Hide the mesh and any helpers
                 }
             }
         });
@@ -2073,6 +2195,15 @@ export class CargoVisualizer {
             console.log(
                 `✅ Isolation complete: Highlighted ${matchCount} item(s) with ID "${itemIdStr}", hidden ${itemCount - matchCount} items`,
             );
+            
+            // Add active class to the button and apply inline styles
+            const btn = document.querySelector(`.isolate-btn[data-receipt-id="${itemIdStr}"]`);
+            if (btn) {
+                btn.classList.add('active');
+                btn.style.backgroundColor = '#dc3545';
+                btn.style.borderColor = '#c82333';
+                btn.style.color = 'white';
+            }
             this.isolatedItemId = itemIdStr; // Track that this item is now isolated
             return true;
         }
@@ -2090,6 +2221,7 @@ export class CargoVisualizer {
                 child.userData &&
                 child.userData.itemId
             ) {
+                child.visible = true; // Show the mesh again
                 if (child.material) {
                     child.material.transparent = true;
                     child.material.opacity = 0.75;

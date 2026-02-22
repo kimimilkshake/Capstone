@@ -24,6 +24,28 @@ class CargoAutoPlacementController extends Controller
         return auth()->guard('admin')->check();
     }
 
+    /**
+     * Helper: Convert dimensions from booking unit to meters
+     */
+    private function convertToMeters($value, $unitName = 'cm')
+    {
+        if (!$value) return 0;
+        
+        $unitLower = strtolower(trim($unitName ?? 'cm'));
+        
+        // Convert to meters based on unit
+        if (strpos($unitLower, 'cm') !== false || strpos($unitLower, 'centimeter') !== false) {
+            return (float) $value / 100; // cm to m
+        } elseif (strpos($unitLower, 'in') !== false || strpos($unitLower, 'inch') !== false) {
+            return (float) $value / 39.3701; // inches to m
+        } elseif (strpos($unitLower, 'm') === 0 || strpos($unitLower, 'meter') !== false) {
+            return (float) $value; // already in meters
+        }
+        
+        // Default: assume cm
+        return (float) $value / 100;
+    }
+
     public function show(Request $request)
     {
         // Prevent browser caching of this page
@@ -274,7 +296,7 @@ class CargoAutoPlacementController extends Controller
         $cargoData = [];
         $confirmedBookings = Booking::where('voyage_id', $voyage->voyage_id)
             ->whereRaw("LOWER(booking.booking_status) = ?", ['confirmed'])
-            ->with('cargoBookings.cargoItem')
+            ->with('cargoBookings.measurementUnit', 'cargoBookings.cargoItem')
             ->get();
 
         foreach ($confirmedBookings as $booking) {
@@ -283,19 +305,29 @@ class CargoAutoPlacementController extends Controller
                 $quantity = (int) ($cb->quantity ?? 1);
                 $totalWeight = (float) ($cb->weight ?? 0);
                 $weightPerItem = $quantity > 0 ? $totalWeight / $quantity : 0;
+                
+                // Get measurement unit name
+                $unitName = $cb->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
+                
+                // Convert dimensions to meters
+                $widthM = $this->convertToMeters($cb->width, $unitName);
+                $heightM = $this->convertToMeters($cb->height, $unitName);
+                $lengthM = $this->convertToMeters($cb->length, $unitName);
 
                 // Create one visual item per quantity unit
                 for ($i = 0; $i < $quantity; $i++) {
                     $cargoData[] = [
                         'id' => (string) ($cb->cargo_booking_id ?? $booking->booking_ref_no) . '_' . $i,
                         'booking_ref' => $booking->booking_ref_no,
-                        'width' => (float) $cb->width,
-                        'height' => (float) $cb->height,
-                        'depth' => (float) $cb->length,
+                        'width' => $widthM,
+                        'height' => $heightM,
+                        'depth' => $lengthM,
                         'weight' => $weightPerItem,
                         'quantity' => 1,
                         'description' => $cb->cargoItem->cargo_item_description ?? 'Cargo Item',
                         'is_breakable' => (bool) ($cb->cargoItem->is_breakable ?? false),
+                        'original_unit' => $unitName,
+                        'original_dims' => "{$cb->length} × {$cb->width} × {$cb->height}",
                     ];
                 }
             }
@@ -312,23 +344,33 @@ class CargoAutoPlacementController extends Controller
             }
 
             foreach ($cargoReceipts as $receipt) {
-                $bookingRow = CargoBooking::where('booking_ref_no', $receipt->booking_ref_no)->first();
+                $bookingRow = CargoBooking::with('measurementUnit')->where('booking_ref_no', $receipt->booking_ref_no)->first();
                 if ($bookingRow && $bookingRow->length && $bookingRow->width && $bookingRow->height) {
                     $quantity = (int) ($bookingRow->quantity ?? 1);
                     $totalWeight = (float) ($bookingRow->weight ?? 0);
                     $weightPerItem = $quantity > 0 ? $totalWeight / $quantity : 0;
+                    
+                    // Get measurement unit name
+                    $unitName = $bookingRow->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
+                    
+                    // Convert dimensions to meters
+                    $widthM = $this->convertToMeters($bookingRow->width, $unitName);
+                    $heightM = $this->convertToMeters($bookingRow->height, $unitName);
+                    $lengthM = $this->convertToMeters($bookingRow->length, $unitName);
 
                     // Create one visual item per quantity unit
                     for ($i = 0; $i < $quantity; $i++) {
                         $cargoData[] = [
                             'id' => (string) $receipt->cargo_receipt_id . '_' . $i,
                             'booking_ref' => $receipt->booking_ref_no,
-                            'width' => (float) $bookingRow->width,
-                            'height' => (float) $bookingRow->height,
-                            'depth' => (float) $bookingRow->length,
+                            'width' => $widthM,
+                            'height' => $heightM,
+                            'depth' => $lengthM,
                             'weight' => $weightPerItem,
                             'quantity' => 1,
                             'description' => $receipt->cargoItem->cargo_item_description ?? 'Cargo Item',
+                            'original_unit' => $unitName,
+                            'original_dims' => "{$bookingRow->length} × {$bookingRow->width} × {$bookingRow->height}",
                         ];
                     }
                 }

@@ -264,3 +264,41 @@ body {
     text-align: center;
     margin-left:410px;
 }
+
+/* Table Header Styling */
+.table thead {
+    background-color: #485b8c !important;
+    color: white !important;
+}
+
+.table thead th {
+    background-color: #485b8c !important;
+    color: white !important;
+    border-color: #3d4a7a !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+    padding: 12px !important;
+}
+
+/* Isolate Button Styling */
+.isolate-btn {
+    transition: all 0.3s ease;
+}
+
+.btn.isolate-btn.active {
+    background-color: #dc3545 !important;
+    border-color: #c82333 !important;
+    font-weight: 600;
+    color: white !important;
+}
+
+/* Isolate Button Styling */
+.isolate-btn {
+    transition: all 0.3s ease;
+}
+
+.isolate-btn.active {
+    background-color: #dc3545 !important;
+    border-color: #c82333 !important;
+    font-weight: 600;
+}

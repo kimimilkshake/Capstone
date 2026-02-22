@@ -19,8 +19,7 @@ use Illuminate\Http\Request;
 use App\Mail\CargoBookingApproved;
 use App\Mail\CargoBookingRejected;
 use Illuminate\Support\Facades\Mail;
-use App\Services\BillOfLadingPdf;
-use App\Models\BillOfLading;
+use App\Services\CargoAutoPlacementService;
 
 
 class StaffCargoController extends Controller
@@ -296,92 +295,132 @@ public function edit($id)
     }
 
     /**
-     * Approve a booking
+     * Approve a booking with auto-placement validation
      */
-public function approve($id)
-{
-    if (!$this->isStaff()) {
-        abort(403);
-    }
-    
-    $booking = Booking::with(['sender', 'consignee', 'cargoBookings.cargoItem', 'voyage'])->where('booking_ref_no', $id)->firstOrFail();
-    $booking->booking_status = 'Confirmed';
-    $booking->save();
-
-    // Calculate total cost
-    $totalCost = 0;
-    foreach ($booking->cargoBookings as $cargo) {
-        $freight = $cargo->cargoItem->cargo_item_freight;
-        $arrastre = $cargo->cargoItem->cargo_item_arrastre;
-        $cbm = ($cargo->length * $cargo->width * $cargo->height) / 1000000;
-        $subtotal = ($freight + $arrastre) * $cbm * $cargo->quantity;
-        $totalCost += $subtotal;
-    }
-
-    // Create payment record with mode='Cash' and status='Completed'
-    $payment = Payment::create([
-        'booking_ref_no' => $booking->booking_ref_no,
-        'mode_of_payment' => 'Cash',
-        'payment_status' => 'Completed',
-        'total_amount' => $totalCost,
-        'payment_date' => now(),
-    ]);
-
-    // Move cargo items to cargo_receipt and create bill of lading
-    $cargoReceiptIds = [];
-    foreach ($booking->cargoBookings as $cargo) {
-        $receipt = new CargoReceipt();
-        $receipt->booking_ref_no = $booking->booking_ref_no;
-        $receipt->sender_id = $booking->sender_id;
-        $receipt->consignee_id = $booking->consignee_id;
-        $receipt->cargo_item_id = $cargo->cargo_item_id ?? null;
-        $receipt->voyage_id = $booking->voyage_id;
-        $receipt->cargo_item_qty = $cargo->quantity;
-        $receipt->save();
+    public function approve($id)
+    {
+        if (!$this->isStaff()) {
+            abort(403);
+        }
         
-        $cargoReceiptIds[] = $receipt->cargo_receipt_id;
-    }
+        $booking = Booking::with(['sender', 'consignee', 'cargoBookings.cargoItem', 'voyage'])->where('booking_ref_no', $id)->firstOrFail();
+        
+        // Step 1: Validate cargo can fit in available hatches
+        $cargoBookingIds = $booking->cargoBookings->pluck('cargo_booking_id')->toArray();
+        $placementValidation = CargoAutoPlacementService::validateCargoPlacement(
+            $booking->voyage_id,
+            $cargoBookingIds
+        );
 
-    // Create bill of lading records with voyage details (vessel name, loading port, unloading port)
-    $staffId = auth()->guard('staff')->user()->staff_id ?? 1; // fallback if needed
-    $voyage = $booking->voyage;
-    
-    foreach ($cargoReceiptIds as $receiptId) {
-        BillOfLading::create([
-            'cargo_receipt_id' => $receiptId,
-            'staff_id' => $staffId,
-            'bl_date_issued' => now()->toDateString(),
-            'bl_loading_port' => $voyage->loading_port ?? 'Not specified',
-            'bl_unloading_port' => $voyage->unloading_port ?? 'Not specified',
+        // If cargo cannot fit, return error
+        if (!$placementValidation['success'] && !($placementValidation['skipValidation'] ?? false)) {
+            return back()
+                ->withErrors([
+                    'placement' => $placementValidation['message'],
+                    'unpacked_items' => !empty($placementValidation['unpackedItems']) 
+                        ? 'Items that cannot fit: ' . implode(', ', array_map(fn($item) => $item['name'] ?? $item['id'], $placementValidation['unpackedItems']))
+                        : ''
+                ])
+                ->with('placement_data', $placementValidation);
+        }
+
+        // Step 2: Proceed with normal approval if placement is successful
+        $booking->booking_status = 'Confirmed';
+        $booking->save();
+
+        // Calculate total cost
+        $totalCost = 0;
+        foreach ($booking->cargoBookings as $cargo) {
+            $freight = $cargo->cargoItem->cargo_item_freight;
+            $arrastre = $cargo->cargoItem->cargo_item_arrastre;
+            $cbm = ($cargo->length * $cargo->width * $cargo->height) / 1000000;
+            $subtotal = ($freight + $arrastre) * $cbm * $cargo->quantity;
+            $totalCost += $subtotal;
+        }
+
+        // Create payment record with mode='Cash' and status='Completed'
+        $payment = Payment::create([
+            'booking_ref_no' => $booking->booking_ref_no,
+            'mode_of_payment' => 'Cash',
+            'payment_status' => 'Completed',
+            'total_amount' => $totalCost,
+            'payment_date' => now(),
         ]);
+
+        // Move cargo items to cargo_receipt and create bill of lading
+        $cargoReceiptIds = [];
+        foreach ($booking->cargoBookings as $cargo) {
+            $receipt = new CargoReceipt();
+            $receipt->booking_ref_no = $booking->booking_ref_no;
+            $receipt->sender_id = $booking->sender_id;
+            $receipt->consignee_id = $booking->consignee_id;
+            $receipt->cargo_item_id = $cargo->cargo_item_id ?? null;
+            $receipt->voyage_id = $booking->voyage_id;
+            $receipt->cargo_item_qty = $cargo->quantity;
+            $receipt->save();
+            
+            $cargoReceiptIds[] = $receipt->cargo_receipt_id;
+        }
+
+        // Create bill of lading records with voyage details (vessel name, loading port, unloading port)
+        $staffId = auth()->guard('staff')->user()->staff_id ?? 1;
+        $voyage = $booking->voyage;
+        
+        foreach ($cargoReceiptIds as $receiptId) {
+            BillOfLading::create([
+                'cargo_receipt_id' => $receiptId,
+                'staff_id' => $staffId,
+                'bl_date_issued' => now()->toDateString(),
+                'bl_loading_port' => $voyage->loading_port ?? 'Not specified',
+                'bl_unloading_port' => $voyage->unloading_port ?? 'Not specified',
+            ]);
+        }
+
+        // Create notification for approved cargo booking
+        $senderName = $booking->sender ? $booking->sender->sender_name : 'Customer';
+        Notification::create([
+            'cargo_receipt_id' => null,
+            'payment_id' => $payment->payment_id ?? null,
+            'booking_ref_no' => $booking->booking_ref_no,
+            'notification_message' => "Cargo booking #{$booking->booking_ref_no} from {$senderName} has been approved",
+            'notification_type' => 'cargo booking approval',
+            'notification_status' => 'approved',
+            'notification_created' => now(),
+        ]);
+
+        // Send email with payment details
+        Mail::to($booking->sender->sender_email)
+            ->send(new \App\Mail\CargoBookingApproved(
+                $booking,
+                $booking->sender,
+                $booking->consignee,
+                $booking->cargoBookings,
+                $payment
+            ));
+
+        return redirect()->route('cargo.bookings.pending')
+            ->with('success', 'Booking approved! Cargo can fit in available hatches and has been added to auto-placement visualization.');
     }
 
-    // Create notification for approved cargo booking
-    $senderName = $booking->sender ? $booking->sender->sender_name : 'Customer';
-    Notification::create([
-        'cargo_receipt_id' => null,
-        'payment_id' => $payment->payment_id ?? null,
-        'booking_ref_no' => $booking->booking_ref_no,
-        'notification_message' => "Cargo booking #{$booking->booking_ref_no} from {$senderName} has been approved",
-        'notification_type' => 'cargo booking approval',
-        'notification_status' => 'approved',
-        'notification_created' => now(),
-    ]);
+    /**
+     * API Endpoint: Validate if cargo can be placed in hatches
+     * Called via AJAX before accepting a booking
+     */
+    public function validatePlacement(Request $request)
+    {
+        $request->validate([
+            'voyage_id' => 'required|exists:voyage,voyage_id',
+            'cargo_booking_ids' => 'required|array',
+            'cargo_booking_ids.*' => 'exists:cargo_booking,cargo_booking_id',
+        ]);
 
-    // Send email with payment details
-    Mail::to($booking->sender->sender_email)
-        ->send(new \App\Mail\CargoBookingApproved(
-            $booking,
-            $booking->sender,
-            $booking->consignee,
-            $booking->cargoBookings,
-            $payment
-        ));
+        $result = CargoAutoPlacementService::validateCargoPlacement(
+            $request->voyage_id,
+            $request->cargo_booking_ids
+        );
 
-    return redirect()->route('cargo.bookings.pending')
-        ->with('success', 'Booking approved, payment recorded, and email sent.');
-}
-
+        return response()->json($result);
+    }
 
     /**
      * Reject a booking

@@ -38,7 +38,7 @@
                     <div class="alert alert-warning">{{ $placementData['error'] }}</div>
                 @else
                     <div class="card mb-4">
-                        <div class="card-header text-white">
+                        <div class="card-header text-white" style="background-color: #485b8c;">
                             <h5>Voyage Information</h5>
                         </div>
                         <div class="card-body">
@@ -52,18 +52,18 @@
                     </div>
 
                     <div class="card mb-4">
-                        <div class="card-header text-white">
+                        <div class="card-header text-white" style="background-color: #485b8c;">
                             <h5>Hatch Specifications</h5>
                         </div>
                         <div class="card-body">
                             <table class="table table-bordered">
-                                <thead>
+                                <thead style="background-color: #485b8c; color: white;">
                                     <tr>
-                                        <th>Hatch</th>
-                                        <th>Length (m)</th>
-                                        <th>Width (m)</th>
-                                        <th>Height (m)</th>
-                                        <th>Weight Capacity (kg)</th>
+                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Hatch</th>
+                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Length (m)</th>
+                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Width (m)</th>
+                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Height (m)</th>
+                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Weight Capacity (kg)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -82,28 +82,37 @@
                     </div>
 
                     <div class="card mb-4">
-                        <div class="card-header text-white">
+                        <div class="card-header text-white" style="background-color: #485b8c;">
                             <h5>Cargo Items</h5>
                         </div>
                         <div class="card-body">
                             <table class="table table-bordered">
-                                <thead>
+                                <thead style="background-color: #485b8c; color: white;">
                                     <tr>
-                                        <th>Receipt ID</th>
-                                        <th>Booking Ref</th>
-                                        <th>Item Description</th>
-                                        <th>Qty</th>
-                                        <th>L × W × H (m)</th>
-                                        <th>Weight (kg)</th>
+                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Receipt ID</th>
+                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Booking Ref</th>
+                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Item Description</th>
+                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Qty</th>
+                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">L × W × H (m)</th>
+                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Weight (kg)</th>
+                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($placementData['cargoReceipts'] as $receipt)
                                         @php
-                                            $booking = \App\Models\CargoBooking::where(
+                                            $booking = \App\Models\CargoBooking::with('measurementUnit')->where(
                                                 'booking_ref_no',
                                                 $receipt->booking_ref_no,
                                             )->first();
+                                            
+                                            // Convert dimensions to meters for display
+                                            $unitName = $booking?->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
+                                            $conversionFactor = stripos($unitName, 'cm') !== false ? 0.01 : (stripos($unitName, 'in') !== false ? 0.0254 : 1);
+                                            
+                                            $lengthM = ($booking?->length ?? 0) * $conversionFactor;
+                                            $widthM = ($booking?->width ?? 0) * $conversionFactor;
+                                            $heightM = ($booking?->height ?? 0) * $conversionFactor;
                                         @endphp
                                         <tr>
                                             <td>{{ $receipt->cargo_receipt_id }}</td>
@@ -112,13 +121,18 @@
                                             <td>{{ $receipt->cargo_item_qty ?? 1 }}</td>
                                             <td>
                                                 @if ($booking)
-                                                    {{ $booking->length }} × {{ $booking->width }} ×
-                                                    {{ $booking->height }}
+                                                    {{ number_format($lengthM, 2) }} × {{ number_format($widthM, 2) }} × {{ number_format($heightM, 2) }}<br>
+                                                    <small style="color: #666;">({{ $booking->length }} × {{ $booking->width }} × {{ $booking->height }} {{ $unitName }})</small>
                                                 @else
                                                     No dimensions
                                                 @endif
                                             </td>
                                             <td>{{ $booking->weight ?? 'N/A' }}</td>
+                                            <td style="text-align: center;">
+                                                <button class="btn btn-sm btn-primary isolate-btn" data-receipt-id="{{ $receipt->cargo_receipt_id }}" onclick="cargoVisualizer.isolateItem('{{ $receipt->cargo_receipt_id }}')">
+                                                    <i class="fas fa-search"></i> Isolate
+                                                </button>
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -126,13 +140,17 @@
                         </div>
                     </div>
 
-                    <form method="POST" action="{{ route('staff.cargo.place') }}">
-                        @csrf
-                        <input type="hidden" name="voyage_id" value="{{ $selectedVoyageId }}">
-                        <button type="submit" class="btn button-textcolor1 btn-lg btn-block">
-                            <i class="fas fa-box-open"></i> Calculate Auto Placement
-                        </button>
-                    </form>
+                    {{-- 3D CARGO VISUALIZATION CONTAINER (AUTO-DISPLAY) --}}
+                    <div class="card mt-4">
+                        <div class="card-header text-white" style="background-color: #485b8c;">
+                            <h5>3D Cargo Visualization</h5>
+                        </div>
+                        <div class="card-body" style="padding: 15px;">
+                            <div id="cargo-visualizer-container" style="width: 100%; height: auto; min-height: 650px; max-height: 85vh; border: 1px solid #ccc; background: #f0f0f0;">
+                                <!-- 3D visualization renders here -->
+                            </div>
+                        </div>
+                    </div>
                 @endif
             @endif
 
@@ -195,4 +213,88 @@
             @endif
         </div>
     </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="{{ asset('js/cargo-visualizer.js') }}" defer></script>
+    <script>
+        /**
+         * Wait for CargoVisualizer to be available
+         */
+        function waitForCargoVisualizer(callback, attempts = 0) {
+            if (typeof window.CargoVisualizer !== 'undefined') {
+                callback();
+            } else if (attempts < 50) {
+                setTimeout(() => waitForCargoVisualizer(callback, attempts + 1), 100);
+            } else {
+                console.error('CargoVisualizer failed to load');
+            }
+        }
+
+        /**
+         * Initialize and render cargo visualization
+         */
+        async function initializeVisualization(voyageId) {
+            const container = document.getElementById('cargo-visualizer-container');
+            
+            try {
+                // Fetch packing data from API
+                const response = await fetch(`{{ route('staff.cargo.packing-data') }}?voyage_id=${voyageId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch packing data');
+                }
+
+                const data = await response.json();
+
+                // Clear container
+                container.innerHTML = '';
+
+                // Initialize Three.js scene with fallback rendering
+                window.cargoVisualizer = new window.CargoVisualizer('cargo-visualizer-container');
+
+                // Render using auto-placement algorithm
+                if (data.cargo && Array.isArray(data.cargo)) {
+                    // Use fallback rendering with intelligent packing algorithm
+                    window.cargoVisualizer.renderRaw(data.hatches, data.cargo);
+                }
+
+            } catch (error) {
+                console.error('Error initializing visualization:', error);
+                container.innerHTML = '<div class="alert alert-danger" style="margin: 0; padding: 20px;">Error loading 3D visualization: ' + error.message + '</div>';
+            }
+        }
+
+
+        /**
+         * Auto-initialize visualization if voyage is selected
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            const voyageSelect = document.getElementById('voyage_id');
+            
+            // If a voyage is already selected, initialize visualization
+            if (voyageSelect && voyageSelect.value) {
+                // Wait for CargoVisualizer to load, then initialize
+                waitForCargoVisualizer(() => {
+                    console.log('Initializing visualization for voyage:', voyageSelect.value);
+                    initializeVisualization(voyageSelect.value);
+                });
+            }
+
+            // Listen for voyage selection changes
+            if (voyageSelect) {
+                voyageSelect.addEventListener('change', function() {
+                    if (this.value) {
+                        console.log('Voyage selected, reloading page...');
+                        // Form will submit on change, reloading the page with new voyage_id
+                    }
+                });
+            }
+        });
+    </script>
 @endsection

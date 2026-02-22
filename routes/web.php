@@ -313,6 +313,8 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     // Approve booking
     Route::post('/cargo-bookings/{id}/approve', [StaffCargoController::class, 'approve'])->name('cargo.bookings.approve');
     Route::post('/cargo-bookings/{id}/reject', [StaffCargoController::class, 'reject'])->name('cargo.bookings.reject');
+    // Placement validation API endpoint
+    Route::post('/api/cargo/placement/validate', [StaffCargoController::class, 'validatePlacement'])->name('cargo.placement.validate');
 
 
     // Edit cargo items
