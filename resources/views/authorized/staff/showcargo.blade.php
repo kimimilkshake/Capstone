@@ -89,7 +89,7 @@
                                         ? asset('storage/cargo_pictures/' . $filename)
                                         : asset('images/no-image.png');
                             $cargoDescription = $cargo->cargoItem->cargo_item_description ?? 'Unknown Cargo';
-                            $cargoClassification = $cargo->cargoItem->cargo_item_classification ?? '';
+                            $cargoClassification = $cargo->cargoClassification->cargo_classification_name ?? '';
                         @endphp
 
                         <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
@@ -151,8 +151,11 @@
             <thead class="table-dark">
                 <tr>
                     <th>Description</th>
+                    <th>Classification</th>
                     <th>Qty</th>
-                    <th>Dimensions</th>
+                    <th>Length</th>
+                    <th>Width</th>
+                    <th>Height</th>
                     <th>CBM</th>
                     <th>Freight</th>
                     <th>Arrastre</th>
@@ -170,14 +173,16 @@
                         $cbm = ($c->length * $c->width * $c->height) / 1000000;
                         $subtotal = ($freight + $arrastre) * $cbm * $c->quantity;
                         $total += $subtotal;
+                        $unit = $c->measurement_unit ?? 'cm';
                     @endphp
 
                     <tr>
-                        <td>{{ $c->cargoItem->cargo_item_description }}
-                            <br><small class="text-muted">({{ $c->cargoItem->cargo_item_classification }})</small>
-                        </td>
+                        <td>{{ $c->cargoItem->cargo_item_description }}</td>
+                        <td>{{ $c->cargoClassification->cargo_classification_name ?? 'N/A' }}</td>
                         <td>{{ $c->quantity }}</td>
-                        <td>{{ $c->length }} × {{ $c->width }} × {{ $c->height }}</td>
+                        <td>{{ number_format($c->length, 2) }}{{ $unit }}</td>
+                        <td>{{ number_format($c->width, 2) }}{{ $unit }}</td>
+                        <td>{{ number_format($c->height, 2) }}{{ $unit }}</td>
                         <td>{{ number_format($cbm, 4) }}</td>
                         <td>₱{{ number_format($freight, 2) }}</td>
                         <td>₱{{ number_format($arrastre, 2) }}</td>
@@ -188,7 +193,7 @@
 
             <tfoot>
                 <tr>
-                    <th colspan="6" class="text-end">TOTAL:</th>
+                    <th colspan="10" class="text-end">TOTAL:</th>
                     <th>
                         @if($payment && $payment->total_amount)
                             ₱{{ number_format($payment->total_amount, 2) }}
@@ -280,8 +285,8 @@
                         <p>Voyage No.: {{ $booking->voyage->voyage_code ?? 'N/A' }}</p>
                         <p>Bill of Lading (B/L) No.: {{ $booking->booking_ref_no }}</p>
                         <p>Sailing Date: {{ $booking->voyage ? \Carbon\Carbon::parse($booking->voyage->voyage_departure_date)->format('M d, Y') : 'N/A' }}</p>
-                        <p>Loading Port: {{ $booking->voyage->loading_port ?? 'Not specified' }}</p>
-                        <p>Unloading Port: {{ $booking->voyage->unloading_port ?? 'Not specified' }}</p>
+                        <p>Loading Port: {{ $booking->voyage && $booking->voyage->routePort ? $booking->voyage->routePort->port_origin_name : 'Not specified' }}</p>
+                        <p>Unloading Port: {{ $booking->voyage && $booking->voyage->routePort ? $booking->voyage->routePort->port_destination_name : 'Not specified' }}</p>
 
                         <hr />
                         <h5>Party Details</h5>
@@ -295,12 +300,13 @@
                         <hr />
                         <h5>Cargo Description</h5>
                         @foreach($booking->cargoBookings as $c)
+                            @php $unit = $c->measurement_unit ?? 'cm'; @endphp
                             <div class="mb-2">
                                 <div><strong>Qty:</strong> {{ $c->quantity }}</div>
-                                <div><strong>Classification:</strong> {{ $c->cargoItem->cargo_item_classification ?? '' }}</div>
+                                <div><strong>Classification:</strong> {{ $c->cargoClassification->cargo_classification_name ?? 'N/A' }}</div>
                                 <div><strong>Description:</strong> {{ $c->cargoItem->cargo_item_description ?? '' }}</div>
-                                <div><strong>Dimensions:</strong> {{ $c->length }} x {{ $c->width }} x {{ $c->height }}</div>
-                                <div><strong>Weight:</strong> {{ $c->weight }} kg</div>
+                                <div><strong>Dimensions:</strong> {{ number_format($c->length, 2) . $unit }} x {{ number_format($c->width, 2) . $unit }} x {{ number_format($c->height, 2) . $unit }}</div>
+                                <div><strong>Weight:</strong> {{ number_format($c->weight, 2) }} kg</div>
                             </div>
                         @endforeach
                     </div>

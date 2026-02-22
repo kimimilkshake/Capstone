@@ -59,7 +59,12 @@
                             $totalExpense += $subtotal;
                         @endphp
                         <tr>
-                            <td>{{ $item->cargo_item_description }} ({{ $item->cargo_item_classification }})</td>
+                            <td>
+                                {{ $item->cargo_item_description }}
+                                @if(isset($item->cargo_item_classification))
+                                    ({{ $item->cargo_item_classification }})
+                                @endif
+                            </td>
                             <td>{{ $item->quantity }}</td>
                             <td>{{ $item->length }} x {{ $item->width }} x {{ $item->height }}</td>
                             <td>{{ number_format($cbm, 3) }}</td>

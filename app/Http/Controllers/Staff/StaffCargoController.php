@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\CargoBooking;
 use App\Models\CargoItem;
+use App\Models\CargoClassification;
+use App\Models\MeasurementUnit;
 use App\Models\CargoReceipt;
 use App\Models\Payment;
 use App\Models\RoutePort;
@@ -50,7 +52,8 @@ class StaffCargoController extends Controller
             ->whereDate('voyage_departure_date', $today)
             ->get();
         $cargoItems = collect(CargoItem::all()); // <-- wrap in collect()
-        return view('authorized.staff.cargobooking', compact('voyages', 'cargoItems'));
+        $cargoClassifications = CargoClassification::orderBy('cargo_classification_name')->get();
+        return view('authorized.staff.cargobooking', compact('voyages', 'cargoItems', 'cargoClassifications'));
     }
 
 
@@ -60,27 +63,29 @@ class StaffCargoController extends Controller
 public function store(Request $request)
 {
     // Validate input
-        $request->validate([
+    $request->validate([
         'sender_firstname' => 'required|string|max:255',
         'sender_lastname' => 'required|string|max:255',
         'sender_contact' => 'required|string|max:20',
-            'sender_email' => 'nullable|email',
-            'sender_tin' => 'nullable|string|max:50',
+        'sender_email' => 'required|email',
+        'sender_tin' => 'nullable|string|max:50',
         'consignee_firstname' => 'required|string|max:255',
         'consignee_lastname' => 'required|string|max:255',
         'consignee_contact' => 'required|string|max:20',
         'voyage_id' => 'required|exists:voyage,voyage_id',
+        'cargo_classification.*' => 'required|string',
         'cargo_item_id.*' => 'required|exists:cargo_item,cargo_item_id',
         'cargo_quantity.*' => 'required|integer|min:1',
+        'cargo_weight.*' => 'required|numeric|min:0',
         'cargo_length.*' => 'required|numeric|min:0',
         'cargo_width.*' => 'required|numeric|min:0',
         'cargo_height.*' => 'required|numeric|min:0',
-        'cargo_weight.*' => 'required|numeric|min:0',
+        'measurement_unit.*' => 'nullable|string|in:cm,in',
         'cargo_picture.*' => 'nullable|image|max:2048',
     ]);
 
-        // Verify voyage date within next 30 days and not in the past
-        $voyage = Voyage::find($request->voyage_id);
+    // Verify voyage date within next 30 days and not in the past
+    $voyage = Voyage::find($request->voyage_id);
         if ($voyage) {
             $dep = \Carbon\Carbon::parse($voyage->voyage_departure_date)->startOfDay();
             $today = \Carbon\Carbon::today();
@@ -116,14 +121,33 @@ public function store(Request $request)
 
     // Create Cargo Items
     foreach ($request->cargo_item_id as $index => $cargoId) {
+        $cargoItem = CargoItem::find($cargoId);
         $cargoBooking = new CargoBooking();
         $cargoBooking->booking_ref_no = $booking->booking_ref_no;
         $cargoBooking->cargo_item_id = $cargoId;
+        $cargoBooking->route_code_id = $cargoItem ? $cargoItem->route_code_id : null;
         $cargoBooking->quantity = $request->cargo_quantity[$index];
+        $cargoBooking->weight = $request->cargo_weight[$index];
         $cargoBooking->length = $request->cargo_length[$index];
         $cargoBooking->width = $request->cargo_width[$index];
         $cargoBooking->height = $request->cargo_height[$index];
-        $cargoBooking->weight = $request->cargo_weight[$index];
+
+        // Save cargo_classification_id from selected name
+        $classificationName = $request->cargo_classification[$index] ?? null;
+        if ($classificationName) {
+            $classification = \App\Models\CargoClassification::where('cargo_classification_name', $classificationName)->first();
+            if ($classification) {
+                $cargoBooking->cargo_classification_id = $classification->cargo_classification_id;
+            }
+        }
+
+        // Store measurement unit if provided
+        if ($request->has("measurement_unit.$index") && $request->measurement_unit[$index]) {
+            $measurementUnit = MeasurementUnit::where('measurement_unit_name', $request->measurement_unit[$index])->first();
+            if ($measurementUnit) {
+                $cargoBooking->measurement_unit_id = $measurementUnit->measurement_unit_id;
+            }
+        }
 
         // Handle image upload
         if ($request->hasFile("cargo_picture.$index")) {
@@ -209,16 +233,10 @@ public function edit($id)
         'cargoBookings.cargoItem'
     ])->where('booking_ref_no', $id)->firstOrFail();
 
-    // For dropdowns (classification + descriptions)
-    $classifications = CargoItem::select('cargo_item_classification')
-        ->distinct()
-        ->pluck('cargo_item_classification');
+    // For dropdowns (use cargo_classification table)
+    $cargoClassifications = CargoClassification::orderBy('cargo_classification_name')->get();
 
-    $descriptions = CargoItem::select('cargo_item_description')
-        ->distinct()
-        ->pluck('cargo_item_description');
-
-    // For cargo item lookup (same as your original)
+    // For cargo item lookup
     $cargoItems = CargoItem::all();
     
     // Load all routes for the Route Destination dropdown
@@ -227,8 +245,7 @@ public function edit($id)
     return view('authorized.staff.editcargo', compact(
         'booking',
         'cargoItems',
-        'classifications',
-        'descriptions'
+        'cargoClassifications'
     ));
 }
 

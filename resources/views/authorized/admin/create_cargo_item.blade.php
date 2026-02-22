@@ -31,11 +31,19 @@
       <form action="{{ route('admin.store_cargo_item') }}" method="POST" class="create-cargoitem-form">
         @csrf
 
-        <div class="form-row">
+        <div class="form-row"> <!-- First Row -->
+
           <div class="form-col">
             <div class="form-group">
-              <label>Classification <span class="text-danger">*</span></label>
-              <input type="text" name="cargo_item_classification" required>
+              <label>Route Code <span class="text-danger">*</span></label>
+              <select name="route_code_id" required>
+                <option value="">Select Route Code</option>
+                @foreach ($route_codes as $routeCode)
+                  <option value="{{ $routeCode->route_code_id }}">
+                    {{ $routeCode->route_code_name }}
+                  </option>
+                @endforeach
+              </select>
             </div>
           </div>
           
@@ -45,9 +53,7 @@
               <input type="text" name="cargo_item_description" required>
             </div>
           </div>
-        </div>
 
-        <div class="form-row">
           <div class="form-col">
             <div class="form-group">
               <label>Freight <span class="text-danger">*</span></label>
@@ -62,20 +68,111 @@
             </div>
           </div>
 
+        </div> <!-- End of First Row -->
+          
+        <div class="form-row"> <!-- Second Row -->
           <div class="form-col">
-            <div class="form-group">
-              <label>Route Destination <span class="text-danger">*</span></label>
-              <select name="route_port_id" required>
-                <option value="">Select Destination</option>
-                @foreach ($routes as $route)
-                  <option value="{{ $route->route_port_id }}">
-                    {{ $route->route_destination }}
-                  </option>
-                @endforeach
-              </select>
+            <div class="form-group inline-radio">
+              <label class="inline-label">
+                With Measurement Range? <span class="text-danger">*</span>
+              </label>
+
+              <div class="radio-group">
+                <label class="radio-option">
+                  <input type="radio" name="cargo_item_measure_required" value="Yes" required>
+                  <span>Yes</span>
+                </label>
+
+                <label class="radio-option">
+                  <input type="radio" name="cargo_item_measure_required" value="No">
+                  <span>No</span>
+                </label>
+              </div>
             </div>
           </div>
         </div>
+
+        {{-- Measurement Range Section --}}
+        <div id="measurement-section" style="display: none;">
+
+          {{-- MIN LWH --}}
+          <div class="form-row">
+            <div class="form-col">
+              <div class="form-group">
+                <label>Min Length</label>
+                <input type="number" step="0.01" name="cargo_item_min_length">
+              </div>
+            </div>
+
+            <div class="form-col">
+              <div class="form-group">
+                <label>Min Width</label>
+                <input type="number" step="0.01" name="cargo_item_min_width">
+              </div>
+            </div>
+
+            <div class="form-col">
+              <div class="form-group">
+                <label>Min Height</label>
+                <input type="number" step="0.01" name="cargo_item_min_height">
+              </div>
+            </div>
+
+            <div class="form-col">
+              <div class="form-group">
+                <label>Unit</label>
+                <select name="measurement_unit_id">
+                  <option value="">Select Unit</option>
+                  @foreach ($measurement_units as $unit)
+                    <option value="{{ $unit->measurement_unit_id }}">
+                      {{ $unit->measurement_unit_name }}
+                    </option>
+                  @endforeach
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {{-- MAX LWH --}}
+          <div class="form-row">
+            <div class="form-col">
+              <div class="form-group">
+                <label>Max Length</label>
+                <input type="number" step="0.01" name="cargo_item_max_length">
+              </div>
+            </div>
+
+            <div class="form-col">
+              <div class="form-group">
+                <label>Max Width</label>
+                <input type="number" step="0.01" name="cargo_item_max_width">
+              </div>
+            </div>
+
+            <div class="form-col">
+              <div class="form-group">
+                <label>Max Height</label>
+                <input type="number" step="0.01" name="cargo_item_max_height">
+              </div>
+            </div>
+
+            <div class="form-col">
+              <div class="form-group">
+                <label>Unit</label>
+                <select name="measurement_unit_id_max">
+                  <option value="">Select Unit</option>
+                  @foreach ($measurement_units as $unit)
+                    <option value="{{ $unit->measurement_unit_id }}">
+                      {{ $unit->measurement_unit_name }}
+                    </option>
+                  @endforeach
+                </select>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
 
         <div class="form-actions">
           <button type="submit" class="acs-add-btn">
@@ -87,3 +184,31 @@
 
   </div>
 @endsection
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const radios = document.querySelectorAll('input[name="cargo_item_measure_required"]');
+  const section = document.getElementById('measurement-section');
+
+  radios.forEach(radio => {
+    radio.addEventListener('change', function () {
+      if (this.value === 'Yes') {
+        section.style.display = 'block';
+
+        // make inputs required
+        section.querySelectorAll('input, select').forEach(el => {
+          el.required = true;
+        });
+      } else {
+        section.style.display = 'none';
+
+        // remove required + clear values
+        section.querySelectorAll('input, select').forEach(el => {
+          el.required = false;
+          el.value = '';
+        });
+      }
+    });
+  });
+});
+</script>

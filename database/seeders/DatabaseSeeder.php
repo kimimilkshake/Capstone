@@ -109,9 +109,51 @@ class DatabaseSeeder extends Seeder
             ],
         ]);
 
-        //Route and Port seeders
+        //Measurement Unit Seeders
+        DB::table('measurement_unit')->insert([
+            [
+                'measurement_unit_name' => 'inches',
+                'measurement_unit_abbreviation' => 'in',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'measurement_unit_name' => 'centimeters',
+                'measurement_unit_abbreviation' => 'cm',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'measurement_unit_name' => 'meters',
+                'measurement_unit_abbreviation' => 'm',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+
+        ]);
+
+        // Route Code seeders
+        DB::table('route_code')->insert([
+            [
+                'route_code_name' => 'BAYBAY',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'route_code_name' => 'TALIBON',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+        // Get inserted Route Code IDs
+        $baybayId = DB::table('route_code')->where('route_code_name', 'BAYBAY')->value('route_code_id');
+        $talibonId = DB::table('route_code')->where('route_code_name', 'TALIBON')->value('route_code_id');
+
+        // Route and Port seeders
         DB::table('route_port')->insert([
             [
+                'route_code_id' => $baybayId,
                 'route_origin' => 'Cebu',
                 'route_destination' => 'Baybay',
                 'port_origin_name' => 'Port of Cebu',
@@ -124,6 +166,7 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'route_code_id' => $talibonId,
                 'route_origin' => 'Cebu',
                 'route_destination' => 'Talibon',
                 'port_origin_name' => 'Port of Cebu',
@@ -136,6 +179,7 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'route_code_id' => $baybayId,
                 'route_origin' => 'Baybay',
                 'route_destination' => 'Cebu',
                 'port_origin_name' => 'Port of Baybay',
@@ -148,6 +192,7 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'route_code_id' => $talibonId,
                 'route_origin' => 'Talibon',
                 'route_destination' => 'Cebu',
                 'port_origin_name' => 'Port of Talibon',
@@ -160,6 +205,7 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ],
         ]);
+
 
         //Vessel seeders
         $vessels = [

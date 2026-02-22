@@ -147,8 +147,16 @@ return new class extends Migration {
         // ==========================
         // VOYAGES & TICKETS
         // ==========================
+
+        Schema::create('route_code', function (Blueprint $table) {
+            $table->id('route_code_id');
+            $table->string('route_code_name');
+            $table->timestamps();
+        });
+
         Schema::create('route_port', function (Blueprint $table) {
             $table->id('route_port_id');
+            $table->foreignId('route_code_id')->constrained('route_code', 'route_code_id');
             $table->string('route_origin');
             $table->string('route_destination');
             $table->string('port_origin_name');
@@ -193,13 +201,35 @@ return new class extends Migration {
         // ==========================
         // CARGO
         // ==========================
+        Schema::create('measurement_unit', function (Blueprint $table) {
+            $table->id('measurement_unit_id');
+            $table->string('measurement_unit_name');
+            $table->string('measurement_unit_abbreviation');
+            $table->timestamps();
+        });
+
+        Schema::create('cargo_classification', function (Blueprint $table) {
+            $table->id('cargo_classification_id');
+            $table->string('cargo_classification_name');
+            $table->timestamps();
+        });
+
         Schema::create('cargo_item', function (Blueprint $table) {
             $table->id('cargo_item_id');
-            $table->string('cargo_item_classification');
+            $table->foreignId('measurement_unit_id')
+                    ->nullable()
+                    ->constrained('measurement_unit', 'measurement_unit_id');
+            $table->foreignId('route_code_id')->constrained('route_code', 'route_code_id');
             $table->string('cargo_item_description');
             $table->decimal('cargo_item_freight', 10, 2);
             $table->decimal('cargo_item_arrastre', 10, 2);
-            $table->foreignId('route_port_id')->constrained('route_port', 'route_port_id');
+            $table->enum('cargo_item_measure_required', ['Yes', 'No']);
+            $table->decimal('cargo_item_min_length', 8, 2)->nullable();
+            $table->decimal('cargo_item_max_length', 8, 2)->nullable();
+            $table->decimal('cargo_item_min_width', 8, 2)->nullable();
+            $table->decimal('cargo_item_max_width', 8, 2)->nullable();
+            $table->decimal('cargo_item_min_height', 8, 2)->nullable();
+            $table->decimal('cargo_item_max_height', 8, 2)->nullable();
             $table->timestamps();
         });
 

@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Passenger;
 use App\Models\CargoItem; // ✅ Add this
+use App\Models\CargoClassification;
+use App\Models\MeasurementUnit;
 use App\Models\Voyage;
 use App\Models\Notification;
 use Carbon\Carbon;
@@ -43,8 +45,9 @@ class PassengerController extends Controller
             $departureTime = Carbon::parse($departureTime)->format('g:i A');
         }
 
-        // ✅ Add this: fetch cargo items for the Blade
+        // ✅ Add this: fetch cargo items and classifications for the Blade
         $cargoItems = $type === 'cargo' ? CargoItem::all() : collect();
+        $cargoClassifications = $type === 'cargo' ? CargoClassification::orderBy('cargo_classification_name')->get() : collect();
 
         // ✅ If user selected "cargo", load passenger.cargobooking
         // Otherwise load passenger.passengerbooking
@@ -60,6 +63,7 @@ class PassengerController extends Controller
             'departureTime',
             'portOfOrigin',
             'cargoItems', // ✅ Pass it to Blade
+            'cargoClassifications', // ✅ Pass classifications
             'voyage',
             'accommodations',
             'cotPlanUrl'
@@ -101,14 +105,21 @@ class PassengerController extends Controller
             'sender_firstname' => 'required|string|max:255',
             'sender_lastname' => 'required|string|max:255',
             'sender_contact' => 'required|string|max:20',
+            'sender_email' => 'required|email',
             'sender_tin' => 'nullable|string|max:50',
             'consignee_firstname' => 'required|string|max:255',
             'consignee_lastname' => 'required|string|max:255',
             'consignee_contact' => 'required|string|max:20',
             'voyage_id' => 'required|exists:voyage,voyage_id',
+            'cargo_classification.*' => 'required|string',
             'cargo_item_id.*' => 'required|exists:cargo_item,cargo_item_id',
             'cargo_quantity.*' => 'required|integer|min:1',
-            'cargo_weight.*' => 'required|numeric|min:0',
+            'cargo_weight.*' => 'required|numeric|min:0.01',
+            'cargo_length.*' => 'required|numeric|min:0.01',
+            'cargo_width.*' => 'required|numeric|min:0.01',
+            'cargo_height.*' => 'required|numeric|min:0.01',
+            'measurement_unit.*' => 'nullable|string|in:cm,in',
+            'cargo_picture.*' => 'nullable|image|max:2048',
         ]);
 
         // Validate voyage date within 30 days and not in the past
@@ -153,19 +164,30 @@ class PassengerController extends Controller
             ]);
 
             foreach ($request->cargo_item_id as $index => $itemId) {
+                $cargoItem = CargoItem::find($itemId);
                 $picturePath = null;
                 if ($request->hasFile('cargo_picture.' . $index)) {
                     $picturePath = $request->file('cargo_picture')[$index]->store('cargo_pictures', 'public');
                 }
 
+                $measurementUnitId = null;
+                if ($request->has("measurement_unit.$index") && $request->measurement_unit[$index]) {
+                    $measurementUnit = MeasurementUnit::where('measurement_unit_name', $request->measurement_unit[$index])->first();
+                    if ($measurementUnit) {
+                        $measurementUnitId = $measurementUnit->measurement_unit_id;
+                    }
+                }
+
                 DB::table('cargo_booking')->insert([
                     'booking_ref_no' => $bookingId,
                     'cargo_item_id' => $itemId,
+                    'route_code_id' => $cargoItem ? $cargoItem->route_code_id : null,
+                    'measurement_unit_id' => $measurementUnitId,
                     'quantity' => $request->cargo_quantity[$index],
                     'weight' => $request->cargo_weight[$index],
-                    'length' => $request->cargo_length[$index] ?? 0,
-                    'width' => $request->cargo_width[$index] ?? 0,
-                    'height' => $request->cargo_height[$index] ?? 0,
+                    'length' => $request->cargo_length[$index],
+                    'width' => $request->cargo_width[$index],
+                    'height' => $request->cargo_height[$index],
                     'cargo_picture' => $picturePath,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -202,7 +224,6 @@ class PassengerController extends Controller
             ->select(
                 'cargo_booking.*',
                 'cargo_item.cargo_item_description',
-                'cargo_item.cargo_item_classification',
                 'cargo_item.cargo_item_freight as freight',
                 'cargo_item.cargo_item_arrastre as arrastre'
             )
