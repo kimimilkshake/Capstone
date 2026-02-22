@@ -43,8 +43,9 @@
                         @php
                             $depDate = \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('M j, Y');
                             $depTime = $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:i A') : '';
+                            $routeCodeId = $voyage->routePort->route_code_id ?? '';
                         @endphp
-                        <option value="{{ $voyage->voyage_id }}" data-route_port="{{ $voyage->route_port_id ?? $voyage->routePort->route_port_id ?? '' }}">
+                        <option value="{{ $voyage->voyage_id }}" data-route_port="{{ $voyage->route_port_id ?? $voyage->routePort->route_port_id ?? '' }}" data-route_code="{{ $routeCodeId }}">
                             {{ $voyage->voyage_code }} - {{ $voyage->routePort->route_origin ?? 'N/A' }} → {{ $voyage->routePort->route_destination ?? 'N/A' }} - Departure: {{ $depDate }} {{ $depTime ? '(' . $depTime . ')' : '' }}
                         </option>
                     @endforeach
@@ -105,14 +106,15 @@
 
                         <div class="cargo-item border rounded p-3 mb-3">
 
-                            <div class="row gx-2 mb-2">
+                            <!-- Classification + Description in row -->
+                            <div class="row gx-2 mb-3">
                                 <div class="col-6">
                                     <label class="form-label">Cargo Classification <span class="text-danger">*</span></label>
                                     <select name="cargo_classification[]" class="form-select cargo-classification">
                                         <option value="">-- Select Classification --</option>
-                                        @foreach($cargoItems->unique('cargo_item_classification') as $item)
-                                            <option value="{{ $item->cargo_item_classification }}" data-route_port="{{ $item->route_port_id }}">
-                                                {{ $item->cargo_item_classification }}
+                                        @foreach($cargoClassifications as $classification)
+                                            <option value="{{ $classification->cargo_classification_name }}">
+                                                {{ $classification->cargo_classification_name }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -122,7 +124,15 @@
                                     <select name="cargo_item_id[]" class="form-select cargo-description" required>
                                         <option value="">-- Select Description --</option>
                                         @foreach($cargoItems as $item)
-                                            <option value="{{ $item->cargo_item_id }}" data-classification="{{ $item->cargo_item_classification }}" data-route_port="{{ $item->route_port_id }}">
+                                            <option value="{{ $item->cargo_item_id }}" 
+                                                data-route-code="{{ $item->route_code_id ?? '' }}"
+                                                data-measure-required="{{ $item->cargo_item_measure_required ?? 'No' }}"
+                                                data-min-length="{{ $item->cargo_item_min_length ?? '' }}"
+                                                data-max-length="{{ $item->cargo_item_max_length ?? '' }}"
+                                                data-min-width="{{ $item->cargo_item_min_width ?? '' }}"
+                                                data-max-width="{{ $item->cargo_item_max_width ?? '' }}"
+                                                data-min-height="{{ $item->cargo_item_min_height ?? '' }}"
+                                                data-max-height="{{ $item->cargo_item_max_height ?? '' }}">
                                                 {{ $item->cargo_item_description }}
                                             </option>
                                         @endforeach
@@ -130,36 +140,38 @@
                                 </div>
                             </div>
 
-                                <div class="row gx-2 mb-2">
-                                    <div class="col-6">
-                                        <label class="form-label">Quantity <span class="text-danger">*</span></label>
-                                        <input type="number" name="cargo_quantity[]" class="form-control" placeholder="Qty" min="1" required>
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="form-label">Weight (kg) <span class="text-danger">*</span></label>
-                                        <input type="number" name="cargo_weight[]" class="form-control" placeholder="Weight" step="0.01" required>
-                                    </div>
+                            <!-- Quantity & Weight -->
+                            <div class="row gx-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                                    <input type="number" name="cargo_quantity[]" class="form-control" placeholder="Qty" min="1" required>
                                 </div>
-
-                                <label class="form-label">Cargo Dimensions <span class="text-danger">*</span></label>
-                            <div class="d-flex gap-2 mb-2 align-items-end">
-                                <div class="flex-fill">
-                                    <label class="form-label">Length <span class="text-danger">*</span></label>
-                                    <input type="number" name="cargo_length[]" class="form-control dimension" required>
+                                <div class="col-6">
+                                    <label class="form-label">Weight (kg) <span class="text-danger">*</span></label>
+                                    <input type="number" name="cargo_weight[]" class="form-control" placeholder="Weight" step="0.01" required>
                                 </div>
+                            </div>
 
+                            <!-- Cargo Dimensions -->
+                            <label class="form-label">Cargo Dimensions <span class="text-danger">*</span></label>
+                            <div class="d-flex gap-2 mb-3 align-items-end">
                                 <div class="flex-fill">
-                                    <label class="form-label">Width <span class="text-danger">*</span></label>
-                                    <input type="number" name="cargo_width[]" class="form-control dimension" required>
+                                    <label class="form-label small">Length</label>
+                                    <input type="number" name="cargo_length[]" class="form-control dimension" placeholder="Length" step="0.01" required>
                                 </div>
 
                                 <div class="flex-fill">
-                                    <label class="form-label">Height <span class="text-danger">*</span></label>
-                                    <input type="number" name="cargo_height[]" class="form-control dimension" required>
+                                    <label class="form-label small">Width</label>
+                                    <input type="number" name="cargo_width[]" class="form-control dimension" placeholder="Width" step="0.01" required>
                                 </div>
 
-                                <div style="width: 150px;">
-                                    <label class="form-label">Unit</label>
+                                <div class="flex-fill">
+                                    <label class="form-label small">Height</label>
+                                    <input type="number" name="cargo_height[]" class="form-control dimension" placeholder="Height" step="0.01" required>
+                                </div>
+
+                                <div style="width: 120px;">
+                                    <label class="form-label small">Unit</label>
                                     <select name="measurement_unit[]" class="form-select unitSelect">
                                         <option value="cm">cm</option>
                                         <option value="in">in</option>
@@ -167,7 +179,7 @@
                                 </div>
 
                                 <div class="flex-fill">
-                                    <label class="form-label">CBM </label>
+                                    <label class="form-label small">CBM</label>
                                     <input type="text" class="form-control cbm-output" readonly placeholder="0.0000">
                                 </div>
                             </div>
@@ -192,7 +204,6 @@
 <!-- JS -->
 <script>
 const container = document.getElementById('cargo-items-container');
-const voyageSelect = document.querySelector('select[name="voyage_id"]');
 
 // Calculate CBM for a cargo item
 function calculateCBM(item){
@@ -202,7 +213,6 @@ function calculateCBM(item){
     let w = parseFloat(item.querySelector('[name="cargo_width[]"]').value) || 0;
     let h = parseFloat(item.querySelector('[name="cargo_height[]"]').value) || 0;
     
-    // Convert inches to centimeters if needed
     if (unit === 'in') {
         l = l * 2.54;
         w = w * 2.54;
@@ -230,10 +240,12 @@ container.addEventListener('change', e => {
 
 // Change number of cargo items based on No. of Cargo input
 const noInput = document.getElementById('no_of_cargo');
+const MAX_ITEMS = 5;
 if(noInput){
     function syncCargoItems(){
         let desired = parseInt(noInput.value) || 1;
         if(desired < 1) { desired = 1; noInput.value = 1; }
+        if(desired > MAX_ITEMS) { desired = MAX_ITEMS; noInput.value = MAX_ITEMS; }
         const items = Array.from(container.querySelectorAll('.cargo-item'));
         const current = items.length;
         const original = items[0];
@@ -254,55 +266,96 @@ if(noInput){
     }
 
     noInput.addEventListener('change', syncCargoItems);
-
-    // Initialize on page load
     window.addEventListener('DOMContentLoaded', syncCargoItems);
 }
 
+// Display min/max ranges when cargo description changes and apply measurement-required behavior
 
-// Classification filter for descriptions
+// Passenger-style: When cargo description is selected, set dimension fields based on measurement requirement
 container.addEventListener('change', e => {
-    if(!e.target.classList.contains('cargo-classification')) return;
+    if(!e.target.classList.contains('cargo-description')) return;
     const item = e.target.closest('.cargo-item');
-    const classification = e.target.value;
-    const voyageId = voyageSelect.value;
-    const descSelect = item.querySelector('.cargo-description');
-    Array.from(descSelect.options).forEach(opt=>{
-        if(opt.value==='') return;
-        const matchesClass = opt.dataset.classification===classification;
-        const matchesVoyage = opt.dataset.route_port==voyageId;
-        opt.style.display = (matchesClass && matchesVoyage)?'block':'none';
-    });
-    descSelect.value='';
+    const selectedOption = e.target.options[e.target.selectedIndex];
+
+    // Get measurement requirement and min/max values
+    const measureRequired = (selectedOption.dataset.measureRequired || 'No').toString();
+    const minLength = selectedOption.dataset.minLength || '';
+    const maxLength = selectedOption.dataset.maxLength || '';
+    const minWidth = selectedOption.dataset.minWidth || '';
+    const maxWidth = selectedOption.dataset.maxWidth || '';
+    const minHeight = selectedOption.dataset.minHeight || '';
+    const maxHeight = selectedOption.dataset.maxHeight || '';
+
+    // Get input fields
+    const lengthInput = item.querySelector('[name="cargo_length[]"]');
+    const widthInput = item.querySelector('[name="cargo_width[]"]');
+    const heightInput = item.querySelector('[name="cargo_height[]"]');
+
+    if (measureRequired === 'Yes') {
+        // Set fields to min values and make readonly
+        if(lengthInput) {
+            lengthInput.value = minLength;
+            lengthInput.readOnly = true;
+        }
+        if(widthInput) {
+            widthInput.value = minWidth;
+            widthInput.readOnly = true;
+        }
+        if(heightInput) {
+            heightInput.value = minHeight;
+            heightInput.readOnly = true;
+        }
+    } else {
+        // Clear fields and make editable
+        if(lengthInput) {
+            lengthInput.value = '';
+            lengthInput.readOnly = false;
+        }
+        if(widthInput) {
+            widthInput.value = '';
+            widthInput.readOnly = false;
+        }
+        if(heightInput) {
+            heightInput.value = '';
+            heightInput.readOnly = false;
+        }
+    }
+
+    // No display of min/max range under dimension fields
 });
 
-// Voyage change updates classifications
-voyageSelect.addEventListener('change', () => {
-    const vid = voyageSelect.value;
-    container.querySelectorAll('.cargo-item').forEach(item=>{
-        const classSelect = item.querySelector('.cargo-classification');
-        const descSelect = item.querySelector('.cargo-description');
-        descSelect.value='';
-        const validClasses = Array.from(container.querySelectorAll('.cargo-description option'))
-            .filter(opt => opt.dataset.route_port==vid && opt.value!=='')
-            .map(opt => opt.dataset.classification)
-            .filter((v,i,a)=>a.indexOf(v)===i);
-        classSelect.innerHTML = '<option value="">-- Select Classification --</option>';
-        validClasses.forEach(cls=>{
-            const opt = document.createElement('option');
-            opt.value = cls;
-            opt.text = cls;
-            classSelect.appendChild(opt);
+// Handle voyage selection and filter cargo descriptions by route_code
+const voyageSelect = document.querySelector('select[name="voyage_id"]');
+if(voyageSelect) {
+    voyageSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const routeCodeId = selectedOption.dataset.route_code;
+        
+        // Filter all cargo descriptions by route_code
+        Array.from(container.querySelectorAll('.cargo-description')).forEach(descSelect => {
+            Array.from(descSelect.options).forEach(opt => {
+                if(opt.value === '') return;
+                opt.style.display = (opt.dataset.routeCode === routeCodeId) ? 'block' : 'none';
+            });
+            descSelect.value = '';
         });
     });
-});
+}
 
-// Photo upload removed for staff UI — no JS needed
-
-// Show loading overlay on submit
+// Show loading overlay on submit and enforce 25kg max per booking
 const staffForm = document.getElementById('staffCargoForm');
 if(staffForm){
-    staffForm.addEventListener('submit', function(){
+    staffForm.addEventListener('submit', function(e){
+        // Enforce 25kg max
+        let totalWeight = 0;
+        document.querySelectorAll('input[name="cargo_weight[]"]').forEach(input => {
+            totalWeight += parseFloat(input.value) || 0;
+        });
+        if(totalWeight > 25){
+            e.preventDefault();
+            alert('Total weight per booking must not exceed 25kg.');
+            return false;
+        }
         const overlay = document.getElementById('staffOverlay');
         if(overlay){ overlay.style.display = 'flex'; }
     });

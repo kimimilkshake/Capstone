@@ -54,9 +54,10 @@ class SemaphoreController extends Controller
 
     private function getPassengerNumbers(int $voyageId): array
     {
-        return Booking::where('voyage_id', $voyageId)
-            ->where('booking_type', 'passenger')
-            ->join('passenger', 'booking.passenger_id', '=', 'passenger.passenger_id')
+        return Booking::where('booking.voyage_id', $voyageId)
+            ->where('booking.booking_type', 'passenger')
+            ->join('passenger_ticket', 'booking.booking_ref_no', '=', 'passenger_ticket.booking_ref_no')
+            ->join('passenger', 'passenger_ticket.passenger_id', '=', 'passenger.passenger_id')
             ->whereNotNull('passenger.passenger_contactno')
             ->pluck('passenger.passenger_contactno')
             ->toArray();

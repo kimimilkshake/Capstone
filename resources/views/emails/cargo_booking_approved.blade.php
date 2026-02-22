@@ -85,7 +85,7 @@
                     @endphp
                     <tr>
                         <td>{{ $cargo->quantity }}</td>
-                        <td>{{ $cargo->cargoItem->cargo_item_classification }}</td>
+                        <td>{{ $cargo->cargoClassification->cargo_classification_name ?? 'N/A' }}</td>
                         <td>{{ $cargo->cargoItem->cargo_item_description }}</td>
                         <td>{{ $displayLength }} × {{ $displayWidth }} × {{ $displayHeight }} {{ $unitDisplay }}</td>
                         <td>{{ $cargo->weight }} kg</td>

@@ -66,7 +66,7 @@
                     @endphp
                     <tr>
                         <td>{{ $cargo->cargoItem->cargo_item_description }}</td>
-                        <td>{{ $cargo->cargoItem->cargo_item_classification }}</td>
+                        <td>{{ $cargo->cargoClassification->cargo_classification_name ?? 'N/A' }}</td>
                         <td>{{ $cargo->quantity }}</td>
                         <td>{{ $cargo->weight }} kg</td>
                         <td>{{ $cargo->length }} × {{ $cargo->width }} × {{ $cargo->height }}</td>

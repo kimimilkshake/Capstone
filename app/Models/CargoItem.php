@@ -13,15 +13,35 @@ class CargoItem extends Model
     protected $primaryKey = 'cargo_item_id';
 
     protected $fillable = [
-        'cargo_item_classification',
+        'measurement_unit_id',
+        'route_code_id',
         'cargo_item_description',
         'cargo_item_freight',
         'cargo_item_arrastre',
-        'route_port_id',
+        'cargo_item_measure_required',
+        'cargo_item_min_length',
+        'cargo_item_max_length',
+        'cargo_item_min_width',
+        'cargo_item_max_width',
+        'cargo_item_min_height',
+        'cargo_item_max_height',
     ];
 
-    public function routePort()
+    public function measurementUnit()
     {
-        return $this->belongsTo(RoutePort::class, 'route_port_id', 'route_port_id');
+        return $this->belongsTo(
+            MeasurementUnit::class,
+            'measurement_unit_id',
+            'measurement_unit_id'
+        );
+    }
+
+    public function routeCode()
+    {
+        return $this->belongsTo(
+            RouteCode::class,
+            'route_code_id',
+            'route_code_id'
+        );
     }
 }

@@ -73,10 +73,10 @@
                             <label>Classification</label>
                             <select name="classification[]" required>
                                 <option value="">Select Classification</option>
-                                @foreach($classifications as $classification)
-                                    <option value="{{ $classification }}"
-                                        {{ $cargo->cargoItem->cargo_item_classification == $classification ? 'selected' : '' }}>
-                                        {{ $classification }}
+                                @foreach($cargoClassifications as $classification)
+                                    <option value="{{ $classification->cargo_classification_name }}"
+                                        {{ $cargo->cargo_classification_id == $classification->cargo_classification_id ? 'selected' : '' }}>
+                                        {{ $classification->cargo_classification_name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -88,10 +88,10 @@
                             <label>Description</label>
                             <select name="description[]" required>
                                 <option value="">Select Description</option>
-                                @foreach($descriptions as $description)
-                                    <option value="{{ $description }}"
-                                        {{ $cargo->cargoItem->cargo_item_description == $description ? 'selected' : '' }}>
-                                        {{ $description }}
+                                @foreach($cargoItems as $item)
+                                    <option value="{{ $item->cargo_item_id }}"
+                                        {{ $cargo->cargo_item_id == $item->cargo_item_id ? 'selected' : '' }}>
+                                        {{ $item->cargo_item_description }}
                                     </option>
                                 @endforeach
                             </select>
@@ -110,21 +110,21 @@
                     <div class="form-col">
                         <div class="form-group">
                             <label>Length (cm)</label>
-                            <input type="number" step="0.01" name="length[]" value="{{ old('length.'.$index, $cargo->length) }}" required>
+                            <input type="number" step="0.01" name="length[]" value="{{ old('length.'.$index, $cargo->length) }}" required @if($cargo->cargoItem && $cargo->cargoItem->cargo_item_measure_required == 'Yes') readonly @endif>
                         </div>
                     </div>
 
                     <div class="form-col">
                         <div class="form-group">
                             <label>Width (cm)</label>
-                            <input type="number" step="0.01" name="width[]" value="{{ old('width.'.$index, $cargo->width) }}" required>
+                            <input type="number" step="0.01" name="width[]" value="{{ old('width.'.$index, $cargo->width) }}" required @if($cargo->cargoItem && $cargo->cargoItem->cargo_item_measure_required == 'Yes') readonly @endif>
                         </div>
                     </div>
 
                     <div class="form-col">
                         <div class="form-group">
                             <label>Height (cm)</label>
-                            <input type="number" step="0.01" name="height[]" value="{{ old('height.'.$index, $cargo->height) }}" required>
+                            <input type="number" step="0.01" name="height[]" value="{{ old('height.'.$index, $cargo->height) }}" required @if($cargo->cargoItem && $cargo->cargoItem->cargo_item_measure_required == 'Yes') readonly @endif>
                         </div>
                     </div>
 
@@ -182,38 +182,49 @@
     function calculateValues() {
         let totalValue = 0;
         const valueInputs = document.querySelectorAll('.cargo-value-per-item');
-        
         document.querySelectorAll('.cargo-rate').forEach((rateInput, index) => {
             const quantityInput = document.querySelector(`input[name="quantity[${index}]"]`);
+            const freightInput = document.querySelector(`input[name="rate[${index}]"]`);
+            const arrastreInput = document.querySelector(`input[name="arrastre[${index}]"]`);
             const valueInput = document.querySelector(`.cargo-value-per-item[data-index="${index}"]`);
-            
-            if (quantityInput && rateInput && valueInput) {
+            let freight = 0, arrastre = 0;
+            if (freightInput) freight = parseFloat(freightInput.value) || 0;
+            if (arrastreInput) arrastre = parseFloat(arrastreInput.value) || 0;
+            if (quantityInput && valueInput) {
                 const quantity = parseFloat(quantityInput.value) || 0;
-                const rate = parseFloat(rateInput.value) || 0;
-                const value = quantity * rate;
+                const value = (freight + arrastre) * quantity;
                 valueInput.value = value.toFixed(2);
                 totalValue += value;
             }
         });
-        
         const totalDisplay = document.getElementById('totalValueDisplay');
         const totalInput = document.getElementById('totalValueInput');
         if (totalDisplay) totalDisplay.textContent = '₱' + totalValue.toFixed(2);
         if (totalInput) totalInput.value = totalValue.toFixed(2);
     }
-    
     document.addEventListener('DOMContentLoaded', function() {
         calculateValues();
-        
         document.querySelectorAll('.cargo-rate').forEach(input => {
             input.addEventListener('change', calculateValues);
             input.addEventListener('input', calculateValues);
         });
-        
         document.querySelectorAll('input[name^="quantity["]').forEach(input => {
             input.addEventListener('change', calculateValues);
             input.addEventListener('input', calculateValues);
         });
+    });
+
+    // Enforce 25kg max per booking
+    document.querySelector('form').addEventListener('submit', function(e){
+        let totalWeight = 0;
+        document.querySelectorAll('input[name="weight[]"]').forEach(input => {
+            totalWeight += parseFloat(input.value) || 0;
+        });
+        if(totalWeight > 25){
+            e.preventDefault();
+            alert('Total weight per booking must not exceed 25kg.');
+            return false;
+        }
     });
 </script>
 @endsection

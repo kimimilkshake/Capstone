@@ -22,7 +22,6 @@ body {
   overflow-x: hidden;
 }
 
-
 /* === COLLAPSED SIDEBAR === */
 .admin-nav.collapsed {
   width: 60px;
@@ -100,6 +99,29 @@ body {
   transform: translateY(0) scale(1);
   transition: all 0.25s ease-in-out;
 }
+
+
+/* === SUCCESS AND ERROR MESSAGES === */
+.alert {
+    max-width: 800px;
+    width: 100%;
+    margin: 15px auto;
+    text-align: center;
+    padding: 14px 18px;
+    border-radius: 8px;
+}
+
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
 
 /* === DASHBOARD CONTENT === */
 .admin-body {
@@ -627,7 +649,8 @@ body {
   font-size: 0.9rem;
 }
 
-.rpmodal-col input {
+.rpmodal-col input,
+.rpmodal-col select {
   padding: 8px 10px;
   font-size: 0.9rem;
   border-radius: 5px;
@@ -663,6 +686,57 @@ body {
 
 .modal-content button[type="submit"]:hover {
   background: #2546a3;
+}
+
+#addRouteCodeModal #aaddCargoClassificationModal {
+  .modal-content {
+    max-width: 500px;
+    width: 90%;
+
+    form {
+      .rpmodal-row.one-col {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+
+        .rpmodal-col {
+          width: 100%;
+
+          label {
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: block;
+          }
+
+          input[type="text"] {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            box-sizing: border-box;
+          }
+        }
+      }
+
+      button[type="submit"] {
+        margin-top: 15px;
+        padding: 10px 15px;
+        border: none;
+        background: #1b3b8b;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        width: 100%;
+        transition: background-color 0.2s;
+
+        &:hover {
+          background: #2546a3;
+        }
+      }
+    }
+  }
 }
 
 @media screen and (max-width: 600px) {
@@ -709,13 +783,76 @@ body {
     display: block;
 }
 
+.inline-radio {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.inline-radio .inline-label {
+  display: flex;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.inline-radio .radio-group {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.inline-radio .radio-option {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+}
+
+.inline-radio .radio-option input {
+  margin: 0;
+}
+
+#aaddCargoClassificationModal .rpmodal-row.one-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#aaddCargoClassificationModal .rpmodal-row.one-col .rpmodal-col {
+    width: 100%;
+}
+
+#aaddCargoClassificationModal .rpmodal-col input {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+#saddCargoClassificationModal .rpmodal-row.one-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#saddCargoClassificationModal .rpmodal-row.one-col .rpmodal-col {
+    width: 100%;
+}
+
+#saddCargoClassificationModal .rpmodal-col input {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
 @media (max-width: 900px) {
     .aci-form_container .form-row {
         flex-direction: column;
         gap: 15px;
     }
 }
-
 
 
 //PAGINATION
@@ -843,3 +980,13 @@ body {
     font-size: 14px;
     align-items: center;
 }
+
+.card-header{
+  background-color:  #485b8c;
+}
+
+.button-textcolor1{
+  color: #485b8c;
+}
+
+.button-textcolor1:hover { color: #485b8c }

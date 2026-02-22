@@ -17,6 +17,10 @@ class CargoBooking extends Model
     protected $fillable = [
         'booking_ref_no',
         'cargo_item_id',
+        'cargo_classification_id',
+        'route_code_id',
+        'measurement_unit_id',
+        'with_measurement',
         'quantity',
         'weight',
         'length',
@@ -36,5 +40,20 @@ class CargoBooking extends Model
     public function cargoItem()
     {
         return $this->belongsTo(CargoItem::class, 'cargo_item_id', 'cargo_item_id');
+    }
+
+    public function cargoClassification()
+    {
+        return $this->belongsTo(CargoClassification::class, 'cargo_classification_id', 'cargo_classification_id');
+    }
+
+    public function measurementUnit()
+    {
+        return $this->belongsTo(MeasurementUnit::class, 'measurement_unit_id', 'measurement_unit_id');
+    }
+
+    public function routeCode()
+    {
+        return $this->belongsTo(RouteCode::class, 'route_code_id', 'route_code_id');
     }
 }

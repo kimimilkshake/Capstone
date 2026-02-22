@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
-use App\Http\Controllers\VesselRouteController;
+//use App\Http\Controllers\VesselRouteController;
 use App\Http\Controllers\VoyageBookingController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PassengerController;
@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\PromoController;
 use App\Http\Controllers\Admin\VesselController;
+use App\Http\Controllers\Admin\RouteCodeController;
 use App\Http\Controllers\Admin\RoutePortController;
 use App\Http\Controllers\NotificationController;
 
@@ -28,6 +29,7 @@ use App\Http\Controllers\Staff\SemaphoreController;
 // SHARED CONTROLLERS
 use App\Http\Controllers\VoyageController;
 use App\Http\Controllers\ManifestController;
+use App\Http\Controllers\CargoClassificationController;
 use App\Http\Controllers\CargoItemController;
 use App\Http\Controllers\CargoAutoPlacementController;
 
@@ -198,11 +200,25 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
     Route::get('/voyages/{id}/edit', [VoyageController::class, 'edit'])->name('admin.voyage_edit');
     Route::put('/voyages/{id}/update', [VoyageController::class, 'update'])->name('admin.voyage_update');
 
+    // Route Code
+    Route::get('/route_codes', [RouteCodeController::class, 'index'])->name('admin.routecodes_list');
+    Route::post('/route_codes', [RouteCodeController::class, 'store'])->name('admin.routecodes.store');
+    Route::put('/route_codes/{id}', [RouteCodeController::class, 'update'])->name('admin.routecodes.update');
+    Route::delete('/route_codes/{id}', [RouteCodeController::class, 'destroy'])->name('admin.routecodes.destroy');
+
     //Route and Port
     Route::get('/route_port', [RoutePortController::class, 'index'])->name('admin.route_port_list');
     Route::post('/route_port', [RoutePortController::class, 'store'])->name('admin.route_port_store');
     Route::put('/route_port/{id}', [RoutePortController::class, 'update'])->name('admin.route_port_update');
     Route::delete('/route_port/{id}', [RoutePortController::class, 'destroy'])->name('admin.route_port_destroy');
+
+    // Cargo Classification
+    Route::get('/cargo_classifications', [CargoClassificationController::class, 'index'])->name('admin.cargo_classification_list');
+    Route::get('/cargo_classifications/create', [CargoClassificationController::class, 'create'])->name('admin.cargo_classification_create');
+    Route::post('/cargo_classifications/store', [CargoClassificationController::class, 'store'])->name('admin.cargo_classification_store');
+    Route::get('/cargo_classifications/{id}/edit', [CargoClassificationController::class, 'edit'])->name('admin.cargo_classification_edit');
+    Route::put('/cargo_classifications/{id}/update', [CargoClassificationController::class, 'update'])->name('admin.cargo_classification_update');
+    Route::delete('/cargo_classifications/{id}/delete', [CargoClassificationController::class, 'destroy'])->name('admin.cargo_classification_delete');
 
     // Cargo Items
     Route::get('/cargo_items', [CargoItemController::class, 'index'])->name('admin.cargo_item_list');
@@ -233,10 +249,6 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
         ->name('admin.cargo.removeRow');
 });
 
-
-
-
-
 //STAFF
 Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
 
@@ -250,6 +262,14 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     Route::post('/voyages/store', [VoyageController::class, 'store'])->name('staff.store_voyage');
     Route::get('/voyages/{id}/edit', [VoyageController::class, 'edit'])->name('staff.voyage_edit');
     Route::put('/voyages/{id}/update', [VoyageController::class, 'update'])->name('staff.voyage_update');
+
+    //Cargo Classification
+    Route::get('/cargo_classifications', [CargoClassificationController::class, 'index'])->name('staff.cargo_classification_list');
+    Route::get('/cargo_classifications/create', [CargoClassificationController::class, 'create'])->name('staff.cargo_classification_create');
+    Route::post('/cargo_classifications/store', [CargoClassificationController::class, 'store'])->name('staff.cargo_classification_store');
+    Route::get('/cargo_classifications/{id}/edit', [CargoClassificationController::class, 'edit'])->name('staff.cargo_classification_edit');
+    Route::put('/cargo_classifications/{id}/update', [CargoClassificationController::class, 'update'])->name('staff.cargo_classification_update');
+    Route::delete('/cargo_classifications/{id}/delete', [CargoClassificationController::class, 'destroy'])->name('staff.cargo_classification_delete');
 
     // Cargo Items
     Route::get('/cargo_items', [CargoItemController::class, 'index'])->name('staff.cargo_item_list');
