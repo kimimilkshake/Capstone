@@ -12,19 +12,27 @@
         }
 
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'DejaVu Sans', 'Arial', sans-serif;
             background: white;
-            padding: 20px;
+            padding: 0;
+            margin: 0;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+
+        @page {
+            size: A4;
+            margin: 8mm;
         }
 
         .page {
-            width: 8.5in;
-            height: 11in;
-            margin: 0 auto 20px;
+            width: 100%;
+            min-height: 281mm;
+            margin: 0;
             background: white;
-            border: 1px solid #ccc;
-            padding: 40px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border: 0;
+            padding: 8mm;
+            box-shadow: none;
         }
 
         .header {
@@ -35,19 +43,19 @@
         }
 
         .header h1 {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             margin-bottom: 5px;
         }
 
         .header .company-info {
-            font-size: 11px;
+            font-size: 12px;
             line-height: 1.3;
             color: #333;
         }
 
         .header .lslc {
-            font-size: 9px;
+            font-size: 10px;
             margin-top: 5px;
             color: #666;
         }
@@ -70,14 +78,14 @@
 
         .section-label {
             font-weight: bold;
-            font-size: 11px;
+            font-size: 12px;
             margin-bottom: 5px;
             border-bottom: 1px solid #333;
             padding-bottom: 3px;
         }
 
         .section-content {
-            font-size: 10px;
+            font-size: 11px;
             line-height: 1.5;
         }
 
@@ -92,8 +100,12 @@
             margin-bottom: 10px;
         }
 
+        .info-row.full {
+            grid-template-columns: 1fr;
+        }
+
         .info-item {
-            font-size: 10px;
+            font-size: 11px;
         }
 
         .info-item label {
@@ -111,7 +123,8 @@
             width: 100%;
             border-collapse: collapse;
             margin: 10px 0;
-            font-size: 10px;
+            font-size: 11px;
+            table-layout: fixed;
         }
 
         .cargo-table th {
@@ -125,6 +138,8 @@
         .cargo-table td {
             border: 1px solid #333;
             padding: 8px;
+            word-wrap: break-word;
+            overflow-wrap: anywhere;
         }
 
         .cargo-description {
@@ -186,6 +201,7 @@
             width: 100%;
             border: 1px solid #333;
             margin-top: 15px;
+            table-layout: fixed;
         }
 
         .charges-table tr {
@@ -194,25 +210,39 @@
 
         .charges-table td {
             padding: 8px;
-            font-size: 10px;
+            font-size: 11px;
         }
 
         .charges-table .label {
             font-weight: bold;
-            width: 150px;
+            width: auto;
         }
 
         .charges-table .amount {
             text-align: right;
-            width: 80px;
+            width: 130px;
             border-left: 1px solid #333;
+            white-space: nowrap;
+            padding-right: 10px;
         }
 
         .notes {
-            font-size: 9px;
+            font-size: 10px;
             margin-top: 10px;
             font-style: italic;
             line-height: 1.3;
+        }
+
+        .signature-block,
+        .section-row,
+        .charges-table,
+        .cargo-table {
+            page-break-inside: avoid;
+        }
+
+        .cargo-table th,
+        .cargo-table td {
+            page-break-inside: avoid;
         }
 
         @media print {
@@ -225,9 +255,10 @@
                 margin: 0;
                 border: none;
                 box-shadow: none;
-                padding: 40px;
+                padding: 8mm;
                 page-break-after: always;
-                height: auto;
+                width: 100%;
+                min-height: auto;
             }
 
             .no-print {
@@ -271,14 +302,10 @@
     </div>
 
     <!-- Top Info Section -->
-    <div class="info-row">
+    <div class="info-row full">
         <div class="info-item">
             <label>Vessel:</label>
             <span>{{ $booking->voyage && $booking->voyage->vessel ? $booking->voyage->vessel->vessel_name : ($booking->voyage->vessel_name ?? 'Not specified') }}</span>
-        </div>
-        <div class="info-item">
-            <label>B/L No.:</label>
-            <span>{{ $booking->booking_ref_no }}</span>
         </div>
     </div>
 
@@ -336,21 +363,23 @@
                 <tr>
                     <th style="width: 8%;">QTY</th>
                     <th style="width: 18%;">Classification</th>
-                    <th style="width: 24%;">Description</th>
-                    <th style="width: 25%;">Dimensions (cm)</th>
-                    <th style="width: 15%;">Weight (kg)</th>
+                    <th style="width: 23%;">Description</th>
+                    <th style="width: 10%;">Length</th>
+                    <th style="width: 10%;">Width</th>
+                    <th style="width: 10%;">Height</th>
+                    <th style="width: 11%;">Weight (kg)</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($booking->cargoBookings as $cargo)
-                    @php $unit = $cargo->measurement_unit ?? 'cm'; @endphp
+                    @php $unit = $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm'; @endphp
                     <tr>
                         <td style="text-align:center;">{{ $cargo->quantity }}</td>
                         <td>{{ $cargo->cargoClassification->cargo_classification_name ?? '' }}</td>
                         <td>{{ $cargo->cargoItem->cargo_item_description ?? '' }}</td>
-                        <td>
-                            {{ number_format($cargo->length, 2) . $unit }} × {{ number_format($cargo->width, 2) . $unit }} × {{ number_format($cargo->height, 2) . $unit }}
-                        </td>
+                        <td style="text-align:center;">{{ number_format($cargo->length, 2) . $unit }}</td>
+                        <td style="text-align:center;">{{ number_format($cargo->width, 2) . $unit }}</td>
+                        <td style="text-align:center;">{{ number_format($cargo->height, 2) . $unit }}</td>
                         <td style="text-align:center;">{{ number_format($cargo->weight, 2) }}</td>
                     </tr>
                 @endforeach
@@ -362,31 +391,33 @@
     @php
         $freight = 0;
         $arrastre = 0;
-        $tax = 0;
         $stamp = 0;
         foreach($booking->cargoBookings as $cargo) {
-            $freight += $cargo->freight ?? 0;
-            $arrastre += $cargo->arrastre ?? 0;
-            $tax += $cargo->tax ?? 0;
-            $stamp += $cargo->stamp ?? 0;
+            $cbm = (float) ($cargo->cbm ?? (($cargo->length * $cargo->width * $cargo->height) / 1000000));
+            $qty = (float) ($cargo->quantity ?? 0);
+            $freightRate = (float) ($cargo->cargoItem->cargo_item_freight ?? 0);
+            $arrastreRate = (float) ($cargo->cargoItem->cargo_item_arrastre ?? 0);
+
+            $freight += $freightRate * $cbm * $qty;
+            $arrastre += $arrastreRate * $cbm * $qty;
         }
-        $total = $freight + $arrastre + $tax + $stamp;
+        $total = $freight + $arrastre + $stamp;
     @endphp
     <table class="charges-table">
         <tr>
             <td class="label">FREIGHT CHARGES</td>
-            <td class="amount">₱{{ number_format($freight + $arrastre, 2) }}</td>
+            <td class="amount">₱{{ number_format($freight, 2) }}</td>
         </tr>
         <tr>
-            <td class="label">Tax</td>
-            <td class="amount">₱{{ number_format($tax, 2) }}</td>
+            <td class="label">ARRASTRE CHARGES</td>
+            <td class="amount">₱{{ number_format($arrastre, 2) }}</td>
         </tr>
         <tr>
-            <td class="label">Stamp</td>
+            <td class="label">STAMP</td>
             <td class="amount">₱{{ number_format($stamp, 2) }}</td>
         </tr>
         <tr>
-            <td class="label"><strong>Total</strong></td>
+            <td class="label"><strong>TOTAL TRANSACTION</strong></td>
             <td class="amount"><strong>₱{{ number_format($total, 2) }}</strong></td>
         </tr>
     </table>

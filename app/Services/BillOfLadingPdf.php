@@ -23,6 +23,11 @@ class BillOfLadingPdf
         $html = view('authorized.staff.bill_of_lading', ['booking' => $booking])->render();
         // Generate PDF from HTML using dompdf
         $pdf = app('dompdf.wrapper');
+        $dompdf = $pdf->getDomPDF();
+        $dompdf->set_option('defaultFont', 'DejaVu Sans');
+        $dompdf->set_option('isHtml5ParserEnabled', true);
+        $dompdf->set_option('isRemoteEnabled', true);
+
         $pdf->loadHTML($html)->setPaper('A4', 'portrait');
         return $pdf->output();
     }

@@ -46,7 +46,7 @@ class PassengerController extends Controller
         }
 
         // ✅ Add this: fetch cargo items and classifications for the Blade
-        $cargoItems = $type === 'cargo' ? CargoItem::all() : collect();
+        $cargoItems = $type === 'cargo' ? CargoItem::with('measurementUnit')->get() : collect();
         $cargoClassifications = $type === 'cargo' ? CargoClassification::orderBy('cargo_classification_name')->get() : collect();
 
         // ✅ If user selected "cargo", load passenger.cargobooking
@@ -111,7 +111,7 @@ class PassengerController extends Controller
             'consignee_lastname' => 'required|string|max:255',
             'consignee_contact' => 'required|string|max:20',
             'voyage_id' => 'required|exists:voyage,voyage_id',
-            'cargo_classification.*' => 'required|string',
+            'cargo_classification.*' => 'required|integer|exists:cargo_classification,cargo_classification_id',
             'cargo_item_id.*' => 'required|exists:cargo_item,cargo_item_id',
             'cargo_quantity.*' => 'required|integer|min:1',
             'cargo_weight.*' => 'required|numeric|min:0.01',
@@ -119,6 +119,7 @@ class PassengerController extends Controller
             'cargo_width.*' => 'required|numeric|min:0.01',
             'cargo_height.*' => 'required|numeric|min:0.01',
             'measurement_unit.*' => 'nullable|string|in:cm,in',
+            'cargo_cbm.*' => 'nullable|numeric|min:0',
             'cargo_picture.*' => 'nullable|image|max:2048',
         ]);
 
@@ -172,22 +173,44 @@ class PassengerController extends Controller
 
                 $measurementUnitId = null;
                 if ($request->has("measurement_unit.$index") && $request->measurement_unit[$index]) {
-                    $measurementUnit = MeasurementUnit::where('measurement_unit_name', $request->measurement_unit[$index])->first();
+                    $measurementUnit = MeasurementUnit::where('measurement_unit_abbreviation', $request->measurement_unit[$index])->first();
                     if ($measurementUnit) {
                         $measurementUnitId = $measurementUnit->measurement_unit_id;
                     }
                 }
 
+                if (!$measurementUnitId && $cargoItem && $cargoItem->measurement_unit_id) {
+                    $measurementUnitId = $cargoItem->measurement_unit_id;
+                }
+
+                $unitAbbreviation = $request->measurement_unit[$index] ?? 'cm';
+                $length = (float) $request->cargo_length[$index];
+                $width = (float) $request->cargo_width[$index];
+                $height = (float) $request->cargo_height[$index];
+
+                if ($unitAbbreviation === 'in') {
+                    $length *= 2.54;
+                    $width *= 2.54;
+                    $height *= 2.54;
+                }
+
+                $computedCbm = ($length * $width * $height) / 1000000;
+                $postedCbm = $request->cargo_cbm[$index] ?? null;
+                $finalCbm = is_numeric($postedCbm) ? (float) $postedCbm : $computedCbm;
+
                 DB::table('cargo_booking')->insert([
                     'booking_ref_no' => $bookingId,
                     'cargo_item_id' => $itemId,
+                    'cargo_classification_id' => $request->cargo_classification[$index] ?? null,
                     'route_code_id' => $cargoItem ? $cargoItem->route_code_id : null,
                     'measurement_unit_id' => $measurementUnitId,
+                    'with_measurement' => $cargoItem ? $cargoItem->cargo_item_measure_required : null,
                     'quantity' => $request->cargo_quantity[$index],
                     'weight' => $request->cargo_weight[$index],
                     'length' => $request->cargo_length[$index],
                     'width' => $request->cargo_width[$index],
                     'height' => $request->cargo_height[$index],
+                    'cbm' => round($finalCbm, 4),
                     'cargo_picture' => $picturePath,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -221,11 +244,15 @@ class PassengerController extends Controller
         // Fetch cargo items with freight & arrastre rates from cargo_item
         $cargoItems = \DB::table('cargo_booking')
             ->join('cargo_item', 'cargo_booking.cargo_item_id', '=', 'cargo_item.cargo_item_id')
+            ->leftJoin('measurement_unit', 'cargo_booking.measurement_unit_id', '=', 'measurement_unit.measurement_unit_id')
+            ->leftJoin('cargo_classification', 'cargo_booking.cargo_classification_id', '=', 'cargo_classification.cargo_classification_id')
             ->select(
                 'cargo_booking.*',
                 'cargo_item.cargo_item_description',
                 'cargo_item.cargo_item_freight as freight',
-                'cargo_item.cargo_item_arrastre as arrastre'
+                'cargo_item.cargo_item_arrastre as arrastre',
+                'measurement_unit.measurement_unit_abbreviation',
+                'cargo_classification.cargo_classification_name'
             )
             ->where('booking_ref_no', $bookingRef)
             ->get();

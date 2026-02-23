@@ -43,7 +43,7 @@ class StaffCargoController extends Controller
         $voyages = Voyage::with('routePort')
             ->whereDate('voyage_departure_date', $today)
             ->get();
-        $cargoItems = collect(CargoItem::all()); // <-- wrap in collect()
+        $cargoItems = collect(CargoItem::with('measurementUnit')->get()); // <-- wrap in collect()
         $cargoClassifications = CargoClassification::orderBy('cargo_classification_name')->get();
         return view('authorized.staff.cargobooking', compact('voyages', 'cargoItems', 'cargoClassifications'));
     }
@@ -65,7 +65,7 @@ public function store(Request $request)
         'consignee_lastname' => 'required|string|max:255',
         'consignee_contact' => 'required|string|max:20',
         'voyage_id' => 'required|exists:voyage,voyage_id',
-        'cargo_classification.*' => 'required|string',
+        'cargo_classification.*' => 'required|integer|exists:cargo_classification,cargo_classification_id',
         'cargo_item_id.*' => 'required|exists:cargo_item,cargo_item_id',
         'cargo_quantity.*' => 'required|integer|min:1',
         'cargo_weight.*' => 'required|numeric|min:0',
@@ -73,6 +73,7 @@ public function store(Request $request)
         'cargo_width.*' => 'required|numeric|min:0',
         'cargo_height.*' => 'required|numeric|min:0',
         'measurement_unit.*' => 'nullable|string|in:cm,in',
+        'cargo_cbm.*' => 'nullable|numeric|min:0',
         'cargo_picture.*' => 'nullable|image|max:2048',
     ]);
 
@@ -123,23 +124,35 @@ public function store(Request $request)
         $cargoBooking->length = $request->cargo_length[$index];
         $cargoBooking->width = $request->cargo_width[$index];
         $cargoBooking->height = $request->cargo_height[$index];
-
-        // Save cargo_classification_id from selected name
-        $classificationName = $request->cargo_classification[$index] ?? null;
-        if ($classificationName) {
-            $classification = \App\Models\CargoClassification::where('cargo_classification_name', $classificationName)->first();
-            if ($classification) {
-                $cargoBooking->cargo_classification_id = $classification->cargo_classification_id;
-            }
-        }
+        $cargoBooking->cargo_classification_id = $request->cargo_classification[$index] ?? null;
+        $cargoBooking->with_measurement = $cargoItem ? $cargoItem->cargo_item_measure_required : null;
 
         // Store measurement unit if provided
         if ($request->has("measurement_unit.$index") && $request->measurement_unit[$index]) {
-            $measurementUnit = MeasurementUnit::where('measurement_unit_name', $request->measurement_unit[$index])->first();
+            $measurementUnit = MeasurementUnit::where('measurement_unit_abbreviation', $request->measurement_unit[$index])->first();
             if ($measurementUnit) {
                 $cargoBooking->measurement_unit_id = $measurementUnit->measurement_unit_id;
             }
         }
+
+        if (!$cargoBooking->measurement_unit_id && $cargoItem && $cargoItem->measurement_unit_id) {
+            $cargoBooking->measurement_unit_id = $cargoItem->measurement_unit_id;
+        }
+
+        $unitAbbreviation = $request->measurement_unit[$index] ?? 'cm';
+        $length = (float) $request->cargo_length[$index];
+        $width = (float) $request->cargo_width[$index];
+        $height = (float) $request->cargo_height[$index];
+
+        if ($unitAbbreviation === 'in') {
+            $length *= 2.54;
+            $width *= 2.54;
+            $height *= 2.54;
+        }
+
+        $computedCbm = ($length * $width * $height) / 1000000;
+        $postedCbm = $request->cargo_cbm[$index] ?? null;
+        $cargoBooking->cbm = round(is_numeric($postedCbm) ? (float) $postedCbm : $computedCbm, 4);
 
         // Handle image upload
         if ($request->hasFile("cargo_picture.$index")) {
@@ -175,23 +188,34 @@ public function store(Request $request)
 public function pending(Request $request)
 {
     $search = $request->input('search');
+    $selectedStatus = $request->input('booking_status');
+    $allowedStatuses = ['All', 'Pending', 'Confirmed', 'Canceled'];
 
-    $bookings = Booking::where('booking_status', 'Pending')
-        ->where('booking_type', 'Cargo')
-        ->with(['sender', 'consignee', 'voyage', 'cargoBookings'])
+    if (!$selectedStatus || !in_array($selectedStatus, $allowedStatuses, true)) {
+        $selectedStatus = 'Pending';
+    }
+
+    $bookings = Booking::whereRaw('LOWER(booking_type) = ?', ['cargo'])
+        ->when($selectedStatus !== 'All', function ($query) use ($selectedStatus) {
+            $query->where('booking_status', $selectedStatus);
+        })
+        ->with(['sender', 'consignee', 'voyage', 'cargoBookings.approvedByStaff'])
         ->when($search, function($query, $search) {
-            $query->where('booking_ref_no', 'like', "%{$search}%")
-                  ->orWhereHas('sender', function($q) use ($search) {
-                      $q->where('sender_name', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('consignee', function($q) use ($search) {
-                      $q->where('consignee_name', 'like', "%{$search}%");
-                  });
+            $query->where(function ($searchQuery) use ($search) {
+                $searchQuery->where('booking_ref_no', 'like', "%{$search}%")
+                    ->orWhereHas('sender', function($q) use ($search) {
+                        $q->where('sender_name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('consignee', function($q) use ($search) {
+                        $q->where('consignee_name', 'like', "%{$search}%");
+                    });
+            });
         })
         ->orderBy('created_at', 'desc')
-        ->paginate(10);
+        ->paginate(10)
+        ->withQueryString();
 
-    return view('authorized.staff.pendingcargo', compact('bookings'));
+    return view('authorized.staff.pendingcargo', compact('bookings', 'selectedStatus', 'allowedStatuses'));
 }
 
     /**
@@ -205,7 +229,7 @@ public function pending(Request $request)
         }
 
         $booking = Booking::where('booking_ref_no', $id)
-            ->with(['sender', 'consignee', 'voyage', 'cargoBookings'])
+            ->with(['sender', 'consignee', 'voyage.routePort', 'cargoBookings.cargoItem', 'cargoBookings.cargoClassification', 'cargoBookings.measurementUnit', 'cargoBookings.approvedByStaff'])
             ->firstOrFail();
 
         $payment = Payment::where('booking_ref_no', $id)->first();
@@ -222,7 +246,8 @@ public function edit($id)
         'sender',
         'consignee',
         'voyage.routePort',
-        'cargoBookings.cargoItem'
+        'cargoBookings.cargoItem',
+        'cargoBookings.measurementUnit'
     ])->where('booking_ref_no', $id)->firstOrFail();
 
     // For dropdowns (use cargo_classification table)
@@ -230,6 +255,9 @@ public function edit($id)
 
     // For cargo item lookup
     $cargoItems = CargoItem::all();
+
+    // Measurement units for dropdown
+    $measurementUnits = MeasurementUnit::whereIn('measurement_unit_abbreviation', ['cm', 'in'])->get();
     
     // Load all routes for the Route Destination dropdown
     $routes = RoutePort::all(); // or whatever your model is called
@@ -237,7 +265,8 @@ public function edit($id)
     return view('authorized.staff.editcargo', compact(
         'booking',
         'cargoItems',
-        'cargoClassifications'
+        'cargoClassifications',
+        'measurementUnits'
     ));
 }
 
@@ -247,17 +276,51 @@ public function edit($id)
      */
     public function update(Request $request, $id)
     {
+        $request->validate([
+            'classification.*' => 'required|integer|exists:cargo_classification,cargo_classification_id',
+            'description.*' => 'required|integer|exists:cargo_item,cargo_item_id',
+            'quantity.*' => 'required|integer|min:1',
+            'length.*' => 'required|numeric|min:0',
+            'width.*' => 'required|numeric|min:0',
+            'height.*' => 'required|numeric|min:0',
+            'weight.*' => 'required|numeric|min:0',
+            'measurement_unit.*' => 'required|string|in:cm,in',
+            'cbm.*' => 'nullable|numeric|min:0',
+        ]);
+
         $booking = Booking::where('booking_ref_no', $id)
             ->with('cargoBookings')
             ->firstOrFail();
 
         foreach ($booking->cargoBookings as $index => $cargo) {
+            $length = (float) $request->length[$index];
+            $width = (float) $request->width[$index];
+            $height = (float) $request->height[$index];
+            $unitAbbreviation = $request->measurement_unit[$index] ?? 'cm';
+
+            $lengthCm = $length;
+            $widthCm = $width;
+            $heightCm = $height;
+
+            if ($unitAbbreviation === 'in') {
+                $lengthCm *= 2.54;
+                $widthCm *= 2.54;
+                $heightCm *= 2.54;
+            }
+
+            $measurementUnit = MeasurementUnit::where('measurement_unit_abbreviation', $unitAbbreviation)->first();
+            $computedCbm = ($lengthCm * $widthCm * $heightCm) / 1000000;
+
             $cargo->update([
+                'cargo_classification_id' => $request->classification[$index],
+                'cargo_item_id' => $request->description[$index],
+                'measurement_unit_id' => $measurementUnit?->measurement_unit_id,
                 'quantity' => $request->quantity[$index],
                 'length'   => $request->length[$index],
                 'width'    => $request->width[$index],
                 'height'   => $request->height[$index],
                 'weight'   => $request->weight[$index],
+                'cbm'      => round($computedCbm, 4),
             ]);
         }
 
@@ -276,13 +339,17 @@ public function approve($id)
     $booking->save();
 
     // Calculate total cost
+    $staffId = auth()->guard('staff')->user()->staff_id ?? null;
     $totalCost = 0;
     foreach ($booking->cargoBookings as $cargo) {
         $freight = $cargo->cargoItem->cargo_item_freight;
         $arrastre = $cargo->cargoItem->cargo_item_arrastre;
-        $cbm = ($cargo->length * $cargo->width * $cargo->height) / 1000000;
+        $cbm = $cargo->cbm ?? (($cargo->length * $cargo->width * $cargo->height) / 1000000);
         $subtotal = ($freight + $arrastre) * $cbm * $cargo->quantity;
         $totalCost += $subtotal;
+
+        $cargo->approved_by_staff_id = $staffId;
+        $cargo->save();
     }
 
     // Create payment record with mode='Cash' and status='Completed'
@@ -310,7 +377,6 @@ public function approve($id)
     }
 
     // Create bill of lading records with voyage details (vessel name, loading port, unloading port)
-    $staffId = auth()->guard('staff')->user()->staff_id ?? 1; // fallback if needed
     $voyage = $booking->voyage;
     
     foreach ($cargoReceiptIds as $receiptId) {
@@ -358,6 +424,13 @@ public function reject(Request $request, $id)
     $request->validate(['reason' => 'required|string|max:1000']);
 
     $booking = Booking::with(['sender', 'consignee', 'cargoBookings.cargoItem', 'voyage'])->where('booking_ref_no', $id)->firstOrFail();
+    $staffId = auth()->guard('staff')->user()->staff_id ?? null;
+
+    foreach ($booking->cargoBookings as $cargo) {
+        $cargo->approved_by_staff_id = $staffId;
+        $cargo->save();
+    }
+
     $booking->booking_status = 'Canceled';
     $booking->save();
 
@@ -396,7 +469,15 @@ public function reject(Request $request, $id)
          */
         public function bolPdf($id)
         {
-            $booking = Booking::with(['sender', 'consignee', 'cargoBookings.cargoItem', 'voyage'])
+            $booking = Booking::with([
+                'sender',
+                'consignee',
+                'cargoBookings.cargoItem',
+                'cargoBookings.cargoClassification',
+                'cargoBookings.measurementUnit',
+                'voyage.vessel',
+                'voyage.routePort'
+            ])
                 ->where('booking_ref_no', $id)
                 ->firstOrFail();
 
@@ -412,7 +493,15 @@ public function reject(Request $request, $id)
      */
     public function bolView($id)
     {
-        $booking = Booking::with(['sender', 'consignee', 'cargoBookings.cargoItem', 'voyage'])
+        $booking = Booking::with([
+            'sender',
+            'consignee',
+            'cargoBookings.cargoItem',
+            'cargoBookings.cargoClassification',
+            'cargoBookings.measurementUnit',
+            'voyage.vessel',
+            'voyage.routePort'
+        ])
             ->where('booking_ref_no', $id)
             ->firstOrFail();
 
