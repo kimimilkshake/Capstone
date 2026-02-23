@@ -10,11 +10,19 @@ use App\Models\Booking;
 use App\Models\CargoReceipt;
 use App\Models\Sender;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Traits\StaffGuard;
 
 class SemaphoreController extends Controller
 {
+    use StaffGuard;
+
+    public function __construct()
+    {
+        $this->ensureStaff();
+    }
+
     private const CHUNK_SIZE = 100;
-    
+
     public function show($voyage)
     {
         return view('authorized.staff.semaphore', ['voyage_id' => $voyage]);
@@ -54,11 +62,14 @@ class SemaphoreController extends Controller
 
     private function getPassengerNumbers(int $voyageId): array
     {
-        return Booking::where('booking.voyage_id', $voyageId)
-            ->where('booking.booking_type', 'passenger')
-            ->join('passenger_ticket', 'booking.booking_ref_no', '=', 'passenger_ticket.booking_ref_no')
+        return DB::table('passenger_ticket')
+            ->where('passenger_ticket.voyage_id', $voyageId)
             ->join('passenger', 'passenger_ticket.passenger_id', '=', 'passenger.passenger_id')
+            ->join('booking', 'passenger_ticket.booking_ref_no', '=', 'booking.booking_ref_no')
+            ->where('booking.booking_status', 'Confirmed')
+            ->where('booking.booking_type', 'passenger')
             ->whereNotNull('passenger.passenger_contactno')
+            ->distinct()
             ->pluck('passenger.passenger_contactno')
             ->toArray();
     }
@@ -66,6 +77,7 @@ class SemaphoreController extends Controller
     private function getCargoSenderNumbers(int $voyageId): array
     {
         return CargoReceipt::where('voyage_id', $voyageId)
+            ->where('cargo_receipt.voyage_id', $voyageId)
             ->join('sender', 'cargo_receipt.sender_id', '=', 'sender.sender_id')
             ->whereNotNull('sender.sender_contactno')
             ->pluck('sender.sender_contactno')

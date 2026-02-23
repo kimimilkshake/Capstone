@@ -6,22 +6,89 @@ use App\Models\Vessel;
 use App\Models\Voyage;
 use App\Models\RoutePort;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
+use App\Http\Controllers\Traits\AdminOrStaffGuard;
 
 class VoyageController extends Controller
 {
-    // Helper methods to check which guard is logged in
-    private function isStaff()
+    use AdminOrStaffGuard;
+    public function __construct()
     {
-        return auth()->guard('staff')->check();
+        $this->ensureAuthorized();
     }
 
-    private function isAdmin()
+    // AUTO UPDATE STATUS
+    private function autoUpdateVoyageStatus()
     {
-        return auth()->guard('admin')->check();
+        $now = Carbon::now();
+
+        Voyage::whereIn('voyage_status', ['Scheduled', 'At Sea'])
+            ->get()
+            ->each(function ($voyage) use ($now) {
+
+                $departure = Carbon::parse(
+                    $voyage->voyage_departure_date . ' ' . $voyage->voyage_estimated_TD
+                );
+
+                $arrival = Carbon::parse(
+                    $voyage->voyage_arrival_date . ' ' . $voyage->voyage_estimated_TA
+                );
+
+                if ($now->greaterThanOrEqualTo($arrival)) {
+                    $voyage->update(['voyage_status' => 'Completed']);
+                }
+                elseif ($now->greaterThanOrEqualTo($departure)) {
+                    $voyage->update(['voyage_status' => 'At Sea']);
+                }
+            });
     }
 
+    //CONFLICT CHECKER FOR VESSEL SCHEDULE
+    private function hasConflict($vesselId, $departureDate, $departureTime, $arrivalDate, $arrivalTime, $ignoreVoyageId = null)
+    {
+        $newDeparture = Carbon::parse($departureDate . ' ' . $departureTime);
+        $newArrival   = Carbon::parse($arrivalDate . ' ' . $arrivalTime);
+
+        $existingVoyages = Voyage::where('vessel_id', $vesselId)
+            ->whereNotIn('voyage_status', ['Cancelled', 'Archived'])
+            ->when($ignoreVoyageId, function ($query) use ($ignoreVoyageId) {
+                $query->where('voyage_id', '!=', $ignoreVoyageId);
+            })
+            ->get();
+
+        foreach ($existingVoyages as $voyage) {
+
+            $existingDeparture = Carbon::parse(
+                $voyage->voyage_departure_date . ' ' . $voyage->voyage_estimated_TD
+            );
+
+            $existingArrival = Carbon::parse(
+                $voyage->voyage_arrival_date . ' ' . $voyage->voyage_estimated_TA
+            );
+
+            if ($newDeparture < $existingArrival && $newArrival > $existingDeparture) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    //INDEX
     public function index(Request $request)
     {
+
+        /*
+        dd([
+            'staff_guard' => auth()->guard('staff')->check(),
+            'admin_guard' => auth()->guard('admin')->check(),
+            'staff_user' => auth()->guard('staff')->user(),
+            'admin_user' => auth()->guard('admin')->user(),
+        ]);
+        */
+
+        $this->autoUpdateVoyageStatus();
+        
         $search = $request->input('search');
         $date = $request->input('date');
 
@@ -44,26 +111,19 @@ class VoyageController extends Controller
             ->orderBy('voyage_departure_date', 'desc')
             ->paginate(8);
 
-        return $this->isStaff()
+        return auth()->guard('staff')->check()
             ? view('authorized.staff.svoyage_list', compact('voyages', 'search'))
             : view('authorized.admin.voyage_list', compact('voyages', 'search'));
     }
 
     public function create()
     {
-        /*
-        dd([
-            'staff_guard' => auth()->guard('staff')->check(),
-            'admin_guard' => auth()->guard('admin')->check(),
-            'staff_user' => auth()->guard('staff')->user(),
-            'admin_user' => auth()->guard('admin')->user(),
-        ]);
-        */
+        
 
         $vessels = Vessel::where('vessel_status', 'Active')->get();
         $route_port = RoutePort::all();
 
-        return $this->isStaff()
+        return auth()->guard('staff')->check()
             ? view('authorized.staff.screate_voyage', compact('vessels', 'route_port'))
             : view('authorized.admin.create_voyage', compact('vessels', 'route_port'));
     }
@@ -78,6 +138,18 @@ class VoyageController extends Controller
             'voyage_estimated_TD' => 'required',
             'voyage_estimated_TA' => 'required',
         ]);
+
+        if ($this->hasConflict(
+            $request->vessel_id,
+            $request->voyage_departure_date,
+            $request->voyage_estimated_TD,
+            $request->voyage_arrival_date,
+            $request->voyage_estimated_TA
+        )) {
+            return back()->withErrors([
+                'voyage_conflict' => 'This vessel already has a voyage scheduled during this time.'
+            ])->withInput();
+        }
 
         $vessel = Vessel::findOrFail($request->vessel_id);
         $route_port = RoutePort::findOrFail($request->route_port_id);
@@ -110,82 +182,140 @@ class VoyageController extends Controller
             'voyage_code' => $voyageCode,
         ]);
 
-        return redirect()->route($this->isStaff() ? 'staff.voyage_list' : 'admin.voyage_list')
-                 ->with('success', 'Voyage added successfully.');
+        return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
+                         ->with('success', 'Voyage added successfully.');
 
     }
 
     public function edit($id)
     {
         $voyage = Voyage::findOrFail($id);
+
         $vessels = Vessel::where('vessel_status', 'Active')->get();
         $route_port = RoutePort::all();
 
-        return $this->isStaff()
-            ? view('authorized.staff.svoyage_edit', compact('voyage', 'vessels', 'route_port'))
-            : view('authorized.admin.voyage_edit', compact('voyage', 'vessels', 'route_port'));
+        // Flag for blade to know if voyage is completed
+        $isCompleted = $voyage->voyage_status === 'Completed';
+
+        // Only allow editing if scheduled OR completed
+        if (!$isCompleted && $voyage->voyage_status !== 'Scheduled') {
+            return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
+                             ->with('error', 'Only scheduled voyages can be edited.');
+        }
+
+        return auth()->guard('staff')->check()
+            ? view('authorized.staff.svoyage_edit', compact('voyage', 'vessels', 'route_port', 'isCompleted'))
+            : view('authorized.admin.voyage_edit', compact('voyage', 'vessels', 'route_port', 'isCompleted'));
     }
 
     public function update(Request $request, $id)
     {
         $voyage = Voyage::findOrFail($id);
 
-        $request->validate([
-            'vessel_id' => 'required|exists:vessel,vessel_id',
-            'route_port_id' => 'required|exists:route_port,route_port_id',
-            'voyage_departure_date' => 'required|date',
-            'voyage_arrival_date' => 'required|date|after_or_equal:voyage_departure_date',
-            'voyage_estimated_TD' => 'required',
-            'voyage_estimated_TA' => 'required',
-            'voyage_status' => 'required|in:Scheduled,At Sea,Completed,Cancelled,Archived',
-        ]);
-
-        $vesselChanged = $voyage->vessel_id != $request->vessel_id;
-        $routeChanged = $voyage->route_port_id != $request->route_port_id;
-
-        if ($vesselChanged || $routeChanged) {
-            $vessel = Vessel::findOrFail($request->vessel_id);
-            $route_port = RoutePort::findOrFail($request->route_port_id);
-
-            $origin = strtoupper(substr($route_port->route_origin, 0, 3));
-            $destination = strtoupper(substr($route_port->route_destination, 0, 3));
-            $year = date('Y', strtotime($request->voyage_departure_date));
-            $month = date('m', strtotime($request->voyage_departure_date));
-
-            $baseCode = "{$vessel->vessel_code}{$origin}{$destination}{$year}{$month}";
-
-            $latestVoyage = Voyage::where('voyage_code', 'like', "{$baseCode}-%")
-                ->orderBy('voyage_code', 'desc')
-                ->first();
-
-            $nextCounter = $latestVoyage
-                ? str_pad(intval(substr($latestVoyage->voyage_code, -3)) + 1, 3, '0', STR_PAD_LEFT)
-                : '001';
-
-            $voyage->voyage_code = "{$baseCode}-{$nextCounter}";
+        // Completely locked statuses
+        if (in_array($voyage->voyage_status, ['At Sea', 'Cancelled', 'Archived'])) {
+            return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
+                             ->with('error', 'This voyage can no longer be updated.');
         }
 
-        $voyage->update([
-            'vessel_id' => $request->vessel_id,
-            'route_port_id' => $request->route_port_id,
-            'voyage_departure_date' => $request->voyage_departure_date,
-            'voyage_arrival_date' => $request->voyage_arrival_date,
-            'voyage_estimated_TD' => $request->voyage_estimated_TD,
-            'voyage_estimated_TA' => $request->voyage_estimated_TA,
-            'voyage_actual_TD' => $request->voyage_actual_TD,
-            'voyage_actual_TA' => $request->voyage_actual_TA,
-            'voyage_description' => $request->voyage_description,
-            'voyage_status' => $request->voyage_status,
-        ]);
+        // Validation rules
+        $rules = [
+            'voyage_description' => 'nullable|string',
+        ];
 
-        return redirect()->route($this->isStaff() ? 'staff.voyage_list' : 'admin.voyage_list')
-                         ->with('success', 'Voyage updated successfully.');
+        if ($voyage->voyage_status !== 'Completed') {
+            // Full edit allowed only if NOT completed
+            $rules = array_merge($rules, [
+                'vessel_id' => 'required|exists:vessel,vessel_id',
+                'route_port_id' => 'required|exists:route_port,route_port_id',
+                'voyage_departure_date' => 'required|date',
+                'voyage_arrival_date' => 'required|date|after_or_equal:voyage_departure_date',
+                'voyage_estimated_TD' => 'required',
+                'voyage_estimated_TA' => 'required',
+                'voyage_status' => 'required|in:Scheduled,At Sea,Completed,Cancelled,Archived',
+            ]);
+        } else {
+            // Completed → only actual times are editable
+            $rules = array_merge($rules, [
+                'voyage_actual_TD' => 'nullable',
+                'voyage_actual_TA' => 'nullable',
+                'voyage_status' => 'required|in:Completed,Cancelled',
+            ]);
+        }
+
+        $request->validate($rules);
+
+        // If vessel or route changed, update voyage code
+        if ($voyage->voyage_status !== 'Completed') {
+            $vesselChanged = $voyage->vessel_id != $request->vessel_id;
+            $routeChanged = $voyage->route_port_id != $request->route_port_id;
+
+            if ($vesselChanged || $routeChanged) {
+                $vessel = Vessel::findOrFail($request->vessel_id);
+                $route_port = RoutePort::findOrFail($request->route_port_id);
+
+                $origin = strtoupper(substr($route_port->route_origin, 0, 3));
+                $destination = strtoupper(substr($route_port->route_destination, 0, 3));
+                $year = date('Y', strtotime($request->voyage_departure_date));
+                $month = date('m', strtotime($request->voyage_departure_date));
+
+                $baseCode = "{$vessel->vessel_code}{$origin}{$destination}{$year}{$month}";
+
+                $latestVoyage = Voyage::where('voyage_code', 'like', "{$baseCode}-%")
+                    ->orderBy('voyage_code', 'desc')
+                    ->first();
+
+                $nextCounter = $latestVoyage
+                    ? str_pad(intval(substr($latestVoyage->voyage_code, -3)) + 1, 3, '0', STR_PAD_LEFT)
+                    : '001';
+
+                $voyage->voyage_code = "{$baseCode}-{$nextCounter}";
+            }
+        }
+
+        // Update fields based on status
+        $updateData = [
+            'voyage_description' => $request->voyage_description,
+        ];
+
+        if ($voyage->voyage_status === 'Completed') {
+            // Only actual times editable
+            $updateData['voyage_actual_TD'] = $request->voyage_actual_TD;
+            $updateData['voyage_actual_TA'] = $request->voyage_actual_TA;
+            $updateData['voyage_status'] = $request->voyage_status;
+        } else {
+            // Full edit
+            $updateData = array_merge($updateData, [
+                'vessel_id' => $request->vessel_id,
+                'route_port_id' => $request->route_port_id,
+                'voyage_departure_date' => $request->voyage_departure_date,
+                'voyage_arrival_date' => $request->voyage_arrival_date,
+                'voyage_estimated_TD' => $request->voyage_estimated_TD,
+                'voyage_estimated_TA' => $request->voyage_estimated_TA,
+                'voyage_status' => $request->voyage_status,
+            ]);
+        }
+
+        $voyage->update($updateData);
+
+        return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
+                        ->with('success', 'Voyage updated successfully.');
     }
+
 
     public function destroy($id)
     {
-        Voyage::destroy($id);
-        return redirect()->route($this->isStaff() ? 'staff.voyage_list' : 'admin.voyage_list')
-                         ->with('success', 'Voyage deleted.');
+        $voyage = Voyage::findOrFail($id);
+
+        if ($voyage->voyage_status !== 'Scheduled') {
+            return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
+                             ->with('error', 'Only scheduled voyages can be deleted.');
+        }
+
+        $voyage->delete();
+
+        return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
+                        ->with('success', 'Voyage deleted.');
+        
     }
 }

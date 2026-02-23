@@ -14,10 +14,14 @@
                 <div class="text-start">
                     <p><strong>Schedule: </strong>{{ optional($voyage->voyage_departure_date) ? \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('F j, Y, D') : '-' }}</p>
                     <p><strong>Vessel: </strong> {{ optional($voyage->vessel)->vessel_name ?? '-' }}</p>
+                    <p><strong>Time of Departure: </strong> {{ $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('h:i A') : '-' }}</p>
+                    <p><strong>Actual Time of Departure: </strong> {{ $voyage->voyage_actual_TD ? \Carbon\Carbon::parse($voyage->voyage_actual_TD)->format('h:i A') : '-' }}</p>
                 </div>
                 <div class="text-start">
                     <p><strong>Voyage Route: </strong>{{ optional($voyage->routePort)->route_origin ?? '-' }} to {{ optional($voyage->routePort)->route_destination ?? '-' }}</p>
                     <p><strong>Status: </strong> {{ $voyage->voyage_status ?? '-' }}</p>
+                    <p><strong>Time of Arrival: </strong>{{ $voyage->voyage_estimated_TA ? \Carbon\Carbon::parse($voyage->voyage_estimated_TA)->format('h:i A') : '-' }}</p>
+                    <p><strong>Actual Time of Arrival: </strong>{{ $voyage->voyage_actual_TA ? \Carbon\Carbon::parse($voyage->voyage_actual_TA)->format('h:i A') : '-' }}</p>
                 </div>
             </div>
         </div>
@@ -133,7 +137,7 @@
                                     <td>{{ $c->cargoClassification->cargo_classification_name ?? 'N/A' }}</td>
                                     <td>{{ $c->cargoItem->cargo_item_description ?? 'N/A'  }}</td>
                                     <td>{{ $c->sender->sender_name ?? 'N/A' }}</td>
-                                    <td>{{ $c->tin_number ?? '-' }}</td>
+                                    <td>{{ $c->sender->sender_tin ?? '-' }}</td>
                                     <td>{{ $c->consignee->consignee_name }}</td>
                                     <td>{{ $c->cargoItem->cargo_item_freight ?? '-' }}</td>
                                     <td>{{ $c->vat ?? '-' }}</td>

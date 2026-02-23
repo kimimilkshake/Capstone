@@ -21,24 +21,16 @@ use App\Mail\CargoBookingRejected;
 use Illuminate\Support\Facades\Mail;
 use App\Services\BillOfLadingPdf;
 use App\Models\BillOfLading;
+use App\Http\Controllers\Traits\StaffGuard;
 
 
 class StaffCargoController extends Controller
 {
-    /**
-     * Check if user is staff
-     */
-    private function isStaff()
+    use StaffGuard;
+    
+    public function __construct()
     {
-        return auth()->guard('staff')->check();
-    }
-
-    /**
-     * Check if user is admin
-     */
-    private function isAdmin()
-    {
-        return auth()->guard('admin')->check();
+        $this->ensureStaff();
     }
 
     /**

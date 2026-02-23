@@ -90,7 +90,7 @@ class DatabaseSeeder extends Seeder
                 'staff_password' => Hash::make('englis01252002'),
                 'staff_dob' => '2002-01-25',
                 'staff_gender' => 'M',
-                'staff_email' => 'clintenglish16@gmail.com',
+                'staff_email' => 'clintenglis16@gmail.com',
                 'staff_status' => 'Active',
                 'created_at' => now(),
                 'updated_at' => now(),

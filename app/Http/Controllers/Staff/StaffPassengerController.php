@@ -13,9 +13,17 @@ use App\Models\Notification;
 use App\Jobs\SendTicketEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Traits\StaffGuard;
 
 class StaffPassengerController extends Controller
 {
+    use StaffGuard;
+
+    public function __construct()
+    {
+        $this->ensureStaff();
+    }
+
     /**
      * Show passenger booking form for staff
      */
