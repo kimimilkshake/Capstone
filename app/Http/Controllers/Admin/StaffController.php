@@ -70,7 +70,7 @@ class StaffController extends Controller
         ]);
 
         Staff::create([
-            'admin_id' => 1, // replace with Auth::guard('admin')->id() if guard is defined
+            'admin_id' => auth()->guard('admin')->id(),
             'staff_name' => $request->staff_name,
             'staff_user' => $request->staff_user,
             'staff_password' => Hash::make($request->staff_password),
