@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Staff;
 
 class CargoBooking extends Model
 {
@@ -31,8 +32,7 @@ class CargoBooking extends Model
         'arrastre',
         'total',
         'cbm',
-        'rate',
-        'value_per_item',
+        'approved_by_staff_id',
     ];
     
 
@@ -55,5 +55,10 @@ class CargoBooking extends Model
     public function routeCode()
     {
         return $this->belongsTo(RouteCode::class, 'route_code_id', 'route_code_id');
+    }
+
+    public function approvedByStaff()
+    {
+        return $this->belongsTo(Staff::class, 'approved_by_staff_id', 'staff_id');
     }
 }

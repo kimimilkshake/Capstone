@@ -74,7 +74,7 @@
                             <select name="classification[]" required>
                                 <option value="">Select Classification</option>
                                 @foreach($cargoClassifications as $classification)
-                                    <option value="{{ $classification->cargo_classification_name }}"
+                                    <option value="{{ $classification->cargo_classification_id }}"
                                         {{ $cargo->cargo_classification_id == $classification->cargo_classification_id ? 'selected' : '' }}>
                                         {{ $classification->cargo_classification_name }}
                                     </option>
@@ -90,6 +90,8 @@
                                 <option value="">Select Description</option>
                                 @foreach($cargoItems as $item)
                                     <option value="{{ $item->cargo_item_id }}"
+                                        data-freight="{{ $item->cargo_item_freight }}"
+                                        data-arrastre="{{ $item->cargo_item_arrastre }}"
                                         {{ $cargo->cargo_item_id == $item->cargo_item_id ? 'selected' : '' }}>
                                         {{ $item->cargo_item_description }}
                                     </option>
@@ -109,22 +111,38 @@
 
                     <div class="form-col">
                         <div class="form-group">
-                            <label>Length (cm)</label>
-                            <input type="number" step="0.01" name="length[]" value="{{ old('length.'.$index, $cargo->length) }}" required @if($cargo->cargoItem && $cargo->cargoItem->cargo_item_measure_required == 'Yes') readonly @endif>
+                            <label>Length</label>
+                            <input type="number" step="0.01" name="length[]" value="{{ old('length.'.$index, $cargo->length) }}" required>
                         </div>
                     </div>
 
                     <div class="form-col">
                         <div class="form-group">
-                            <label>Width (cm)</label>
-                            <input type="number" step="0.01" name="width[]" value="{{ old('width.'.$index, $cargo->width) }}" required @if($cargo->cargoItem && $cargo->cargoItem->cargo_item_measure_required == 'Yes') readonly @endif>
+                            <label>Width</label>
+                            <input type="number" step="0.01" name="width[]" value="{{ old('width.'.$index, $cargo->width) }}" required>
                         </div>
                     </div>
 
                     <div class="form-col">
                         <div class="form-group">
-                            <label>Height (cm)</label>
-                            <input type="number" step="0.01" name="height[]" value="{{ old('height.'.$index, $cargo->height) }}" required @if($cargo->cargoItem && $cargo->cargoItem->cargo_item_measure_required == 'Yes') readonly @endif>
+                            <label>Height</label>
+                            <input type="number" step="0.01" name="height[]" value="{{ old('height.'.$index, $cargo->height) }}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label>Unit</label>
+                            <select name="measurement_unit[]" required>
+                                @php
+                                    $selectedUnit = old('measurement_unit.'.$index, $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm');
+                                @endphp
+                                @foreach($measurementUnits as $measurementUnit)
+                                    <option value="{{ $measurementUnit->measurement_unit_abbreviation }}" {{ $selectedUnit === $measurementUnit->measurement_unit_abbreviation ? 'selected' : '' }}>
+                                        {{ $measurementUnit->measurement_unit_abbreviation }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
 
@@ -138,21 +156,7 @@
                     <div class="form-col">
                         <div class="form-group">
                             <label>CBM</label>
-                            <input type="number" step="0.0001" name="cbm[]" value="{{ old('cbm.'.$index, $cargo->cbm ?? 0) }}" placeholder="0.0000">
-                        </div>
-                    </div>
-
-                    <div class="form-col">
-                        <div class="form-group">
-                            <label>Rate (per unit)</label>
-                            <input type="number" step="0.01" name="rate[]" value="{{ old('rate.'.$index, $cargo->rate ?? 0) }}" placeholder="0.00" class="cargo-rate" data-index="{{ $index }}">
-                        </div>
-                    </div>
-
-                    <div class="form-col">
-                        <div class="form-group">
-                            <label>Value per Item</label>
-                            <input type="number" step="0.01" name="value_per_item[]" value="{{ old('value_per_item.'.$index, $cargo->value_per_item ?? 0) }}" placeholder="0.00" class="cargo-value-per-item" data-index="{{ $index }}" readonly style="background-color: #f5f5f5;">
+                            <input type="number" step="0.0001" name="cbm[]" value="{{ old('cbm.'.$index, $cargo->cbm ?? 0) }}" placeholder="0.0000" class="cargo-cbm" data-index="{{ $index }}" readonly>
                         </div>
                     </div>
                 </div>
@@ -179,36 +183,70 @@
 </div>
 
 <script>
+    function calculateCBM(index) {
+        const lengthInputs = document.querySelectorAll('input[name="length[]"]');
+        const widthInputs = document.querySelectorAll('input[name="width[]"]');
+        const heightInputs = document.querySelectorAll('input[name="height[]"]');
+        const unitSelects = document.querySelectorAll('select[name="measurement_unit[]"]');
+        const cbmInputs = document.querySelectorAll('input[name="cbm[]"]');
+
+        let length = lengthInputs[index] ? (parseFloat(lengthInputs[index].value) || 0) : 0;
+        let width = widthInputs[index] ? (parseFloat(widthInputs[index].value) || 0) : 0;
+        let height = heightInputs[index] ? (parseFloat(heightInputs[index].value) || 0) : 0;
+        const unit = unitSelects[index] ? unitSelects[index].value : 'cm';
+
+        if (unit === 'in') {
+            length *= 2.54;
+            width *= 2.54;
+            height *= 2.54;
+        }
+
+        const cbm = (length * width * height) / 1000000;
+        if (cbmInputs[index]) {
+            cbmInputs[index].value = cbm.toFixed(4);
+        }
+
+        return cbm;
+    }
+
     function calculateValues() {
         let totalValue = 0;
-        const valueInputs = document.querySelectorAll('.cargo-value-per-item');
-        document.querySelectorAll('.cargo-rate').forEach((rateInput, index) => {
-            const quantityInput = document.querySelector(`input[name="quantity[${index}]"]`);
-            const freightInput = document.querySelector(`input[name="rate[${index}]"]`);
-            const arrastreInput = document.querySelector(`input[name="arrastre[${index}]"]`);
-            const valueInput = document.querySelector(`.cargo-value-per-item[data-index="${index}"]`);
-            let freight = 0, arrastre = 0;
-            if (freightInput) freight = parseFloat(freightInput.value) || 0;
-            if (arrastreInput) arrastre = parseFloat(arrastreInput.value) || 0;
-            if (quantityInput && valueInput) {
-                const quantity = parseFloat(quantityInput.value) || 0;
-                const value = (freight + arrastre) * quantity;
-                valueInput.value = value.toFixed(2);
-                totalValue += value;
-            }
+        const descriptionSelects = document.querySelectorAll('select[name="description[]"]');
+        const quantityInputs = document.querySelectorAll('input[name="quantity[]"]');
+
+        descriptionSelects.forEach((descriptionSelect, index) => {
+            const selectedOption = descriptionSelect.options[descriptionSelect.selectedIndex];
+            const quantity = quantityInputs[index] ? (parseFloat(quantityInputs[index].value) || 0) : 0;
+            const cbm = calculateCBM(index);
+            const freight = selectedOption ? (parseFloat(selectedOption.dataset.freight) || 0) : 0;
+            const arrastre = selectedOption ? (parseFloat(selectedOption.dataset.arrastre) || 0) : 0;
+
+            totalValue += (freight + arrastre) * cbm * quantity;
         });
+
         const totalDisplay = document.getElementById('totalValueDisplay');
         const totalInput = document.getElementById('totalValueInput');
         if (totalDisplay) totalDisplay.textContent = '₱' + totalValue.toFixed(2);
         if (totalInput) totalInput.value = totalValue.toFixed(2);
     }
+
     document.addEventListener('DOMContentLoaded', function() {
         calculateValues();
-        document.querySelectorAll('.cargo-rate').forEach(input => {
+        document.querySelectorAll('select[name="description[]"]').forEach(input => {
+            input.addEventListener('change', calculateValues);
+        });
+        document.querySelectorAll('select[name="measurement_unit[]"]').forEach(input => {
+            input.addEventListener('change', calculateValues);
+        });
+        document.querySelectorAll('input[name="length[]"], input[name="width[]"], input[name="height[]"]').forEach(input => {
             input.addEventListener('change', calculateValues);
             input.addEventListener('input', calculateValues);
         });
-        document.querySelectorAll('input[name^="quantity["]').forEach(input => {
+        document.querySelectorAll('input[name="cbm[]"]').forEach(input => {
+            input.addEventListener('change', calculateValues);
+            input.addEventListener('input', calculateValues);
+        });
+        document.querySelectorAll('input[name="quantity[]"]').forEach(input => {
             input.addEventListener('change', calculateValues);
             input.addEventListener('input', calculateValues);
         });

@@ -39,8 +39,11 @@
                 <thead class="table-dark">
                     <tr>
                         <th>Item</th>
+                        <th>Classification</th>
                         <th>Quantity</th>
-                        <th>Dimensions (LxWxH cm)</th>
+                        <th>Length</th>
+                        <th>Width</th>
+                        <th>Height</th>
                         <th>CBM</th>
                         <th>Freight Rate</th>
                         <th>Arrastre Rate</th>
@@ -51,33 +54,30 @@
                     @php $totalExpense = 0; @endphp
                     @foreach($cargoItems as $item)
                         @php
-                            // CBM calculation (m³)
-                            $cbm = ($item->length * $item->width * $item->height) / 1000000;
+                            $cbm = (float) ($item->cbm ?? 0);
 
                             // Subtotal: (freight + arrastre) * quantity * CBM
                             $subtotal = $cbm * ($item->freight + $item->arrastre) * $item->quantity;
                             $totalExpense += $subtotal;
                         @endphp
                         <tr>
-                            <td>
-                                {{ $item->cargo_item_description }}
-                                @if(isset($item->cargo_item_classification))
-                                    ({{ $item->cargo_item_classification }})
-                                @endif
-                            </td>
+                            <td>{{ $item->cargo_item_description }}</td>
+                            <td>{{ $item->cargo_classification_name ?? 'N/A' }}</td>
                             <td>{{ $item->quantity }}</td>
-                            <td>{{ $item->length }} x {{ $item->width }} x {{ $item->height }}</td>
+                            <td>{{ number_format((float) $item->length, 2) }}{{ $item->measurement_unit_abbreviation ?? 'cm' }}</td>
+                            <td>{{ number_format((float) $item->width, 2) }}{{ $item->measurement_unit_abbreviation ?? 'cm' }}</td>
+                            <td>{{ number_format((float) $item->height, 2) }}{{ $item->measurement_unit_abbreviation ?? 'cm' }}</td>
                             <td>{{ number_format($cbm, 3) }}</td>
-                            <td>PHP {{ number_format($item->freight, 2) }}</td>
-                            <td>PHP {{ number_format($item->arrastre, 2) }}</td>
-                            <td>PHP {{ number_format($subtotal, 2) }}</td>
+                            <td>₱{{ number_format($item->freight, 2) }}</td>
+                            <td>₱{{ number_format($item->arrastre, 2) }}</td>
+                            <td>₱{{ number_format($subtotal, 2) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
                 <tfoot>
                     <tr>
-                        <th colspan="6" class="text-end">Total Expense:</th>
-                        <th>PHP {{ number_format($totalExpense, 2) }}</th>
+                        <th colspan="9" class="text-end">Total Expense:</th>
+                        <th>₱{{ number_format($totalExpense, 2) }}</th>
                     </tr>
                 </tfoot>
             </table>
