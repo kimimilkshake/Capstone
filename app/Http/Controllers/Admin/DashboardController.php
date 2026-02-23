@@ -6,12 +6,15 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Voyage;
 use Carbon\Carbon;
+use App\Http\Controllers\Traits\AdminGuard;
 
 class DashboardController extends Controller
 {
-    private function isAdmin()
+    use AdminGuard;
+
+    public function __construct()
     {
-        return auth()->guard('admin')->check();
+        $this->ensureAdmin();
     }
 
     public function index()
@@ -24,10 +27,6 @@ class DashboardController extends Controller
             'admin_user' => auth()->guard('admin')->user(),
         ]);
         */
-
-        if (!$this->isAdmin()) {
-            abort(403);
-        }
         
         // Get today's date
         $today = Carbon::today();

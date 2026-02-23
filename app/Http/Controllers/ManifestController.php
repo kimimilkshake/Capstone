@@ -16,20 +16,17 @@ use App\Models\CargoBooking;
 use App\Models\CargoReceipt;
 use App\Models\CargoItem;
 use App\Models\Payment;
+use App\Http\Controllers\Traits\AdminOrStaffGuard;
 
 class ManifestController extends Controller
 {
 
-    // Helper methods to check which guard is logged in
-    private function isStaff()
+    use AdminOrStaffGuard;
+    public function __construct()
     {
-        return auth()->guard('staff')->check();
+        $this->ensureAuthorized();
     }
 
-    private function isAdmin()
-    {
-        return auth()->guard('admin')->check();
-    }
     /**
      * Show the manifest for a voyage with server-side filter options.
      *
@@ -170,7 +167,7 @@ class ManifestController extends Controller
         }
 
         // Render the view
-        return $this->isStaff()
+        return auth()->guard('staff')->check()
             ? view('authorized.staff.staffmanifest', compact('voyage', 'showPassenger', 'showCargo', 'passengers', 'cargos'))
             : view('authorized.admin.adminmanifest', compact('voyage', 'showPassenger', 'showCargo', 'passengers', 'cargos'));
     }

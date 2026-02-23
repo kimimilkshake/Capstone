@@ -141,7 +141,7 @@
                                     <td><?php echo e($c->cargoClassification->cargo_classification_name ?? 'N/A'); ?></td>
                                     <td><?php echo e($c->cargoItem->cargo_item_description ?? 'N/A'); ?></td>
                                     <td><?php echo e($c->sender->sender_name ?? 'N/A'); ?></td>
-                                    <td><?php echo e($c->tin_number ?? '-'); ?></td>
+                                    <td><?php echo e($c->sender->sender_tin ?? '-'); ?></td>
                                     <td><?php echo e($c->consignee->consignee_name); ?></td>
                                     <td><?php echo e($c->cargoItem->cargo_item_freight ?? '-'); ?></td>
                                     <td><?php echo e($c->vat ?? '-'); ?></td>

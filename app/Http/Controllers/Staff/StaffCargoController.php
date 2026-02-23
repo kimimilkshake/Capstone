@@ -21,24 +21,16 @@ use App\Mail\CargoBookingRejected;
 use Illuminate\Support\Facades\Mail;
 use App\Services\BillOfLadingPdf;
 use App\Models\BillOfLading;
+use App\Http\Controllers\Traits\StaffGuard;
 
 
 class StaffCargoController extends Controller
 {
-    /**
-     * Check if user is staff
-     */
-    private function isStaff()
+    use StaffGuard;
+    
+    public function __construct()
     {
-        return auth()->guard('staff')->check();
-    }
-
-    /**
-     * Check if user is admin
-     */
-    private function isAdmin()
-    {
-        return auth()->guard('admin')->check();
+        $this->ensureStaff();
     }
 
     /**
@@ -46,11 +38,6 @@ class StaffCargoController extends Controller
      */
     public function create()
     {
-
-        if (!$this->isStaff()) {
-            abort(403);
-        }
-
         // Show only voyages scheduled for today (departures today)
         $today = \Carbon\Carbon::today()->toDateString();
         $voyages = Voyage::with('routePort')
@@ -67,10 +54,6 @@ class StaffCargoController extends Controller
      */
 public function store(Request $request)
 {
-    if (!$this->isStaff()) {
-        abort(403);
-    }
-
     // Validate input
     $request->validate([
         'sender_firstname' => 'required|string|max:255',
@@ -191,10 +174,6 @@ public function store(Request $request)
      */
 public function pending(Request $request)
 {
-    if (!$this->isStaff()) {
-        abort(403);
-    }
-
     $search = $request->input('search');
 
     $bookings = Booking::where('booking_status', 'Pending')
@@ -239,10 +218,6 @@ public function pending(Request $request)
      */
 public function edit($id)
 {
-    if (!$this->isStaff()) {
-        abort(403);
-    }
-
     $booking = Booking::with([
         'sender',
         'consignee',
@@ -272,10 +247,6 @@ public function edit($id)
      */
     public function update(Request $request, $id)
     {
-        if (!$this->isStaff()) {
-            abort(403);
-        }
-
         $booking = Booking::where('booking_ref_no', $id)
             ->with('cargoBookings')
             ->firstOrFail();
@@ -300,10 +271,6 @@ public function edit($id)
      */
 public function approve($id)
 {
-    if (!$this->isStaff()) {
-        abort(403);
-    }
-    
     $booking = Booking::with(['sender', 'consignee', 'cargoBookings.cargoItem', 'voyage'])->where('booking_ref_no', $id)->firstOrFail();
     $booking->booking_status = 'Confirmed';
     $booking->save();
@@ -388,10 +355,6 @@ public function approve($id)
      */
 public function reject(Request $request, $id)
 {
-    if (!$this->isStaff()) {
-        abort(403);
-    }
-
     $request->validate(['reason' => 'required|string|max:1000']);
 
     $booking = Booking::with(['sender', 'consignee', 'cargoBookings.cargoItem', 'voyage'])->where('booking_ref_no', $id)->firstOrFail();

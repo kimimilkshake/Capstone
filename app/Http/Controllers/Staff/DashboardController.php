@@ -6,12 +6,15 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Voyage;
 use Carbon\Carbon;
+use App\Http\Controllers\Traits\StaffGuard;
 
 class DashboardController extends Controller
 {
-    private function isStaff()
+    use StaffGuard;
+
+    public function __construct()
     {
-        return auth()->guard('staff')->check();
+        $this->ensureStaff();
     }
 
     public function index()
@@ -25,10 +28,6 @@ class DashboardController extends Controller
             'admin_user' => auth()->guard('admin')->user(),
         ]);
         */
-
-        if (!$this->isStaff()) {
-            abort(403);
-        }
         
         // Get today's date
         $today = Carbon::today();

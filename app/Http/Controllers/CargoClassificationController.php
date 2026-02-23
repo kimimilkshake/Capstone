@@ -5,19 +5,22 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\CargoClassification;
+use App\Http\Controllers\Traits\AdminOrStaffGuard;
 
 class CargoClassificationController extends Controller
 {
-    // Helper guards
-    private function isAdmin() { return auth()->guard('admin')->check(); }
-    private function isStaff() { return auth()->guard('staff')->check(); }
+    use AdminOrStaffGuard;
+    public function __construct()
+    {
+        $this->ensureAuthorized();
+    }
 
     // List
     public function index()
     {
         $classifications = CargoClassification::orderBy('cargo_classification_name', 'asc')->paginate(10);
 
-        return $this->isAdmin()
+        return auth()->guard('admin')->check()
             ? view('authorized.admin.cargo_item_list', compact('classifications'))
             : view('authorized.staff.cargo_item_list', compact('classifications'));
     }
@@ -25,7 +28,7 @@ class CargoClassificationController extends Controller
     // Show create form
     public function create()
     {
-        return $this->isAdmin()
+        return auth()->guard('admin')->check()
             ? view('authorized.admin.cargo_classification_create')
             : view('authorized.staff.cargo_classification_create');
     }
@@ -39,7 +42,7 @@ class CargoClassificationController extends Controller
 
         CargoClassification::create($request->only('cargo_classification_name'));
 
-        return redirect()->route($this->isAdmin() ? 'admin.cargo_item_list' : 'staff.cargo_item_list')
+        return redirect()->route(auth()->guard('admin')->check() ? 'admin.cargo_item_list' : 'staff.cargo_item_list')
                          ->with('success', 'Cargo Classification added successfully!');
     }
 
@@ -48,7 +51,7 @@ class CargoClassificationController extends Controller
     {
         $classification = CargoClassification::findOrFail($id);
 
-        return $this->isAdmin()
+        return auth()->guard('admin')->check()
             ? view('authorized.admin.cargo_classification_edit', compact('classification'))
             : view('authorized.staff.cargo_classification_edit', compact('classification'));
     }
@@ -64,7 +67,7 @@ class CargoClassificationController extends Controller
 
         $classification->update($request->only('cargo_classification_name'));
 
-        return redirect()->route($this->isAdmin() ? 'admin.cargo_classification_list' : 'staff.cargo_classification_list')
+        return redirect()->route(auth()->guard('admin')->check() ? 'admin.cargo_classification_list' : 'staff.cargo_classification_list')
                          ->with('success', 'Cargo Classification updated successfully!');
     }
 
