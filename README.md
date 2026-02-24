@@ -130,3 +130,10 @@ and make sure that your branch is up to date with the remote repository. Otherwi
 
 **Semaphore API**
 - Ensure Laravel queue worker is running for bulk jobs (recommended, this is for sms bulk texts): php artisan queue:work
+
+
+**Commands to start**
+php artisan serve
+npm run dev
+php artisan queue:work
+php artisan schedule:work 

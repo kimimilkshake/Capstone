@@ -38,8 +38,11 @@
                 <thead class="table-dark">
                     <tr>
                         <th>Item</th>
+                        <th>Classification</th>
                         <th>Quantity</th>
-                        <th>Dimensions (LxWxH cm)</th>
+                        <th>Length</th>
+                        <th>Width</th>
+                        <th>Height</th>
                         <th>CBM</th>
                         <th>Freight Rate</th>
                         <th>Arrastre Rate</th>
@@ -50,28 +53,30 @@
                     <?php $totalExpense = 0; ?>
                     <?php $__currentLoopData = $cargoItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <?php
-                            // CBM calculation (m³)
-                            $cbm = ($item->length * $item->width * $item->height) / 1000000;
+                            $cbm = (float) ($item->cbm ?? 0);
 
                             // Subtotal: (freight + arrastre) * quantity * CBM
                             $subtotal = $cbm * ($item->freight + $item->arrastre) * $item->quantity;
                             $totalExpense += $subtotal;
                         ?>
                         <tr>
-                            <td><?php echo e($item->cargo_item_description); ?> (<?php echo e($item->cargo_item_classification); ?>)</td>
+                            <td><?php echo e($item->cargo_item_description); ?></td>
+                            <td><?php echo e($item->cargo_classification_name ?? 'N/A'); ?></td>
                             <td><?php echo e($item->quantity); ?></td>
-                            <td><?php echo e($item->length); ?> x <?php echo e($item->width); ?> x <?php echo e($item->height); ?></td>
+                            <td><?php echo e(number_format((float) $item->length, 2)); ?><?php echo e($item->measurement_unit_abbreviation ?? 'cm'); ?></td>
+                            <td><?php echo e(number_format((float) $item->width, 2)); ?><?php echo e($item->measurement_unit_abbreviation ?? 'cm'); ?></td>
+                            <td><?php echo e(number_format((float) $item->height, 2)); ?><?php echo e($item->measurement_unit_abbreviation ?? 'cm'); ?></td>
                             <td><?php echo e(number_format($cbm, 3)); ?></td>
-                            <td>PHP <?php echo e(number_format($item->freight, 2)); ?></td>
-                            <td>PHP <?php echo e(number_format($item->arrastre, 2)); ?></td>
-                            <td>PHP <?php echo e(number_format($subtotal, 2)); ?></td>
+                            <td>₱<?php echo e(number_format($item->freight, 2)); ?></td>
+                            <td>₱<?php echo e(number_format($item->arrastre, 2)); ?></td>
+                            <td>₱<?php echo e(number_format($subtotal, 2)); ?></td>
                         </tr>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </tbody>
                 <tfoot>
                     <tr>
-                        <th colspan="6" class="text-end">Total Expense:</th>
-                        <th>PHP <?php echo e(number_format($totalExpense, 2)); ?></th>
+                        <th colspan="9" class="text-end">Total Expense:</th>
+                        <th>₱<?php echo e(number_format($totalExpense, 2)); ?></th>
                     </tr>
                 </tfoot>
             </table>

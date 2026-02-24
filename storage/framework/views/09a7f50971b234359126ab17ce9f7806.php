@@ -28,14 +28,20 @@
                             <input type="hidden" id="departureDate" name="departure_date" value="<?php echo e($departureDate); ?>">
                             <input type="hidden" id="departureTime" name="departure_time" value="<?php echo e($departureTime); ?>">
                             <input type="hidden" id="voyageId" name="voyage_id" value="<?php echo e($voyage->voyage_id); ?>">
-                            <!-- Number of Passengers -->
-                            <div class="mb-4">
-                                <label for="numPassengers" class="form-label fw-bold">Number of Passengers</label>
-                                <select id="numPassengers" class="form-select">
-                                    <?php for($i = 1; $i <= 50; $i++): ?>
-                                        <option value="<?php echo e($i); ?>"><?php echo e($i); ?></option>
-                                    <?php endfor; ?>
-                                </select>
+                            <!-- Number of Passengers & Promo Code -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label for="numPassengers" class="form-label fw-bold">Number of Passengers</label>
+                                    <select id="numPassengers" class="form-select" style="font-size: 1.1rem; padding: 0.75rem;">
+                                        <?php for($i = 1; $i <= 50; $i++): ?>
+                                            <option value="<?php echo e($i); ?>"><?php echo e($i); ?></option>
+                                        <?php endfor; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="promoCode" class="form-label fw-bold">Promo Code (Optional)</label>
+                                    <input type="text" id="promoCode" class="form-control" placeholder="Enter promo code" style="font-size: 1.1rem; padding: 0.75rem;">
+                                </div>
                             </div>
 
                             <!-- Dynamic Passenger Sections -->
