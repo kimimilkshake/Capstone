@@ -224,7 +224,7 @@ public function pending(Request $request)
     public function show($id)
     {
         // Check if admin is trying to access
-        if ($this->isAdmin()) {
+        if (auth()->guard('admin')->check()) {
             return redirect()->back()->with('error', 'Please use a Staff account to approve Cargo Bookings');
         }
 
