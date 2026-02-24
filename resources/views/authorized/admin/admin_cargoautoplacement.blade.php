@@ -5,7 +5,7 @@
     @include('components.admin_nav')
 
 <div class="admin-body">
-    <h3 class="text-center mb-4">Cargo Auto Placement</h3>
+    <h3 class="text-center mb-4">CARGO AUTO PLACEMENT</h3>
 
     <div class="scs-form_container">
         <form method="GET" action="{{ route('admin.cargo.placement') }}" class="mb-4">
