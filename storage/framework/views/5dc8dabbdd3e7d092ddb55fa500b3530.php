@@ -1,8 +1,7 @@
-@extends('layouts.app')
-@section('page-title', 'RESERVATION')
-@section('content')
-    @include('components.authHeader')
-    @include('components.staff_nav')
+<?php $__env->startSection('page-title', 'Reservation'); ?>
+<?php $__env->startSection('content'); ?>
+    <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    <?php echo $__env->make('components.staff_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <div class="staff-body">
         <div class="container">
@@ -29,7 +28,7 @@
                             <!-- Booking Reference -->
                             <div class="text-center mb-4">
                                 <p class="mb-1"><strong>Booking Reference:</strong></p>
-                                <h3 class="text-primary">{{ $bookingRefNo }}</h3>
+                                <h3 class="text-primary"><?php echo e($bookingRefNo); ?></h3>
                             </div>
 
                             <!-- Payment Summary -->
@@ -38,41 +37,41 @@
                                     <h5 class="mb-0"><i class="fas fa-receipt"></i> Payment Summary</h5>
                                 </div>
                                 <div class="card-body">
-                                    @foreach ($passengers as $index => $passenger)
+                                    <?php $__currentLoopData = $passengers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $passenger): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <div class="d-flex justify-content-between mb-2">
-                                            <span>Passenger {{ $index + 1 }} ({{ $passenger['type'] }}):</span>
-                                            <span>₱{{ number_format($passenger['price'], 2) }}</span>
+                                            <span>Passenger <?php echo e($index + 1); ?> (<?php echo e($passenger['type']); ?>):</span>
+                                            <span>₱<?php echo e(number_format($passenger['price'], 2)); ?></span>
                                         </div>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     <hr>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <h5 class="mb-0">Total Amount to Pay:</h5>
-                                        <h3 class="mb-0 text-primary">₱{{ number_format($totalAmount, 2) }}</h3>
+                                        <h3 class="mb-0 text-primary">₱<?php echo e(number_format($totalAmount, 2)); ?></h3>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Action Buttons -->
                             <div class="d-grid gap-3">
-                                <form action="{{ route('staff.passenger_booking.complete_cash', $bookingRefNo) }}"
+                                <form action="<?php echo e(route('staff.passenger_booking.complete_cash', $bookingRefNo)); ?>"
                                     method="POST" id="cashForm">
-                                    @csrf
+                                    <?php echo csrf_field(); ?>
                                     <button type="submit" class="btn btn-success btn-lg w-100">
                                         <i class="fas fa-money-bill-wave"></i> Continue with Cash
                                     </button>
                                 </form>
 
-                                <form action="{{ route('staff.passenger_booking.complete_gcash', $bookingRefNo) }}"
+                                <form action="<?php echo e(route('staff.passenger_booking.complete_gcash', $bookingRefNo)); ?>"
                                     method="POST" id="gcashForm">
-                                    @csrf
+                                    <?php echo csrf_field(); ?>
                                     <button type="submit" class="btn btn-info btn-lg w-100">
                                         <i class="fas fa-mobile-alt"></i> Continue with GCash
                                     </button>
                                 </form>
 
-                                <form action="{{ route('staff.passenger_booking.cancel', $bookingRefNo) }}" method="POST"
+                                <form action="<?php echo e(route('staff.passenger_booking.cancel', $bookingRefNo)); ?>" method="POST"
                                     id="cancelForm">
-                                    @csrf
+                                    <?php echo csrf_field(); ?>
                                     <button type="submit" class="btn btn-danger btn-lg w-100">
                                         <i class="fas fa-times"></i> Cancel Reservation
                                     </button>
@@ -104,14 +103,14 @@
             if (!isFormSubmitting && reservationTimeLeft > 0) {
                 // Cancel the booking
                 const formData = new FormData();
-                formData.append('_token', '{{ csrf_token() }}');
-                navigator.sendBeacon('{{ route('staff.passenger_booking.cancel', $bookingRefNo) }}', formData);
+                formData.append('_token', '<?php echo e(csrf_token()); ?>');
+                navigator.sendBeacon('<?php echo e(route('staff.passenger_booking.cancel', $bookingRefNo)); ?>', formData);
 
                 // Stop the timer
                 clearInterval(timerInterval);
 
                 // Redirect to staff booking create page
-                window.location.href = '{{ route('staff.passenger_booking.create') }}';
+                window.location.href = '<?php echo e(route('staff.passenger_booking.create')); ?>';
             }
         });
 
@@ -125,11 +124,11 @@
 
         // Check on page load if booking is still valid
         window.addEventListener('DOMContentLoaded', function() {
-            const bookingStatus = '{{ strtolower($booking->booking_status ?? 'pending') }}';
+            const bookingStatus = '<?php echo e(strtolower($booking->booking_status ?? 'pending')); ?>';
             if (bookingStatus !== 'pending') {
                 // Booking is no longer pending, redirect away
                 alert('This reservation is no longer active.');
-                window.location.href = '{{ route('staff.passenger_booking.create') }}';
+                window.location.href = '<?php echo e(route('staff.passenger_booking.create')); ?>';
             }
         });
 
@@ -157,10 +156,10 @@
 
         async function autoCancelReservation() {
             try {
-                await fetch('{{ route('staff.passenger_booking.cancel', $bookingRefNo) }}', {
+                await fetch('<?php echo e(route('staff.passenger_booking.cancel', $bookingRefNo)); ?>', {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
                         'Content-Type': 'application/json'
                     }
                 });
@@ -169,7 +168,7 @@
             }
 
             alert('Reservation time expired. Booking has been cancelled.');
-            window.location.href = '{{ route('staff.passenger_booking.create') }}';
+            window.location.href = '<?php echo e(route('staff.passenger_booking.create')); ?>';
         }
 
         // Start timer when page loads
@@ -181,9 +180,9 @@
             if (reservationTimeLeft > 0 && !isFormSubmitting) {
                 // Send cancel request synchronously
                 navigator.sendBeacon(
-                    '{{ route('staff.passenger_booking.cancel', $bookingRefNo) }}',
+                    '<?php echo e(route('staff.passenger_booking.cancel', $bookingRefNo)); ?>',
                     new URLSearchParams({
-                        '_token': '{{ csrf_token() }}'
+                        '_token': '<?php echo e(csrf_token()); ?>'
                     })
                 );
             }
@@ -238,4 +237,6 @@
             text-align: center !important;
         }
     </style>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/authorized/staff/reservation.blade.php ENDPATH**/ ?>
