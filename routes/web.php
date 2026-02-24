@@ -33,6 +33,19 @@ use App\Http\Controllers\CargoClassificationController;
 use App\Http\Controllers\CargoItemController;
 use App\Http\Controllers\CargoAutoPlacementController;
 
+// Development helper: debug visualizer page (no auth) — renders packing-data for voyage 1
+Route::get('/dev/visualizer-debug', function () {
+    $controller = new CargoAutoPlacementController();
+    $request = request()->merge(['voyage_id' => 1]);
+    $response = $controller->getPackingData($request);
+    // if response is JsonResponse, get data
+    $data = null;
+    if (is_object($response) && method_exists($response, 'getContent')) {
+        $data = json_decode($response->getContent(), true);
+    }
+    return view('debug_visualizer', ['data' => $data]);
+});
+
 // OCR route
 Route::post('/ocr/parse', [OcrController::class, 'parseImage'])->name('ocr.parse');
 
@@ -89,6 +102,8 @@ Route::post('/booking/submit', [BookingController::class, 'store'])->name('booki
 Route::post('/booking/cancel/{booking_ref_no}', [BookingController::class, 'cancel'])->name('booking.cancel');
 // Request ticket copy
 Route::post('/ticket/request-copy', [BookingController::class, 'requestTicketCopy'])->name('ticket.request-copy');
+// Validate promo code
+Route::post('/api/validate-promo', [BookingController::class, 'validatePromo'])->name('api.validate_promo');
 // API: return unavailable cot numbers for a voyage (by route/date or voyage_id)
 Route::get('/voyage/unavailable-cots', [BookingController::class, 'unavailableCots'])->name('voyage.unavailable_cots');
 // API: return available cots per accommodation for a voyage
@@ -220,14 +235,14 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
 
     // Cargo Auto Placement
 
-    Route::post('/admin_cargo/place', [CargoAutoPlacementController::class, 'place'])
-        ->name('admin.cargo.place');
-
     Route::get('/admin_cargo/placement', [CargoAutoPlacementController::class, 'show'])
         ->name('admin.cargo.placement');
 
     Route::post('/admin_cargo/place', [CargoAutoPlacementController::class, 'place'])
         ->name('admin.cargo.place');
+
+    Route::get('/api/admin_cargo/packing-data', [CargoAutoPlacementController::class, 'getPackingData'])
+        ->name('admin.cargo.packing-data');
 
     Route::post('/admin_cargo/placement/add-row', [CargoAutoPlacementController::class, 'addRow'])
         ->name('admin.cargo.addRow');
@@ -300,6 +315,8 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     // Approve booking
     Route::post('/cargo-bookings/{id}/approve', [StaffCargoController::class, 'approve'])->name('cargo.bookings.approve');
     Route::post('/cargo-bookings/{id}/reject', [StaffCargoController::class, 'reject'])->name('cargo.bookings.reject');
+    // Placement validation API endpoint
+    Route::post('/api/cargo/placement/validate', [StaffCargoController::class, 'validatePlacement'])->name('cargo.placement.validate');
 
 
     // Edit cargo items
@@ -319,14 +336,14 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
 
     // Cargo Auto Placement
 
-    Route::post('/staff_cargo/place', [CargoAutoPlacementController::class, 'place'])
-        ->name('staff.cargo.place');
-
     Route::get('/staff_cargo/placement', [CargoAutoPlacementController::class, 'show'])
         ->name('staff.cargo.placement');
 
     Route::post('/staff_cargo/place', [CargoAutoPlacementController::class, 'place'])
         ->name('staff.cargo.place');
+
+    Route::get('/api/staff_cargo/packing-data', [CargoAutoPlacementController::class, 'getPackingData'])
+        ->name('staff.cargo.packing-data');
 
     Route::post('/staff_cargo/placement/add-row', [CargoAutoPlacementController::class, 'addRow'])
         ->name('staff.cargo.addRow');

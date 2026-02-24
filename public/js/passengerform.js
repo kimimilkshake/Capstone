@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const bookingForm = document.getElementById("bookingForm");
     const loader = document.getElementById("ocrLoader");
     let accommodationsWithCots = []; // Will store accommodation data with available cots
+    let currentPromo = null; // Store current promo info
 
     // Get accommodations data from the page (basic info)
     let accommodations = [];
@@ -441,6 +442,46 @@ document.addEventListener("DOMContentLoaded", function () {
 
     bookingForm.addEventListener("submit", async function (e) {
         e.preventDefault();
+        
+        // Validate and apply promo code if provided
+        const promoCodeInput = document.getElementById('promoCode');
+        const promoCode = promoCodeInput ? promoCodeInput.value.trim().toUpperCase() : '';
+        
+        if (promoCode) {
+            loader.style.display = "flex";
+            try {
+                // Validate promo code first
+                const promoResponse = await fetch('/api/validate-promo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': bookingForm.dataset.csrf
+                    },
+                    body: JSON.stringify({
+                        promo_code: promoCode
+                    })
+                });
+
+                const promoData = await promoResponse.json();
+
+                if (!promoData.success) {
+                    loader.style.display = "none";
+                    alert('Promo code error: ' + (promoData.message || 'Invalid promo code'));
+                    return;
+                }
+
+                // Promo is valid, set current promo
+                currentPromo = promoData.promo;
+            } catch (error) {
+                loader.style.display = "none";
+                console.error('Promo validation error:', error);
+                alert('Error validating promo code');
+                return;
+            }
+        }
+        
+        loader.style.display = "flex";
+        e.preventDefault();
         loader.style.display = "flex";
 
         try {
@@ -621,6 +662,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 departure_date: departureDate,
                 departure_time: departureTime,
                 voyage_id: voyageId,
+                promo_id: currentPromo ? currentPromo.promo_id : null,
+                promo_code: currentPromo ? currentPromo.promo_code : null,
+                promo_discount_rate: currentPromo ? currentPromo.promo_discount_rate : 0
             };
 
             console.log("Submitting booking with payload:", payload);
