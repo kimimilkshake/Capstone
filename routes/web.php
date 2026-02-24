@@ -102,6 +102,8 @@ Route::post('/booking/submit', [BookingController::class, 'store'])->name('booki
 Route::post('/booking/cancel/{booking_ref_no}', [BookingController::class, 'cancel'])->name('booking.cancel');
 // Request ticket copy
 Route::post('/ticket/request-copy', [BookingController::class, 'requestTicketCopy'])->name('ticket.request-copy');
+// Validate promo code
+Route::post('/api/validate-promo', [BookingController::class, 'validatePromo'])->name('api.validate_promo');
 // API: return unavailable cot numbers for a voyage (by route/date or voyage_id)
 Route::get('/voyage/unavailable-cots', [BookingController::class, 'unavailableCots'])->name('voyage.unavailable_cots');
 // API: return available cots per accommodation for a voyage

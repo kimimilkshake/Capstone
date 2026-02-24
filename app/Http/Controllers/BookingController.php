@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Jobs\CancelBookingHold;
 use App\Jobs\SendTicketEmail;
+use App\Models\Promo;
+use App\Models\PassengerTicket;
+use App\Models\Passenger;
 use Carbon\Carbon;
 
 class BookingController extends Controller
@@ -21,6 +24,8 @@ class BookingController extends Controller
         $routeTo = $data['route_to'] ?? null;
         $departureDate = $data['departure_date'] ?? null;
         $voyageId = $data['voyage_id'] ?? null;
+        $promoId = $data['promo_id'] ?? null;
+        $promoDiscountRate = $data['promo_discount_rate'] ?? 0;
 
         if (empty($passengers) || !$routeFrom || !$routeTo || !$departureDate) {
             return response()->json(['success' => false, 'message' => 'Missing booking data.'], 422);
@@ -143,6 +148,12 @@ class BookingController extends Controller
                 // Apply discounts based on passenger type and route
                 $price = $this->calculateDiscountedPrice($basePrice, $p['type'] ?? 'Regular', $routeFrom, $routeTo);
 
+                // Apply promo discount if applicable (percentage off the discounted price)
+                if ($promoId && $promoDiscountRate > 0) {
+                    $promoDiscount = $price * ($promoDiscountRate / 100);
+                    $price = $price - $promoDiscount;
+                }
+
                 $totalAmount += $price;
 
                 // Create passenger_ticket with pt_valid_until_ts = now + 5 minutes
@@ -150,7 +161,7 @@ class BookingController extends Controller
                 $ptId = DB::table('passenger_ticket')->insertGetId([
                     'passenger_id' => $passengerId,
                     'voyage_id' => $voyage->voyage_id,
-                    'promo_id' => null,
+                    'promo_id' => $promoId,
                     'payment_id' => $paymentId,
                     'booking_ref_no' => $bookingId,
                     // keep legacy date column (pt_valid_until) as date for backwards compat
@@ -212,14 +223,15 @@ class BookingController extends Controller
 
         $payment = DB::table('payment')->where('booking_ref_no', $bookingRef)->first();
 
-        $tickets = DB::table('passenger_ticket')
-            ->where('booking_ref_no', $bookingRef)
+        // Use model to load promo relationships
+        $tickets = \App\Models\PassengerTicket::where('booking_ref_no', $bookingRef)
+            ->with('promo')
             ->get();
 
         // join passenger data
         $passengers = [];
         foreach ($tickets as $t) {
-            $p = DB::table('passenger')->where('passenger_id', $t->passenger_id)->first();
+            $p = \App\Models\Passenger::where('passenger_id', $t->passenger_id)->first();
             $passengers[] = [
                 'ticket' => $t,
                 'passenger' => $p,
@@ -404,6 +416,63 @@ class BookingController extends Controller
 
             default:
                 return $basePrice; // Default to regular price
+        }
+    }
+
+    /**
+     * Validate promo code
+     */
+    public function validatePromo(Request $request)
+    {
+        try {
+            $promoCode = strtoupper(trim($request->input('promo_code', '')));
+
+            if (empty($promoCode)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Promo code is required'
+                ]);
+            }
+
+            $promo = DB::table('promo')
+                ->where('promo_code', $promoCode)
+                ->where('promo_status', 'Active')
+                ->first();
+
+            if (!$promo) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Promo code not found or inactive'
+                ]);
+            }
+
+            // Check if promo is within active date range
+            $today = Carbon::now()->toDateString();
+            if ($today < $promo->promo_start_date || $today > $promo->promo_end_date) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Promo code has expired or not yet active'
+                ]);
+            }
+
+            // Promo is valid
+            return response()->json([
+                'success' => true,
+                'promo' => [
+                    'promo_id' => $promo->promo_id,
+                    'promo_code' => $promo->promo_code,
+                    'promo_name' => $promo->promo_name,
+                    'promo_description' => $promo->promo_description,
+                    'promo_discount_rate' => (float) $promo->promo_discount_rate,
+                    'promo_type' => $promo->promo_type
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error validating promo code: ' . $e->getMessage()
+            ], 500);
         }
     }
 
