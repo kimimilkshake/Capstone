@@ -6,17 +6,14 @@ use App\Models\CargoItem;
 use App\Models\RouteCode;
 use App\Models\MeasurementUnit;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Traits\AdminOrStaffGuard;
 
 class CargoItemController extends Controller
 {
-    private function isStaff()
+    use AdminOrStaffGuard;
+    public function __construct()
     {
-        return auth()->guard('staff')->check();
-    }
-
-    private function isAdmin()
-    {
-        return auth()->guard('admin')->check();
+        $this->ensureAuthorized();
     }
 
     public function index(Request $request)
@@ -35,7 +32,7 @@ class CargoItemController extends Controller
 
         $route_codes = RouteCode::all();
 
-        return $this->isStaff()
+        return auth()->guard('staff')->check()
             ? view('authorized.staff.scargo_item_list', compact('cargo_items', 'route_codes'))
             : view('authorized.admin.cargo_item_list', compact('cargo_items', 'route_codes'));
     }
@@ -45,7 +42,7 @@ class CargoItemController extends Controller
         $route_codes = RouteCode::all();
         $measurement_units = MeasurementUnit::all();
 
-        return $this->isStaff()
+        return auth()->guard('staff')->check()
             ? view('authorized.staff.screate_cargo_item', compact('route_codes', 'measurement_units'))
             : view('authorized.admin.create_cargo_item', compact('route_codes', 'measurement_units'));
     }
@@ -70,8 +67,11 @@ class CargoItemController extends Controller
 
         CargoItem::create($validated);
 
-        return redirect()->route($this->isStaff() ? 'staff.cargo_item_list' : 'admin.cargo_item_list')
-                 ->with('success', 'Cargo item added successfully.');
+        return redirect()->route(
+            auth()->guard('staff')->check()
+                ? 'staff.cargo_item_list'
+                : 'admin.cargo_item_list'
+        )->with('success', 'Cargo item added successfully.');
 
     }
 
@@ -81,11 +81,9 @@ class CargoItemController extends Controller
         $route_codes = RouteCode::all();          // for route code dropdown
         $measurement_units = MeasurementUnit::all(); // for measurement units dropdown
 
-        if ($this->isStaff()) {
-            return view('authorized.staff.scargo_item_edit', compact('cargo_item', 'route_codes', 'measurement_units'));
-        } else {
-            return view('authorized.admin.cargo_item_edit', compact('cargo_item', 'route_codes', 'measurement_units'));
-        }
+        return auth()->guard('staff')->check()
+            ? view('authorized.staff.scargo_item_edit', compact('cargo_item', 'route_codes', 'measurement_units'))
+            : view('authorized.admin.cargo_item_edit', compact('cargo_item', 'route_codes', 'measurement_units'));
     }
 
 
@@ -111,8 +109,11 @@ class CargoItemController extends Controller
 
         $cargo_item->update($validated);
 
-        return redirect()->route('admin.cargo_item_list')
-                         ->with('success', 'Cargo item updated successfully.');
+        return redirect()->route(
+            auth()->guard('staff')->check()
+                ? 'staff.cargo_item_list'
+                : 'admin.cargo_item_list'
+        )->with('success', 'Cargo item updated successfully.');
     }
 
     public function destroy($id)

@@ -26,10 +26,11 @@ class ContactController extends Controller
         ];
 
         // Send email
-        Mail::send('passenger.contact', $data, function ($message) use ($data) {
-            $message->from($data['sender_email'], $data['sender_name']);
-            $message->to('sophiaannu.cohon@gmail.com')
-                    ->subject('Website Contact: '.$data['subject']);
+        Mail::send('emails.contact_message', $data, function ($message) use ($data) {
+            $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'))
+                ->replyTo($data['sender_email'], $data['sender_name'])
+                ->to('shemcardoza7@gmail.com')
+                ->subject('Website Contact: ' . $data['subject']);
         });
 
         return back()->with('success', 'Message sent! We will reply to your email.');

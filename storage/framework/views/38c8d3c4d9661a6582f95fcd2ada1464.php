@@ -14,9 +14,24 @@
             <div class="col-lg-6">
                 <div class="card shadow-sm p-4 mb-4">
                     <h5 class="mb-2">Booking Information</h5>
+                    <?php
+                        $processedBy = optional(optional($booking->cargoBookings->first())->approvedByStaff)
+                            ->staff_name;
+                        $processedLabel = 'N/A';
+                        if ($processedBy) {
+                            if ($booking->booking_status === 'Confirmed') {
+                                $processedLabel = 'Approved by ' . $processedBy;
+                            } elseif ($booking->booking_status === 'Canceled') {
+                                $processedLabel = 'Canceled by ' . $processedBy;
+                            } else {
+                                $processedLabel = $processedBy;
+                            }
+                        }
+                    ?>
                     <p><strong>Booking Ref #:</strong> <?php echo e($booking->booking_code); ?></p>
                     <p><strong>Status:</strong> <?php echo e($booking->booking_status); ?></p>
                     <p><strong>Created:</strong> <?php echo e($booking->created_at->format('M d, Y')); ?></p>
+                    <p><strong>Approved By:</strong> <?php echo e($processedLabel); ?></p>
 
                     <?php if($booking->voyage): ?>
                         <p><strong>Voyage Code:</strong> <?php echo e($booking->voyage->voyage_code); ?></p>
@@ -144,65 +159,67 @@
     <div class="card shadow-sm p-3 mb-4">
         <h5>Cargo Items</h5>
 
-        <table class="table table-bordered table-striped mt-3">
-            <thead class="table-dark">
-                <tr>
-                    <th>Description</th>
-                    <th>Classification</th>
-                    <th>Qty</th>
-                    <th>Length</th>
-                    <th>Width</th>
-                    <th>Height</th>
-                    <th>CBM</th>
-                    <th>Freight</th>
-                    <th>Arrastre</th>
-                    <th>Subtotal</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                <?php $total = 0; ?>
-
-                <?php $__currentLoopData = $cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <?php
-                        $freight = $c->cargoItem->cargo_item_freight;
-                        $arrastre = $c->cargoItem->cargo_item_arrastre;
-                        $cbm = ($c->length * $c->width * $c->height) / 1000000;
-                        $subtotal = ($freight + $arrastre) * $cbm * $c->quantity;
-                        $total += $subtotal;
-                        $unit = $c->measurement_unit ?? 'cm';
-                    ?>
-
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped mt-3 align-middle cargo-items-table">
+                <thead class="table-dark">
                     <tr>
-                        <td><?php echo e($c->cargoItem->cargo_item_description); ?></td>
-                        <td><?php echo e($c->cargoClassification->cargo_classification_name ?? 'N/A'); ?></td>
-                        <td><?php echo e($c->quantity); ?></td>
-                        <td><?php echo e(number_format($c->length, 2)); ?><?php echo e($unit); ?></td>
-                        <td><?php echo e(number_format($c->width, 2)); ?><?php echo e($unit); ?></td>
-                        <td><?php echo e(number_format($c->height, 2)); ?><?php echo e($unit); ?></td>
-                        <td><?php echo e(number_format($cbm, 4)); ?></td>
-                        <td>₱<?php echo e(number_format($freight, 2)); ?></td>
-                        <td>₱<?php echo e(number_format($arrastre, 2)); ?></td>
-                        <td>₱<?php echo e(number_format($subtotal, 2)); ?></td>
+                        <th>Description</th>
+                        <th>Classification</th>
+                        <th>Qty</th>
+                        <th>Length</th>
+                        <th>Width</th>
+                        <th>Height</th>
+                        <th>CBM</th>
+                        <th>Freight</th>
+                        <th>Arrastre</th>
+                        <th>Subtotal</th>
                     </tr>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-            </tbody>
+                </thead>
 
-            <tfoot>
-                <tr>
-                    <th colspan="10" class="text-end">TOTAL:</th>
-                    <th>
-                        <?php if($payment && $payment->total_amount): ?>
-                            ₱<?php echo e(number_format($payment->total_amount, 2)); ?>
+                <tbody>
+                    <?php $total = 0; ?>
 
-                        <?php else: ?>
-                            ₱<?php echo e(number_format($total, 2)); ?>
+                    <?php $__currentLoopData = $cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php
+                            $freight = $c->cargoItem->cargo_item_freight;
+                            $arrastre = $c->cargoItem->cargo_item_arrastre;
+                            $cbm = (float) ($c->cbm ?? ($c->length * $c->width * $c->height) / 1000000);
+                            $subtotal = ($freight + $arrastre) * $cbm * $c->quantity;
+                            $total += $subtotal;
+                            $unit = $c->measurementUnit->measurement_unit_abbreviation ?? 'cm';
+                        ?>
 
-                        <?php endif; ?>
-                    </th>
-                </tr>
-            </tfoot>
-        </table>
+                        <tr>
+                            <td><?php echo e($c->cargoItem->cargo_item_description); ?></td>
+                            <td><?php echo e($c->cargoClassification->cargo_classification_name ?? 'N/A'); ?></td>
+                            <td class="text-center"><?php echo e($c->quantity); ?></td>
+                            <td class="text-end"><?php echo e(number_format($c->length, 2)); ?><?php echo e($unit); ?></td>
+                            <td class="text-end"><?php echo e(number_format($c->width, 2)); ?><?php echo e($unit); ?></td>
+                            <td class="text-end"><?php echo e(number_format($c->height, 2)); ?><?php echo e($unit); ?></td>
+                            <td class="text-end"><?php echo e(number_format($cbm, 4)); ?></td>
+                            <td class="text-end">₱<?php echo e(number_format($freight, 2)); ?></td>
+                            <td class="text-end">₱<?php echo e(number_format($arrastre, 2)); ?></td>
+                            <td class="text-end">₱<?php echo e(number_format($subtotal, 2)); ?></td>
+                        </tr>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </tbody>
+
+                <tfoot>
+                    <tr>
+                        <th colspan="10" class="text-end">TOTAL:</th>
+                        <th class="text-end">
+                            <?php if($payment && $payment->total_amount): ?>
+                                ₱<?php echo e(number_format($payment->total_amount, 2)); ?>
+
+                            <?php else: ?>
+                                ₱<?php echo e(number_format($total, 2)); ?>
+
+                            <?php endif; ?>
+                        </th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
     </div>
 
     
@@ -211,7 +228,8 @@
             <form action="<?php echo e(route('cargo.bookings.approve', $booking->booking_ref_no)); ?>" method="POST" class="w-100"
                 style="max-width: 200px;" id="acceptForm">
                 <?php echo csrf_field(); ?>
-                <button type="button" class="btn btn-success btn-lg px-4 w-100" id="acceptBtn" onclick="validateAndAccept(event)">Accept</button>
+                <button type="button" class="btn btn-success btn-lg px-4 w-100" id="acceptBtn"
+                    onclick="validateAndAccept(event)">Accept</button>
             </form>
 
             <!-- Open modal to collect rejection reason -->
@@ -227,7 +245,8 @@
                         <?php echo csrf_field(); ?>
                         <div class="modal-header">
                             <h5 class="modal-title">Reason for Rejection</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             <div class="mb-3">
@@ -283,7 +302,6 @@
                 <div class="modal-body" id="billOfLadingContent">
                     <div class="p-3">
                         <h5>Shipping Information</h5>
-                        <p>Vessel Name: <?php echo e($booking->voyage->vessel_name ?? 'Not specified'); ?></p>
                         <p>Voyage No.: <?php echo e($booking->voyage->voyage_code ?? 'N/A'); ?></p>
                         <p>Bill of Lading (B/L) No.: <?php echo e($booking->booking_ref_no); ?></p>
                         <p>Sailing Date:
@@ -313,16 +331,16 @@
                         <hr />
                         <h5>Cargo Description</h5>
                         <?php $__currentLoopData = $booking->cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <?php $unit = $c->measurement_unit ?? 'cm'; ?>
+                            <?php $unit = $c->measurementUnit->measurement_unit_abbreviation ?? 'cm'; ?>
                             <div class="mb-2">
                                 <div><strong>Qty:</strong> <?php echo e($c->quantity); ?></div>
                                 <div><strong>Classification:</strong>
                                     <?php echo e($c->cargoClassification->cargo_classification_name ?? 'N/A'); ?></div>
                                 <div><strong>Description:</strong> <?php echo e($c->cargoItem->cargo_item_description ?? ''); ?></div>
-                                <div><strong>Dimensions:</strong> <?php echo e(number_format($c->length, 2) . $unit); ?> x
-                                    <?php echo e(number_format($c->width, 2) . $unit); ?> x <?php echo e(number_format($c->height, 2) . $unit); ?>
+                                <div><strong>Dimensions:</strong> <?php echo e(number_format($c->length, 2)); ?> x
+                                    <?php echo e(number_format($c->width, 2)); ?> x <?php echo e(number_format($c->height, 2)); ?>
 
-                                </div>
+                                    <?php echo e($unit); ?></div>
                                 <div><strong>Weight:</strong> <?php echo e(number_format($c->weight, 2)); ?> kg</div>
                             </div>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -414,7 +432,8 @@
                     <form action="<?php echo e(route('cargo.bookings.approve', $booking->booking_ref_no)); ?>" method="POST"
                         class="w-100" style="max-width: 200px;" id="acceptForm2">
                         <?php echo csrf_field(); ?>
-                        <button type="button" class="btn btn-success btn-lg px-4 w-100" id="acceptBtn2" onclick="validateAndAccept(event)">Accept</button>
+                        <button type="button" class="btn btn-success btn-lg px-4 w-100" id="acceptBtn2"
+                            onclick="validateAndAccept(event)">Accept</button>
                     </form>
 
                     <!-- Open modal to collect rejection reason -->
@@ -556,7 +575,8 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-success" id="confirmAcceptBtn" onclick="proceedWithAcceptance()">Proceed with Acceptance</button>
+                        <button type="button" class="btn btn-success" id="confirmAcceptBtn"
+                            onclick="proceedWithAcceptance()">Proceed with Acceptance</button>
                     </div>
                 </div>
             </div>
@@ -568,7 +588,7 @@
              */
             function validateAndAccept(event) {
                 event.preventDefault();
-                
+
                 const voyageId = <?php echo e($booking->voyage_id); ?>;
                 const cargoBookingIds = [
                     <?php $__currentLoopData = $booking->cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cargo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -589,39 +609,39 @@
                 btn.disabled = true;
 
                 // Call API to validate placement
-                fetch('<?php echo e(route("cargo.placement.validate")); ?>', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || 
-                                       document.querySelector('input[name="_token"]')?.value
-                    },
-                    body: JSON.stringify({
-                        voyage_id: voyageId,
-                        cargo_booking_ids: cargoBookingIds
+                fetch('<?php echo e(route('cargo.placement.validate')); ?>', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ||
+                                document.querySelector('input[name="_token"]')?.value
+                        },
+                        body: JSON.stringify({
+                            voyage_id: voyageId,
+                            cargo_booking_ids: cargoBookingIds
+                        })
                     })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
+                    .then(response => response.json())
+                    .then(data => {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
 
-                    if (data.success || data.skipValidation) {
-                        // Cargo can fit, proceed with acceptance
+                        if (data.success || data.skipValidation) {
+                            // Cargo can fit, proceed with acceptance
+                            proceedWithAcceptance();
+                        } else {
+                            // Show warning modal
+                            showPlacementWarning(data);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+
+                        // If error, still allow to proceed (fail-open policy)
                         proceedWithAcceptance();
-                    } else {
-                        // Show warning modal
-                        showPlacementWarning(data);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                    
-                    // If error, still allow to proceed (fail-open policy)
-                    proceedWithAcceptance();
-                });
+                    });
             }
 
             /**
@@ -645,8 +665,8 @@
                             <h6>Items that cannot fit:</h6>
                             <ul class="mb-0">
                                 ${data.unpackedItems.map(item => `
-                                    <li>${item.name || item.id} - Cannot fit in any hatch</li>
-                                `).join('')}
+                                            <li>${item.name || item.id} - Cannot fit in any hatch</li>
+                                        `).join('')}
                             </ul>
                         </div>
                     `;
@@ -990,7 +1010,46 @@
                     height: 14px;
                 }
             }
+
+            .cargo-items-table th,
+            .cargo-items-table td {
+                vertical-align: middle;
+            }
         </style>
+    <?php $__env->stopSection(); ?>
+
+    <?php $__env->startSection('scripts'); ?>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                document.addEventListener('click', function(event) {
+                    const trigger = event.target.closest('[data-bs-target="#photoModal"]');
+                    if (!trigger) return;
+
+                    const image = trigger.getAttribute('data-image');
+                    const description = trigger.getAttribute('data-description') || 'Cargo Item';
+                    const classification = trigger.getAttribute('data-classification') || '--';
+
+                    const modalImage = document.getElementById('modalCargoPhoto');
+                    const modalCaption = document.getElementById('modalPhotoCaption');
+                    const modalClassification = document.getElementById('modalPhotoClassification');
+
+                    if (modalImage) modalImage.src = image || '';
+                    if (modalCaption) modalCaption.textContent = description;
+                    if (modalClassification) modalClassification.textContent = 'Classification: ' +
+                        classification;
+                });
+
+                const photoModal = document.getElementById('photoModal');
+                if (photoModal) {
+                    photoModal.addEventListener('hidden.bs.modal', function() {
+                        const modalImage = document.getElementById('modalCargoPhoto');
+                        if (modalImage) {
+                            modalImage.removeAttribute('src');
+                        }
+                    });
+                }
+            });
+        </script>
     <?php $__env->stopSection(); ?>
 
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Shem\Desktop\Capstone\resources\views/authorized/staff/showcargo.blade.php ENDPATH**/ ?>

@@ -5,10 +5,17 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\RouteCode;
+use App\Http\Controllers\Traits\AdminGuard;
 
 class RouteCodeController extends Controller
 {
-    //
+    use AdminGuard;
+
+    public function __construct()
+    {
+        $this->ensureAdmin();
+    }
+
     /*
         dd([
             'staff_guard' => auth()->guard('staff')->check(),
@@ -24,10 +31,6 @@ class RouteCodeController extends Controller
 
     public function index()
     {
-        if (!$this->isAdmin()) {
-            abort(403);
-        }
-
         $routeCodes = RouteCode::all();
 
         return view('authorized.admin.route_port_list', compact('routeCodes'));
@@ -35,10 +38,6 @@ class RouteCodeController extends Controller
 
     public function store(Request $request)
     {
-        if (!$this->isAdmin()) {
-            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
-        }
-
         $validated = $request->validate([
             'route_code_name' => 'required|string|max:255|unique:route_code,route_code_name',
         ]);

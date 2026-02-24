@@ -8,15 +8,15 @@
         </div>
         <div class="astat-boxes-row">
             <div class="astat-boxes-col">
-                <span class="anumberStat">XX</span>
-                <p>Passengers</p>
+                <span class="anumberStat"><?php echo e($passengerBookings); ?></span>
+                <p>Passenger Bookings</p>
             </div>
             <div class="astat-boxes-col">
-                <span class="anumberStat">XX</span>
+                <span class="anumberStat"><?php echo e($cargoBookings); ?></span>
                 <p>Cargo Bookings</p>
             </div>
             <div class="astat-boxes-col">
-                <span class="anumberStat">PHP XXXX</span>
+                <span class="anumberStat">PHP <?php echo e(number_format($totalSales, 2)); ?></span>
                 <p>Total Sales</p>
             </div>
         </div>

@@ -25,6 +25,11 @@
             <div class="contact-col">
                 <div class="contact-card">
                     <h3 class="contact-title">SEND US A MESSAGE!</h3>
+                    @if(session('success'))
+                        <div class="alert contact-success">
+                            {{ session('success') }}
+                        </div>
+                    @endif
                     <form action="{{ route('contact.send') }}" method="POST">
                         @csrf
                         <label for="contact_name">Name:</label>

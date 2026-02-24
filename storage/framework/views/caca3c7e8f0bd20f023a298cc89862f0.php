@@ -14,10 +14,14 @@
                 <div class="text-start">
                     <p><strong>Schedule: </strong><?php echo e(optional($voyage->voyage_departure_date) ? \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('F j, Y, D') : '-'); ?></p>
                     <p><strong>Vessel: </strong> <?php echo e(optional($voyage->vessel)->vessel_name ?? '-'); ?></p>
+                    <p><strong>Time of Departure: </strong> <?php echo e($voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('h:i A') : '-'); ?></p>
+                    <p><strong>Actual Time of Departure: </strong> <?php echo e($voyage->voyage_actual_TD ? \Carbon\Carbon::parse($voyage->voyage_actual_TD)->format('h:i A') : '-'); ?></p>
                 </div>
                 <div class="text-start">
                     <p><strong>Voyage Route: </strong><?php echo e(optional($voyage->routePort)->route_origin ?? '-'); ?> to <?php echo e(optional($voyage->routePort)->route_destination ?? '-'); ?></p>
                     <p><strong>Status: </strong> <?php echo e($voyage->voyage_status ?? '-'); ?></p>
+                    <p><strong>Time of Arrival: </strong><?php echo e($voyage->voyage_estimated_TA ? \Carbon\Carbon::parse($voyage->voyage_estimated_TA)->format('h:i A') : '-'); ?></p>
+                    <p><strong>Actual Time of Arrival: </strong><?php echo e($voyage->voyage_actual_TA ? \Carbon\Carbon::parse($voyage->voyage_actual_TA)->format('h:i A') : '-'); ?></p>
                 </div>
             </div>
         </div>
@@ -134,10 +138,10 @@
                                 <tr>
                                     <td><?php echo e($c->bl_number ?? $c->booking_ref_no ?? $c->booking_ref ?? ($c->booking_ref_no ?? '-')); ?></td>
                                     <td><?php echo e($c->quantity ?? $c->cargo_item_qty ?? '-'); ?></td>
-                                    <td><?php echo e($c->cargoItem->cargo_item_classification ?? 'N/A'); ?></td>
+                                    <td><?php echo e($c->cargoClassification->cargo_classification_name ?? 'N/A'); ?></td>
                                     <td><?php echo e($c->cargoItem->cargo_item_description ?? 'N/A'); ?></td>
                                     <td><?php echo e($c->sender->sender_name ?? 'N/A'); ?></td>
-                                    <td><?php echo e($c->tin_number ?? '-'); ?></td>
+                                    <td><?php echo e($c->sender->sender_tin ?? '-'); ?></td>
                                     <td><?php echo e($c->consignee->consignee_name); ?></td>
                                     <td><?php echo e($c->cargoItem->cargo_item_freight ?? '-'); ?></td>
                                     <td><?php echo e($c->vat ?? '-'); ?></td>

@@ -137,7 +137,7 @@
                                                 <select name="cargo_classification[]" class="form-control cargo-classification required-field">
                                                     <option value="">-- Select Classification --</option>
                                                     @foreach($cargoClassifications as $classification)
-                                                        <option value="{{ $classification->cargo_classification_name }}">
+                                                        <option value="{{ $classification->cargo_classification_id }}">
                                                             {{ $classification->cargo_classification_name }}
                                                         </option>
                                                     @endforeach
@@ -159,6 +159,7 @@
                                                                 data-route-code="{{ $cargo->route_code_id ?? '' }}"
                                                                 data-classification="{{ $cargo->cargo_item_classification ?? '' }}"
                                                                 data-measure-required="{{ $cargo->cargo_item_measure_required ?? 'No' }}"
+                                                                data-measurement-unit="{{ $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm' }}"
                                                                 data-min-length="{{ $cargo->cargo_item_min_length ?? '' }}"
                                                                 data-max-length="{{ $cargo->cargo_item_max_length ?? '' }}"
                                                                 data-min-width="{{ $cargo->cargo_item_min_width ?? '' }}"
@@ -205,8 +206,9 @@
                                     </div>
 
                                     <!-- Cargo Dimensions (Always Visible) -->
-                                    <label class="form-label">Cargo Dimensions <span class="text-danger">*</span></label>
-                                    <div class="d-flex gap-2 align-items-end mb-3">
+                                    <div class="cargo-dimensions-block">
+                                        <label class="form-label">Cargo Dimensions <span class="text-danger">*</span></label>
+                                        <div class="d-flex gap-2 align-items-end mb-3">
                                         <div class="flex-fill">
                                             <label class="form-label small">Length <span
                                                     class="text-danger">*</span></label>
@@ -258,6 +260,8 @@
                                             <input type="text" class="form-control cbm-output" readonly placeholder="0.0000">
                                         </div>
                                     </div>
+                                    </div>
+                                    <input type="hidden" name="cargo_cbm[]" class="cargo-cbm-input" value="0.0000">
 
                                     <!-- Photo Upload -->
                                     <div class="mb-2">
@@ -373,7 +377,80 @@
 
             const cbm = (l * w * h) / 1000000;
             item.querySelector('.cbm-output').value = cbm.toFixed(4);
+            const hiddenCbmInput = item.querySelector('.cargo-cbm-input');
+            if (hiddenCbmInput) {
+                hiddenCbmInput.value = cbm.toFixed(4);
+            }
             return cbm;
+        }
+
+        function applyMeasurementRules(item, selectedOption) {
+            if (!item || !selectedOption) return;
+
+            const measureRequired = (selectedOption.dataset.measureRequired || 'No').toString();
+            const minLength = selectedOption.dataset.minLength || '';
+            const minWidth = selectedOption.dataset.minWidth || '';
+            const minHeight = selectedOption.dataset.minHeight || '';
+            const unitFromItem = selectedOption.dataset.measurementUnit || 'cm';
+
+            const lengthInput = item.querySelector('[name="cargo_length[]"]');
+            const widthInput = item.querySelector('[name="cargo_width[]"]');
+            const heightInput = item.querySelector('[name="cargo_height[]"]');
+            const unitSelect = item.querySelector('.unitSelect');
+            const dimensionsBlock = item.querySelector('.cargo-dimensions-block');
+
+            if (unitSelect && (unitFromItem === 'cm' || unitFromItem === 'in')) {
+                unitSelect.value = unitFromItem;
+            }
+
+            if (measureRequired === 'Yes') {
+                if (lengthInput) {
+                    lengthInput.value = minLength;
+                    lengthInput.readOnly = true;
+                }
+                if (widthInput) {
+                    widthInput.value = minWidth;
+                    widthInput.readOnly = true;
+                }
+                if (heightInput) {
+                    heightInput.value = minHeight;
+                    heightInput.readOnly = true;
+                }
+                if (unitSelect) {
+                    unitSelect.disabled = true;
+                }
+                if (dimensionsBlock) {
+                    dimensionsBlock.style.display = 'none';
+                }
+            } else {
+                if (lengthInput) {
+                    lengthInput.value = '';
+                    lengthInput.readOnly = false;
+                }
+                if (widthInput) {
+                    widthInput.value = '';
+                    widthInput.readOnly = false;
+                }
+                if (heightInput) {
+                    heightInput.value = '';
+                    heightInput.readOnly = false;
+                }
+                if (unitSelect) {
+                    unitSelect.disabled = false;
+                }
+                if (dimensionsBlock) {
+                    dimensionsBlock.style.display = '';
+                }
+            }
+
+            calculateCBM(item);
+        }
+
+        function updateCargoItemComputedValues(item) {
+            const descriptionSelect = item.querySelector('.cargo-description');
+            if (!descriptionSelect) return;
+            const selectedOption = descriptionSelect.options[descriptionSelect.selectedIndex];
+            applyMeasurementRules(item, selectedOption);
         }
 
         function syncCargoItems() {
@@ -394,9 +471,12 @@
                         el.querySelectorAll('option').forEach(o => { o.style.display = ''; });
                     });
                     newItem.querySelector('.cbm-output').value = '0.0000';
+                    const hiddenCbmInput = newItem.querySelector('.cargo-cbm-input');
+                    if (hiddenCbmInput) hiddenCbmInput.value = '0.0000';
                     const ms = newItem.querySelector('.measurements-section');
                     if (ms) ms.style.display = 'none';
                     container.appendChild(newItem);
+                    updateCargoItemComputedValues(newItem);
                 }
             } else if (desired < current) {
                 for (let i = current; i > desired; i--) {
@@ -450,56 +530,7 @@ container.addEventListener('change', e => {
     if(!e.target.classList.contains('cargo-description')) return;
     const item = e.target.closest('.cargo-item');
     const selectedOption = e.target.options[e.target.selectedIndex];
-
-    // Get measurement requirement and min/max values
-    const measureRequired = (selectedOption.dataset.measureRequired || 'No').toString();
-    const minLength = selectedOption.dataset.minLength || '';
-    const maxLength = selectedOption.dataset.maxLength || '';
-    const minWidth = selectedOption.dataset.minWidth || '';
-    const maxWidth = selectedOption.dataset.maxWidth || '';
-    const minHeight = selectedOption.dataset.minHeight || '';
-    const maxHeight = selectedOption.dataset.maxHeight || '';
-
-    // Get input fields
-    const lengthInput = item.querySelector('[name="cargo_length[]"]');
-    const widthInput = item.querySelector('[name="cargo_width[]"]');
-    const heightInput = item.querySelector('[name="cargo_height[]"]');
-
-    if (measureRequired === 'Yes') {
-        // Set fields to min/max values and make readonly
-        if(lengthInput) {
-            lengthInput.value = minLength;
-            lengthInput.readOnly = true;
-        }
-        if(widthInput) {
-            widthInput.value = minWidth;
-            widthInput.readOnly = true;
-        }
-        if(heightInput) {
-            heightInput.value = minHeight;
-            heightInput.readOnly = true;
-        }
-    } else {
-        // Clear fields and make editable
-        if(lengthInput) {
-            lengthInput.value = '';
-            lengthInput.readOnly = false;
-        }
-        if(widthInput) {
-            widthInput.value = '';
-            widthInput.readOnly = false;
-        }
-        if(heightInput) {
-            heightInput.value = '';
-            heightInput.readOnly = false;
-        }
-    }
-
-    // Optionally update dimension range display as before
-    const dimensionRanges = item.querySelectorAll('.dimension-range');
-    if(dimensionRanges[0]) dimensionRanges[0].textContent = minLength && maxLength ? `(${minLength} - ${maxLength})` : '';
-    if(dimensionRanges[1]) dimensionRanges[1].textContent = minWidth && maxWidth ? `(${minWidth} - ${maxWidth})` : '';
-    if(dimensionRanges[2]) dimensionRanges[2].textContent = minHeight && maxHeight ? `(${minHeight} - ${maxHeight})` : '';
+    applyMeasurementRules(item, selectedOption);
 });
 
 
@@ -523,7 +554,10 @@ container.addEventListener('change', e => {
 
         if (noInput) {
             noInput.addEventListener('change', syncCargoItems);
-            window.addEventListener('DOMContentLoaded', syncCargoItems);
+            window.addEventListener('DOMContentLoaded', function () {
+                syncCargoItems();
+                container.querySelectorAll('.cargo-item').forEach(updateCargoItemComputedValues);
+            });
         }
 
 

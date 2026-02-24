@@ -6,17 +6,19 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\RoutePort;
 use App\Models\RouteCode;
+use App\Http\Controllers\Traits\AdminGuard;
 
 class RoutePortController extends Controller
 {
-    private function isAdmin()
+    use AdminGuard;
+
+    public function __construct()
     {
-        return auth()->guard('admin')->check();
+        $this->ensureAdmin();
     }
 
     public function index(Request $request)
     {
-
         /*
         dd([
             'staff_guard' => auth()->guard('staff')->check(),
@@ -25,10 +27,6 @@ class RoutePortController extends Controller
             'admin_user' => auth()->guard('admin')->user(),
         ]);
         */
-
-        if (!$this->isAdmin()) {
-            abort(403);
-        }
 
         $search = $request->input('search');
 

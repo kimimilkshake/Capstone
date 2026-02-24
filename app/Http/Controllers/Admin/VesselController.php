@@ -8,12 +8,13 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Vessel;
 use App\Models\Hatch;
 use App\Models\Accommodation;
-
+use App\Http\Controllers\Traits\AdminGuard;
 class VesselController extends Controller
 {
-    private function isAdmin()
+    use AdminGuard;
+    public function __construct()
     {
-        return auth()->guard('admin')->check();
+        $this->ensureAdmin();
     }
 
     public function index(Request $request)
@@ -26,10 +27,6 @@ class VesselController extends Controller
             'admin_user' => auth()->guard('admin')->user(),
         ]);
         */
-
-        if (!$this->isAdmin()) {
-            abort(403);
-        }
         
         $query = Vessel::with(['hatches', 'accommodations']);
 
@@ -50,15 +47,6 @@ class VesselController extends Controller
 
     public function create()
     {
-        /*
-        dd([
-            'staff_guard' => auth()->guard('staff')->check(),
-            'admin_guard' => auth()->guard('admin')->check(),
-            'staff_user' => auth()->guard('staff')->user(),
-            'admin_user' => auth()->guard('admin')->user(),
-        ]);
-        */
-        
         return view('authorized.admin.create_vessel');
     }
 

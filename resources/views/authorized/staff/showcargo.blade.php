@@ -15,9 +15,24 @@
             <div class="col-lg-6">
                 <div class="card shadow-sm p-4 mb-4">
                     <h5 class="mb-2">Booking Information</h5>
+                    @php
+                        $processedBy = optional(optional($booking->cargoBookings->first())->approvedByStaff)
+                            ->staff_name;
+                        $processedLabel = 'N/A';
+                        if ($processedBy) {
+                            if ($booking->booking_status === 'Confirmed') {
+                                $processedLabel = 'Approved by ' . $processedBy;
+                            } elseif ($booking->booking_status === 'Canceled') {
+                                $processedLabel = 'Canceled by ' . $processedBy;
+                            } else {
+                                $processedLabel = $processedBy;
+                            }
+                        }
+                    @endphp
                     <p><strong>Booking Ref #:</strong> {{ $booking->booking_code }}</p>
                     <p><strong>Status:</strong> {{ $booking->booking_status }}</p>
                     <p><strong>Created:</strong> {{ $booking->created_at->format('M d, Y') }}</p>
+                    <p><strong>Approved By:</strong> {{ $processedLabel }}</p>
 
                     @if ($booking->voyage)
                         <p><strong>Voyage Code:</strong> {{ $booking->voyage->voyage_code }}</p>
@@ -145,63 +160,65 @@
     <div class="card shadow-sm p-3 mb-4">
         <h5>Cargo Items</h5>
 
-        <table class="table table-bordered table-striped mt-3">
-            <thead class="table-dark">
-                <tr>
-                    <th>Description</th>
-                    <th>Classification</th>
-                    <th>Qty</th>
-                    <th>Length</th>
-                    <th>Width</th>
-                    <th>Height</th>
-                    <th>CBM</th>
-                    <th>Freight</th>
-                    <th>Arrastre</th>
-                    <th>Subtotal</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @php $total = 0; @endphp
-
-                @foreach ($cargoBookings as $c)
-                    @php
-                        $freight = $c->cargoItem->cargo_item_freight;
-                        $arrastre = $c->cargoItem->cargo_item_arrastre;
-                        $cbm = ($c->length * $c->width * $c->height) / 1000000;
-                        $subtotal = ($freight + $arrastre) * $cbm * $c->quantity;
-                        $total += $subtotal;
-                        $unit = $c->measurement_unit ?? 'cm';
-                    @endphp
-
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped mt-3 align-middle cargo-items-table">
+                <thead class="table-dark">
                     <tr>
-                        <td>{{ $c->cargoItem->cargo_item_description }}</td>
-                        <td>{{ $c->cargoClassification->cargo_classification_name ?? 'N/A' }}</td>
-                        <td>{{ $c->quantity }}</td>
-                        <td>{{ number_format($c->length, 2) }}{{ $unit }}</td>
-                        <td>{{ number_format($c->width, 2) }}{{ $unit }}</td>
-                        <td>{{ number_format($c->height, 2) }}{{ $unit }}</td>
-                        <td>{{ number_format($cbm, 4) }}</td>
-                        <td>₱{{ number_format($freight, 2) }}</td>
-                        <td>₱{{ number_format($arrastre, 2) }}</td>
-                        <td>₱{{ number_format($subtotal, 2) }}</td>
+                        <th>Description</th>
+                        <th>Classification</th>
+                        <th>Qty</th>
+                        <th>Length</th>
+                        <th>Width</th>
+                        <th>Height</th>
+                        <th>CBM</th>
+                        <th>Freight</th>
+                        <th>Arrastre</th>
+                        <th>Subtotal</th>
                     </tr>
-                @endforeach
-            </tbody>
+                </thead>
 
-            <tfoot>
-                <tr>
-                    <th colspan="10" class="text-end">TOTAL:</th>
-                    <th>
-                        @if ($payment && $payment->total_amount)
-                            ₱{{ number_format($payment->total_amount, 2) }}
-                        @else
-                            ₱{{ number_format($total, 2) }}
-                        @endif
-                    </th>
-                </tr>
-            </tfoot>
-        </table>
+                <tbody>
+                    @php $total = 0; @endphp
+
+                    @foreach ($cargoBookings as $c)
+                        @php
+                            $freight = $c->cargoItem->cargo_item_freight;
+                            $arrastre = $c->cargoItem->cargo_item_arrastre;
+                            $cbm = (float) ($c->cbm ?? ($c->length * $c->width * $c->height) / 1000000);
+                            $subtotal = ($freight + $arrastre) * $cbm * $c->quantity;
+                            $total += $subtotal;
+                            $unit = $c->measurementUnit->measurement_unit_abbreviation ?? 'cm';
+                        @endphp
+
+                        <tr>
+                            <td>{{ $c->cargoItem->cargo_item_description }}</td>
+                            <td>{{ $c->cargoClassification->cargo_classification_name ?? 'N/A' }}</td>
+                            <td class="text-center">{{ $c->quantity }}</td>
+                            <td class="text-end">{{ number_format($c->length, 2) }}{{ $unit }}</td>
+                            <td class="text-end">{{ number_format($c->width, 2) }}{{ $unit }}</td>
+                            <td class="text-end">{{ number_format($c->height, 2) }}{{ $unit }}</td>
+                            <td class="text-end">{{ number_format($cbm, 4) }}</td>
+                            <td class="text-end">₱{{ number_format($freight, 2) }}</td>
+                            <td class="text-end">₱{{ number_format($arrastre, 2) }}</td>
+                            <td class="text-end">₱{{ number_format($subtotal, 2) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+
+                <tfoot>
+                    <tr>
+                        <th colspan="10" class="text-end">TOTAL:</th>
+                        <th class="text-end">
+                            @if ($payment && $payment->total_amount)
+                                ₱{{ number_format($payment->total_amount, 2) }}
+                            @else
+                                ₱{{ number_format($total, 2) }}
+                            @endif
+                        </th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
     </div>
 
     {{-- ACTION BUTTONS --}}
@@ -210,7 +227,8 @@
             <form action="{{ route('cargo.bookings.approve', $booking->booking_ref_no) }}" method="POST" class="w-100"
                 style="max-width: 200px;" id="acceptForm">
                 @csrf
-                <button type="button" class="btn btn-success btn-lg px-4 w-100" id="acceptBtn" onclick="validateAndAccept(event)">Accept</button>
+                <button type="button" class="btn btn-success btn-lg px-4 w-100" id="acceptBtn"
+                    onclick="validateAndAccept(event)">Accept</button>
             </form>
 
             <!-- Open modal to collect rejection reason -->
@@ -226,7 +244,8 @@
                         @csrf
                         <div class="modal-header">
                             <h5 class="modal-title">Reason for Rejection</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             <div class="mb-3">
@@ -282,7 +301,6 @@
                 <div class="modal-body" id="billOfLadingContent">
                     <div class="p-3">
                         <h5>Shipping Information</h5>
-                        <p>Vessel Name: {{ $booking->voyage->vessel_name ?? 'Not specified' }}</p>
                         <p>Voyage No.: {{ $booking->voyage->voyage_code ?? 'N/A' }}</p>
                         <p>Bill of Lading (B/L) No.: {{ $booking->booking_ref_no }}</p>
                         <p>Sailing Date:
@@ -308,15 +326,15 @@
                         <hr />
                         <h5>Cargo Description</h5>
                         @foreach ($booking->cargoBookings as $c)
-                            @php $unit = $c->measurement_unit ?? 'cm'; @endphp
+                            @php $unit = $c->measurementUnit->measurement_unit_abbreviation ?? 'cm'; @endphp
                             <div class="mb-2">
                                 <div><strong>Qty:</strong> {{ $c->quantity }}</div>
                                 <div><strong>Classification:</strong>
                                     {{ $c->cargoClassification->cargo_classification_name ?? 'N/A' }}</div>
                                 <div><strong>Description:</strong> {{ $c->cargoItem->cargo_item_description ?? '' }}</div>
-                                <div><strong>Dimensions:</strong> {{ number_format($c->length, 2) . $unit }} x
-                                    {{ number_format($c->width, 2) . $unit }} x {{ number_format($c->height, 2) . $unit }}
-                                </div>
+                                <div><strong>Dimensions:</strong> {{ number_format($c->length, 2) }} x
+                                    {{ number_format($c->width, 2) }} x {{ number_format($c->height, 2) }}
+                                    {{ $unit }}</div>
                                 <div><strong>Weight:</strong> {{ number_format($c->weight, 2) }} kg</div>
                             </div>
                         @endforeach
@@ -405,7 +423,8 @@
                     <form action="{{ route('cargo.bookings.approve', $booking->booking_ref_no) }}" method="POST"
                         class="w-100" style="max-width: 200px;" id="acceptForm2">
                         @csrf
-                        <button type="button" class="btn btn-success btn-lg px-4 w-100" id="acceptBtn2" onclick="validateAndAccept(event)">Accept</button>
+                        <button type="button" class="btn btn-success btn-lg px-4 w-100" id="acceptBtn2"
+                            onclick="validateAndAccept(event)">Accept</button>
                     </form>
 
                     <!-- Open modal to collect rejection reason -->
@@ -544,7 +563,8 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-success" id="confirmAcceptBtn" onclick="proceedWithAcceptance()">Proceed with Acceptance</button>
+                        <button type="button" class="btn btn-success" id="confirmAcceptBtn"
+                            onclick="proceedWithAcceptance()">Proceed with Acceptance</button>
                     </div>
                 </div>
             </div>
@@ -556,7 +576,7 @@
              */
             function validateAndAccept(event) {
                 event.preventDefault();
-                
+
                 const voyageId = {{ $booking->voyage_id }};
                 const cargoBookingIds = [
                     @foreach ($booking->cargoBookings as $cargo)
@@ -577,39 +597,39 @@
                 btn.disabled = true;
 
                 // Call API to validate placement
-                fetch('{{ route("cargo.placement.validate") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || 
-                                       document.querySelector('input[name="_token"]')?.value
-                    },
-                    body: JSON.stringify({
-                        voyage_id: voyageId,
-                        cargo_booking_ids: cargoBookingIds
+                fetch('{{ route('cargo.placement.validate') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ||
+                                document.querySelector('input[name="_token"]')?.value
+                        },
+                        body: JSON.stringify({
+                            voyage_id: voyageId,
+                            cargo_booking_ids: cargoBookingIds
+                        })
                     })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
+                    .then(response => response.json())
+                    .then(data => {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
 
-                    if (data.success || data.skipValidation) {
-                        // Cargo can fit, proceed with acceptance
+                        if (data.success || data.skipValidation) {
+                            // Cargo can fit, proceed with acceptance
+                            proceedWithAcceptance();
+                        } else {
+                            // Show warning modal
+                            showPlacementWarning(data);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+
+                        // If error, still allow to proceed (fail-open policy)
                         proceedWithAcceptance();
-                    } else {
-                        // Show warning modal
-                        showPlacementWarning(data);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                    
-                    // If error, still allow to proceed (fail-open policy)
-                    proceedWithAcceptance();
-                });
+                    });
             }
 
             /**
@@ -633,8 +653,8 @@
                             <h6>Items that cannot fit:</h6>
                             <ul class="mb-0">
                                 ${data.unpackedItems.map(item => `
-                                    <li>${item.name || item.id} - Cannot fit in any hatch</li>
-                                `).join('')}
+                                            <li>${item.name || item.id} - Cannot fit in any hatch</li>
+                                        `).join('')}
                             </ul>
                         </div>
                     `;
@@ -978,5 +998,44 @@
                     height: 14px;
                 }
             }
+
+            .cargo-items-table th,
+            .cargo-items-table td {
+                vertical-align: middle;
+            }
         </style>
+    @endsection
+
+    @section('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                document.addEventListener('click', function(event) {
+                    const trigger = event.target.closest('[data-bs-target="#photoModal"]');
+                    if (!trigger) return;
+
+                    const image = trigger.getAttribute('data-image');
+                    const description = trigger.getAttribute('data-description') || 'Cargo Item';
+                    const classification = trigger.getAttribute('data-classification') || '--';
+
+                    const modalImage = document.getElementById('modalCargoPhoto');
+                    const modalCaption = document.getElementById('modalPhotoCaption');
+                    const modalClassification = document.getElementById('modalPhotoClassification');
+
+                    if (modalImage) modalImage.src = image || '';
+                    if (modalCaption) modalCaption.textContent = description;
+                    if (modalClassification) modalClassification.textContent = 'Classification: ' +
+                        classification;
+                });
+
+                const photoModal = document.getElementById('photoModal');
+                if (photoModal) {
+                    photoModal.addEventListener('hidden.bs.modal', function() {
+                        const modalImage = document.getElementById('modalCargoPhoto');
+                        if (modalImage) {
+                            modalImage.removeAttribute('src');
+                        }
+                    });
+                }
+            });
+        </script>
     @endsection

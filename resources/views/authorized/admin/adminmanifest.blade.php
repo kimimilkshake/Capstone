@@ -137,7 +137,7 @@
                                     <td>{{ $c->cargoClassification->cargo_classification_name ?? 'N/A' }}</td>
                                     <td>{{ $c->cargoItem->cargo_item_description ?? 'N/A'  }}</td>
                                     <td>{{ $c->sender->sender_name ?? 'N/A' }}</td>
-                                    <td>{{ $c->tin_number ?? '-' }}</td>
+                                    <td>{{ $c->sender->sender_tin ?? '-' }}</td>
                                     <td>{{ $c->consignee->consignee_name }}</td>
                                     <td>{{ $c->cargoItem->cargo_item_freight ?? '-' }}</td>
                                     <td>{{ $c->vat ?? '-' }}</td>

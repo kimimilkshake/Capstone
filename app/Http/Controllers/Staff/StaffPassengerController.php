@@ -13,12 +13,15 @@ use App\Models\Notification;
 use App\Jobs\SendTicketEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Traits\StaffGuard;
 
 class StaffPassengerController extends Controller
 {
-    private function isStaff()
+    use StaffGuard;
+
+    public function __construct()
     {
-        return auth()->guard('staff')->check();
+        $this->ensureStaff();
     }
 
     /**
@@ -26,11 +29,6 @@ class StaffPassengerController extends Controller
      */
     public function create()
     {
-
-        if (!$this->isStaff()) {
-            abort(403);
-        }
-
         $voyages = Voyage::with(['routePort', 'vessel.accommodations'])
             ->where('voyage_status', 'Scheduled')
             ->orderBy('voyage_departure_date', 'asc')
@@ -50,10 +48,6 @@ class StaffPassengerController extends Controller
      */
     public function store(Request $request)
     {
-        if (!$this->isStaff()) {
-            abort(403);
-        }
-
         $request->validate([
             'voyage_id' => 'required|exists:voyage,voyage_id',
             'payment_mode' => 'required|in:Physical,GCash,Pending',
@@ -219,10 +213,6 @@ class StaffPassengerController extends Controller
      */
     public function showReservation($bookingRef)
     {
-        if (!$this->isStaff()) {
-            abort(403);
-        }
-
         $booking = Booking::where('booking_ref_no', $bookingRef)
             ->first();
 
@@ -312,10 +302,6 @@ class StaffPassengerController extends Controller
      */
     public function getAvailableCots(Request $request)
     {
-        if (!$this->isStaff()) {
-            abort(403);
-        }
-
         $voyageId = $request->query('voyage_id');
 
         if (!$voyageId) {
@@ -381,10 +367,6 @@ class StaffPassengerController extends Controller
      */
     public function cancelReservation($bookingRef)
     {
-        if (!$this->isStaff()) {
-            abort(403);
-        }
-
         try {
             $booking = Booking::where('booking_ref_no', $bookingRef)->first();
 
@@ -412,10 +394,6 @@ class StaffPassengerController extends Controller
      */
     public function completeCash($bookingRef)
     {
-        if (!$this->isStaff()) {
-            abort(403);
-        }
-
         try {
             DB::beginTransaction();
 
@@ -479,10 +457,6 @@ class StaffPassengerController extends Controller
      */
     public function completeGcash($bookingRef)
     {
-        if (!$this->isStaff()) {
-            abort(403);
-        }
-
         try {
             DB::beginTransaction();
 

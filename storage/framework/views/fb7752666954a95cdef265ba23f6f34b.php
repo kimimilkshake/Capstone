@@ -6,6 +6,22 @@
     <div class="svl-title">
       <h3>SEARCH VOYAGE</h3>
     </div>
+
+    
+    <?php if(session('success')): ?>
+      <div class="alert alert-success mb-3">
+          <?php echo e(session('success')); ?>
+
+      </div>
+    <?php endif; ?>
+
+    <?php if(session('error')): ?>
+      <div class="alert alert-danger mb-3">
+          <?php echo e(session('error')); ?>
+
+      </div>
+    <?php endif; ?>
+
     <div class="search-add-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
       <form class="search-bar" action="<?php echo e(route('staff.voyage_list')); ?>" method="GET" style="flex: 1;">
           <input 

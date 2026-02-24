@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Promo;
+use App\Http\Controllers\Traits\AdminGuard;
 
 class PromoController extends Controller
 {
-    private function isAdmin()
+    use AdminGuard;
+
+    public function __construct()
     {
-        return auth()->guard('admin')->check();
+        $this->ensureAdmin();
     }
 
     //Show list of promos with optional search
@@ -24,10 +27,6 @@ class PromoController extends Controller
             'admin_user' => auth()->guard('admin')->user(),
         ]);
         */
-
-        if (!$this->isAdmin()) {
-            abort(403);
-        }
 
         $query = Promo::query();
 

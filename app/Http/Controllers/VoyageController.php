@@ -7,18 +7,14 @@ use App\Models\Voyage;
 use App\Models\RoutePort;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Http\Controllers\Traits\AdminOrStaffGuard;
 
 class VoyageController extends Controller
 {
-    // AUTHORIZATION GUARDS
-    private function isStaff()
+    use AdminOrStaffGuard;
+    public function __construct()
     {
-        return auth()->guard('staff')->check();
-    }
-
-    private function isAdmin()
-    {
-        return auth()->guard('admin')->check();
+        $this->ensureAuthorized();
     }
 
     // AUTO UPDATE STATUS
@@ -115,7 +111,7 @@ class VoyageController extends Controller
             ->orderBy('voyage_departure_date', 'desc')
             ->paginate(8);
 
-        return $this->isStaff()
+        return auth()->guard('staff')->check()
             ? view('authorized.staff.svoyage_list', compact('voyages', 'search'))
             : view('authorized.admin.voyage_list', compact('voyages', 'search'));
     }
@@ -127,7 +123,7 @@ class VoyageController extends Controller
         $vessels = Vessel::where('vessel_status', 'Active')->get();
         $route_port = RoutePort::all();
 
-        return $this->isStaff()
+        return auth()->guard('staff')->check()
             ? view('authorized.staff.screate_voyage', compact('vessels', 'route_port'))
             : view('authorized.admin.create_voyage', compact('vessels', 'route_port'));
     }
@@ -186,8 +182,8 @@ class VoyageController extends Controller
             'voyage_code' => $voyageCode,
         ]);
 
-        return redirect()->route($this->isStaff() ? 'staff.voyage_list' : 'admin.voyage_list')
-                 ->with('success', 'Voyage added successfully.');
+        return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
+                         ->with('success', 'Voyage added successfully.');
 
     }
 
@@ -203,12 +199,11 @@ class VoyageController extends Controller
 
         // Only allow editing if scheduled OR completed
         if (!$isCompleted && $voyage->voyage_status !== 'Scheduled') {
-            return redirect()->route(
-                $this->isStaff() ? 'staff.voyage_list' : 'admin.voyage_list'
-            )->with('error', 'Only scheduled voyages can be edited.');
+            return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
+                             ->with('error', 'Only scheduled voyages can be edited.');
         }
 
-        return $this->isStaff()
+        return auth()->guard('staff')->check()
             ? view('authorized.staff.svoyage_edit', compact('voyage', 'vessels', 'route_port', 'isCompleted'))
             : view('authorized.admin.voyage_edit', compact('voyage', 'vessels', 'route_port', 'isCompleted'));
     }
@@ -219,9 +214,8 @@ class VoyageController extends Controller
 
         // Completely locked statuses
         if (in_array($voyage->voyage_status, ['At Sea', 'Cancelled', 'Archived'])) {
-            return redirect()->route(
-                $this->isStaff() ? 'staff.voyage_list' : 'admin.voyage_list'
-            )->with('error', 'This voyage can no longer be updated.');
+            return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
+                             ->with('error', 'This voyage can no longer be updated.');
         }
 
         // Validation rules
@@ -304,7 +298,7 @@ class VoyageController extends Controller
 
         $voyage->update($updateData);
 
-        return redirect()->route($this->isStaff() ? 'staff.voyage_list' : 'admin.voyage_list')
+        return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
                         ->with('success', 'Voyage updated successfully.');
     }
 
@@ -313,18 +307,15 @@ class VoyageController extends Controller
     {
         $voyage = Voyage::findOrFail($id);
 
-        //Only allow deleting if voyage is still scheduled
         if ($voyage->voyage_status !== 'Scheduled') {
-            return redirect()->route(
-                $this->isStaff() ? 'staff.voyage_list' : 'admin.voyage_list'
-            )->with('error', 'Only scheduled voyages can be deleted.');
+            return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
+                             ->with('error', 'Only scheduled voyages can be deleted.');
         }
 
         $voyage->delete();
 
-        return redirect()->route(
-            $this->isStaff() ? 'staff.voyage_list' : 'admin.voyage_list'
-        )->with('success', 'Voyage deleted.');
+        return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
+                        ->with('success', 'Voyage deleted.');
         
     }
 }

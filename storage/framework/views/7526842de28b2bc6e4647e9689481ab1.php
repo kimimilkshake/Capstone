@@ -14,9 +14,22 @@
         <div class="col-lg-6">
             <div class="card shadow-sm p-4 mb-4">
                 <h5 class="mb-2">Booking Information</h5>
+                <?php
+                    $processedBy = optional(optional($booking->cargoBookings->first())->approvedByStaff)->staff_name;
+                    $processedLabel = 'N/A';
+                    if ($processedBy) {
+                        if ($booking->booking_status === 'Confirmed') {
+                            $processedLabel = 'Approved by ' . $processedBy;
+                        } elseif ($booking->booking_status === 'Canceled') {
+                            $processedLabel = 'Canceled by ' . $processedBy;
+                        } else {
+                            $processedLabel = $processedBy;
+                        }
+                    }
+                ?>
                 <p><strong>Booking Ref #:</strong> <?php echo e($booking->booking_code); ?></p>
                 <p><strong>Status:</strong> <?php echo e($booking->booking_status); ?></p>
-                <p><strong>Created:</strong> <?php echo e($booking->created_at->format('M d, Y')); ?></p>
+                <p><strong>Approved By:</strong> <?php echo e($processedLabel); ?></p>
 
                 <?php if($booking->voyage): ?>
                     <p><strong>Voyage Code:</strong> <?php echo e($booking->voyage->voyage_code); ?></p>
@@ -26,11 +39,6 @@
                     <p><strong>Voyage:</strong> N/A</p>
                 <?php endif; ?>
 
-                <?php if($payment): ?>
-                    <p><strong>Mode of Payment:</strong> <?php echo e($payment->mode_of_payment); ?></p>
-                    <p><strong>Payment Status:</strong> <?php echo e($payment->payment_status); ?></p>
-                    <p><strong>Amount Paid:</strong> ₱<?php echo e(number_format($payment->total_amount,2)); ?></p>
-                <?php endif; ?>
             </div>
         </div>
 
@@ -146,7 +154,8 @@
     <div class="card shadow-sm p-3 mb-4">
         <h5>Cargo Items</h5>
 
-        <table class="table table-bordered table-striped mt-3">
+        <div class="table-responsive">
+        <table class="table table-bordered table-striped mt-3 align-middle cargo-items-table">
             <thead class="table-dark">
                 <tr>
                     <th>Description</th>
@@ -169,31 +178,31 @@
                     <?php
                         $freight = $c->cargoItem->cargo_item_freight;
                         $arrastre = $c->cargoItem->cargo_item_arrastre;
-                        $cbm = ($c->length * $c->width * $c->height) / 1000000;
+                        $cbm = (float) ($c->cbm ?? (($c->length * $c->width * $c->height) / 1000000));
                         $subtotal = ($freight + $arrastre) * $cbm * $c->quantity;
                         $total += $subtotal;
-                        $unit = $c->measurement_unit ?? 'cm';
+                        $unit = $c->measurementUnit->measurement_unit_abbreviation ?? 'cm';
                     ?>
 
                     <tr>
                         <td><?php echo e($c->cargoItem->cargo_item_description); ?></td>
                         <td><?php echo e($c->cargoClassification->cargo_classification_name ?? 'N/A'); ?></td>
-                        <td><?php echo e($c->quantity); ?></td>
-                        <td><?php echo e(number_format($c->length, 2)); ?><?php echo e($unit); ?></td>
-                        <td><?php echo e(number_format($c->width, 2)); ?><?php echo e($unit); ?></td>
-                        <td><?php echo e(number_format($c->height, 2)); ?><?php echo e($unit); ?></td>
-                        <td><?php echo e(number_format($cbm, 4)); ?></td>
-                        <td>₱<?php echo e(number_format($freight, 2)); ?></td>
-                        <td>₱<?php echo e(number_format($arrastre, 2)); ?></td>
-                        <td>₱<?php echo e(number_format($subtotal, 2)); ?></td>
+                        <td class="text-center"><?php echo e($c->quantity); ?></td>
+                        <td class="text-end"><?php echo e(number_format($c->length, 2)); ?><?php echo e($unit); ?></td>
+                        <td class="text-end"><?php echo e(number_format($c->width, 2)); ?><?php echo e($unit); ?></td>
+                        <td class="text-end"><?php echo e(number_format($c->height, 2)); ?><?php echo e($unit); ?></td>
+                        <td class="text-end"><?php echo e(number_format($cbm, 4)); ?></td>
+                        <td class="text-end">₱<?php echo e(number_format($freight, 2)); ?></td>
+                        <td class="text-end">₱<?php echo e(number_format($arrastre, 2)); ?></td>
+                        <td class="text-end">₱<?php echo e(number_format($subtotal, 2)); ?></td>
                     </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </tbody>
 
             <tfoot>
                 <tr>
-                    <th colspan="10" class="text-end">TOTAL:</th>
-                    <th>
+                    <th colspan="9" class="text-end">TOTAL:</th>
+                    <th class="text-end">
                         <?php if($payment && $payment->total_amount): ?>
                             ₱<?php echo e(number_format($payment->total_amount, 2)); ?>
 
@@ -205,6 +214,7 @@
                 </tr>
             </tfoot>
         </table>
+        </div>
     </div>
 
     
@@ -282,7 +292,6 @@
                 <div class="modal-body" id="billOfLadingContent">
                     <div class="p-3">
                         <h5>Shipping Information</h5>
-                        <p>Vessel Name: <?php echo e($booking->voyage->vessel_name ?? 'Not specified'); ?></p>
                         <p>Voyage No.: <?php echo e($booking->voyage->voyage_code ?? 'N/A'); ?></p>
                         <p>Bill of Lading (B/L) No.: <?php echo e($booking->booking_ref_no); ?></p>
                         <p>Sailing Date: <?php echo e($booking->voyage ? \Carbon\Carbon::parse($booking->voyage->voyage_departure_date)->format('M d, Y') : 'N/A'); ?></p>
@@ -301,12 +310,12 @@
                         <hr />
                         <h5>Cargo Description</h5>
                         <?php $__currentLoopData = $booking->cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <?php $unit = $c->measurement_unit ?? 'cm'; ?>
+                            <?php $unit = $c->measurementUnit->measurement_unit_abbreviation ?? 'cm'; ?>
                             <div class="mb-2">
                                 <div><strong>Qty:</strong> <?php echo e($c->quantity); ?></div>
                                 <div><strong>Classification:</strong> <?php echo e($c->cargoClassification->cargo_classification_name ?? 'N/A'); ?></div>
                                 <div><strong>Description:</strong> <?php echo e($c->cargoItem->cargo_item_description ?? ''); ?></div>
-                                <div><strong>Dimensions:</strong> <?php echo e(number_format($c->length, 2) . $unit); ?> x <?php echo e(number_format($c->width, 2) . $unit); ?> x <?php echo e(number_format($c->height, 2) . $unit); ?></div>
+                                <div><strong>Dimensions:</strong> <?php echo e(number_format($c->length, 2)); ?> x <?php echo e(number_format($c->width, 2)); ?> x <?php echo e(number_format($c->height, 2)); ?> <?php echo e($unit); ?></div>
                                 <div><strong>Weight:</strong> <?php echo e(number_format($c->weight, 2)); ?> kg</div>
                             </div>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -637,21 +646,41 @@
             height: 14px;
         }
     }
+
+    .cargo-items-table th,
+    .cargo-items-table td {
+        vertical-align: middle;
+    }
 </style>
 
 <script>
-    // Modal image data handling
-    document.querySelectorAll('[data-bs-target="#photoModal"]').forEach(element => {
-        element.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const image = this.getAttribute('data-image');
-            const description = this.getAttribute('data-description');
-            const classification = this.getAttribute('data-classification');
-            
-            document.getElementById('modalCargoPhoto').src = image;
-            document.getElementById('modalPhotoCaption').textContent = description;
-            document.getElementById('modalPhotoClassification').textContent = 'Classification: ' + classification;
+    document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('click', function (event) {
+            const trigger = event.target.closest('[data-bs-target="#photoModal"]');
+            if (!trigger) return;
+
+            const image = trigger.getAttribute('data-image');
+            const description = trigger.getAttribute('data-description') || 'Cargo Item';
+            const classification = trigger.getAttribute('data-classification') || '--';
+
+            const modalImage = document.getElementById('modalCargoPhoto');
+            const modalCaption = document.getElementById('modalPhotoCaption');
+            const modalClassification = document.getElementById('modalPhotoClassification');
+
+            if (modalImage) modalImage.src = image || '';
+            if (modalCaption) modalCaption.textContent = description;
+            if (modalClassification) modalClassification.textContent = 'Classification: ' + classification;
         });
+
+        const photoModal = document.getElementById('photoModal');
+        if (photoModal) {
+            photoModal.addEventListener('hidden.bs.modal', function () {
+                const modalImage = document.getElementById('modalCargoPhoto');
+                if (modalImage) {
+                    modalImage.removeAttribute('src');
+                }
+            });
+        }
     });
 
     function printBillOfLading() {

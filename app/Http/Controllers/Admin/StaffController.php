@@ -7,11 +7,31 @@ use Illuminate\Http\Request;
 use App\Models\Staff;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Traits\AdminGuard;
 
 class StaffController extends Controller
 {
+    use AdminGuard;
+
+    public function __construct()
+    {
+        $this->ensureAdmin();
+    }
+
     public function index(Request $request)
     {
+           
+        /*
+        dd([
+            'staff_guard' => auth()->guard('staff')->check(),
+            'admin_guard' => auth()->guard('admin')->check(),
+            'staff_user' => auth()->guard('staff')->user(),
+            'admin_user' => auth()->guard('admin')->user(),
+        ]);
+        */
+        
+        $this->ensureAdmin();
+
         $query = Staff::query();
 
         // Search by name
@@ -25,7 +45,7 @@ class StaffController extends Controller
         }
 
         $staff = $query
-            ->orderBy('staff_id', 'asc')
+            ->orderBy('staff_name', 'asc')
             ->paginate(8);
 
 
@@ -50,7 +70,7 @@ class StaffController extends Controller
         ]);
 
         Staff::create([
-            'admin_id' => 1, // replace with Auth::guard('admin')->id() if guard is defined
+            'admin_id' => auth()->guard('admin')->id(),
             'staff_name' => $request->staff_name,
             'staff_user' => $request->staff_user,
             'staff_password' => Hash::make($request->staff_password),
