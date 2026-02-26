@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bill of Lading - {{ $booking->booking_ref_no }}</title>
+    <title>Bill of Lading - <?php echo e($booking->booking_ref_no); ?></title>
     <style>
         * {
             margin: 0;
@@ -316,18 +316,18 @@
     <div class="info-row full">
         <div class="info-item">
             <label>Vessel:</label>
-            <span>{{ $booking->voyage && $booking->voyage->vessel ? $booking->voyage->vessel->vessel_name : ($booking->voyage->vessel_name ?? 'Not specified') }}</span>
+            <span><?php echo e($booking->voyage && $booking->voyage->vessel ? $booking->voyage->vessel->vessel_name : ($booking->voyage->vessel_name ?? 'Not specified')); ?></span>
         </div>
     </div>
 
     <div class="info-row">
         <div class="info-item">
             <label>Voyage No.:</label>
-            <span>{{ $booking->voyage->voyage_code ?? 'N/A' }}</span>
+            <span><?php echo e($booking->voyage->voyage_code ?? 'N/A'); ?></span>
         </div>
         <div class="info-item">
             <label>Sailing Date:</label>
-            <span>{{ $booking->voyage ? \Carbon\Carbon::parse($booking->voyage->voyage_departure_date)->format('F d, Y') : 'N/A' }}</span>
+            <span><?php echo e($booking->voyage ? \Carbon\Carbon::parse($booking->voyage->voyage_departure_date)->format('F d, Y') : 'N/A'); ?></span>
         </div>
     </div>
 
@@ -336,16 +336,16 @@
         <div class="section-box">
             <div class="section-label">SHIPPER</div>
             <div class="section-content">
-                <p><strong>{{ $booking->sender->sender_name ?? '' }}</strong></p>
-                <p>{{ $booking->sender->sender_contactno ?? '' }}</p>
-                <p>{{ $booking->sender->sender_email ?? '' }}</p>
+                <p><strong><?php echo e($booking->sender->sender_name ?? ''); ?></strong></p>
+                <p><?php echo e($booking->sender->sender_contactno ?? ''); ?></p>
+                <p><?php echo e($booking->sender->sender_email ?? ''); ?></p>
             </div>
         </div>
         <div class="section-box">
             <div class="section-label">CONSIGNEE</div>
             <div class="section-content">
-                <p><strong>{{ $booking->consignee->consignee_name ?? '' }}</strong></p>
-                <p>{{ $booking->consignee->consignee_contactno ?? '' }}</p>
+                <p><strong><?php echo e($booking->consignee->consignee_name ?? ''); ?></strong></p>
+                <p><?php echo e($booking->consignee->consignee_contactno ?? ''); ?></p>
             </div>
         </div>
     </div>
@@ -355,13 +355,13 @@
         <div class="section-box">
             <div class="section-label">Loading Port</div>
             <div class="section-content">
-                <p>{{ $booking->voyage && $booking->voyage->routePort ? $booking->voyage->routePort->port_origin_name : 'Not specified' }}</p>
+                <p><?php echo e($booking->voyage && $booking->voyage->routePort ? $booking->voyage->routePort->port_origin_name : 'Not specified'); ?></p>
             </div>
         </div>
         <div class="section-box">
             <div class="section-label">Unloading Port</div>
             <div class="section-content">
-                <p>{{ $booking->voyage && $booking->voyage->routePort ? $booking->voyage->routePort->port_destination_name : 'Not specified' }}</p>
+                <p><?php echo e($booking->voyage && $booking->voyage->routePort ? $booking->voyage->routePort->port_destination_name : 'Not specified'); ?></p>
             </div>
         </div>
     </div>
@@ -382,24 +382,24 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($booking->cargoBookings as $cargo)
-                    @php $unit = $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm'; @endphp
+                <?php $__currentLoopData = $booking->cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cargo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php $unit = $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm'; ?>
                     <tr>
-                        <td style="text-align:center;">{{ $cargo->quantity }}</td>
-                        <td>{{ $cargo->cargoClassification->cargo_classification_name ?? '' }}</td>
-                        <td>{{ $cargo->cargoItem->cargo_item_description ?? '' }}</td>
-                        <td style="text-align:center;">{{ number_format($cargo->length, 2) . $unit }}</td>
-                        <td style="text-align:center;">{{ number_format($cargo->width, 2) . $unit }}</td>
-                        <td style="text-align:center;">{{ number_format($cargo->height, 2) . $unit }}</td>
-                        <td style="text-align:center;">{{ number_format($cargo->weight, 2) }}</td>
+                        <td style="text-align:center;"><?php echo e($cargo->quantity); ?></td>
+                        <td><?php echo e($cargo->cargoClassification->cargo_classification_name ?? ''); ?></td>
+                        <td><?php echo e($cargo->cargoItem->cargo_item_description ?? ''); ?></td>
+                        <td style="text-align:center;"><?php echo e(number_format($cargo->length, 2) . $unit); ?></td>
+                        <td style="text-align:center;"><?php echo e(number_format($cargo->width, 2) . $unit); ?></td>
+                        <td style="text-align:center;"><?php echo e(number_format($cargo->height, 2) . $unit); ?></td>
+                        <td style="text-align:center;"><?php echo e(number_format($cargo->weight, 2)); ?></td>
                     </tr>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </tbody>
         </table>
     </div>
 
     <!-- Charges Table -->
-    @php
+    <?php
         $freight = 0;
         $arrastre = 0;
         $stamp = 0;
@@ -413,23 +413,23 @@
             $arrastre += $arrastreRate * $cbm * $qty;
         }
         $total = $freight + $arrastre + $stamp;
-    @endphp
+    ?>
     <table class="charges-table">
         <tr>
             <td class="label">FREIGHT CHARGES</td>
-            <td class="amount">₱{{ number_format($freight, 2) }}</td>
+            <td class="amount">₱<?php echo e(number_format($freight, 2)); ?></td>
         </tr>
         <tr>
             <td class="label">ARRASTRE CHARGES</td>
-            <td class="amount">₱{{ number_format($arrastre, 2) }}</td>
+            <td class="amount">₱<?php echo e(number_format($arrastre, 2)); ?></td>
         </tr>
         <tr>
             <td class="label">STAMP</td>
-            <td class="amount">₱2{{ number_format($stamp, 2) }}</td>
+            <td class="amount">₱2<?php echo e(number_format($stamp, 2)); ?></td>
         </tr>
         <tr>
             <td class="label"><strong>TOTAL TRANSACTION</strong></td>
-            <td class="amount"><strong>₱{{ number_format($total, 2) }}</strong></td>
+            <td class="amount"><strong>₱<?php echo e(number_format($total, 2)); ?></strong></td>
         </tr>
     </table>
 
@@ -461,3 +461,4 @@
 
 </body>
 </html>
+<?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/authorized/staff/bill_of_lading.blade.php ENDPATH**/ ?>
