@@ -13,8 +13,8 @@
 
         body {
             font-family: 'DejaVu Sans', 'Arial', sans-serif;
-            background: white;
-            padding: 0;
+            background: #eceff3;
+            padding: 24px;
             margin: 0;
             font-size: 12px;
             line-height: 1.35;
@@ -26,13 +26,13 @@
         }
 
         .page {
-            width: 100%;
-            min-height: 281mm;
-            margin: 0;
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
             background: white;
-            border: 0;
+            border: 1px solid #d9dee5;
             padding: 8mm;
-            box-shadow: none;
+            box-shadow: 0 10px 30px rgba(25, 38, 62, 0.12);
         }
 
         .header {
@@ -263,6 +263,17 @@
 
             .no-print {
                 display: none;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            body {
+                padding: 12px;
+            }
+
+            .page {
+                width: 100%;
+                min-height: auto;
             }
         }
 

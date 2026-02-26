@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('page-title', 'Reservation')
+@section('page-title', 'RESERVATION')
 @section('content')
     @include('components.authHeader')
     @include('components.staff_nav')

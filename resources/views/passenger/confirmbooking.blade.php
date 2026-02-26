@@ -92,6 +92,25 @@
                             <p>Payment Status: <strong>{{ $payment->payment_status }}</strong></p>
                         @endif
 
+                        @php
+                            // Check if any passenger has a promo applied
+                            $promoApplied = null;
+                            foreach ($passengers as $item) {
+                                if ($item['ticket']->promo) {
+                                    $promoApplied = $item['ticket']->promo;
+                                    break;
+                                }
+                            }
+                        @endphp
+
+                        @if ($promoApplied)
+                            <div class="alert alert-success mb-3">
+                                <strong>🎉 Promo Applied!</strong><br>
+                                <small>{{ $promoApplied->promo_name }} ({{ $promoApplied->promo_code }})<br>
+                                {{ $promoApplied->promo_description }}</small>
+                            </div>
+                        @endif
+
                         <hr>
 
                         <h6>Passengers</h6>
@@ -100,8 +119,13 @@
                                 <li class="list-group-item">
                                     <strong>{{ $item['passenger']->passenger_firstname }}
                                         {{ $item['passenger']->passenger_lastname }}</strong>
+                                    <div>Type: {{ $item['passenger']->passenger_type }}</div>
                                     <div>Cot: {{ $item['ticket']->pt_cot_no }}</div>
-                                    <div>Price: PHP {{ number_format($item['ticket']->pt_ticket_price, 2) }}</div>
+                                    <div>Price: PHP {{ number_format($item['ticket']->pt_ticket_price, 2) }}
+                                        @if ($item['ticket']->promo)
+                                            <span class="badge bg-success">Promo: -{{ $item['ticket']->promo->promo_discount_rate }}%</span>
+                                        @endif
+                                    </div>
                                 </li>
                             @endforeach
                         </ul>

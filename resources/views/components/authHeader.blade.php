@@ -34,12 +34,9 @@
         <span class="fw-semibold">{{ Session::get('user_name') }}</span>
       </div>
 
-    <div class="dropdown-menu">
-        <a href="#" class="dropdown-item">
-          <i class="fa-solid fa-user"></i> View Profile
-        </a>
+        <div class="dropdown-menu">
           <a href="#" class="dropdown-item">
-            <i class="fa-solid fa-gear"></i> Settings
+            <i class="fa-solid fa-user"></i> View Profile
           </a>
           <form action="{{ route('logout') }}" method="POST">
             @csrf

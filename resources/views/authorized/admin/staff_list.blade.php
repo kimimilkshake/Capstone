@@ -16,7 +16,7 @@
 
             <form method="GET" action="{{ route('admin.staff_list') }}">
                 <select name="status" onchange="this.form.submit()"> 
-                    <option value="">Filter by Status</option>
+                    <option value="">All Staff</option>
                     <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active</option>
                     <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
                 </select>

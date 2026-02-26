@@ -27,16 +27,20 @@ or <br>
 ```php artisan db:seed```<br>
 16. Run the npm installation command: <br>
 ```npm install```<br>
-17. Open a new terminal and run the following command: <br>
+17. Run the PHP command: <br>
+```composer require barryvdh/laravel-dompdf``` <br>
+18. Open a new terminal and run the following command: <br>
 ```php artisan storage:link``` <br>
-18. Open a new terminal in VS Code and run the PHP server using the following command: <br>
+19. Open a new terminal in VS Code and run the PHP server using the following command: <br>
 ```php artisan serve```<br>
     and click the link `http://127.0.0.1:8000` <br>
-19. Open a new terminal in VS Code and run the Node.js server using the following command: <br>
+20. Open a new terminal in VS Code and run the Node.js server using the following command: <br>
 ```npm run dev```<br>
     and click the link `http://localhost:5173/` <br>
-20. Open a new terminal in VS Code and run the following command: <br>
+21. Open a new terminal in VS Code and run the following command: <br>
 ```php artisan queue:work``` <br>
+22. Open a new terminal in VS Code and run the following command: <br>
+```php artisan schedule:work``` <br>
 
 <h1 align="center">Running the Project</h1>
 
@@ -44,12 +48,15 @@ or <br>
  - If you have already cloned the repository in your computer/laptop and are going to run the project <br>
 1. Open XAMPP and Start APACHE and MySQL <br>
 2. Create a New Terminal in VS Code and run the following command: <br>
-
 ```php artisan serve``` <br>
    and click the link `http://127.0.0.1:8000` <br>
-3. Create anoter New Terminal in VS Code and run the following command: <br>
+3. Create another New Terminal in VS Code and run the following command: <br>
 ```npm run dev```<br>
     and click the link `http://localhost:5173/` <br>
+4. Create another New Terminal in VS Code and run the following command: <br>
+```php artisan queue:work``` <br>
+5. Create another New Terminal in VS Code and run the following command: <br>
+```php artisan schedule:work``` <br>
 
 <h1 align="center">Updating the Project</h1>
 
@@ -80,7 +87,6 @@ or <br>
 
 <h3 align="center">Merging Branches</h3>
 1. To check which branch you are in, open a terminal in VS Code and use the following command: <br>
-
 `git branch` <br>
 2. To check the status of your branch, use the following command: <br>
 `git status` <br>

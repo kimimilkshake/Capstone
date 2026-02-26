@@ -15,7 +15,7 @@
 
             <form method="GET" action="<?php echo e(route('admin.staff_list')); ?>">
                 <select name="status" onchange="this.form.submit()"> 
-                    <option value="">Filter by Status</option>
+                    <option value="">All Staff</option>
                     <option value="Active" <?php echo e(request('status') == 'Active' ? 'selected' : ''); ?>>Active</option>
                     <option value="Inactive" <?php echo e(request('status') == 'Inactive' ? 'selected' : ''); ?>>Inactive</option>
                 </select>
