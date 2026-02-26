@@ -220,30 +220,6 @@
                 <button class="btn btn-danger btn-lg px-4" data-bs-toggle="modal" data-bs-target="#rejectModal"
                     style="width: 200px;">Reject</button>
             </div>
-
-            <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <form action="<?php echo e(route('cargo.bookings.reject', $booking->booking_ref_no)); ?>" method="POST">
-                            <?php echo csrf_field(); ?>
-                            <div class="modal-header">
-                                <h5 class="modal-title">Reason for Rejection</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="mb-3">
-                                    <label class="form-label">Please provide the reason for rejecting this booking</label>
-                                    <textarea name="reason" class="form-control" rows="4" required></textarea>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="submit" class="btn btn-danger">Submit Rejection</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
         <?php endif; ?>
 
         <div class="modal fade" id="photoModal" tabindex="-1" aria-hidden="true">
@@ -273,6 +249,32 @@
             </a>
         </div>
     </div>
+
+    <?php if($booking->booking_status === 'Pending'): ?>
+        <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form action="<?php echo e(route('cargo.bookings.reject', $booking->booking_ref_no)); ?>" method="POST">
+                        <?php echo csrf_field(); ?>
+                        <div class="modal-header">
+                            <h5 class="modal-title">Reason for Rejection</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Please provide the reason for rejecting this booking</label>
+                                <textarea name="reason" class="form-control" rows="4" required></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-danger">Submit Rejection</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 
         
         <div class="modal fade" id="placementValidationModal" tabindex="-1" aria-hidden="true">
