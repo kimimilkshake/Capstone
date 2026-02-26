@@ -34,12 +34,9 @@
         <span class="fw-semibold"><?php echo e(Session::get('user_name')); ?></span>
       </div>
 
-    <div class="dropdown-menu">
-        <a href="#" class="dropdown-item">
-          <i class="fa-solid fa-user"></i> View Profile
-        </a>
+        <div class="dropdown-menu">
           <a href="#" class="dropdown-item">
-            <i class="fa-solid fa-gear"></i> Settings
+            <i class="fa-solid fa-user"></i> View Profile
           </a>
           <form action="<?php echo e(route('logout')); ?>" method="POST">
             <?php echo csrf_field(); ?>

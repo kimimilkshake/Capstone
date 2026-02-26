@@ -91,6 +91,25 @@
                             <p>Payment Status: <strong><?php echo e($payment->payment_status); ?></strong></p>
                         <?php endif; ?>
 
+                        <?php
+                            // Check if any passenger has a promo applied
+                            $promoApplied = null;
+                            foreach ($passengers as $item) {
+                                if ($item['ticket']->promo) {
+                                    $promoApplied = $item['ticket']->promo;
+                                    break;
+                                }
+                            }
+                        ?>
+
+                        <?php if($promoApplied): ?>
+                            <div class="alert alert-success mb-3">
+                                <strong>🎉 Promo Applied!</strong><br>
+                                <small><?php echo e($promoApplied->promo_name); ?> (<?php echo e($promoApplied->promo_code); ?>)<br>
+                                <?php echo e($promoApplied->promo_description); ?></small>
+                            </div>
+                        <?php endif; ?>
+
                         <hr>
 
                         <h6>Passengers</h6>
@@ -100,8 +119,14 @@
                                     <strong><?php echo e($item['passenger']->passenger_firstname); ?>
 
                                         <?php echo e($item['passenger']->passenger_lastname); ?></strong>
+                                    <div>Type: <?php echo e($item['passenger']->passenger_type); ?></div>
                                     <div>Cot: <?php echo e($item['ticket']->pt_cot_no); ?></div>
-                                    <div>Price: PHP <?php echo e(number_format($item['ticket']->pt_ticket_price, 2)); ?></div>
+                                    <div>Price: PHP <?php echo e(number_format($item['ticket']->pt_ticket_price, 2)); ?>
+
+                                        <?php if($item['ticket']->promo): ?>
+                                            <span class="badge bg-success">Promo: -<?php echo e($item['ticket']->promo->promo_discount_rate); ?>%</span>
+                                        <?php endif; ?>
+                                    </div>
                                 </li>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </ul>

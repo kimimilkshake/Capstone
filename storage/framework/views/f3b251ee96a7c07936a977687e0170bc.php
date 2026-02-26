@@ -183,7 +183,6 @@
     </div>
   </div>
 <?php $__env->stopSection(); ?>
-<<<<<<< HEAD:storage/framework/views/d1b8384c742dd212fd539c6b9f40c23e.php
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -213,7 +212,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/authorized/staff/screate_cargo_item.blade.php ENDPATH**/ ?>
-=======
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/authorized/staff/screate_cargo_item.blade.php ENDPATH**/ ?>
->>>>>>> staff:storage/framework/views/f3b251ee96a7c07936a977687e0170bc.php

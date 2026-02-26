@@ -161,9 +161,12 @@ class ManifestController extends Controller
         // --------------------
         if ($showCargo) {
             $cargos = CargoReceipt::where('voyage_id', $voyage->voyage_id)
-    ->with(['booking', 'cargoBooking', 'cargoItem', 'sender', 'consignee', 'payment'])
-    ->get();
-
+                ->with(['booking', 'cargoBooking', 'cargoItem', 'sender', 'consignee', 'payment'])
+                ->select('cargo_receipt.*')
+                ->distinct()
+                ->get()
+                ->unique('cargo_receipt_id')
+                ->values();
         }
 
         // Render the view

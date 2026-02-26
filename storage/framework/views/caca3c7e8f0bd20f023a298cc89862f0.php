@@ -144,8 +144,8 @@
                                     <td><?php echo e($c->sender->sender_tin ?? '-'); ?></td>
                                     <td><?php echo e($c->consignee->consignee_name); ?></td>
                                     <td><?php echo e($c->cargoItem->cargo_item_freight ?? '-'); ?></td>
-                                    <td><?php echo e($c->vat ?? '-'); ?></td>
-                                    <td><?php echo e($c->stamp ?? '-'); ?></td>
+                                    <td>12%</td>
+                                    <td>20.00</td>
                                     <td><?php echo e($c->payment->total_amount ?? 'N/A'); ?></td>
                                     <td><?php echo e($c->receipt_no ?? ($c->cargo_receipt_id ?? '-')); ?></td>
                                     <td><?php echo e($c->cargoItem->cargo_item_arrastre ?? '-'); ?></td>
