@@ -223,11 +223,6 @@ public function pending(Request $request)
      */
     public function show($id)
     {
-        // Check if admin is trying to access
-        if ($this->isAdmin()) {
-            return redirect()->back()->with('error', 'Please use a Staff account to approve Cargo Bookings');
-        }
-
         $booking = Booking::where('booking_ref_no', $id)
             ->with(['sender', 'consignee', 'voyage.routePort', 'cargoBookings.cargoItem', 'cargoBookings.cargoClassification', 'cargoBookings.measurementUnit', 'cargoBookings.approvedByStaff'])
             ->firstOrFail();
