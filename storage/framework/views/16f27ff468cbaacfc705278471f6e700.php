@@ -177,8 +177,12 @@
                                 <div style="width: 120px;">
                                     <label class="form-label small">Unit</label>
                                     <select name="measurement_unit[]" class="form-select unitSelect">
-                                        <option value="cm">cm</option>
-                                        <option value="in">in</option>
+                                        <?php $__currentLoopData = $measurementUnits; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $measurementUnit): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($measurementUnit->measurement_unit_abbreviation); ?>">
+                                                <?php echo e($measurementUnit->measurement_unit_abbreviation); ?>
+
+                                            </option>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select> 
                                 </div>
 
@@ -211,19 +215,35 @@
 <script>
 const container = document.getElementById('cargo-items-container');
 
+function normalizeUnitValue(unitValue){
+    const normalized = String(unitValue || '').trim().toLowerCase();
+
+    if (['in', 'inch', 'inches'].includes(normalized)) return 'in';
+    if (['cm', 'centimeter', 'centimeters'].includes(normalized)) return 'cm';
+    if (['mm', 'millimeter', 'millimeters'].includes(normalized)) return 'mm';
+    if (['m', 'meter', 'meters'].includes(normalized)) return 'm';
+
+    return normalized || 'cm';
+}
+
+function toCentimeters(value, unitValue){
+    const unit = normalizeUnitValue(unitValue);
+    const numericValue = parseFloat(value) || 0;
+
+    if (unit === 'in') return numericValue * 2.54;
+    if (unit === 'mm') return numericValue * 0.1;
+    if (unit === 'm') return numericValue * 100;
+
+    return numericValue;
+}
+
 // Calculate CBM for a cargo item
 function calculateCBM(item){
     const unitEl = item.querySelector('.unitSelect');
     const unit = unitEl ? unitEl.value : 'cm';
-    let l = parseFloat(item.querySelector('[name="cargo_length[]"]').value) || 0;
-    let w = parseFloat(item.querySelector('[name="cargo_width[]"]').value) || 0;
-    let h = parseFloat(item.querySelector('[name="cargo_height[]"]').value) || 0;
-    
-    if (unit === 'in') {
-        l = l * 2.54;
-        w = w * 2.54;
-        h = h * 2.54;
-    }
+    const l = toCentimeters(item.querySelector('[name="cargo_length[]"]').value, unit);
+    const w = toCentimeters(item.querySelector('[name="cargo_width[]"]').value, unit);
+    const h = toCentimeters(item.querySelector('[name="cargo_height[]"]').value, unit);
     
     const cbm = ((l*w*h)/1000000);
     item.querySelector('.cbm-output').value = cbm.toFixed(4);
@@ -246,8 +266,15 @@ function applyMeasurementRules(item, selectedOption){
     const unitSelect = item.querySelector('.unitSelect');
     const dimensionsBlock = item.querySelector('.cargo-dimensions-block');
 
-    if (unitSelect && (unitFromItem === 'cm' || unitFromItem === 'in')) {
-        unitSelect.value = unitFromItem;
+    if (unitSelect) {
+        const normalizedItemUnit = normalizeUnitValue(unitFromItem);
+        const matchingOption = Array.from(unitSelect.options).find(option =>
+            normalizeUnitValue(option.value) === normalizedItemUnit
+        );
+
+        if (matchingOption) {
+            unitSelect.value = matchingOption.value;
+        }
     }
 
     if (measureRequired === 'Yes') {
@@ -367,16 +394,6 @@ if(voyageSelect) {
 const staffForm = document.getElementById('staffCargoForm');
 if(staffForm){
     staffForm.addEventListener('submit', function(e){
-        // Enforce 25kg max
-        let totalWeight = 0;
-        document.querySelectorAll('input[name="cargo_weight[]"]').forEach(input => {
-            totalWeight += parseFloat(input.value) || 0;
-        });
-        if(totalWeight > 25){
-            e.preventDefault();
-            alert('Total weight per booking must not exceed 25kg.');
-            return false;
-        }
         const overlay = document.getElementById('staffOverlay');
         if(overlay){ overlay.style.display = 'flex'; }
     });

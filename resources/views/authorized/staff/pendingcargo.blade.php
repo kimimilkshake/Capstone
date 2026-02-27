@@ -15,7 +15,9 @@
         <input type="text" name="search" class="form-control" style="height: 46px; border-radius: 0;" placeholder="Search by Ref No., Sender, or Consignee..." value="{{ request('search') }}">
         <select name="booking_status" class="form-select" style="max-width: 220px; height: 46px; border-radius: 0;">
             @foreach($allowedStatuses as $status)
-                <option value="{{ $status }}" {{ $selectedStatus === $status ? 'selected' : '' }}>{{ $status }}</option>
+                <option value="{{ $status }}" {{ $selectedStatus === $status ? 'selected' : '' }}>
+                    {{ in_array($status, ['Canceled', 'Cancelled']) ? 'Rejected' : $status }}
+                </option>
             @endforeach
         </select>
         <button type="submit" class="btn btn-primary">Search</button>
@@ -45,7 +47,7 @@
                     <td>{{ $b->booking_code }}</td>
                     <td>{{ optional($b->sender)->sender_name ?? 'N/A' }}</td>
                     <td>{{ optional($b->consignee)->consignee_name ?? 'N/A' }}</td>
-                    <td>{{ $b->booking_status }}</td>
+                    <td>{{ in_array($b->booking_status, ['Canceled', 'Cancelled']) ? 'Rejected' : $b->booking_status }}</td>
                     @php
                         $processedBy = optional(optional($b->cargoBookings->first())->approvedByStaff)->staff_name;
                         $processedLabel = 'N/A';

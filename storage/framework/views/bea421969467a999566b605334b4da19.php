@@ -14,7 +14,10 @@
         <input type="text" name="search" class="form-control" style="height: 46px; border-radius: 0;" placeholder="Search by Ref No., Sender, or Consignee..." value="<?php echo e(request('search')); ?>">
         <select name="booking_status" class="form-select" style="max-width: 220px; height: 46px; border-radius: 0;">
             <?php $__currentLoopData = $allowedStatuses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $status): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <option value="<?php echo e($status); ?>" <?php echo e($selectedStatus === $status ? 'selected' : ''); ?>><?php echo e($status); ?></option>
+                <option value="<?php echo e($status); ?>" <?php echo e($selectedStatus === $status ? 'selected' : ''); ?>>
+                    <?php echo e(in_array($status, ['Canceled', 'Cancelled']) ? 'Rejected' : $status); ?>
+
+                </option>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </select>
         <button type="submit" class="btn btn-primary">Search</button>
@@ -44,7 +47,7 @@
                     <td><?php echo e($b->booking_code); ?></td>
                     <td><?php echo e(optional($b->sender)->sender_name ?? 'N/A'); ?></td>
                     <td><?php echo e(optional($b->consignee)->consignee_name ?? 'N/A'); ?></td>
-                    <td><?php echo e($b->booking_status); ?></td>
+                    <td><?php echo e(in_array($b->booking_status, ['Canceled', 'Cancelled']) ? 'Rejected' : $b->booking_status); ?></td>
                     <?php
                         $processedBy = optional(optional($b->cargoBookings->first())->approvedByStaff)->staff_name;
                         $processedLabel = 'N/A';
