@@ -77,13 +77,11 @@
         <div class="card shadow-sm p-4 mb-4">
             <h5 class="fw-bold mb-3">Cargo Photos</h5>
 
-            
             <?php if(!$hasPhotos): ?>
                 <p class="text-muted text-center fst-italic">
                     No photos were included since the booking was made by the staff
                 </p>
             <?php else: ?>
-                
                 <div id="cargoCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
                     <div class="carousel-indicators">
                         <?php $__currentLoopData = $cargoWithPhotos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $cargo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -112,132 +110,147 @@
                                         data-classification="<?php echo e($cargoClassification); ?>" data-bs-toggle="modal"
                                         data-bs-target="#photoModal" style="cursor: pointer;">
 
-                                    
                                     <div class="carousel-zoom-overlay" data-image="<?php echo e($imgPath); ?>"
                                         data-description="<?php echo e($cargoDescription); ?>"
                                         data-classification="<?php echo e($cargoClassification); ?>" data-bs-toggle="modal"
                                         data-bs-target="#photoModal" style="cursor: pointer;">
-                                        <div class="zoom-content">
-                                        </div>
+                                        <div class="zoom-content"></div>
                                     </div>
 
-                                    
                                     <div class="carousel-caption-overlay">
                                         <h5 class="carousel-cargo-title"><?php echo e($cargoDescription); ?></h5>
                                         <p class="carousel-cargo-classification"><?php echo e($cargoClassification); ?></p>
                                     </div>
                                 </div>
-
-                                
-                                <div class="carousel-caption-overlay">
-                                    <h5 class="carousel-cargo-title"><?php echo e($cargoDescription); ?></h5>
-                                    <p class="carousel-cargo-classification"><?php echo e($cargoClassification); ?></p>
-                                </div>
                             </div>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+
+                    <?php if($cargoWithPhotos->count() > 1): ?>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#cargoCarousel"
+                            data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#cargoCarousel"
+                            data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
         </div>
 
-        
-        <?php if($cargoWithPhotos->count() > 1): ?>
-            <button class="carousel-control-prev" type="button" data-bs-target="#cargoCarousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Previous</span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#cargoCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Next</span>
-            </button>
-        <?php endif; ?>
-    </div>
-    <?php endif; ?>
-    </div>
+        <div class="card shadow-sm p-3 mb-4">
+            <h5>Cargo Items</h5>
 
-    
-    
-    
-    <div class="card shadow-sm p-3 mb-4">
-        <h5>Cargo Items</h5>
-
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped mt-3 align-middle cargo-items-table">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Description</th>
-                        <th>Classification</th>
-                        <th>Qty</th>
-                        <th>Length</th>
-                        <th>Width</th>
-                        <th>Height</th>
-                        <th>CBM</th>
-                        <th>Freight</th>
-                        <th>Arrastre</th>
-                        <th>Subtotal</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <?php $total = 0; ?>
-
-                    <?php $__currentLoopData = $cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        <?php
-                            $freight = $c->cargoItem->cargo_item_freight;
-                            $arrastre = $c->cargoItem->cargo_item_arrastre;
-                            $cbm = (float) ($c->cbm ?? ($c->length * $c->width * $c->height) / 1000000);
-                            $subtotal = ($freight + $arrastre) * $cbm * $c->quantity;
-                            $total += $subtotal;
-                            $unit = $c->measurementUnit->measurement_unit_abbreviation ?? 'cm';
-                        ?>
-
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped mt-3 align-middle cargo-items-table">
+                    <thead class="table-dark">
                         <tr>
-                            <td><?php echo e($c->cargoItem->cargo_item_description); ?></td>
-                            <td><?php echo e($c->cargoClassification->cargo_classification_name ?? 'N/A'); ?></td>
-                            <td class="text-center"><?php echo e($c->quantity); ?></td>
-                            <td class="text-end"><?php echo e(number_format($c->length, 2)); ?><?php echo e($unit); ?></td>
-                            <td class="text-end"><?php echo e(number_format($c->width, 2)); ?><?php echo e($unit); ?></td>
-                            <td class="text-end"><?php echo e(number_format($c->height, 2)); ?><?php echo e($unit); ?></td>
-                            <td class="text-end"><?php echo e(number_format($cbm, 4)); ?></td>
-                            <td class="text-end">₱<?php echo e(number_format($freight, 2)); ?></td>
-                            <td class="text-end">₱<?php echo e(number_format($arrastre, 2)); ?></td>
-                            <td class="text-end">₱<?php echo e(number_format($subtotal, 2)); ?></td>
+                            <th>Description</th>
+                            <th>Classification</th>
+                            <th>Qty</th>
+                            <th>Length</th>
+                            <th>Width</th>
+                            <th>Height</th>
+                            <th>CBM</th>
+                            <th>Freight</th>
+                            <th>Arrastre</th>
+                            <th>Subtotal</th>
                         </tr>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                </tbody>
+                    </thead>
 
-                <tfoot>
-                    <tr>
-                        <th colspan="10" class="text-end">TOTAL:</th>
-                        <th class="text-end">
-                            <?php if($payment && $payment->total_amount): ?>
-                                ₱<?php echo e(number_format($payment->total_amount, 2)); ?>
+                    <tbody>
+                        <?php $total = 0; ?>
 
-                            <?php else: ?>
-                                ₱<?php echo e(number_format($total, 2)); ?>
+                        <?php $__currentLoopData = $cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php
+                                $freight = $c->cargoItem->cargo_item_freight;
+                                $arrastre = $c->cargoItem->cargo_item_arrastre;
+                                $cbm = (float) ($c->cbm ?? ($c->length * $c->width * $c->height) / 1000000);
+                                $subtotal = ($freight + $arrastre) * $cbm * $c->quantity;
+                                $total += $subtotal;
+                                $unit = $c->measurementUnit->measurement_unit_abbreviation ?? 'cm';
+                            ?>
 
-                            <?php endif; ?>
-                        </th>
-                    </tr>
-                </tfoot>
-            </table>
+                            <tr>
+                                <td><?php echo e($c->cargoItem->cargo_item_description); ?></td>
+                                <td><?php echo e($c->cargoClassification->cargo_classification_name ?? 'N/A'); ?></td>
+                                <td class="text-center"><?php echo e($c->quantity); ?></td>
+                                <td class="text-end"><?php echo e(number_format($c->length, 2)); ?><?php echo e($unit); ?></td>
+                                <td class="text-end"><?php echo e(number_format($c->width, 2)); ?><?php echo e($unit); ?></td>
+                                <td class="text-end"><?php echo e(number_format($c->height, 2)); ?><?php echo e($unit); ?></td>
+                                <td class="text-end"><?php echo e(number_format($cbm, 4)); ?></td>
+                                <td class="text-end">₱<?php echo e(number_format($freight, 2)); ?></td>
+                                <td class="text-end">₱<?php echo e(number_format($arrastre, 2)); ?></td>
+                                <td class="text-end">₱<?php echo e(number_format($subtotal, 2)); ?></td>
+                            </tr>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    </tbody>
+
+                    <tfoot>
+                        <tr>
+                            <th colspan="9" class="text-end">TOTAL:</th>
+                            <th class="text-end">
+                                <?php if($payment && $payment->total_amount): ?>
+                                    ₱<?php echo e(number_format($payment->total_amount, 2)); ?>
+
+                                <?php else: ?>
+                                    ₱<?php echo e(number_format($total, 2)); ?>
+
+                                <?php endif; ?>
+                            </th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <?php if($booking->booking_status === 'Pending'): ?>
+            <div class="d-flex justify-content-center gap-3 mt-4">
+                <form action="<?php echo e(route('cargo.bookings.approve', $booking->booking_ref_no)); ?>" method="POST" class="w-100"
+                    style="max-width: 200px;" id="acceptForm">
+                    <?php echo csrf_field(); ?>
+                    <button type="button" class="btn btn-success btn-lg px-4 w-100" id="acceptBtn"
+                        onclick="validateAndAccept(event)">Accept</button>
+                </form>
+
+                <button class="btn btn-danger btn-lg px-4" data-bs-toggle="modal" data-bs-target="#rejectModal"
+                    style="width: 200px;">Reject</button>
+            </div>
+        <?php endif; ?>
+
+        <div class="modal fade" id="photoModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content bg-dark">
+                    <div class="modal-body p-0 position-relative" style="height: 600px;">
+                        <img id="modalCargoPhoto" class="w-100 h-100" style="object-fit: contain;" alt="Cargo Photo">
+
+                        <div class="position-absolute bottom-0 start-0 p-3 bg-dark bg-opacity-90 text-white"
+                            style="border-radius: 0 8px 0 0;">
+                            <h6 id="modalPhotoCaption" class="mb-1">Cargo Item</h6>
+                            <small id="modalPhotoClassification" class="text-muted">Classification: --</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="<?php echo e(route('cargo.bookings.pending')); ?>" class="btn btn-outline-primary btn-lg px-4">
+                Back to Pending Bookings
+            </a>
+
+            <a href="<?php echo e(route('cargo.bookings.bol', $booking->booking_ref_no)); ?>" target="_blank"
+                class="btn btn-secondary btn-lg px-4 ms-3">
+                Bill of Lading
+            </a>
         </div>
     </div>
 
-    
     <?php if($booking->booking_status === 'Pending'): ?>
-        <div class="d-flex justify-content-center gap-3 mt-4">
-            <form action="<?php echo e(route('cargo.bookings.approve', $booking->booking_ref_no)); ?>" method="POST" class="w-100"
-                style="max-width: 200px;" id="acceptForm">
-                <?php echo csrf_field(); ?>
-                <button type="button" class="btn btn-success btn-lg px-4 w-100" id="acceptBtn"
-                    onclick="validateAndAccept(event)">Accept</button>
-            </form>
-
-            <!-- Open modal to collect rejection reason -->
-            <button class="btn btn-danger btn-lg px-4" data-bs-toggle="modal" data-bs-target="#rejectModal"
-                style="width: 200px;">Reject</button>
-        </div>
-
-        <!-- Reject Modal -->
         <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -262,304 +275,6 @@
             </div>
         </div>
     <?php endif; ?>
-
-    
-    <div class="modal fade" id="photoModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content bg-dark">
-                <div class="modal-body p-0 position-relative" style="height: 600px;">
-                    <img id="modalCargoPhoto" class="w-100 h-100" style="object-fit: contain;" alt="Cargo Photo">
-
-                    
-                    <div class="position-absolute bottom-0 start-0 p-3 bg-dark bg-opacity-90 text-white"
-                        style="border-radius: 0 8px 0 0;">
-                        <h6 id="modalPhotoCaption" class="mb-1">Cargo Item</h6>
-                        <small id="modalPhotoClassification" class="text-muted">Classification: --</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="text-center mt-4">
-        <a href="<?php echo e(route('cargo.bookings.pending')); ?>" class="btn btn-outline-primary btn-lg px-4">
-            Back to Pending Bookings
-        </a>
-
-        <button class="btn btn-secondary btn-lg px-4 ms-3" data-bs-toggle="modal" data-bs-target="#billOfLadingModal">
-            Bill of Lading
-        </button>
-    </div>
-
-    <!-- Bill of Lading Modal -->
-    <div class="modal fade" id="billOfLadingModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Bill of Lading - <?php echo e($booking->booking_ref_no); ?></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="billOfLadingContent">
-                    <div class="p-3">
-                        <h5>Shipping Information</h5>
-                        <p>Voyage No.: <?php echo e($booking->voyage->voyage_code ?? 'N/A'); ?></p>
-                        <p>Bill of Lading (B/L) No.: <?php echo e($booking->booking_ref_no); ?></p>
-                        <p>Sailing Date:
-                            <?php echo e($booking->voyage ? \Carbon\Carbon::parse($booking->voyage->voyage_departure_date)->format('M d, Y') : 'N/A'); ?>
-
-                        </p>
-                        <p>Loading Port:
-                            <?php echo e($booking->voyage && $booking->voyage->routePort ? $booking->voyage->routePort->port_origin_name : 'Not specified'); ?>
-
-                        </p>
-                        <p>Unloading Port:
-                            <?php echo e($booking->voyage && $booking->voyage->routePort ? $booking->voyage->routePort->port_destination_name : 'Not specified'); ?>
-
-                        </p>
-
-                        <hr />
-                        <h5>Party Details</h5>
-                        <p><strong>Shipper:</strong> <?php echo e($booking->sender->sender_name ?? ''); ?></p>
-                        <p><strong>Shipper Contact Number :</strong> <?php echo e($booking->sender->sender_contactno ?? ''); ?></p>
-                        <p><strong>Shipper Email :</strong> <?php echo e($booking->sender->sender_email ?? ''); ?></p>
-
-                        <p><strong>Consignee:</strong> <?php echo e($booking->consignee->consignee_name ?? ''); ?></p>
-                        <p><strong>Consignee Contact Number :</strong> <?php echo e($booking->consignee->consignee_contactno ?? ''); ?>
-
-                        </p>
-
-                        <hr />
-                        <h5>Cargo Description</h5>
-                        <?php $__currentLoopData = $booking->cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <?php $unit = $c->measurementUnit->measurement_unit_abbreviation ?? 'cm'; ?>
-                            <div class="mb-2">
-                                <div><strong>Qty:</strong> <?php echo e($c->quantity); ?></div>
-                                <div><strong>Classification:</strong>
-                                    <?php echo e($c->cargoClassification->cargo_classification_name ?? 'N/A'); ?></div>
-                                <div><strong>Description:</strong> <?php echo e($c->cargoItem->cargo_item_description ?? ''); ?></div>
-                                <div><strong>Dimensions:</strong> <?php echo e(number_format($c->length, 2)); ?> x
-                                    <?php echo e(number_format($c->width, 2)); ?> x <?php echo e(number_format($c->height, 2)); ?>
-
-                                    <?php echo e($unit); ?></div>
-                                <div><strong>Weight:</strong> <?php echo e(number_format($c->weight, 2)); ?> kg</div>
-                            </div>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                    </div>
-
-                    
-                    <?php if($cargoWithPhotos->count() > 1): ?>
-                        <button class="carousel-control-prev" type="button" data-bs-target="#cargoCarousel"
-                            data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Previous</span>
-                        </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#cargoCarousel"
-                            data-bs-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Next</span>
-                        </button>
-                    <?php endif; ?>
-                </div>
-
-            </div>
-
-            
-            
-            
-            <div class="card shadow-sm p-3 mb-4">
-                <h5>Cargo Items</h5>
-
-                <table class="table table-bordered table-striped mt-3">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Description</th>
-                            <th>Qty</th>
-                            <th>Dimensions</th>
-                            <th>CBM</th>
-                            <th>Freight</th>
-                            <th>Arrastre</th>
-                            <th>Subtotal</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        <?php $total = 0; ?>
-
-                        <?php $__currentLoopData = $cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <?php
-                                $freight = $c->cargoItem->cargo_item_freight;
-                                $arrastre = $c->cargoItem->cargo_item_arrastre;
-                                $cbm = ($c->length * $c->width * $c->height) / 1000000;
-                                $subtotal = ($freight + $arrastre) * $cbm * $c->quantity;
-                                $total += $subtotal;
-                            ?>
-
-                            <tr>
-                                <td><?php echo e($c->cargoItem->cargo_item_description); ?>
-
-                                    <br><small class="text-muted">(<?php echo e($c->cargoItem->cargo_item_classification); ?>)</small>
-                                </td>
-                                <td><?php echo e($c->quantity); ?></td>
-                                <td><?php echo e($c->length); ?> × <?php echo e($c->width); ?> × <?php echo e($c->height); ?></td>
-                                <td><?php echo e(number_format($cbm, 4)); ?></td>
-                                <td>₱<?php echo e(number_format($freight, 2)); ?></td>
-                                <td>₱<?php echo e(number_format($arrastre, 2)); ?></td>
-                                <td>₱<?php echo e(number_format($subtotal, 2)); ?></td>
-                            </tr>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                    </tbody>
-
-                    <tfoot>
-                        <tr>
-                            <th colspan="6" class="text-end">TOTAL:</th>
-                            <th>
-                                <?php if($payment && $payment->total_amount): ?>
-                                    ₱<?php echo e(number_format($payment->total_amount, 2)); ?>
-
-                                <?php else: ?>
-                                    ₱<?php echo e(number_format($total, 2)); ?>
-
-                                <?php endif; ?>
-                            </th>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-            
-            <?php if($booking->booking_status === 'Pending'): ?>
-                <div class="d-flex justify-content-center gap-3 mt-4">
-                    <form action="<?php echo e(route('cargo.bookings.approve', $booking->booking_ref_no)); ?>" method="POST"
-                        class="w-100" style="max-width: 200px;" id="acceptForm2">
-                        <?php echo csrf_field(); ?>
-                        <button type="button" class="btn btn-success btn-lg px-4 w-100" id="acceptBtn2"
-                            onclick="validateAndAccept(event)">Accept</button>
-                    </form>
-
-                    <!-- Open modal to collect rejection reason -->
-                    <button class="btn btn-danger btn-lg px-4" data-bs-toggle="modal" data-bs-target="#rejectModal"
-                        style="width: 200px;">Reject</button>
-                </div>
-
-                <!-- Reject Modal -->
-                <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <form action="<?php echo e(route('cargo.bookings.reject', $booking->booking_ref_no)); ?>" method="POST">
-                                <?php echo csrf_field(); ?>
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Reason for Rejection</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label class="form-label">Please provide the reason for rejecting this
-                                            booking</label>
-                                        <textarea name="reason" class="form-control" rows="4" required></textarea>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="submit" class="btn btn-danger">Submit Rejection</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            <?php endif; ?>
-
-            
-            <div class="modal fade" id="photoModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-lg modal-dialog-centered">
-                    <div class="modal-content bg-dark">
-                        <div class="modal-body p-0 position-relative" style="height: 600px;">
-                            <img id="modalCargoPhoto" class="w-100 h-100" style="object-fit: contain;"
-                                alt="Cargo Photo">
-
-                            
-                            <div class="position-absolute bottom-0 start-0 p-3 bg-dark bg-opacity-90 text-white"
-                                style="border-radius: 0 8px 0 0;">
-                                <h6 id="modalPhotoCaption" class="mb-1">Cargo Item</h6>
-                                <small id="modalPhotoClassification" class="text-muted">Classification: --</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="text-center mt-4">
-                <a href="<?php echo e(route('cargo.bookings.pending')); ?>" class="btn btn-outline-primary btn-lg px-4">
-                    Back to Pending Bookings
-                </a>
-
-                <button class="btn btn-secondary btn-lg px-4 ms-3" data-bs-toggle="modal"
-                    data-bs-target="#billOfLadingModal">
-                    Bill of Lading
-                </button>
-            </div>
-
-            <!-- Bill of Lading Modal -->
-            <div class="modal fade" id="billOfLadingModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-lg modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Bill of Lading - <?php echo e($booking->booking_ref_no); ?></h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body" id="billOfLadingContent">
-                            <div class="p-3">
-                                <h5>Shipping Information</h5>
-                                <p>Vessel Name: <?php echo e($booking->voyage->vessel_name ?? 'Not specified'); ?></p>
-                                <p>Voyage No.: <?php echo e($booking->voyage->voyage_code ?? 'N/A'); ?></p>
-                                <p>Bill of Lading (B/L) No.: <?php echo e($booking->booking_ref_no); ?></p>
-                                <p>Sailing Date:
-                                    <?php echo e($booking->voyage ? \Carbon\Carbon::parse($booking->voyage->voyage_departure_date)->format('M d, Y') : 'N/A'); ?>
-
-                                </p>
-                                <p>Loading Port: <?php echo e($booking->voyage->loading_port ?? 'Not specified'); ?></p>
-                                <p>Unloading Port: <?php echo e($booking->voyage->unloading_port ?? 'Not specified'); ?></p>
-
-                                <hr />
-                                <h5>Party Details</h5>
-                                <p><strong>Shipper:</strong> <?php echo e($booking->sender->sender_name ?? ''); ?></p>
-                                <p><strong>Shipper Contact Number :</strong> <?php echo e($booking->sender->sender_contactno ?? ''); ?>
-
-                                </p>
-                                <p><strong>Shipper Email :</strong> <?php echo e($booking->sender->sender_email ?? ''); ?></p>
-
-                                <p><strong>Consignee:</strong> <?php echo e($booking->consignee->consignee_name ?? ''); ?></p>
-                                <p><strong>Consignee Contact Number :</strong>
-                                    <?php echo e($booking->consignee->consignee_contactno ?? ''); ?></p>
-
-                                <hr />
-                                <h5>Cargo Description</h5>
-                                <?php $__currentLoopData = $booking->cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                    <div class="mb-2">
-                                        <div><strong>Qty:</strong> <?php echo e($c->quantity); ?></div>
-                                        <div><strong>Classification:</strong>
-                                            <?php echo e($c->cargoItem->cargo_item_classification ?? ''); ?></div>
-                                        <div><strong>Description:</strong>
-                                            <?php echo e($c->cargoItem->cargo_item_description ?? ''); ?>
-
-                                        </div>
-                                        <div><strong>Dimensions:</strong> <?php echo e($c->length); ?> x <?php echo e($c->width); ?> x
-                                            <?php echo e($c->height); ?></div>
-                                        <div><strong>Weight:</strong> <?php echo e($c->weight); ?> kg</div>
-                                    </div>
-                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <a href="<?php echo e(route('cargo.bookings.bol', $booking->booking_ref_no)); ?>" target="_blank"
-                                class="btn btn-outline-primary">Open PDF</a>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
 
         
         <div class="modal fade" id="placementValidationModal" tabindex="-1" aria-hidden="true">
@@ -688,7 +403,7 @@
              * Proceed with acceptance after validation
              */
             function proceedWithAcceptance() {
-                const form = document.getElementById('acceptForm') || document.getElementById('acceptForm2');
+                const form = document.getElementById('acceptForm');
                 if (form) {
                     form.submit();
                 }

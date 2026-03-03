@@ -425,7 +425,7 @@
         </tr>
         <tr>
             <td class="label">STAMP</td>
-            <td class="amount">₱<?php echo e(number_format($stamp, 2)); ?></td>
+            <td class="amount">₱2<?php echo e(number_format($stamp, 2)); ?></td>
         </tr>
         <tr>
             <td class="label"><strong>TOTAL TRANSACTION</strong></td>

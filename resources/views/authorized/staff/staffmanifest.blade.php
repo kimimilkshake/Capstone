@@ -134,13 +134,13 @@
                                 <tr>
                                     <td>{{ $c->bl_number ?? $c->booking_ref_no ?? $c->booking_ref ?? ($c->booking_ref_no ?? '-') }}</td>
                                     <td>{{ $c->quantity ?? $c->cargo_item_qty ?? '-' }}</td>
-                                    <td>{{ $c->cargoClassification->cargo_classification_name ?? 'N/A' }}</td>
+                                    <td>{{ $c->cargo_classification_name ?? 'N/A' }}</td>
                                     <td>{{ $c->cargoItem->cargo_item_description ?? 'N/A'  }}</td>
                                     <td>{{ $c->sender->sender_name ?? 'N/A' }}</td>
                                     <td>{{ $c->sender->sender_tin ?? '-' }}</td>
                                     <td>{{ $c->consignee->consignee_name }}</td>
                                     <td>{{ $c->cargoItem->cargo_item_freight ?? '-' }}</td>
-                                    <td>12%</td>
+                                    <td>{{ ($c->cargoItem->cargo_item_freight ?? 0) * 0.12 }}</td>
                                     <td>20.00</td>
                                     <td>{{ $c->payment->total_amount ?? 'N/A' }}</td>
                                     <td>{{ $c->receipt_no ?? ($c->cargo_receipt_id ?? '-') }}</td>
@@ -155,48 +155,48 @@
     </div>
 
 <script>
-    function printTable(tableId) {
-        const printContent = document.getElementById(tableId);
+function printTable(tableId) {
+    const printContent = document.getElementById(tableId);
+    if (!printContent) return;
 
-        if (!printContent) {
-            console.error("Table with ID '" + tableId + "' not found.");
-            return;
-        }
-        
-        // Include the Voyage Header for context on the printout
-        const manifestHeader = document.querySelector('.manifest-header').innerHTML;
-        
-        // Start new window content
-        const printWindow = window.open('', '', 'height=600,width=800');
-        printWindow.document.write('<html><head><title>Manifest Print</title>');
-        
-        // Add basic print-friendly styling
-        printWindow.document.write('<style>');
-        printWindow.document.write('body { font-family: Arial, sans-serif; font-size: 10pt; padding: 20px; }');
-        printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 20px; }');
-        printWindow.document.write('th, td { border: 1px solid #000; padding: 8px; text-align: left; }');
-        printWindow.document.write('th { background-color: #f2f2f2; }');
-        printWindow.document.write('.manifest-header { text-align: center; margin-bottom: 20px; }');
-        printWindow.document.write('.manifest-title { font-size: 14pt; }');
-        printWindow.document.write('</style>');
-        
-        printWindow.document.write('</head><body>');
-        
-        // Write the header and the table content
-        printWindow.document.write('<div class="manifest-header">');
-        printWindow.document.write(manifestHeader);
-        printWindow.document.write('</div>');
-        printWindow.document.write(printContent.outerHTML); // outerHTML includes the table itself
-
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
-        
-        // Wait a moment for the content to render before calling print
-        printWindow.onload = function() {
-            printWindow.print();
-            printWindow.close();
-        }
+    const tbody = printContent.querySelector('tbody');
+    const rows = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
+    const hasRealData = rows.some(row => {
+        const text = (row.textContent || '').trim().toLowerCase();
+        const noDataRow = row.querySelector('td[colspan]') && text.includes('no data available');
+        return !noDataRow && text.length > 0;
+    });
+    if (!hasRealData) {
+        alert('No data available to print for this table.');
+        return;
     }
+
+    const manifestHeader = document.querySelector('.manifest-header').innerHTML;
+    const printWindow = window.open('', '_blank', 'height=700,width=1000');
+    printWindow.document.write('<html><head><title>Manifest Print</title>');
+    printWindow.document.write('<style>');
+    printWindow.document.write('@page { margin: 14mm; }');
+    printWindow.document.write('body { font-family: Arial, sans-serif; font-size: 10pt; padding: 12px; padding-bottom: 70px; }');
+    printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 16px; }');
+    printWindow.document.write('th, td { border: 1px solid #000; padding: 8px; text-align: left; }');
+    printWindow.document.write('th { background-color: #f2f2f2; }');
+    printWindow.document.write('.manifest-header { text-align: center; margin-bottom: 16px; }');
+    printWindow.document.write('.manifest-title { font-size: 14pt; }');
+    printWindow.document.write('.system-note { position: fixed; bottom: 12px; left: 0; right: 0; text-align: center; font-style: italic; }');
+    printWindow.document.write('</style>');
+    printWindow.document.write('</head><body>');
+    printWindow.document.write('<div class="manifest-header">' + manifestHeader + '</div>');
+    printWindow.document.write(printContent.outerHTML);
+    printWindow.document.write('<div class="system-note">This is a system generated manifest</div>');
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+
+    printWindow.onload = function () {
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    };
+}
 </script>
 
 @endsection

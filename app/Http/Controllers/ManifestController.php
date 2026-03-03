@@ -160,14 +160,25 @@ class ManifestController extends Controller
         // CARGOS
         // --------------------
         if ($showCargo) {
-            $cargos = CargoReceipt::where('voyage_id', $voyage->voyage_id)
-                ->with(['booking', 'cargoBooking', 'cargoItem', 'sender', 'consignee', 'payment'])
-                ->select('cargo_receipt.*')
-                ->distinct()
-                ->get()
-                ->unique('cargo_receipt_id')
-                ->values();
-        }
+    $cargos = CargoReceipt::where('voyage_id', $voyage->voyage_id)
+        ->with([
+            'booking',
+            'cargoBooking.cargoClassification', // nested relation path
+            'cargoItem',
+            'sender',
+            'consignee',
+            'payment'
+        ])
+        ->select('cargo_receipt.*')
+        ->distinct()
+        ->get()
+        ->unique('cargo_receipt_id')
+        ->values()
+        ->map(function ($c) {
+            $c->cargo_classification_name = optional(optional($c->cargoBooking)->cargoClassification)->cargo_classification_name;
+            return $c;
+        });
+}
 
         // Render the view
         return auth()->guard('staff')->check()
