@@ -14,10 +14,10 @@ class CargoItem extends Model
 
     protected $fillable = [
         'measurement_unit_id',
+        'cargo_category_id',
         'route_code_id',
         'cargo_item_description',
         'cargo_item_freight',
-        'cargo_item_arrastre',
         'cargo_item_measure_required',
         'cargo_item_min_length',
         'cargo_item_max_length',
@@ -34,6 +34,11 @@ class CargoItem extends Model
             'measurement_unit_id',
             'measurement_unit_id'
         );
+    }
+
+    public function cargo_category()
+    {
+        return $this->belongsTo(CargoCategory::class, 'cargo_category_id', 'cargo_category_id');
     }
 
     public function routeCode()

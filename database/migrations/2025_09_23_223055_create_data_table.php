@@ -59,7 +59,6 @@ return new class extends Migration {
 
         Schema::create('promo', function (Blueprint $table) {
             $table->id('promo_id');
-            $table->enum('promo_type', ['Discount', 'Freebie']);
             $table->string('promo_name', 50);
             $table->string('promo_code');
             $table->string('promo_description', 255);
@@ -214,15 +213,21 @@ return new class extends Migration {
             $table->timestamps();
         });
 
+        Schema::create('cargo_category', function (Blueprint $table) {
+            $table->id('cargo_category_id');
+            $table->string('cargo_category_name');
+            $table->timestamps();
+        });
+
         Schema::create('cargo_item', function (Blueprint $table) {
             $table->id('cargo_item_id');
             $table->foreignId('measurement_unit_id')
                     ->nullable()
                     ->constrained('measurement_unit', 'measurement_unit_id');
+            $table->foreignId('cargo_category_id')->constrained('cargo_category', 'cargo_category_id');
             $table->foreignId('route_code_id')->constrained('route_code', 'route_code_id');
             $table->string('cargo_item_description');
             $table->decimal('cargo_item_freight', 10, 2);
-            $table->decimal('cargo_item_arrastre', 10, 2);
             $table->enum('cargo_item_measure_required', ['Yes', 'No']);
             $table->decimal('cargo_item_min_length', 8, 2)->nullable();
             $table->decimal('cargo_item_max_length', 8, 2)->nullable();

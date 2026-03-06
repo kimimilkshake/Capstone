@@ -45,6 +45,20 @@
               </select>
             </div>
           </div>
+
+          <div class="form-col">
+            <div class="form-group">
+              <label>Category <span class="text-danger">*</span></label>
+              <select name="cargo_category_id" required>
+                <option value="">Select Category</option>
+                @foreach ($cargo_categories as $category)
+                  <option value="{{ $category->cargo_category_id }}">
+                    {{ $category->cargo_category_name }}
+                  </option>
+                @endforeach
+              </select>
+            </div>
+          </div>
           
           <div class="form-col">
             <div class="form-group">
@@ -59,13 +73,7 @@
               <input type="number" name="cargo_item_freight" step="0.01" required>
             </div>
           </div>
-
-          <div class="form-col">
-            <div class="form-group">
-              <label>Arrastre <span class="text-danger">*</span></label>
-              <input type="number" name="cargo_item_arrastre" step="0.01" required>
-            </div>
-          </div>
+          
         </div>
 
         <div class="form-row"> <!-- Second Row -->

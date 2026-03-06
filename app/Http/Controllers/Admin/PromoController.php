@@ -56,14 +56,13 @@ class PromoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'promo_type' => 'required|in:Discount,Freebie',
             'promo_name' => 'required|string|max:50',
             'promo_code' => 'required|string|unique:promo,promo_code',
             'promo_description' => 'required|string|max:255',
             'promo_start_date' => 'required|date',
             'promo_end_date' => 'required|date|after_or_equal:promo_start_date',
-            //'promo_status' => 'required|in:Active,Inactive',
-            'promo_discount_rate' => 'nullable|numeric|min:0|max:100',
+            'promo_status' => 'required|in:Active,Inactive',
+            'promo_discount_rate' => 'required|numeric|min:0|max:100',
         ]);
 
         Promo::create($request->all());
@@ -84,14 +83,13 @@ class PromoController extends Controller
         $promo = Promo::findOrFail($id);
 
         $request->validate([
-            'promo_type' => 'required|in:Discount,Freebie',
             'promo_name' => 'required|string|max:50',
             'promo_code' => 'required|string|unique:promo,promo_code,' . $id . ',promo_id',
             'promo_description' => 'required|string|max:255',
             'promo_start_date' => 'required|date',
             'promo_end_date' => 'required|date|after_or_equal:promo_start_date',
             'promo_status' => 'required|in:Active,Inactive',
-            'promo_discount_rate' => 'nullable|numeric|min:0|max:100',
+            'promo_discount_rate' => 'required|numeric|min:0|max:100',
         ]);
 
         $promo->update($request->all());

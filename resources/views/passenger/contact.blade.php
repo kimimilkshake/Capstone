@@ -15,7 +15,7 @@
                         <p><i class="fa-solid fa-phone me-3"></i>TEL. #: (032)  232-8864,  232-8865</p>
                         <p><i class="fa-solid fa-fax me-3"></i>FAX #: (032)  232-8863</p>
                         <p><i class="fa-solid fa-mobile-screen me-3"></i>CELLPHONE NO.  09091897083</p>
-                        <p><i class="fa-solid fa-envelope me-3"></i>EMAIL: lapulinesbiz@yahoo.com [TEMPORARY]</p>
+                        <p><i class="fa-solid fa-envelope me-3"></i>EMAIL: lapulapushippinglinescorp@gmail.com</p>
                         <p><i class="fa-solid fa-business-time me-3"></i>BUSINESS HOURS: 8AM TO 5PM MONDAY TO SATURDAY</p>
                         <a href="https://www.facebook.com/profile.php?id=100064063478567" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-thumbs-up me-3"></i>Facebook: Lapulapu Shipping Lines Corporation</a>
                     </div>

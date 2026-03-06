@@ -31,6 +31,19 @@
           
           <div class="form-col">
             <div class="form-group">
+              <label>Category <span class="text-danger">*</span></label>
+              <select name="cargo_category_id" required>
+                @foreach ($cargo_categories as $category)
+                  <option value="{{ $category->cargo_category_id }}" {{ $cargo_item->cargo_category_id == $category->cargo_category_id ? 'selected' : '' }}>
+                    {{ $category->cargo_category_name }}
+                  </option>
+                @endforeach
+              </select>
+            </div>
+          </div>
+
+          <div class="form-col">
+            <div class="form-group">
               <label>Description <span class="text-danger">*</span></label>
               <input type="text" name="cargo_item_description" value="{{ old('cargo_item_description', $cargo_item->cargo_item_description) }}"  required>
             </div>
@@ -43,12 +56,7 @@
             </div>
           </div>
 
-          <div class="form-col">
-            <div class="form-group">
-              <label>Arrastre <span class="text-danger">*</span></label>
-              <input type="number" name="cargo_item_arrastre" value="{{ old('cargo_item_arrastre', $cargo_item->cargo_item_arrastre) }}" required>
-            </div>
-          </div>
+          
         </div>
 
         <div class="form-row"> <!-- Second Row -->

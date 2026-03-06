@@ -43,11 +43,8 @@
               </div>
 
               <div class="form-group">
-                <label for="promo_type">Type <span class="text-danger">*</span></label>
-                <select id="promo_type" name="promo_type" required>
-                  <option value="Discount" {{ $promo->promo_type == 'Discount' ? 'selected' : '' }}>Discount</option>
-                  <option value="Freebie" {{ $promo->promo_type == 'Freebie' ? 'selected' : '' }}>Freebie</option>
-                </select>
+                <label for="promo_discount_rate">Discount Rate</label>
+                <input type="number" id="promo_discount_rate" name="promo_discount_rate" value="{{ $promo->promo_discount_rate }}" required>
               </div>
             </div>
 
@@ -63,9 +60,12 @@
                 <input type="date" id="promo_end_date" name="promo_end_date" value="{{ $promo->promo_end_date }}" required>
               </div>
 
-              <div class="form-group">
-                <label for="promo_discount_rate">Discount Rate</label>
-                <input type="number" id="promo_discount_rate" name="promo_discount_rate" value="{{ $promo->promo_discount_rate }}" required>
+                <div class="form-group" style="flex: 1;">
+                  <label for="promo_status">Status <span class="text-danger">*</span></label>
+                  <select id="promo_status" name="promo_status" required>
+                    <option value="Active" {{ $promo->promo_status == 'Active' ? 'selected' : '' }}>Active</option>
+                    <option value="Inactive" {{ $promo->promo_status == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                  </select>
               </div>
             </div>
           </div>
@@ -77,13 +77,7 @@
               <textarea id="promo_description" name="promo_description" required>{{ $promo->promo_description }}</textarea>
             </div>
 
-            <div class="form-group" style="flex: 1;">
-              <label for="promo_status">Status <span class="text-danger">*</span></label>
-              <select id="promo_status" name="promo_status" required>
-                <option value="Active" {{ $promo->promo_status == 'Active' ? 'selected' : '' }}>Active</option>
-                <option value="Inactive" {{ $promo->promo_status == 'Inactive' ? 'selected' : '' }}>Inactive</option>
-              </select>
-            </div>
+            
           </div>
 
           <div class="form-actions" style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">

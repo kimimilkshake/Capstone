@@ -23,7 +23,7 @@
           <tr>
             <th>Name</th>
             <th>Code</th>
-            <th>Type</th>
+            <th>Discount Rate</th>
             <th>Start Date</th>
             <th>End Date</th>
             <th>Status</th>
@@ -35,7 +35,7 @@
             <tr>
               <td>{{ $p->promo_name }}</td>
               <td>{{ $p->promo_code }}</td>
-              <td>{{ $p->promo_type }}</td>
+              <td>{{ rtrim(rtrim($p->promo_discount_rate, '0'), '.') }}%</td>
               <td>{{ $p->promo_start_date }}</td>
               <td>{{ $p->promo_end_date }}</td>
               <td>{{ $p->promo_status }}</td>

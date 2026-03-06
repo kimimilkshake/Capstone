@@ -30,6 +30,7 @@ use App\Http\Controllers\Staff\SemaphoreController;
 use App\Http\Controllers\VoyageController;
 use App\Http\Controllers\ManifestController;
 use App\Http\Controllers\CargoClassificationController;
+use App\Http\Controllers\CargoCategoryController;
 use App\Http\Controllers\CargoItemController;
 use App\Http\Controllers\CargoAutoPlacementController;
 
@@ -222,6 +223,14 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
     Route::put('/cargo_classifications/{id}/update', [CargoClassificationController::class, 'update'])->name('admin.cargo_classification_update');
     Route::delete('/cargo_classifications/{id}/delete', [CargoClassificationController::class, 'destroy'])->name('admin.cargo_classification_delete');
 
+    //Cargo Category
+    Route::get('/cargo_categories', [CargoCategoryController::class, 'index'])->name('admin.cargo_category_list');
+    Route::get('/cargo_categories/create', [CargoCategoryController::class, 'create'])->name('admin.cargo_category_create');
+    Route::post('/cargo_categories/store', [CargoCategoryController::class, 'store'])->name('admin.cargo_category_store');
+    Route::get('/cargo_categories/{id}/edit', [CargoCategoryController::class, 'edit'])->name('admin.cargo_category_edit');
+    Route::put('/cargo_categories/{id}/update', [CargoCategoryController::class, 'update'])->name('admin.cargo_category_update');
+    Route::delete('/cargo_categories/{id}/delete', [CargoCategoryController::class, 'destroy'])->name('admin.cargo_category_delete');
+
     // Cargo Items
     Route::get('/cargo_items', [CargoItemController::class, 'index'])->name('admin.cargo_item_list');
     Route::get('/cargo_items/create', [CargoItemController::class, 'create'])->name('admin.create_cargo_item');
@@ -272,6 +281,14 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     Route::get('/cargo_classifications/{id}/edit', [CargoClassificationController::class, 'edit'])->name('staff.cargo_classification_edit');
     Route::put('/cargo_classifications/{id}/update', [CargoClassificationController::class, 'update'])->name('staff.cargo_classification_update');
     Route::delete('/cargo_classifications/{id}/delete', [CargoClassificationController::class, 'destroy'])->name('staff.cargo_classification_delete');
+
+    //Cargo Category
+    Route::get('/cargo_categories', [CargoCategoryController::class, 'index'])->name('staff.cargo_category_list');
+    Route::get('/cargo_categories/create', [CargoCategoryController::class, 'create'])->name('staff.cargo_category_create');
+    Route::post('/cargo_categories/store', [CargoCategoryController::class, 'store'])->name('staff.cargo_category_store');
+    Route::get('/cargo_categories/{id}/edit', [CargoCategoryController::class, 'edit'])->name('staff.cargo_category_edit');
+    Route::put('/cargo_categories/{id}/update', [CargoCategoryController::class, 'update'])->name('staff.cargo_category_update');
+    Route::delete('/cargo_categories/{id}/delete', [CargoCategoryController::class, 'destroy'])->name('staff.cargo_category_delete');  
 
     // Cargo Items
     Route::get('/cargo_items', [CargoItemController::class, 'index'])->name('staff.cargo_item_list');

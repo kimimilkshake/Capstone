@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CargoItem;
 use App\Models\RouteCode;
 use App\Models\MeasurementUnit;
+use App\Models\CargoCategory;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Traits\AdminOrStaffGuard;
 
@@ -41,22 +42,22 @@ class CargoItemController extends Controller
     {
         $route_codes = RouteCode::all();
         $measurement_units = MeasurementUnit::all();
+        $cargo_categories = CargoCategory::all();
 
         return auth()->guard('staff')->check()
-            ? view('authorized.staff.screate_cargo_item', compact('route_codes', 'measurement_units'))
-            : view('authorized.admin.create_cargo_item', compact('route_codes', 'measurement_units'));
+            ? view('authorized.staff.screate_cargo_item', compact('route_codes', 'measurement_units', 'cargo_categories'))
+            : view('authorized.admin.create_cargo_item', compact('route_codes', 'measurement_units', 'cargo_categories'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'measurement_unit_id' => 'nullable|exists:measurement_unit,measurement_unit_id',
+            'cargo_category_id' => 'required|exists:cargo_category,cargo_category_id',
             'route_code_id'       => 'required|exists:route_code,route_code_id',
             'cargo_item_description' => 'required|string',
             'cargo_item_freight'  => 'required|numeric',
-            'cargo_item_arrastre' => 'required|numeric',
             'cargo_item_measure_required' => 'required|in:Yes,No',
-
             'cargo_item_min_length' => 'nullable|numeric',
             'cargo_item_max_length' => 'nullable|numeric',
             'cargo_item_min_width'  => 'nullable|numeric',
@@ -80,10 +81,11 @@ class CargoItemController extends Controller
         $cargo_item = CargoItem::findOrFail($id); // get the cargo item
         $route_codes = RouteCode::all();          // for route code dropdown
         $measurement_units = MeasurementUnit::all(); // for measurement units dropdown
+        $cargo_categories = CargoCategory::all(); // for cargo category dropdown
 
         return auth()->guard('staff')->check()
-            ? view('authorized.staff.scargo_item_edit', compact('cargo_item', 'route_codes', 'measurement_units'))
-            : view('authorized.admin.cargo_item_edit', compact('cargo_item', 'route_codes', 'measurement_units'));
+            ? view('authorized.staff.scargo_item_edit', compact('cargo_item', 'route_codes', 'measurement_units', 'cargo_categories'))
+            : view('authorized.admin.cargo_item_edit', compact('cargo_item', 'route_codes', 'measurement_units', 'cargo_categories' ));
     }
 
 
@@ -93,12 +95,11 @@ class CargoItemController extends Controller
 
         $validated = $request->validate([
             'measurement_unit_id' => 'nullable|exists:measurement_unit,measurement_unit_id',
+            'cargo_category_id' => 'required|exists:cargo_category,cargo_category_id',
             'route_code_id'       => 'required|exists:route_code,route_code_id',
             'cargo_item_description' => 'required|string',
             'cargo_item_freight'  => 'required|numeric',
-            'cargo_item_arrastre' => 'required|numeric',
             'cargo_item_measure_required' => 'required|in:Yes,No',
-
             'cargo_item_min_length' => 'nullable|numeric',
             'cargo_item_max_length' => 'nullable|numeric',
             'cargo_item_min_width'  => 'nullable|numeric',

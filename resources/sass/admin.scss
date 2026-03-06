@@ -638,6 +638,10 @@ body {
   margin-bottom: 15px;
 }
 
+.rpmodal-row.one-col {
+  grid-template-columns: 1fr;
+}
+
 .rpmodal-col {
   display: flex;
   flex-direction: column;

@@ -29,7 +29,7 @@ class ContactController extends Controller
         Mail::send('emails.contact_message', $data, function ($message) use ($data) {
             $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'))
                 ->replyTo($data['sender_email'], $data['sender_name'])
-                ->to('shemcardoza7@gmail.com')
+                ->to('lapulapushippinglinescorp@gmail.com')
                 ->subject('Website Contact: ' . $data['subject']);
         });
 

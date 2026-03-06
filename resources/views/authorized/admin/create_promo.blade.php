@@ -39,13 +39,10 @@
               </div>
 
               <div class="form-group">
-                <label for="promo_type">Type <span class="text-danger">*</span></label>
-                <select id="promo_type" name="promo_type" required>
-                  <option value="">Select</option>
-                  <option value="Discount">Discount</option>
-                  <option value="Freebie">Freebie</option>
-                </select>
+                <label for="promo_discount_rate">Discount Rate</label>
+                <input type="number" id="promo_discount_rate" name="promo_discount_rate">
               </div>
+
             </div>
 
             <!-- Column 2 -->
@@ -62,8 +59,12 @@
               </div>
 
               <div class="form-group">
-                <label for="promo_discount_rate">Discount Rate</label>
-                <input type="number" id="promo_discount_rate" name="promo_discount_rate">
+                <label for="promo_status">Promo Status <span class="text-danger">*</span></label>
+                <select id="promo_status" name="promo_status" required>
+                  <option value="">Select Status</option>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
               </div>
 
             </div>

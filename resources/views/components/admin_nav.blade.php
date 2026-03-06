@@ -39,6 +39,13 @@
     </li>
 
     <li class="anav-item">
+      <a href="#" class="anav-link">
+        <i class="fa-solid fa-eye me-1"></i>
+        <span class="snav-label">Review Cargo</span>
+      </a>
+    </li>
+
+    <li class="anav-item">
       <a class="anav-link" href="{{ route('admin.create_cargo_item') }}">
         <i class="fa-solid fa-boxes-stacked me-1"></i>
         <span class="anav-label">Create Cargo Item</span>

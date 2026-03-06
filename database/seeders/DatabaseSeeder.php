@@ -129,7 +129,144 @@ class DatabaseSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+        ]);
 
+        //Cargo Classification Seeders
+        DB::table('cargo_classification')->insert([
+            [
+                'cargo_classification_name' => 'bag',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],    
+            [
+                'cargo_classification_name' => 'box',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_classification_name' => 'bundle',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_classification_name' => 'carbouy',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],    
+            [
+                'cargo_classification_name' => 'carton',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_classification_name' => 'drum',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_classification_name' => 'length',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_classification_name' => 'piece',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_classification_name' => 'roll',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],  
+            [
+                'cargo_classification_name' => 'sack',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_classification_name' => 'unit',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+        //Cargo Category Seeders
+        DB::table('cargo_category')->insert([
+            [
+                'cargo_category_name' => 'Animals/Livestock',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],    
+            [
+                'cargo_category_name' => 'Appliances',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_category_name' => 'Building Materials',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_category_name' => 'Electronics',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],    
+            [
+                'cargo_category_name' => 'Fragile',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_category_name' => 'Furniture',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_category_name' => 'General Cargo',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_category_name' => 'Hazardous/Dangerous Goods',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_category_name' => 'Liquids',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_category_name' => 'Machinery',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_category_name' => 'Oversized/Heavy Cargo',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],    
+            [
+                'cargo_category_name' => 'Perishable',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_category_name' => 'Pharmaceuticals/Medicals',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_category_name' => 'Textiles/Clothing',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_category_name' => 'Vehicle',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ]);
 
         // Route Code seeders
