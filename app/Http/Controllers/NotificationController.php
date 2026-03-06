@@ -11,6 +11,16 @@ class NotificationController extends Controller
     /**
      * Get all notifications
      */
+     private function isStaff()
+    {
+        return auth()->guard('staff')->check();
+    }
+
+    private function isAdmin()
+    {
+        return auth()->guard('admin')->check();
+    }
+
     public function index()
     {
         $notifications = Notification::whereNotIn('notification_status', ['archived'])
