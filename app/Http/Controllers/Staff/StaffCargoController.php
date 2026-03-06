@@ -23,6 +23,7 @@ use App\Services\CargoAutoPlacementService;
 use App\Services\BillOfLadingPdf;
 use App\Models\BillOfLading;
 use App\Http\Controllers\Traits\StaffGuard;
+use Illuminate\Validation\Rule;
 
 
 class StaffCargoController extends Controller
@@ -57,7 +58,11 @@ class StaffCargoController extends Controller
         
         $cargoItems = collect(CargoItem::with('measurementUnit')->get()); // <-- wrap in collect()
         $cargoClassifications = CargoClassification::orderBy('cargo_classification_name')->get();
-        return view('authorized.staff.cargobooking', compact('voyages', 'cargoItems', 'cargoClassifications'));
+        $measurementUnits = MeasurementUnit::whereNotNull('measurement_unit_abbreviation')
+            ->orderBy('measurement_unit_name')
+            ->get();
+
+        return view('authorized.staff.cargobooking', compact('voyages', 'cargoItems', 'cargoClassifications', 'measurementUnits'));
     }
 
 
@@ -89,7 +94,7 @@ class StaffCargoController extends Controller
             'cargo_length.*' => 'required|numeric|min:0',
             'cargo_width.*' => 'required|numeric|min:0',
             'cargo_height.*' => 'required|numeric|min:0',
-            'measurement_unit.*' => 'nullable|string|in:cm,in',
+            'measurement_unit.*' => ['nullable', 'string', Rule::exists('measurement_unit', 'measurement_unit_abbreviation')],
             'cargo_cbm.*' => 'nullable|numeric|min:0',
             'cargo_picture.*' => 'nullable|image|max:2048',
         ]);
@@ -212,7 +217,11 @@ class StaffCargoController extends Controller
 
         $search = $request->input('search');
         $selectedStatus = $request->input('booking_status');
-        $allowedStatuses = ['All', 'Pending', 'Confirmed', 'Canceled'];
+        $allowedStatuses = ['All', 'Pending', 'Confirmed', 'Rejected'];
+
+        if (in_array($selectedStatus, ['Canceled', 'Cancelled'], true)) {
+            $selectedStatus = 'Rejected';
+        }
 
         if (!$selectedStatus || !in_array($selectedStatus, $allowedStatuses, true)) {
             $selectedStatus = 'Pending';
@@ -220,7 +229,11 @@ class StaffCargoController extends Controller
 
         $bookings = Booking::whereRaw('LOWER(booking_type) = ?', ['cargo'])
             ->when($selectedStatus !== 'All', function ($query) use ($selectedStatus) {
-                $query->where('booking_status', $selectedStatus);
+                if ($selectedStatus === 'Rejected') {
+                    $query->whereIn('booking_status', ['Canceled', 'Cancelled']);
+                } else {
+                    $query->where('booking_status', $selectedStatus);
+                }
             })
             ->with(['sender', 'consignee', 'voyage', 'cargoBookings.approvedByStaff'])
             ->when($search, function ($query, $search) {

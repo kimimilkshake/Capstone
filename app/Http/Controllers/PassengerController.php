@@ -11,6 +11,7 @@ use App\Models\MeasurementUnit;
 use App\Models\Voyage;
 use App\Models\Notification;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 
 class PassengerController extends Controller
 {
@@ -48,6 +49,11 @@ class PassengerController extends Controller
         // ✅ Add this: fetch cargo items and classifications for the Blade
         $cargoItems = $type === 'cargo' ? CargoItem::with('measurementUnit')->get() : collect();
         $cargoClassifications = $type === 'cargo' ? CargoClassification::orderBy('cargo_classification_name')->get() : collect();
+        $measurementUnits = $type === 'cargo'
+            ? MeasurementUnit::whereNotNull('measurement_unit_abbreviation')
+                ->orderBy('measurement_unit_name')
+                ->get()
+            : collect();
 
         // ✅ If user selected "cargo", load passenger.cargobooking
         // Otherwise load passenger.passengerbooking
@@ -64,6 +70,7 @@ class PassengerController extends Controller
             'portOfOrigin',
             'cargoItems', // ✅ Pass it to Blade
             'cargoClassifications', // ✅ Pass classifications
+            'measurementUnits',
             'voyage',
             'accommodations',
             'cotPlanUrl'
@@ -118,7 +125,7 @@ class PassengerController extends Controller
             'cargo_length.*' => 'required|numeric|min:0.01',
             'cargo_width.*' => 'required|numeric|min:0.01',
             'cargo_height.*' => 'required|numeric|min:0.01',
-            'measurement_unit.*' => 'nullable|string|in:cm,in',
+            'measurement_unit.*' => ['nullable', 'string', Rule::exists('measurement_unit', 'measurement_unit_abbreviation')],
             'cargo_cbm.*' => 'nullable|numeric|min:0',
             'cargo_picture.*' => 'nullable|image|max:2048',
         ]);
