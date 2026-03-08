@@ -1,14 +1,14 @@
 # Cargo Auto Placement System
 
 ## Overview
-The Cargo Auto Placement system uses the 3DBinPacking API to automatically calculate optimal cargo placement across multiple hatches in a vessel for a specific voyage.
+The Cargo Auto Placement system displays cargo items and hatch data for manual placement review and visualization across multiple hatches in a vessel for a specific voyage.
 
 ## Features
-- **Multi-Hatch Support**: Automatically distributes cargo across all available hatches in a vessel
-- **Dimension-Based Calculation**: Uses length, width, height, and weight from cargo bookings
-- **Sequential Hatch Filling**: Fills hatches sequentially until all cargo is placed
-- **Remaining Items Tracking**: Shows items that couldn't fit in any hatch
-- **Real-time Placement Visualization**: Displays 3D coordinates and dimensions for each placed item
+- **Multi-Hatch Support**: View all cargo across available hatches in a vessel
+- **Dimension-Based Display**: Shows length, width, height, and weight from cargo bookings
+- **Cargo Organization**: Groups cargo items by cargo type and dimensions
+- **Hatch Visualization**: Displays hatch specifications and capacity information
+- **Manual Placement Planning**: Interactive interface for planning cargo placement
 
 ## How It Works
 
@@ -23,16 +23,15 @@ The system gathers:
 - **Cargo Data**: Dimensions (length, width, height) and weight from `cargo_booking` table
 - **Quantity**: Number of items from `cargo_receipt` table
 
-### 3. API Integration
-- Sends cargo items to 3DBinPacking API for each hatch
-- API calculates optimal placement using bin packing algorithms
-- Returns packed items with 3D coordinates (x, y, z) and unpacked items
+### 3. Data Preparation
+- Prepares cargo items for manual placement review
+- Calculates cargo volume and weight requirements
+- Displays available hatch space and capacity
 
-### 4. Sequential Processing
-- Processes hatches in order (Hatch 1, Hatch 2, etc.)
-- Removes successfully packed items from remaining items list
-- Continues to next hatch with remaining items
-- Stops when all items are placed or all hatches are full
+### 4. Visualization
+- Displays all cargo items and hatch information
+- Shows dimensions and weight specifications
+- Enables staff to review and plan placement manually
 
 ## Database Structure
 
@@ -52,19 +51,7 @@ CargoReceipt → CargoItem (description)
 ```
 
 ## Configuration
-
-### Environment Variables
-Add to your `.env` file:
-```env
-3DBIN_USERNAME=your_username_here
-3DBIN_API_KEY=your_api_key_here
-```
-
-### Getting API Credentials
-1. Visit [3DBinPacking.com](https://www.3dbinpacking.com/)
-2. Sign up for an account
-3. Obtain your API credentials from the dashboard
-4. Add credentials to `.env` file
+No external API configuration required. The system uses internal database data for cargo and hatch information.
 
 ## Usage
 
@@ -72,49 +59,31 @@ Add to your `.env` file:
 1. Navigate to: `Authorized > Admin > Cargo Auto Placement`
 2. Select a voyage from the dropdown
 3. Review voyage information, hatch specifications, and cargo items
-4. Click "Calculate Auto Placement" button
-5. View results showing packed items per hatch
+4. Use the provided data to plan cargo placement manually
+5. View cargo and hatch information for planning
 
 ### For Staff Users
 1. Navigate to: `Authorized > Staff > Cargo Auto Placement`
 2. Follow same steps as admin users
 
-## Results Display
+## Display Information
 
-### Placement Results
-- **Hatch Label**: Name of the hatch (e.g., Hatch 1, Hatch 2)
-- **Packed Items Count**: Number of items successfully placed
-- **Unpacked Items Count**: Number of items that couldn't fit
+### Voyage & Vessel Information
+- **Voyage Details**: Voyage ID, departure date, route
+- **Vessel Information**: Vessel name, total hatch capacity
+- **Hatch Specifications**: For each hatch - label, dimensions (L×W×H), weight capacity
+
+### Cargo Items
 - **Item Details Table**:
   - Item ID (cargo_receipt_id)
-  - Position (x, y, z coordinates in meters)
-  - Dimensions (width × height × depth in meters)
+  - Item Name/Description
+  - Dimensions (width × height × depth)
+  - Weight
+  - Quantity
 
-### Warnings
-- System displays warning if items couldn't be placed in any hatch
-- Shows count of remaining items that need manual placement
-
-## API Response Structure
-
-### Successful Response
-```json
-{
-  "response": {
-    "packed_items": [
-      {
-        "id": "123",
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0,
-        "w": 1.2,
-        "h": 0.8,
-        "d": 1.5
-      }
-    ],
-    "unpacked_items": []
-  }
-}
-```
+### Placement Planning
+- Staff can review all cargo and hatch information together
+- Information provided for manual placement decision-making
 
 ## Error Handling
 
@@ -122,8 +91,6 @@ Add to your `.env` file:
 1. **No Hatches Found**: Vessel has no hatch configurations
 2. **No Cargo Bookings**: No cargo receipts exist for the voyage
 3. **No Valid Dimensions**: Cargo bookings missing length/width/height
-4. **API Credentials Missing**: 3DBIN credentials not configured
-5. **API Connection Failed**: Unable to reach 3DBinPacking API
 
 ### Error Messages
 - Displayed as alerts on the page
@@ -136,9 +103,9 @@ Add to your `.env` file:
 
 #### Methods
 - `show()`: Displays the placement page with voyage selection
-- `place()`: Processes placement calculation
+- `place()`: Prepares cargo and hatch data for review
 - `getVoyagePlacementData()`: Retrieves voyage, hatches, and cargo data
-- `callBinPackingAPI()`: Makes API call to 3DBinPacking
+- `getPackingData()`: Returns JSON data for visualization
 
 ### Routes
 **Admin:**
@@ -182,10 +149,9 @@ Add to your `.env` file:
 ### Performance Issues
 - Large number of items may take longer to process
 - Consider pagination for voyages with many cargo items
-- API timeout is set to 15 seconds per hatch
 
 ## Support
 For issues or questions:
 1. Check Laravel logs: `storage/logs/laravel.log`
-2. Review API documentation: [3DBinPacking API Docs](https://www.3dbinpacking.com/docs)
+2. Verify database connections and hatch configurations
 3. Contact system administrator

@@ -41,11 +41,6 @@ return [
     'endpoint' => env('SEMAPHORE_ENDPOINT', 'https://api.semaphore.co/api/v4/messages'),
 ],
 
-'3dbin' => [
-    'username' => env('3DBIN_USERNAME'),
-    'api_key'  => env('3DBIN_API_KEY'),
-],
-
 
 
 ];
