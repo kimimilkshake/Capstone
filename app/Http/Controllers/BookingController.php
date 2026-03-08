@@ -113,7 +113,7 @@ class BookingController extends Controller
                 'updated_at' => now(),
             ]);
 
-            foreach ($passengers as $p) {
+            foreach ($passengers as $index => $p) {
                 // Insert or create passenger record
                 $passengerId = DB::table('passenger')->insertGetId([
                     'passenger_firstname' => $p['first_name'] ?? null,
@@ -122,7 +122,7 @@ class BookingController extends Controller
                     'passenger_suffix' => $p['suffix'] ?? null,
                     'passenger_age' => $p['age'] ?? 0,
                     'passenger_gender' => strtoupper(substr($p['gender'] ?? 'M', 0, 1)),
-                    'passenger_type' => $p['type'] ?? 'Regular', // Use the new enum values directly
+                    'passenger_type' => $p['type'] ?? 'Regular',
                     'passenger_address' => $p['address'] ?? null,
                     'passenger_contactno' => $p['contact_number'] ?? null,
                     'passenger_email' => $p['email'] ?? null,
@@ -148,9 +148,12 @@ class BookingController extends Controller
                 // Apply discounts based on passenger type and route
                 $price = $this->calculateDiscountedPrice($basePrice, $p['type'] ?? 'Regular', $routeFrom, $routeTo);
 
-                // Apply promo discount if applicable (percentage off the discounted price)
-                if ($promoId && $promoDiscountRate > 0) {
-                    $promoDiscount = $price * ($promoDiscountRate / 100);
+                // Apply promo discount if applicable PER PASSENGER
+                $passengerPromoId = $p['promo_id'] ?? null;
+                $passengerPromoRate = $p['promo_discount_rate'] ?? 0;
+
+                if ($passengerPromoId && $passengerPromoRate > 0) {
+                    $promoDiscount = $price * ($passengerPromoRate / 100);
                     $price = $price - $promoDiscount;
                 }
 
@@ -161,7 +164,7 @@ class BookingController extends Controller
                 $ptId = DB::table('passenger_ticket')->insertGetId([
                     'passenger_id' => $passengerId,
                     'voyage_id' => $voyage->voyage_id,
-                    'promo_id' => $promoId,
+                    'promo_id' => $passengerPromoId,
                     'payment_id' => $paymentId,
                     'booking_ref_no' => $bookingId,
                     // keep legacy date column (pt_valid_until) as date for backwards compat

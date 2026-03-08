@@ -14,10 +14,11 @@ class CargoAutoPlacementService
      */
     private static function convertToMeters($value, $unitName = 'cm')
     {
-        if (!$value) return 0;
-        
+        if (!$value)
+            return 0;
+
         $unitLower = strtolower(trim($unitName ?? 'cm'));
-        
+
         // Convert to meters based on unit
         if (strpos($unitLower, 'cm') !== false || strpos($unitLower, 'centimeter') !== false) {
             return (float) $value / 100; // cm to m
@@ -26,7 +27,7 @@ class CargoAutoPlacementService
         } elseif (strpos($unitLower, 'm') === 0 || strpos($unitLower, 'meter') !== false) {
             return (float) $value; // already in meters
         }
-        
+
         // Default: assume cm
         return (float) $value / 100;
     }
@@ -34,7 +35,7 @@ class CargoAutoPlacementService
      * Validate if cargo items from a booking can fit in the voyage's hatches
      * Note: 3DBinPacking API integration has been removed.
      * Dimensions are converted from cm/inches to meters for visualization.
-     * 
+     *
      * @param int $voyageId
      * @param array $cargoBookingIds - Array of cargo_booking IDs to validate
      * @return array ['success' => bool, 'message' => string, 'packedItems' => array, 'unpackedItems' => array]
@@ -43,7 +44,7 @@ class CargoAutoPlacementService
     {
         try {
             $voyage = Voyage::with(['vessel.hatches'])->findOrFail($voyageId);
-            
+
             if (!$voyage->vessel->hatches || $voyage->vessel->hatches->isEmpty()) {
                 return [
                     'success' => false,
@@ -55,7 +56,7 @@ class CargoAutoPlacementService
 
             // Fetch cargo bookings with measurement unit
             $cargoBookings = CargoBooking::with(['measurementUnit', 'cargoItem'])->whereIn('cargo_booking_id', $cargoBookingIds)->get();
-            
+
             if ($cargoBookings->isEmpty()) {
                 return [
                     'success' => false,
@@ -71,12 +72,12 @@ class CargoAutoPlacementService
                 if ($cargo->length && $cargo->width && $cargo->height) {
                     // Get measurement unit (default: cm)
                     $unitName = $cargo->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
-                    
+
                     // Convert dimensions to meters
                     $widthM = self::convertToMeters($cargo->width, $unitName);
                     $heightM = self::convertToMeters($cargo->height, $unitName);
                     $lengthM = self::convertToMeters($cargo->length, $unitName);
-                    
+
                     $cargoItems[] = [
                         'id' => $cargo->cargo_booking_id,
                         'w' => (float) $widthM,

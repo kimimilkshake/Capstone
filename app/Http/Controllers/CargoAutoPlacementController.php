@@ -29,10 +29,11 @@ class CargoAutoPlacementController extends Controller
      */
     private function convertToMeters($value, $unitName = 'cm')
     {
-        if (!$value) return 0;
-        
+        if (!$value)
+            return 0;
+
         $unitLower = strtolower(trim($unitName ?? 'cm'));
-        
+
         // Convert to meters based on unit
         if (strpos($unitLower, 'cm') !== false || strpos($unitLower, 'centimeter') !== false) {
             return (float) $value / 100; // cm to m
@@ -41,7 +42,7 @@ class CargoAutoPlacementController extends Controller
         } elseif (strpos($unitLower, 'm') === 0 || strpos($unitLower, 'meter') !== false) {
             return (float) $value; // already in meters
         }
-        
+
         // Default: assume cm
         return (float) $value / 100;
     }
@@ -130,12 +131,12 @@ class CargoAutoPlacementController extends Controller
             if ($cargoBooking && $cargoBooking->length && $cargoBooking->width && $cargoBooking->height) {
                 // Get measurement unit (default: cm)
                 $unitName = $cargoBooking->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
-                
+
                 // Convert dimensions to meters
                 $widthM = $this->convertToMeters($cargoBooking->width, $unitName);
                 $heightM = $this->convertToMeters($cargoBooking->height, $unitName);
                 $lengthM = $this->convertToMeters($cargoBooking->length, $unitName);
-                
+
                 $cargoItems[] = [
                     'id' => $receipt->cargo_receipt_id,
                     'w' => (float) $widthM,
@@ -157,7 +158,7 @@ class CargoAutoPlacementController extends Controller
 
         // Prepare results for display
         $hatchResults = [];
-        
+
         foreach ($hatches as $hatch) {
             $hatchResults[] = [
                 'hatch' => $hatch,
@@ -221,10 +222,10 @@ class CargoAutoPlacementController extends Controller
                 $quantity = (int) ($cb->quantity ?? 1);
                 $totalWeight = (float) ($cb->weight ?? 0);
                 $weightPerItem = $quantity > 0 ? $totalWeight / $quantity : 0;
-                
+
                 // Get measurement unit name
                 $unitName = $cb->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
-                
+
                 // Convert dimensions to meters
                 $widthM = $this->convertToMeters($cb->width, $unitName);
                 $heightM = $this->convertToMeters($cb->height, $unitName);
@@ -265,10 +266,10 @@ class CargoAutoPlacementController extends Controller
                     $quantity = (int) ($bookingRow->quantity ?? 1);
                     $totalWeight = (float) ($bookingRow->weight ?? 0);
                     $weightPerItem = $quantity > 0 ? $totalWeight / $quantity : 0;
-                    
+
                     // Get measurement unit name
                     $unitName = $bookingRow->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
-                    
+
                     // Convert dimensions to meters
                     $widthM = $this->convertToMeters($bookingRow->width, $unitName);
                     $heightM = $this->convertToMeters($bookingRow->height, $unitName);

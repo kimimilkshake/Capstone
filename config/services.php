@@ -36,10 +36,10 @@ return [
     ],
 
     'semaphore' => [
-    'api_key'  => env('SEMAPHORE_API_KEY'),
-    'sender'   => env('LAPULAPUSHIPPINGLINES'),
-    'endpoint' => env('SEMAPHORE_ENDPOINT', 'https://api.semaphore.co/api/v4/messages'),
-],
+        'api_key' => env('SEMAPHORE_API_KEY'),
+        'sender' => env('LAPULAPUSHIPPINGLINES'),
+        'endpoint' => env('SEMAPHORE_ENDPOINT', 'https://api.semaphore.co/api/v4/messages'),
+    ],
 
 
 
