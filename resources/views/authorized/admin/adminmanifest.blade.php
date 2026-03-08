@@ -50,7 +50,7 @@
                       onclick="printTable('passengerTable')"
                     ></i>
                 </div>
-                <table id="passengerTable" class="manifest-table table">
+                <table id="passengerTable" class="manifest-table table text-center align-middle">
                     <thead>
                         <tr>
                             <th>Ticket / Ref</th>
@@ -66,7 +66,7 @@
                     </thead>
                     <tbody>
                         @if($passengers->isEmpty())
-                            <tr><td colspan="8" class="text-center">No data available</td></tr>
+                            <tr><td colspan="9" class="text-center">No data available</td></tr>
                         @else
                             @foreach($passengers as $p)
                                 <tr>
@@ -108,12 +108,13 @@
                       onclick="printTable('passengerTable')"
                     ></i>
                 </div>
-                 <table id="cargoTable" class="manifest-table table table-striped">
+                 <table id="cargoTable" class="manifest-table table table-striped text-center align-middle">
                     <thead>
                         <tr>
                             <th>B/L No / Ref</th>
                             <th>Qty</th>
                             <th>Classification / Item</th>
+                            <th>Category</th>
                             <th>Description</th>
                             <th>Sender</th>
                             <th>TIN</th>
@@ -123,7 +124,6 @@
                             <th>Stamp</th>
                             <th>Total</th>
                             <th>Receipt No.</th>
-                            <th>Net Arrastre</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -135,6 +135,7 @@
                                      <td>{{ $c->bl_number ?? $c->booking_ref_no ?? $c->booking_ref ?? ($c->booking_ref_no ?? '-') }}</td>
                                     <td>{{ $c->quantity ?? $c->cargo_item_qty ?? '-' }}</td>
                                     <td>{{ $c->cargo_classification_name ?? 'N/A' }}</td>
+                                    <td>{{ $c->cargoItem->cargo_category->cargo_category_name ?? 'N/A'  }}</td>
                                     <td>{{ $c->cargoItem->cargo_item_description ?? 'N/A'  }}</td>
                                     <td>{{ $c->sender->sender_name ?? 'N/A' }}</td>
                                     <td>{{ $c->sender->sender_tin ?? '-' }}</td>
@@ -144,7 +145,6 @@
                                     <td>20.00</td>
                                     <td>{{ $c->payment->total_amount ?? 'N/A' }}</td>
                                     <td>{{ $c->receipt_no ?? ($c->cargo_receipt_id ?? '-') }}</td>
-                                    <td>{{ $c->cargoItem->cargo_item_arrastre ?? '-' }}</td>
                                 </tr>
                             @endforeach
                         @endif
@@ -178,7 +178,7 @@ function printTable(tableId) {
     printWindow.document.write('@page { margin: 14mm; }');
     printWindow.document.write('body { font-family: Arial, sans-serif; font-size: 10pt; padding: 12px; padding-bottom: 70px; }');
     printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 16px; }');
-    printWindow.document.write('th, td { border: 1px solid #000; padding: 8px; text-align: left; }');
+    printWindow.document.write('th, td { border: 1px solid #000; padding: 8px; text-align: center; }');
     printWindow.document.write('th { background-color: #f2f2f2; }');
     printWindow.document.write('.manifest-header { text-align: center; margin-bottom: 16px; }');
     printWindow.document.write('.manifest-title { font-size: 14pt; }');
