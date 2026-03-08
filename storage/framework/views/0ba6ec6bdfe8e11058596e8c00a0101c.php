@@ -86,4 +86,4 @@
 
     </ul>
 </nav>
-<?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/components/staff_nav.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/components/staff_nav.blade.php ENDPATH**/ ?>

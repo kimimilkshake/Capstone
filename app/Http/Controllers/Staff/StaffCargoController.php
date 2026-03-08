@@ -251,7 +251,11 @@ class StaffCargoController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('authorized.staff.pendingcargo', compact('bookings', 'selectedStatus', 'allowedStatuses'));
+        $view = auth()->guard('admin')->check()
+            ? 'authorized.admin.pendingcargo'
+            : 'authorized.staff.pendingcargo';
+
+        return view($view, compact('bookings', 'selectedStatus', 'allowedStatuses'));
     }
 
     /**
@@ -270,7 +274,11 @@ class StaffCargoController extends Controller
 
         $payment = Payment::where('booking_ref_no', $id)->first();
 
-        return view('authorized.staff.showcargo', compact('booking', 'payment'));
+        $view = auth()->guard('admin')->check()
+            ? 'authorized.admin.showcargo'
+            : 'authorized.staff.showcargo';
+
+        return view($view, compact('booking', 'payment'));
     }
 
     /**
@@ -413,9 +421,8 @@ class StaffCargoController extends Controller
         $totalCost = 0;
         foreach ($booking->cargoBookings as $cargo) {
             $freight = $cargo->cargoItem->cargo_item_freight;
-            $arrastre = $cargo->cargoItem->cargo_item_arrastre;
             $cbm = $cargo->cbm ?? (($cargo->length * $cargo->width * $cargo->height) / 1000000);
-            $subtotal = ($freight + $arrastre) * $cbm * $cargo->quantity;
+            $subtotal = $freight * $cbm * $cargo->quantity;
             $totalCost += $subtotal;
 
             $cargo->approved_by_staff_id = $staffId;
