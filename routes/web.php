@@ -10,6 +10,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\OcrController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\QrScannerController;
 
 // ADMIN CONTROLLERS
 use App\Http\Controllers\Admin\DashboardController;
@@ -164,10 +165,35 @@ Route::get('/authorized/login', [AuthController::class, 'showLoginForm'])->name(
 // Process login
 Route::post('/authorized/login', [AuthController::class, 'login'])->name('login');
 
+// Dedicated staff login for QR scanner
+Route::get('/authorized/scannerlogin', [AuthController::class, 'showScannerLoginForm'])->name('scanner.login.form');
+Route::post('/authorized/scannerlogin', [AuthController::class, 'scannerLogin'])->name('scanner.login');
+
+// Basic QR scanner page (staff only)
+Route::get('/authorized/scanner', [QrScannerController::class, 'index'])
+    ->name('scanner.page');
+
 // Forgot password
 Route::get('/authorized/forgot_password', function () {
     return view('authorized.forgot_password');
 })->name('authorized.forgot_password');
+
+//Send OTP
+Route::post('/send-otp', [AuthController::class, 'sendOTP'])->name('send.otp');
+
+//OTP Page
+Route::get('/verify-otp', function () {
+    return view('authorized.verify_otp');
+})->name('otp.page');
+
+//Verify OTP
+Route::post('/verify-otp', [AuthController::class, 'verifyOTP'])->name('verify.otp');
+
+//Reset Password
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('reset.password');
+Route::get('/reset-password-page', function () {
+    return view('authorized.reset_password');
+})->name('reset.password.page');
 
 //ADMIN ROUTES
 Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
@@ -258,6 +284,14 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
 
     Route::post('/admin_cargo/placement/remove-row', [CargoAutoPlacementController::class, 'removeRow'])
         ->name('admin.cargo.removeRow');
+
+    // Cargo Booking Review (View Only)
+    Route::get('/cargo-bookings/pending', [StaffCargoController::class, 'pending'])
+        ->name('admin.cargo.bookings.pending');
+    Route::get('/cargo-bookings/{id}', [StaffCargoController::class, 'show'])
+        ->name('admin.cargo.bookings.show');
+    Route::get('/cargo-bookings/{id}/bol', [StaffCargoController::class, 'bolView'])
+        ->name('admin.cargo.bookings.bol');
 });
 
 //STAFF

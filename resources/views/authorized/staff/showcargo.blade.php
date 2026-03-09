@@ -98,7 +98,7 @@
                                 $filename = basename($cargo->cargo_picture);
                                 $imgPath = file_exists(storage_path('app/public/cargo_pictures/' . $filename))
                                     ? asset('storage/cargo_pictures/' . $filename)
-                                    : asset('images/no-image.png');
+                                    : asset('images/passenger.svg');
                                 $cargoDescription = $cargo->cargoItem->cargo_item_description ?? 'Unknown Cargo';
                                 $cargoClassification = $cargo->cargoClassification->cargo_classification_name ?? '';
                             @endphp
@@ -106,17 +106,8 @@
                             <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
                                 <div class="carousel-image-container">
                                     <img src="{{ $imgPath }}" class="d-block w-100 carousel-img"
-                                        alt="{{ $cargoDescription }}" data-image="{{ $imgPath }}"
-                                        data-description="{{ $cargoDescription }}"
-                                        data-classification="{{ $cargoClassification }}" data-bs-toggle="modal"
-                                        data-bs-target="#photoModal" style="cursor: pointer;">
-
-                                    <div class="carousel-zoom-overlay" data-image="{{ $imgPath }}"
-                                        data-description="{{ $cargoDescription }}"
-                                        data-classification="{{ $cargoClassification }}" data-bs-toggle="modal"
-                                        data-bs-target="#photoModal" style="cursor: pointer;">
-                                        <div class="zoom-content"></div>
-                                    </div>
+                                        alt="{{ $cargoDescription }}" style="cursor: default;"
+                                        onerror="this.onerror=null;this.src='{{ asset('images/passenger.svg') }}';">
 
                                     <div class="carousel-caption-overlay">
                                         <h5 class="carousel-cargo-title">{{ $cargoDescription }}</h5>
@@ -158,7 +149,6 @@
                             <th>Height</th>
                             <th>CBM</th>
                             <th>Freight</th>
-                            <th>Arrastre</th>
                             <th>Subtotal</th>
                         </tr>
                     </thead>
@@ -169,9 +159,8 @@
                         @foreach ($cargoBookings as $c)
                             @php
                                 $freight = $c->cargoItem->cargo_item_freight;
-                                $arrastre = $c->cargoItem->cargo_item_arrastre;
                                 $cbm = (float) ($c->cbm ?? ($c->length * $c->width * $c->height) / 1000000);
-                                $subtotal = ($freight + $arrastre) * $cbm * $c->quantity;
+                                $subtotal = $freight * $cbm * $c->quantity;
                                 $total += $subtotal;
                                 $unit = $c->measurementUnit->measurement_unit_abbreviation ?? 'cm';
                             @endphp
@@ -185,7 +174,6 @@
                                 <td class="text-end">{{ number_format($c->height, 2) }}{{ $unit }}</td>
                                 <td class="text-end">{{ number_format($cbm, 4) }}</td>
                                 <td class="text-end">₱{{ number_format($freight, 2) }}</td>
-                                <td class="text-end">₱{{ number_format($arrastre, 2) }}</td>
                                 <td class="text-end">₱{{ number_format($subtotal, 2) }}</td>
                             </tr>
                         @endforeach
@@ -193,7 +181,7 @@
 
                     <tfoot>
                         <tr>
-                            <th colspan="9" class="text-end">TOTAL:</th>
+                            <th colspan="8" class="text-end">TOTAL:</th>
                             <th class="text-end">
                                 @if ($payment && $payment->total_amount)
                                     ₱{{ number_format($payment->total_amount, 2) }}
@@ -220,22 +208,6 @@
                     style="width: 200px;">Reject</button>
             </div>
         @endif
-
-        <div class="modal fade" id="photoModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content bg-dark">
-                    <div class="modal-body p-0 position-relative" style="height: 600px;">
-                        <img id="modalCargoPhoto" class="w-100 h-100" style="object-fit: contain;" alt="Cargo Photo">
-
-                        <div class="position-absolute bottom-0 start-0 p-3 bg-dark bg-opacity-90 text-white"
-                            style="border-radius: 0 8px 0 0;">
-                            <h6 id="modalPhotoCaption" class="mb-1">Cargo Item</h6>
-                            <small id="modalPhotoClassification" class="text-muted">Classification: --</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <div class="text-center mt-4">
             <a href="{{ route('cargo.bookings.pending') }}" class="btn btn-outline-primary btn-lg px-4">
@@ -747,6 +719,7 @@
                 const modalCaption = document.getElementById('modalPhotoCaption');
                 const modalClassification = document.getElementById('modalPhotoClassification');
 
+<<<<<<< HEAD
                 if (modalImage) modalImage.src = image || '';
                 if (modalCaption) modalCaption.textContent = description;
                 if (modalClassification) modalClassification.textContent = 'Classification: ' +
@@ -765,3 +738,101 @@
         });
     </script>
 @endsection
+=======
+                .zoom-content p {
+                    font-size: 0.95rem;
+                }
+
+                .carousel-cargo-title {
+                    font-size: 1.2rem;
+                    padding: 0 10px;
+                }
+
+                .carousel-cargo-classification {
+                    font-size: 0.85rem;
+                }
+
+                .carousel-control-prev,
+                .carousel-control-next {
+                    width: 44px;
+                    height: 44px;
+                }
+
+                .carousel-control-prev-icon,
+                .carousel-control-next-icon {
+                    font-size: 1.25rem;
+                }
+            }
+
+            @media (max-width: 576px) {
+                #cargoCarousel {
+                    padding: 10px;
+                }
+
+                .carousel-item {
+                    height: 250px;
+                }
+
+                .carousel-img {
+                    padding: 15px;
+                }
+
+                .carousel-caption-overlay {
+                    padding: 20px 15px 15px;
+                }
+
+                .zoom-content i {
+                    font-size: 2rem;
+                    margin-bottom: 6px;
+                }
+
+                .zoom-content p {
+                    font-size: 0.85rem;
+                }
+
+                .carousel-cargo-title {
+                    font-size: 1rem;
+                    padding: 0 8px;
+                }
+
+                .carousel-cargo-classification {
+                    font-size: 0.75rem;
+                }
+
+                .carousel-control-prev,
+                .carousel-control-next {
+                    width: 40px;
+                    height: 40px;
+                }
+
+                .carousel-control-prev {
+                    left: 5px;
+                }
+
+                .carousel-control-next {
+                    right: 5px;
+                }
+
+                .carousel-indicators {
+                    bottom: -40px;
+                }
+
+                .carousel-indicators button {
+                    width: 12px;
+                    height: 12px;
+                }
+
+                .carousel-indicators button.active {
+                    width: 14px;
+                    height: 14px;
+                }
+            }
+
+            .cargo-items-table th,
+            .cargo-items-table td {
+                vertical-align: middle;
+            }
+        </style>
+    @endsection
+
+>>>>>>> admin

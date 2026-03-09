@@ -29,7 +29,6 @@ class CargoBooking extends Model
         'height',
         'cargo_picture',
         'freight',
-        'arrastre',
         'total',
         'cbm',
         'approved_by_staff_id',

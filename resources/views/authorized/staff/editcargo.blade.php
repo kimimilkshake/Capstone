@@ -91,7 +91,6 @@
                                 @foreach($cargoItems as $item)
                                     <option value="{{ $item->cargo_item_id }}"
                                         data-freight="{{ $item->cargo_item_freight }}"
-                                        data-arrastre="{{ $item->cargo_item_arrastre }}"
                                         {{ $cargo->cargo_item_id == $item->cargo_item_id ? 'selected' : '' }}>
                                         {{ $item->cargo_item_description }}
                                     </option>
@@ -219,9 +218,8 @@
             const quantity = quantityInputs[index] ? (parseFloat(quantityInputs[index].value) || 0) : 0;
             const cbm = calculateCBM(index);
             const freight = selectedOption ? (parseFloat(selectedOption.dataset.freight) || 0) : 0;
-            const arrastre = selectedOption ? (parseFloat(selectedOption.dataset.arrastre) || 0) : 0;
 
-            totalValue += (freight + arrastre) * cbm * quantity;
+            totalValue += freight * cbm * quantity;
         });
 
         const totalDisplay = document.getElementById('totalValueDisplay');
@@ -252,17 +250,5 @@
         });
     });
 
-    // Enforce 25kg max per booking
-    document.querySelector('form').addEventListener('submit', function(e){
-        let totalWeight = 0;
-        document.querySelectorAll('input[name="weight[]"]').forEach(input => {
-            totalWeight += parseFloat(input.value) || 0;
-        });
-        if(totalWeight > 25){
-            e.preventDefault();
-            alert('Total weight per booking must not exceed 25kg.');
-            return false;
-        }
-    });
 </script>
 @endsection

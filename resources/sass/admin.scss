@@ -270,6 +270,14 @@ body {
     text-align: left;
 }
 
+/* Manifest columns should be centered to line up values with headers. */
+/*
+.manifest-table th,
+.manifest-table td {
+  text-align: center;
+}
+*/
+
 .staff-table th, .promo-table th, .vessel-table th, .voyage-table th, .rp-table th, .manifest-table th, .cargo-item-table th{
     background-color: #485b8c;
     color: white;

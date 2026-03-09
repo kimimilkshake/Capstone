@@ -1,12 +1,12 @@
 <?php $__env->startSection('page-title', 'CARGO'); ?>
 <?php $__env->startSection('content'); ?>
   <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-  <?php echo $__env->make('components.admin_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-  <div class="admin-body">
-    <div class="avl-title">
+  <?php echo $__env->make('components.staff_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+  <div class="staff-body">
+    <div class="svl-title">
       <h3>VIEW RATES</h3>
     </div>
-    
+
     
     <?php if($errors->any()): ?>
       <div class="alert-wrapper">
@@ -31,7 +31,7 @@
 
     <div class="search-filter-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
 
-      <form class="search-bar" action="<?php echo e(route('admin.cargo_item_list')); ?>"  method="GET" style="flex: 1;">
+      <form class="search-bar" action="<?php echo e(route('staff.cargo_item_list')); ?>"  method="GET" style="flex: 1;">
 
         <input type="text" name="search" placeholder="Search..." value="<?php echo e(request('search')); ?>" style="margin-right: 10px;">
         <select name="route_code_id">
@@ -47,7 +47,7 @@
       </form>
 
       <div class="add-vessel">
-        <button type="button" id="aaddCargoCategoryBtn" class="add-link-btn" title="Add Cargo Category">
+        <button type="button" id="saddCargoCategoryBtn" class="add-link-btn" title="Add Cargo Category">
           <i class="fa-solid fa-plus me-2"></i><i class="fa-solid fa-boxes-packing"></i>
         </button>
       </div>
@@ -61,7 +61,7 @@
           <th>Category</th>
           <th>Description</th>
           <th>Freight</th>
-          <th>With Measurement Range?</th>
+          <th>With Measurement </th>
           <th>Action</th>
         </tr>
       </thead>
@@ -74,7 +74,7 @@
             <td><?php echo e($c->cargo_item_freight); ?></td>
             <td><?php echo e($c->cargo_item_measure_required); ?></td>
             <td>
-              <a href="<?php echo e(route('admin.cargo_item_edit', $c->cargo_item_id)); ?>" class="edit-icon">
+              <a href="<?php echo e(route('staff.cargo_item_edit', $c->cargo_item_id)); ?>" class="editRouteBtn link-btn" title="Edit Cargo Item">
                 <i class="fa fa-pencil" aria-hidden="true"></i>
               </a>
             </td>
@@ -90,16 +90,17 @@
       <?php echo e($cargo_items->appends(request()->query())->links('pagination::bootstrap-5')); ?>
 
     </div>
+
   </div>
 
   <!-- Add Cargo Classification Modal -->
-  <div id="aaddCargoCategoryModal" class="modal-overlay" style="display: none">
+  <div id="saddCargoCategoryModal" class="modal-overlay" style="display: none">
     <div class="modal-content">
       
-      <span class="close-btn" id="acloseCargoCategoryModal">&times;</span>
+      <span class="close-btn" id="scloseCargoCategoryModal">&times;</span>
       <h3>Add Cargo Category</h3>
-      <form id="aaddCargoCategoryForm" 
-            action="<?php echo e(route('admin.cargo_category_store')); ?>"
+      <form id="saddCargoCategoryForm" 
+            action="<?php echo e(route('staff.cargo_category_store')); ?>"
             method="POST">
         <?php echo csrf_field(); ?>
         <div class="rpmodal-row one-col">
@@ -116,9 +117,9 @@
   <script>
     document.addEventListener('DOMContentLoaded', function () {
 
-        const openBtn = document.getElementById('aaddCargoCategoryBtn');
-        const modal = document.getElementById('aaddCargoCategoryModal');
-        const closeBtn = document.getElementById('acloseCargoCategoryModal');
+        const openBtn = document.getElementById('saddCargoCategoryBtn');
+        const modal = document.getElementById('saddCargoCategoryModal');
+        const closeBtn = document.getElementById('scloseCargoCategoryModal');
 
         // Open modal
         openBtn.addEventListener('click', function () {
@@ -139,7 +140,5 @@
 
     });
     </script>
-
-
 <?php $__env->stopSection(); ?>
-<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/authorized/admin/cargo_item_list.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/authorized/staff/scargo_item_list.blade.php ENDPATH**/ ?>

@@ -55,14 +55,17 @@
                     </tr>
                 </thead>
                 <tbody>
-                @php $total = 0; @endphp
+                @php
+                    $total = 0;
+                    $totalQuantity = 0;
+                @endphp
                 @foreach($cargoItems as $cargo)
                     @php
                         $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
-                        $arrastre = $cargo->cargoItem->cargo_item_arrastre ?? 0;
-                        $cbm = ($cargo->length * $cargo->width * $cargo->height) / 1000000;
-                        $subtotal = ($freight + $arrastre) * $cbm * $cargo->quantity;
+                        $cbm = $cargo->cbm ?? (($cargo->length * $cargo->width * $cargo->height) / 1000000);
+                        $subtotal = $freight * $cbm * $cargo->quantity;
                         $total += $subtotal;
+                        $totalQuantity += $cargo->quantity;
                     @endphp
                     <tr>
                         <td>{{ $cargo->cargoItem->cargo_item_description }}</td>
@@ -74,6 +77,11 @@
                         <td>₱{{ number_format($subtotal,2) }}</td>
                     </tr>
                 @endforeach
+                <tr style="background-color: #f9f9f9; font-weight: bold;">
+                    <td colspan="2">Total Items</td>
+                    <td>{{ $totalQuantity }}</td>
+                    <td colspan="4"></td>
+                </tr>
                 </tbody>
             </table>
 

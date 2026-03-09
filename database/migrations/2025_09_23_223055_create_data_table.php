@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->id('admin_id');
             $table->string('admin_name', 50);
             $table->string('admin_user', 10);
+            $table->string('admin_email');
             $table->string('admin_password');
             $table->timestamps();
         });
@@ -302,6 +303,17 @@ return new class extends Migration {
             $table->enum('notification_status', ['Approved', 'Rejected', 'Read', 'Archived']);
             $table->timestamp('notification_created');
             $table->timestamps();
+        });
+
+        // ==========================
+        // PASSWORD RESET OTPS
+        // ==========================
+        Schema::create('password_otps', function (Blueprint $table) {
+            $table->id();
+            $table->string('email')->unique();   // email of admin or staff
+            $table->string('otp');               // store 4-digit OTP
+            $table->timestamp('expires_at');     // OTP expiration
+            $table->timestamps();                // created_at, updated_at
         });
 
     }

@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             [
                 'admin_name' => 'Admin User',
                 'admin_user' => 'admin',
+                'admin_email' => 'admin@example.com',
                 'admin_password' => Hash::make('12345'),
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -36,6 +37,7 @@ class DatabaseSeeder extends Seeder
             [
                 'admin_name' => 'Alexander Cohon',
                 'admin_user' => 'atcohon',
+                'admin_email' => 'lapulines@yahoo.com',
                 'admin_password' => Hash::make('cohon01161957'),
                 'created_at' => now(),
                 'updated_at' => now(),

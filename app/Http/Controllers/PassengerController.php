@@ -248,7 +248,7 @@ class PassengerController extends Controller
     // Show confirmation page
     public function showCargoConfirmation($bookingRef)
     {
-        // Fetch cargo items with freight & arrastre rates from cargo_item
+        // Fetch cargo items with freight rates from cargo_item
         $cargoItems = \DB::table('cargo_booking')
             ->join('cargo_item', 'cargo_booking.cargo_item_id', '=', 'cargo_item.cargo_item_id')
             ->leftJoin('measurement_unit', 'cargo_booking.measurement_unit_id', '=', 'measurement_unit.measurement_unit_id')
@@ -257,7 +257,6 @@ class PassengerController extends Controller
                 'cargo_booking.*',
                 'cargo_item.cargo_item_description',
                 'cargo_item.cargo_item_freight as freight',
-                'cargo_item.cargo_item_arrastre as arrastre',
                 'measurement_unit.measurement_unit_abbreviation',
                 'cargo_classification.cargo_classification_name'
             )

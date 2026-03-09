@@ -97,7 +97,7 @@
                                 $filename = basename($cargo->cargo_picture);
                                 $imgPath = file_exists(storage_path('app/public/cargo_pictures/' . $filename))
                                     ? asset('storage/cargo_pictures/' . $filename)
-                                    : asset('images/no-image.png');
+                                    : asset('images/passenger.svg');
                                 $cargoDescription = $cargo->cargoItem->cargo_item_description ?? 'Unknown Cargo';
                                 $cargoClassification = $cargo->cargoClassification->cargo_classification_name ?? '';
                             ?>
@@ -105,17 +105,8 @@
                             <div class="carousel-item <?php echo e($index === 0 ? 'active' : ''); ?>">
                                 <div class="carousel-image-container">
                                     <img src="<?php echo e($imgPath); ?>" class="d-block w-100 carousel-img"
-                                        alt="<?php echo e($cargoDescription); ?>" data-image="<?php echo e($imgPath); ?>"
-                                        data-description="<?php echo e($cargoDescription); ?>"
-                                        data-classification="<?php echo e($cargoClassification); ?>" data-bs-toggle="modal"
-                                        data-bs-target="#photoModal" style="cursor: pointer;">
-
-                                    <div class="carousel-zoom-overlay" data-image="<?php echo e($imgPath); ?>"
-                                        data-description="<?php echo e($cargoDescription); ?>"
-                                        data-classification="<?php echo e($cargoClassification); ?>" data-bs-toggle="modal"
-                                        data-bs-target="#photoModal" style="cursor: pointer;">
-                                        <div class="zoom-content"></div>
-                                    </div>
+                                        alt="<?php echo e($cargoDescription); ?>" style="cursor: default;"
+                                        onerror="this.onerror=null;this.src='<?php echo e(asset('images/passenger.svg')); ?>';">
 
                                     <div class="carousel-caption-overlay">
                                         <h5 class="carousel-cargo-title"><?php echo e($cargoDescription); ?></h5>
@@ -157,7 +148,6 @@
                             <th>Height</th>
                             <th>CBM</th>
                             <th>Freight</th>
-                            <th>Arrastre</th>
                             <th>Subtotal</th>
                         </tr>
                     </thead>
@@ -168,9 +158,8 @@
                         <?php $__currentLoopData = $cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <?php
                                 $freight = $c->cargoItem->cargo_item_freight;
-                                $arrastre = $c->cargoItem->cargo_item_arrastre;
                                 $cbm = (float) ($c->cbm ?? ($c->length * $c->width * $c->height) / 1000000);
-                                $subtotal = ($freight + $arrastre) * $cbm * $c->quantity;
+                                $subtotal = $freight * $cbm * $c->quantity;
                                 $total += $subtotal;
                                 $unit = $c->measurementUnit->measurement_unit_abbreviation ?? 'cm';
                             ?>
@@ -184,7 +173,6 @@
                                 <td class="text-end"><?php echo e(number_format($c->height, 2)); ?><?php echo e($unit); ?></td>
                                 <td class="text-end"><?php echo e(number_format($cbm, 4)); ?></td>
                                 <td class="text-end">₱<?php echo e(number_format($freight, 2)); ?></td>
-                                <td class="text-end">₱<?php echo e(number_format($arrastre, 2)); ?></td>
                                 <td class="text-end">₱<?php echo e(number_format($subtotal, 2)); ?></td>
                             </tr>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -192,7 +180,7 @@
 
                     <tfoot>
                         <tr>
-                            <th colspan="9" class="text-end">TOTAL:</th>
+                            <th colspan="8" class="text-end">TOTAL:</th>
                             <th class="text-end">
                                 <?php if($payment && $payment->total_amount): ?>
                                     ₱<?php echo e(number_format($payment->total_amount, 2)); ?>
@@ -221,22 +209,6 @@
                     style="width: 200px;">Reject</button>
             </div>
         <?php endif; ?>
-
-        <div class="modal fade" id="photoModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content bg-dark">
-                    <div class="modal-body p-0 position-relative" style="height: 600px;">
-                        <img id="modalCargoPhoto" class="w-100 h-100" style="object-fit: contain;" alt="Cargo Photo">
-
-                        <div class="position-absolute bottom-0 start-0 p-3 bg-dark bg-opacity-90 text-white"
-                            style="border-radius: 0 8px 0 0;">
-                            <h6 id="modalPhotoCaption" class="mb-1">Cargo Item</h6>
-                            <small id="modalPhotoClassification" class="text-muted">Classification: --</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <div class="text-center mt-4">
             <a href="<?php echo e(route('cargo.bookings.pending')); ?>" class="btn btn-outline-primary btn-lg px-4">
@@ -733,38 +705,5 @@
         </style>
     <?php $__env->stopSection(); ?>
 
-    <?php $__env->startSection('scripts'); ?>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                document.addEventListener('click', function(event) {
-                    const trigger = event.target.closest('[data-bs-target="#photoModal"]');
-                    if (!trigger) return;
-
-                    const image = trigger.getAttribute('data-image');
-                    const description = trigger.getAttribute('data-description') || 'Cargo Item';
-                    const classification = trigger.getAttribute('data-classification') || '--';
-
-                    const modalImage = document.getElementById('modalCargoPhoto');
-                    const modalCaption = document.getElementById('modalPhotoCaption');
-                    const modalClassification = document.getElementById('modalPhotoClassification');
-
-                    if (modalImage) modalImage.src = image || '';
-                    if (modalCaption) modalCaption.textContent = description;
-                    if (modalClassification) modalClassification.textContent = 'Classification: ' +
-                        classification;
-                });
-
-                const photoModal = document.getElementById('photoModal');
-                if (photoModal) {
-                    photoModal.addEventListener('hidden.bs.modal', function() {
-                        const modalImage = document.getElementById('modalCargoPhoto');
-                        if (modalImage) {
-                            modalImage.removeAttribute('src');
-                        }
-                    });
-                }
-            });
-        </script>
-    <?php $__env->stopSection(); ?>
 
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/authorized/staff/showcargo.blade.php ENDPATH**/ ?>
