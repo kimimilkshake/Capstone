@@ -4,8 +4,8 @@
     @include('components.authHeader')
     @include('components.admin_nav')
 
-<div class="admin-body">
-    <h3 class="text-center mb-4">CARGO AUTO PLACEMENT</h3>
+    <div class="admin-body">
+        <h3 class="text-center mb-4">CARGO AUTO PLACEMENT</h3>
 
         <div class="scs-form_container">
             <form method="GET" action="{{ route('admin.cargo.placement') }}" class="mb-4">
@@ -250,7 +250,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="{{ asset('js/cargo-visualizer.js') }}" defer></script>
+    <script src="{{ asset('js/cargo-visualizer.js') }}"></script>
     <script>
         /**
          * Wait for CargoVisualizer to be available
@@ -293,10 +293,9 @@
                 // Initialize Three.js scene with fallback rendering
                 window.cargoVisualizer = new window.CargoVisualizer('cargo-visualizer-container');
 
-                // Render using auto-placement algorithm
+                // Render using 2-zone packing algorithm
                 if (data.cargo && Array.isArray(data.cargo)) {
-                    // Use fallback rendering with intelligent packing algorithm
-                    window.cargoVisualizer.renderRaw(data.hatches, data.cargo);
+                    window.cargoVisualizer.packAndVisualize(data.hatches, data.cargo);
                 }
 
             } catch (error) {

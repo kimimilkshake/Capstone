@@ -62,9 +62,8 @@
                 <?php $__currentLoopData = $cargoItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cargo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <?php
                         $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
-                        $arrastre = $cargo->cargoItem->cargo_item_arrastre ?? 0;
                         $cbm = ($cargo->length * $cargo->width * $cargo->height) / 1000000;
-                        $subtotal = ($freight + $arrastre) * $cbm * $cargo->quantity;
+                        $subtotal = $freight * $cbm * $cargo->quantity;
                         $total += $subtotal;
                         $totalQuantity += $cargo->quantity;
                         

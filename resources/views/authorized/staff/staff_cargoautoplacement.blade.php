@@ -59,11 +59,21 @@
                             <table class="table table-bordered">
                                 <thead style="background-color: #485b8c; color: white;">
                                     <tr>
-                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Hatch</th>
-                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Length (m)</th>
-                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Width (m)</th>
-                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Height (m)</th>
-                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Weight Capacity (kg)</th>
+                                        <th
+                                            style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">
+                                            Hatch</th>
+                                        <th
+                                            style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">
+                                            Length (m)</th>
+                                        <th
+                                            style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">
+                                            Width (m)</th>
+                                        <th
+                                            style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">
+                                            Height (m)</th>
+                                        <th
+                                            style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">
+                                            Weight Capacity (kg)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -89,27 +99,46 @@
                             <table class="table table-bordered">
                                 <thead style="background-color: #485b8c; color: white;">
                                     <tr>
-                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Receipt ID</th>
-                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Booking Ref</th>
-                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Item Description</th>
-                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Qty</th>
-                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">L × W × H (m)</th>
-                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Weight (kg)</th>
-                                        <th style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">Action</th>
+                                        <th
+                                            style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">
+                                            Receipt ID</th>
+                                        <th
+                                            style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">
+                                            Booking Ref</th>
+                                        <th
+                                            style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">
+                                            Item Description</th>
+                                        <th
+                                            style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">
+                                            Qty</th>
+                                        <th
+                                            style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">
+                                            L × W × H (m)</th>
+                                        <th
+                                            style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">
+                                            Weight (kg)</th>
+                                        <th
+                                            style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">
+                                            Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($placementData['cargoReceipts'] as $receipt)
                                         @php
-                                            $booking = \App\Models\CargoBooking::with('measurementUnit')->where(
-                                                'booking_ref_no',
-                                                $receipt->booking_ref_no,
-                                            )->first();
-                                            
+                                            $booking = \App\Models\CargoBooking::with('measurementUnit')
+                                                ->where('booking_ref_no', $receipt->booking_ref_no)
+                                                ->first();
+
                                             // Convert dimensions to meters for display
-                                            $unitName = $booking?->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
-                                            $conversionFactor = stripos($unitName, 'cm') !== false ? 0.01 : (stripos($unitName, 'in') !== false ? 0.0254 : 1);
-                                            
+                                            $unitName =
+                                                $booking?->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
+                                            $conversionFactor =
+                                                stripos($unitName, 'cm') !== false
+                                                    ? 0.01
+                                                    : (stripos($unitName, 'in') !== false
+                                                        ? 0.0254
+                                                        : 1);
+
                                             $lengthM = ($booking?->length ?? 0) * $conversionFactor;
                                             $widthM = ($booking?->width ?? 0) * $conversionFactor;
                                             $heightM = ($booking?->height ?? 0) * $conversionFactor;
@@ -121,15 +150,20 @@
                                             <td>{{ $receipt->cargo_item_qty ?? 1 }}</td>
                                             <td>
                                                 @if ($booking)
-                                                    {{ number_format($lengthM, 2) }} × {{ number_format($widthM, 2) }} × {{ number_format($heightM, 2) }}<br>
-                                                    <small style="color: #666;">({{ $booking->length }} × {{ $booking->width }} × {{ $booking->height }} {{ $unitName }})</small>
+                                                    {{ number_format($lengthM, 2) }} × {{ number_format($widthM, 2) }} ×
+                                                    {{ number_format($heightM, 2) }}<br>
+                                                    <small style="color: #666;">({{ $booking->length }} ×
+                                                        {{ $booking->width }} × {{ $booking->height }}
+                                                        {{ $unitName }})</small>
                                                 @else
                                                     No dimensions
                                                 @endif
                                             </td>
                                             <td>{{ $booking->weight ?? 'N/A' }}</td>
                                             <td style="text-align: center;">
-                                                <button class="btn btn-sm btn-primary isolate-btn" data-receipt-id="{{ $receipt->cargo_receipt_id }}" onclick="cargoVisualizer.isolateItem('{{ $receipt->cargo_receipt_id }}')">
+                                                <button class="btn btn-sm btn-primary isolate-btn"
+                                                    data-receipt-id="{{ $receipt->cargo_receipt_id }}"
+                                                    onclick="cargoVisualizer.isolateItem('{{ $receipt->cargo_receipt_id }}')">
                                                     <i class="fas fa-search"></i> Isolate
                                                 </button>
                                             </td>
@@ -146,7 +180,8 @@
                             <h5>3D Cargo Visualization</h5>
                         </div>
                         <div class="card-body" style="padding: 15px;">
-                            <div id="cargo-visualizer-container" style="width: 100%; height: auto; min-height: 650px; max-height: 85vh; border: 1px solid #ccc; background: #f0f0f0;">
+                            <div id="cargo-visualizer-container"
+                                style="width: 100%; height: auto; min-height: 650px; max-height: 85vh; border: 1px solid #ccc; background: #f0f0f0;">
                                 <!-- 3D visualization renders here -->
                             </div>
                         </div>
@@ -215,7 +250,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="{{ asset('js/cargo-visualizer.js') }}" defer></script>
+    <script src="{{ asset('js/cargo-visualizer.js') }}"></script>
     <script>
         /**
          * Wait for CargoVisualizer to be available
@@ -235,7 +270,7 @@
          */
         async function initializeVisualization(voyageId) {
             const container = document.getElementById('cargo-visualizer-container');
-            
+
             try {
                 // Fetch packing data from API
                 const response = await fetch(`{{ route('staff.cargo.packing-data') }}?voyage_id=${voyageId}`, {
@@ -258,15 +293,16 @@
                 // Initialize Three.js scene with fallback rendering
                 window.cargoVisualizer = new window.CargoVisualizer('cargo-visualizer-container');
 
-                // Render using auto-placement algorithm
+                // Render using 2-zone packing algorithm
                 if (data.cargo && Array.isArray(data.cargo)) {
-                    // Use fallback rendering with intelligent packing algorithm
-                    window.cargoVisualizer.renderRaw(data.hatches, data.cargo);
+                    window.cargoVisualizer.packAndVisualize(data.hatches, data.cargo);
                 }
 
             } catch (error) {
                 console.error('Error initializing visualization:', error);
-                container.innerHTML = '<div class="alert alert-danger" style="margin: 0; padding: 20px;">Error loading 3D visualization: ' + error.message + '</div>';
+                container.innerHTML =
+                    '<div class="alert alert-danger" style="margin: 0; padding: 20px;">Error loading 3D visualization: ' +
+                    error.message + '</div>';
             }
         }
 
@@ -276,7 +312,7 @@
          */
         document.addEventListener('DOMContentLoaded', function() {
             const voyageSelect = document.getElementById('voyage_id');
-            
+
             // If a voyage is already selected, initialize visualization
             if (voyageSelect && voyageSelect.value) {
                 // Wait for CargoVisualizer to load, then initialize
