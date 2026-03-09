@@ -141,7 +141,7 @@
                                     <td>{{ $c->sender->sender_tin ?? '-' }}</td>
                                     <td>{{ $c->consignee->consignee_name }}</td>
                                     <td>{{ $c->cargoItem->cargo_item_freight ?? '-' }}</td>
-                                    <td>12%</td>
+                                    <td>{{ ($c->cargoItem->cargo_item_freight ?? 0) * 0.12 }}</td>
                                     <td>20.00</td>
                                     <td>{{ $c->payment->total_amount ?? 'N/A' }}</td>
                                     <td>{{ $c->receipt_no ?? ($c->cargo_receipt_id ?? '-') }}</td>

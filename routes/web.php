@@ -10,6 +10,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\OcrController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\QrScannerController;
 
 // ADMIN CONTROLLERS
 use App\Http\Controllers\Admin\DashboardController;
@@ -163,6 +164,14 @@ Route::get('/authorized/login', [AuthController::class, 'showLoginForm'])->name(
 
 // Process login
 Route::post('/authorized/login', [AuthController::class, 'login'])->name('login');
+
+// Dedicated staff login for QR scanner
+Route::get('/authorized/scannerlogin', [AuthController::class, 'showScannerLoginForm'])->name('scanner.login.form');
+Route::post('/authorized/scannerlogin', [AuthController::class, 'scannerLogin'])->name('scanner.login');
+
+// Basic QR scanner page (staff only)
+Route::get('/authorized/scanner', [QrScannerController::class, 'index'])
+    ->name('scanner.page');
 
 // Forgot password
 Route::get('/authorized/forgot_password', function () {

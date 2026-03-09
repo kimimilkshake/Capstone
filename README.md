@@ -117,6 +117,8 @@ and make sure that your branch is up to date with the remote repository. Otherwi
  - make sure the project is running
  - On the tab where the project is running, change the link to: `http://127.0.0.1:8000/authorized/login`
 
+ - scanner login page `http://127.0.0.1:8000/authorized/scannerlogin`
+
 
 **Admin Credentials**
  - username: `admin`
@@ -130,6 +132,9 @@ and make sure that your branch is up to date with the remote repository. Otherwi
 
 **Semaphore API**
 - Ensure Laravel queue worker is running for bulk jobs (recommended, this is for sms bulk texts): php artisan queue:work
+
+**For a fresh seed**
+php artisan migrate:fresh --seed
 
 
 **Commands to start**
