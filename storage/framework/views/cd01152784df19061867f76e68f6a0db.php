@@ -45,12 +45,11 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Description</th>
+                        <th>QTY</th>
                         <th>Classification</th>
-                        <th>Quantity</th>
+                        <th>Description</th>
+                        <th>Dimensions</th>
                         <th>Weight</th>
-                        <th>Dimensions (L×W×H cm)</th>
-                        <th>CBM</th>
                         <th>Subtotal</th>
                     </tr>
                 </thead>
@@ -66,21 +65,35 @@
                         $subtotal = $freight * $cbm * $cargo->quantity;
                         $total += $subtotal;
                         $totalQuantity += $cargo->quantity;
+
+                        // Determine unit of measurement
+                        $unit = $cargo->measurement_unit ?? 'cm';
+                        $unitDisplay = ($unit === 'in') ? 'inches' : 'cm';
+
+                        // For display, show dimensions in the unit chosen by customer
+                        if ($unit === 'in') {
+                            $displayLength = round($cargo->length / 2.54, 2);
+                            $displayWidth = round($cargo->width / 2.54, 2);
+                            $displayHeight = round($cargo->height / 2.54, 2);
+                        } else {
+                            $displayLength = $cargo->length;
+                            $displayWidth = $cargo->width;
+                            $displayHeight = $cargo->height;
+                        }
                     ?>
                     <tr>
-                        <td><?php echo e($cargo->cargoItem->cargo_item_description); ?></td>
-                        <td><?php echo e($cargo->cargoClassification->cargo_classification_name ?? 'N/A'); ?></td>
                         <td><?php echo e($cargo->quantity); ?></td>
+                        <td><?php echo e($cargo->cargoClassification->cargo_classification_name ?? 'N/A'); ?></td>
+                        <td><?php echo e($cargo->cargoItem->cargo_item_description); ?></td>
+                        <td><?php echo e($displayLength); ?> × <?php echo e($displayWidth); ?> × <?php echo e($displayHeight); ?> <?php echo e($unitDisplay); ?></td>
                         <td><?php echo e($cargo->weight); ?> kg</td>
-                        <td><?php echo e($cargo->length); ?> × <?php echo e($cargo->width); ?> × <?php echo e($cargo->height); ?></td>
-                        <td><?php echo e(number_format($cbm,4)); ?></td>
                         <td>₱<?php echo e(number_format($subtotal,2)); ?></td>
                     </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 <tr style="background-color: #f9f9f9; font-weight: bold;">
                     <td colspan="2">Total Items</td>
-                    <td><?php echo e($totalQuantity); ?></td>
-                    <td colspan="4"></td>
+                    <td colspan="2"><?php echo e($totalQuantity); ?></td>
+                    <td colspan="2"></td>
                 </tr>
                 </tbody>
             </table>

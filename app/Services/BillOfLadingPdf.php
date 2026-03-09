@@ -19,14 +19,15 @@ class BillOfLadingPdf
 
     public static function generate(Booking $booking)
     {
-        // Render the Blade view to HTML
-        $html = view('authorized.staff.bill_of_lading', ['booking' => $booking])->render();
+        // Use a PDF-specific Blade template with print-friendly styles for dompdf.
+        $html = view('authorized.staff.bill_of_lading_pdf', ['booking' => $booking])->render();
         // Generate PDF from HTML using dompdf
         $pdf = app('dompdf.wrapper');
         $dompdf = $pdf->getDomPDF();
         $dompdf->set_option('defaultFont', 'DejaVu Sans');
         $dompdf->set_option('isHtml5ParserEnabled', true);
         $dompdf->set_option('isRemoteEnabled', true);
+        $dompdf->set_option('dpi', 96);
 
         $pdf->loadHTML($html)->setPaper('A4', 'portrait');
         return $pdf->output();
