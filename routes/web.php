@@ -178,6 +178,23 @@ Route::get('/authorized/forgot_password', function () {
     return view('authorized.forgot_password');
 })->name('authorized.forgot_password');
 
+//Send OTP
+Route::post('/send-otp', [AuthController::class, 'sendOTP'])->name('send.otp');
+
+//OTP Page
+Route::get('/verify-otp', function () {
+    return view('authorized.verify_otp');
+})->name('otp.page');
+
+//Verify OTP
+Route::post('/verify-otp', [AuthController::class, 'verifyOTP'])->name('verify.otp');
+
+//Reset Password
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('reset.password');
+Route::get('/reset-password-page', function () {
+    return view('authorized.reset_password');
+})->name('reset.password.page');
+
 //ADMIN ROUTES
 Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
 

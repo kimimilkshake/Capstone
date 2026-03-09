@@ -5,7 +5,7 @@
     @include('components.staff_nav') {{--NAVBAR--}}
 
     <div class="staff-body">
-        <div class="manifest-header text-center">
+        <div class="manifest-header text-start">
             <h2 class="manifest-title">
                 Voyage Number: {{ $voyage->voyage_code ?? '-' }}
             </h2>
@@ -26,7 +26,7 @@
             </div>
         </div>
 
-        <div class="manifest-filters text-center mt-4 ">
+        <div class="manifest-filters text-start mt-4 ">
             <form method="GET" action="{{ url()->current() }}" class="d-flex gap-5 align-items-center" id="manifestFilterForm">
                 <input type="hidden" name="show_passenger" value="0">
                 <div class="form-check">
@@ -50,7 +50,7 @@
                       onclick="printTable('passengerTable')"
                     ></i>
                 </div>
-                <table id="passengerTable" class="manifest-table table text-center align-middle">
+                <table id="passengerTable" class="manifest-table table text-start align-middle">
                     <thead>
                         <tr>
                             <th>Ticket / Ref</th>
@@ -89,7 +89,7 @@
                                     <td>{{ $p->accommodation_name ?? '-' }}</td>
                                     <td>{{ $p->pt_cot_no ?? '-' }}</td>
                                     <td>{{ $voyage->voyage_departure_date ?? '-' }}</td>
-                                    <td>{{ $p->pt_ticket_price ?? '-' }}</td>
+                                    <td class="text-end">{{ $p->pt_ticket_price ?? '-' }}</td>
                                     <td>{{\Illuminate\Support\Facades\DB::table('booking')->where('booking_ref_no', $p->booking_ref)->value('booking_status') ?? '-'}}</td>
                                 </tr>
                             @endforeach
@@ -108,7 +108,7 @@
                       onclick="printTable('cargoTable')"
                     ></i>
                 </div>
-                 <table id="cargoTable" class="manifest-table table table-striped text-center align-middle">
+                 <table id="cargoTable" class="manifest-table table table-striped text-start align-middle">
                     <thead>
                         <tr>
                             <th>B/L No / Ref</th>
@@ -140,10 +140,10 @@
                                     <td>{{ $c->sender->sender_name ?? 'N/A' }}</td>
                                     <td>{{ $c->sender->sender_tin ?? '-' }}</td>
                                     <td>{{ $c->consignee->consignee_name }}</td>
-                                    <td>{{ $c->cargoItem->cargo_item_freight ?? '-' }}</td>
-                                    <td>{{ ($c->cargoItem->cargo_item_freight ?? 0) * 0.12 }}</td>
+                                    <td class="text-end">{{ $c->cargoItem->cargo_item_freight ?? '-' }}</td>
+                                    <td class="text-end">{{ ($c->cargoItem->cargo_item_freight ?? 0) * 0.12 }}</td>
                                     <td>20.00</td>
-                                    <td>{{ $c->payment->total_amount ?? 'N/A' }}</td>
+                                    <td class="text-end">{{ $c->payment->total_amount ?? 'N/A' }}</td>
                                     <td>{{ $c->receipt_no ?? ($c->cargo_receipt_id ?? '-') }}</td>
                                 </tr>
                             @endforeach
