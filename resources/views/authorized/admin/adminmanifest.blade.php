@@ -154,6 +154,13 @@
         @endif
     </div>
 
+<style>
+#passengerTable tbody td,
+#cargoTable tbody td {
+    text-align: left !important;
+}
+</style>
+
 <script>
 function printTable(tableId) {
     const printContent = document.getElementById(tableId);
@@ -178,7 +185,9 @@ function printTable(tableId) {
     printWindow.document.write('@page { margin: 14mm; }');
     printWindow.document.write('body { font-family: Arial, sans-serif; font-size: 10pt; padding: 12px; padding-bottom: 70px; }');
     printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 16px; }');
-    printWindow.document.write('th, td { border: 1px solid #000; padding: 8px; text-align: center; }');
+    printWindow.document.write('th, td { border: 1px solid #000; padding: 8px; }');
+    printWindow.document.write('th { text-align: center; }');
+    printWindow.document.write('td { text-align: left; }');
     printWindow.document.write('th { background-color: #f2f2f2; }');
     printWindow.document.write('.manifest-header { text-align: center; margin-bottom: 16px; }');
     printWindow.document.write('.manifest-title { font-size: 14pt; }');

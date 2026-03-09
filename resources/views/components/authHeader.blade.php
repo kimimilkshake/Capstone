@@ -250,10 +250,16 @@
         .catch(error => console.error('Error loading unread count:', error));
     }
 
-    // Navigate to cargo booking page
+    // Navigate to cargo booking page based on authenticated role
+    const cargoBookingsBaseUrl = @json(
+      Session::get('user_role') === 'admin'
+        ? url('/authorized/admin/cargo-bookings')
+        : url('/authorized/staff/cargo-bookings')
+    );
+
     window.navigateToCargo = function(bookingRef) {
       console.log('Navigating to cargo booking:', bookingRef);
-      const url = `{{ url('/authorized/staff/cargo-bookings') }}/${bookingRef}`;
+      const url = `${cargoBookingsBaseUrl}/${bookingRef}`;
       console.log('Navigation URL:', url);
       window.location.href = url;
     };

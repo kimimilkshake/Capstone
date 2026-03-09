@@ -50,7 +50,7 @@
                       onclick="printTable('passengerTable')"
                     ></i>
                 </div>
-                <table id="passengerTable" class="manifest-table table text-center align-middle">
+                <table id="passengerTable" class="manifest-table table text-start align-middle">
                     <thead>
                         <tr>
                             <th>Ticket / Ref</th>
@@ -93,7 +93,7 @@
                                     <td><?php echo e($p->accommodation_name ?? '-'); ?></td>
                                     <td><?php echo e($p->pt_cot_no ?? '-'); ?></td>
                                     <td><?php echo e($voyage->voyage_departure_date ?? '-'); ?></td>
-                                    <td><?php echo e($p->pt_ticket_price ?? '-'); ?></td>
+                                    <td class="text-end"><?php echo e($p->pt_ticket_price ?? '-'); ?></td>
                                     <td><?php echo e(\Illuminate\Support\Facades\DB::table('booking')->where('booking_ref_no', $p->booking_ref)->value('booking_status') ?? '-'); ?></td>
                                 </tr>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -112,7 +112,7 @@
                       onclick="printTable('passengerTable')"
                     ></i>
                 </div>
-                 <table id="cargoTable" class="manifest-table table table-striped text-center align-middle">
+                 <table id="cargoTable" class="manifest-table table table-striped text-start align-middle">
                     <thead>
                         <tr>
                             <th>B/L No / Ref</th>
@@ -144,10 +144,10 @@
                                     <td><?php echo e($c->sender->sender_name ?? 'N/A'); ?></td>
                                     <td><?php echo e($c->sender->sender_tin ?? '-'); ?></td>
                                     <td><?php echo e($c->consignee->consignee_name); ?></td>
-                                    <td><?php echo e($c->cargoItem->cargo_item_freight ?? '-'); ?></td>
-                                    <td><?php echo e(($c->cargoItem->cargo_item_freight ?? 0) * 0.12); ?></td>
+                                    <td class="text-end"><?php echo e($c->cargoItem->cargo_item_freight ?? '-'); ?></td>
+                                    <td class="text-end"><?php echo e(($c->cargoItem->cargo_item_freight ?? 0) * 0.12); ?></td>
                                     <td>20.00</td>
-                                    <td><?php echo e($c->payment->total_amount ?? 'N/A'); ?></td>
+                                    <td class="text-end"><?php echo e($c->payment->total_amount ?? 'N/A'); ?></td>
                                     <td><?php echo e($c->receipt_no ?? ($c->cargo_receipt_id ?? '-')); ?></td>
                                 </tr>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -157,6 +157,13 @@
             </div>
         <?php endif; ?>
     </div>
+
+<style>
+#passengerTable tbody td,
+#cargoTable tbody td {
+    text-align: left !important;
+}
+</style>
 
 <script>
 function printTable(tableId) {
@@ -182,7 +189,9 @@ function printTable(tableId) {
     printWindow.document.write('@page { margin: 14mm; }');
     printWindow.document.write('body { font-family: Arial, sans-serif; font-size: 10pt; padding: 12px; padding-bottom: 70px; }');
     printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 16px; }');
-    printWindow.document.write('th, td { border: 1px solid #000; padding: 8px; text-align: center; }');
+    printWindow.document.write('th, td { border: 1px solid #000; padding: 8px; }');
+    printWindow.document.write('th { text-align: center; }');
+    printWindow.document.write('td { text-align: left; }');
     printWindow.document.write('th { background-color: #f2f2f2; }');
     printWindow.document.write('.manifest-header { text-align: center; margin-bottom: 16px; }');
     printWindow.document.write('.manifest-title { font-size: 14pt; }');
