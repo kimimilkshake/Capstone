@@ -29,10 +29,11 @@ class CargoAutoPlacementController extends Controller
      */
     private function convertToMeters($value, $unitName = 'cm')
     {
-        if (!$value) return 0;
-        
+        if (!$value)
+            return 0;
+
         $unitLower = strtolower(trim($unitName ?? 'cm'));
-        
+
         // Convert to meters based on unit
         if (strpos($unitLower, 'cm') !== false || strpos($unitLower, 'centimeter') !== false) {
             return (float) $value / 100; // cm to m
@@ -41,7 +42,7 @@ class CargoAutoPlacementController extends Controller
         } elseif (strpos($unitLower, 'm') === 0 || strpos($unitLower, 'meter') !== false) {
             return (float) $value; // already in meters
         }
-        
+
         // Default: assume cm
         return (float) $value / 100;
     }
@@ -97,7 +98,8 @@ class CargoAutoPlacementController extends Controller
 
 
     /**
-     * Process cargo placement request using 3DBinPacking API.
+     * Process cargo placement request.
+     * Note: Previous 3DBinPacking API integration has been removed.
      */
     public function place(Request $request)
     {
@@ -120,21 +122,32 @@ class CargoAutoPlacementController extends Controller
             return back()->withErrors(['voyage' => 'No cargo bookings found for this voyage.']);
         }
 
-        // Prepare cargo items
+        // Prepare cargo items with unit conversion
         $cargoItems = [];
         foreach ($cargoReceipts as $receipt) {
-            $cargoBooking = CargoBooking::where('booking_ref_no', $receipt->booking_ref_no)->first();
+            $cargoBooking = CargoBooking::with('measurementUnit')
+                ->where('booking_ref_no', $receipt->booking_ref_no)->first();
 
             if ($cargoBooking && $cargoBooking->length && $cargoBooking->width && $cargoBooking->height) {
+                // Get measurement unit (default: cm)
+                $unitName = $cargoBooking->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
+
+                // Convert dimensions to meters
+                $widthM = $this->convertToMeters($cargoBooking->width, $unitName);
+                $heightM = $this->convertToMeters($cargoBooking->height, $unitName);
+                $lengthM = $this->convertToMeters($cargoBooking->length, $unitName);
+
                 $cargoItems[] = [
                     'id' => $receipt->cargo_receipt_id,
-                    'w' => (float) $cargoBooking->width,
-                    'h' => (float) $cargoBooking->height,
-                    'd' => (float) $cargoBooking->length,
+                    'w' => (float) $widthM,
+                    'h' => (float) $heightM,
+                    'd' => (float) $lengthM,
                     'weight' => (float) ($cargoBooking->weight ?? 0),
                     'q' => (int) ($receipt->cargo_item_qty ?? 1),
                     'item_name' => $receipt->cargoItem->cargo_item_description ?? 'Unknown',
                     'booking_ref' => $receipt->booking_ref_no,
+                    'original_unit' => $unitName,
+                    'original_dims' => "{$cargoBooking->length} × {$cargoBooking->width} × {$cargoBooking->height}",
                 ];
             }
         }
@@ -143,124 +156,28 @@ class CargoAutoPlacementController extends Controller
             return back()->withErrors(['voyage' => 'No valid cargo items with dimensions found.']);
         }
 
-        // Process each hatch with 3DBinPacking API
-        $username = config('services.3dbin.username') ?? env('3DBIN_USERNAME');
-        $apiKey = config('services.3dbin.api_key') ?? env('3DBIN_API_KEY');
-
-        if (empty($username) || empty($apiKey)) {
-            return back()->withErrors(['api_credentials' => '3DBinPacking credentials are not configured.']);
-        }
-
+        // Prepare results for display
         $hatchResults = [];
-        $remainingItems = $cargoItems;
 
-        foreach ($hatches as $index => $hatch) {
-            if (empty($remainingItems)) {
-                break;
-            }
-
-            $result = $this->callBinPackingAPI(
-                $username,
-                $apiKey,
-                $hatch,
-                $remainingItems
-            );
-
-            if (isset($result['error'])) {
-                $hatchResults[] = [
-                    'hatch' => $hatch,
-                    'error' => $result['error'],
-                ];
-                continue;
-            }
-
+        foreach ($hatches as $hatch) {
             $hatchResults[] = [
                 'hatch' => $hatch,
-                'result' => $result,
+                'result' => [
+                    'packed_items' => [],
+                    'message' => 'Auto-placement data prepared. Manual placement visualization available.'
+                ],
             ];
-
-            // Remove packed items from remaining items
-            if (isset($result['packed_items'])) {
-                $packedIds = array_column($result['packed_items'], 'id');
-                $remainingItems = array_filter($remainingItems, function ($item) use ($packedIds) {
-                    return !in_array($item['id'], $packedIds);
-                });
-                $remainingItems = array_values($remainingItems);
-            }
         }
 
         return back()->with([
             'placement_results' => $hatchResults,
-            'remaining_items' => $remainingItems,
+            'remaining_items' => $cargoItems,
             'voyage_id' => $request->voyage_id,
+            'info' => 'Auto-placement API has been removed. All items available for manual placement review.',
         ]);
     }
 
-    private function callBinPackingAPI($username, $apiKey, $hatch, $items)
-    {
-        $payload = [
-            'username' => $username,
-            'api_key' => $apiKey,
-            'container' => [
-                'w' => (float) $hatch->hatch_width,
-                'h' => (float) $hatch->hatch_height,
-                'd' => (float) $hatch->hatch_length,
-            ],
-            'items' => array_map(function ($it) {
-                return [
-                    'id' => (string) $it['id'],
-                    'w' => (float) $it['w'],
-                    'h' => (float) $it['h'],
-                    'd' => (float) $it['d'],
-                    'q' => (int) $it['q'],
-                ];
-            }, $items),
-        ];
 
-        $endpoint = 'https://global-api.3dbinpacking.com/packer/fillContainer';
-
-        try {
-            $response = Http::timeout(15)
-                ->acceptJson()
-                ->post($endpoint, $payload);
-        } catch (\Exception $e) {
-            Log::error('3DBinPacking request failed', [
-                'exception' => $e->getMessage(),
-                'hatch_id' => $hatch->hatch_id,
-            ]);
-
-            return ['error' => 'Unable to reach 3DBinPacking API.'];
-        }
-
-        if ($response->failed()) {
-            $apiMessage = null;
-            try {
-                $body = $response->json();
-                if (is_array($body) && isset($body['error'])) {
-                    $apiMessage = $body['error'];
-                } elseif (is_array($body) && isset($body['message'])) {
-                    $apiMessage = $body['message'];
-                }
-            } catch (\Exception $e) {
-                // ignore parse errors
-            }
-
-            $errorMsg = $apiMessage ?? '3DBinPacking API request failed.';
-            return ['error' => $errorMsg];
-        }
-
-        try {
-            $result = $response->json();
-            return $result;
-        } catch (\Exception $e) {
-            Log::error('Failed to parse 3DBinPacking response JSON', [
-                'exception' => $e->getMessage(),
-                'raw' => $response->body(),
-            ]);
-
-            return ['error' => 'Invalid response from 3DBinPacking API.'];
-        }
-    }
 
     /**
      * Get packing data for visualization (JSON API endpoint)
@@ -305,10 +222,10 @@ class CargoAutoPlacementController extends Controller
                 $quantity = (int) ($cb->quantity ?? 1);
                 $totalWeight = (float) ($cb->weight ?? 0);
                 $weightPerItem = $quantity > 0 ? $totalWeight / $quantity : 0;
-                
+
                 // Get measurement unit name
                 $unitName = $cb->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
-                
+
                 // Convert dimensions to meters
                 $widthM = $this->convertToMeters($cb->width, $unitName);
                 $heightM = $this->convertToMeters($cb->height, $unitName);
@@ -349,10 +266,10 @@ class CargoAutoPlacementController extends Controller
                     $quantity = (int) ($bookingRow->quantity ?? 1);
                     $totalWeight = (float) ($bookingRow->weight ?? 0);
                     $weightPerItem = $quantity > 0 ? $totalWeight / $quantity : 0;
-                    
+
                     // Get measurement unit name
                     $unitName = $bookingRow->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
-                    
+
                     // Convert dimensions to meters
                     $widthM = $this->convertToMeters($bookingRow->width, $unitName);
                     $heightM = $this->convertToMeters($bookingRow->height, $unitName);

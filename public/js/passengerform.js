@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let accommodations = [];
     try {
         const accommodationsData = document.getElementById(
-            "accommodations-data"
+            "accommodations-data",
         );
         if (accommodationsData) {
             accommodations = JSON.parse(accommodationsData.textContent);
@@ -31,8 +31,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         }" data-price="${acc.accommodation_regular_price}">${
                             acc.accommodation_name
                         } - ₱${parseFloat(
-                            acc.accommodation_regular_price
-                        ).toFixed(2)}</option>`
+                            acc.accommodation_regular_price,
+                        ).toFixed(2)}</option>`,
                 )
                 .join("");
             const passengerHTML = `
@@ -53,8 +53,8 @@ document.addEventListener("DOMContentLoaded", function () {
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Suffix</label>
-                            <input type="text" class="form-control" name="suffix" placeholder="Jr., Sr., III">
+                            <label class="form-label">Promo Code <span class="text-muted">(Optional)</span></label>
+                            <input type="text" class="form-control passenger-promo-code" name="promo_code" placeholder="Enter promo code">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">First Name <span class="text-danger">*</span></label>
@@ -69,10 +69,14 @@ document.addEventListener("DOMContentLoaded", function () {
                             <input type="text" maxlength="1" class="form-control text-center" name="middle_initial">
                         </div>
                         <div class="col-md-3">
+                            <label class="form-label">Suffix</label>
+                            <input type="text" class="form-control" name="suffix" placeholder="Jr., Sr., III">
+                        </div>
+                        <div class="col-md-3">
                             <label class="form-label">Age <span class="text-danger">*</span></label>
                             <input type="number" min="0" class="form-control" name="age" required>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <label class="form-label">Gender <span class="text-danger">*</span></label>
                             <select class="form-select" name="gender" required>
                                 <option value="">Select Gender</option>
@@ -158,7 +162,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 // Find the accommodation data
                 const accommodation = accommodationsWithCots.find(
-                    (acc) => acc.accommodation_id == accommodationId
+                    (acc) => acc.accommodation_id == accommodationId,
                 );
 
                 if (accommodation && accommodation.available_cots) {
@@ -169,7 +173,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         accommodation.available_cots
                             .map(
                                 (cot) =>
-                                    `<option value="${cot}">${cot}</option>`
+                                    `<option value="${cot}">${cot}</option>`,
                             )
                             .join("");
 
@@ -246,7 +250,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const provinces = await fetchPSGC("/provinces");
                 if (provinces) {
                     provincesCache = provinces.sort((a, b) =>
-                        a.name.localeCompare(b.name)
+                        a.name.localeCompare(b.name),
                     );
                 }
             }
@@ -277,11 +281,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     // Load cities/municipalities for selected province
                     if (!citiesCache[provinceCode]) {
                         const cities = await fetchPSGC(
-                            `/provinces/${provinceCode}/cities-municipalities`
+                            `/provinces/${provinceCode}/cities-municipalities`,
                         );
                         if (cities) {
                             citiesCache[provinceCode] = cities.sort((a, b) =>
-                                a.name.localeCompare(b.name)
+                                a.name.localeCompare(b.name),
                             );
                         }
                     }
@@ -319,16 +323,16 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (!barangaysCache[cityCode]) {
                         // Try both city and municipality endpoints
                         let barangays = await fetchPSGC(
-                            `/cities/${cityCode}/barangays`
+                            `/cities/${cityCode}/barangays`,
                         );
                         if (!barangays) {
                             barangays = await fetchPSGC(
-                                `/municipalities/${cityCode}/barangays`
+                                `/municipalities/${cityCode}/barangays`,
                             );
                         }
                         if (barangays) {
                             barangaysCache[cityCode] = barangays.sort((a, b) =>
-                                a.name.localeCompare(b.name)
+                                a.name.localeCompare(b.name),
                             );
                         }
                     }
@@ -371,14 +375,14 @@ document.addEventListener("DOMContentLoaded", function () {
             const currentValue = select.value ? parseInt(select.value) : null;
             const passengerForm = select.closest(".passenger-form");
             const accommodationSelect = passengerForm.querySelector(
-                ".accommodation-select"
+                ".accommodation-select",
             );
             const accommodationId = accommodationSelect.value;
 
             if (!accommodationId) return;
 
             const accommodation = accommodationsWithCots.find(
-                (acc) => acc.accommodation_id == accommodationId
+                (acc) => acc.accommodation_id == accommodationId,
             );
 
             if (!accommodation || !accommodation.available_cots) return;
@@ -393,7 +397,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     options.push(
                         `<option value="${cot}"${
                             cot === currentValue ? " selected" : ""
-                        }>${cot}</option>`
+                        }>${cot}</option>`,
                     );
                 }
             });
@@ -409,7 +413,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (voyageIdEl && voyageIdEl.value) {
             try {
                 const resp = await fetch(
-                    `/voyage/available-cots-by-accommodation?voyage_id=${voyageIdEl.value}`
+                    `/voyage/available-cots-by-accommodation?voyage_id=${voyageIdEl.value}`,
                 );
                 const json = await resp.json();
 
@@ -421,13 +425,13 @@ document.addEventListener("DOMContentLoaded", function () {
                     accommodationsWithCots = json.accommodations;
                     console.log(
                         "Loaded accommodation cot data:",
-                        accommodationsWithCots
+                        accommodationsWithCots,
                     );
                 }
             } catch (err) {
                 console.error(
                     "Failed to fetch available cots by accommodation",
-                    err
+                    err,
                 );
             }
         }
@@ -442,46 +446,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     bookingForm.addEventListener("submit", async function (e) {
         e.preventDefault();
-        
-        // Validate and apply promo code if provided
-        const promoCodeInput = document.getElementById('promoCode');
-        const promoCode = promoCodeInput ? promoCodeInput.value.trim().toUpperCase() : '';
-        
-        if (promoCode) {
-            loader.style.display = "flex";
-            try {
-                // Validate promo code first
-                const promoResponse = await fetch('/api/validate-promo', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': bookingForm.dataset.csrf
-                    },
-                    body: JSON.stringify({
-                        promo_code: promoCode
-                    })
-                });
 
-                const promoData = await promoResponse.json();
-
-                if (!promoData.success) {
-                    loader.style.display = "none";
-                    alert('Promo code error: ' + (promoData.message || 'Invalid promo code'));
-                    return;
-                }
-
-                // Promo is valid, set current promo
-                currentPromo = promoData.promo;
-            } catch (error) {
-                loader.style.display = "none";
-                console.error('Promo validation error:', error);
-                alert('Error validating promo code');
-                return;
-            }
-        }
-        
-        loader.style.display = "flex";
-        e.preventDefault();
         loader.style.display = "flex";
 
         try {
@@ -489,22 +454,82 @@ document.addEventListener("DOMContentLoaded", function () {
             const passengerForms = document.querySelectorAll(".passenger-form");
             console.log("Found", passengerForms.length, "passenger forms");
 
+            // STEP 1: Validate promo codes for each passenger
+            const passengerPromos = {}; // Store promo data per passenger
+
+            for (const form of passengerForms) {
+                const passengerNumber = form.dataset.passenger || "Unknown";
+                const promoCodeInput = form.querySelector(
+                    ".passenger-promo-code",
+                );
+                const promoCode = promoCodeInput
+                    ? promoCodeInput.value.trim().toUpperCase()
+                    : "";
+
+                if (promoCode) {
+                    try {
+                        const promoResponse = await fetch(
+                            "/api/validate-promo",
+                            {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "X-CSRF-TOKEN": bookingForm.dataset.csrf,
+                                },
+                                body: JSON.stringify({
+                                    promo_code: promoCode,
+                                }),
+                            },
+                        );
+
+                        const promoData = await promoResponse.json();
+
+                        if (!promoData.success) {
+                            loader.style.display = "none";
+                            alert(
+                                `Passenger ${passengerNumber}: Invalid promo code "${promoCode}"`,
+                            );
+                            return;
+                        }
+
+                        // Store valid promo for this passenger
+                        passengerPromos[passengerNumber] = {
+                            promo_id: promoData.promo.promo_id,
+                            promo_code: promoData.promo.promo_code,
+                            promo_discount_rate:
+                                promoData.promo.promo_discount_rate,
+                        };
+                    } catch (error) {
+                        loader.style.display = "none";
+                        console.error(
+                            `Promo validation error for Passenger ${passengerNumber}:`,
+                            error,
+                        );
+                        alert(
+                            `Error validating promo for Passenger ${passengerNumber}`,
+                        );
+                        return;
+                    }
+                }
+            }
+
+            // STEP 2: ID verification for non-regular passengers
             for (const form of passengerForms) {
                 const type = form.querySelector(".passenger-type").value;
                 const passengerNumber = form.dataset.passenger || "Unknown";
                 console.log(
-                    `Processing Passenger ${passengerNumber}, Type: ${type}`
+                    `Processing Passenger ${passengerNumber}, Type: ${type}`,
                 );
 
                 if (type === "Regular") {
                     console.log(
-                        `Skipping ID verification for Passenger ${passengerNumber} (Regular)`
+                        `Skipping ID verification for Passenger ${passengerNumber} (Regular)`,
                     );
                     continue;
                 }
 
                 console.log(
-                    `Starting ID verification for Passenger ${passengerNumber} (${type})`
+                    `Starting ID verification for Passenger ${passengerNumber} (${type})`,
                 );
 
                 const firstName = form
@@ -521,7 +546,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (!idFile) {
                     loader.style.display = "none";
                     alert(
-                        `Passenger ${passengerNumber} (${type}): Please upload an ID image for discount verification.`
+                        `Passenger ${passengerNumber} (${type}): Please upload an ID image for discount verification.`,
                     );
                     return;
                 }
@@ -530,7 +555,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 formData.append("file", idFile);
 
                 console.log(
-                    `Sending OCR request for Passenger ${passengerNumber}...`
+                    `Sending OCR request for Passenger ${passengerNumber}...`,
                 );
                 const response = await fetch("/ocr/parse", {
                     method: "POST",
@@ -543,13 +568,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 const data = await response.json();
                 if (!data.text)
                     throw new Error(
-                        `OCR failed for Passenger ${passengerNumber}`
+                        `OCR failed for Passenger ${passengerNumber}`,
                     );
 
                 const scanned = data.text.toLowerCase().replace(/_/g, "");
                 console.log(
                     `OCR result for Passenger ${passengerNumber}:`,
-                    scanned.substring(0, 100) + "..."
+                    scanned.substring(0, 100) + "...",
                 );
 
                 if (
@@ -559,31 +584,32 @@ document.addEventListener("DOMContentLoaded", function () {
                 ) {
                     loader.style.display = "none";
                     alert(
-                        `Passenger ${passengerNumber} (${firstName} ${lastName}): ID does not match. Please check your input or upload a clearer photo.`
+                        `Passenger ${passengerNumber} (${firstName} ${lastName}): ID does not match. Please check your input or upload a clearer photo.`,
                     );
                     return;
                 }
 
                 console.log(
-                    `✓ ID verification passed for Passenger ${passengerNumber}`
+                    `✓ ID verification passed for Passenger ${passengerNumber}`,
                 );
             }
 
             console.log(
-                "ID verification completed, gathering passenger data..."
+                "ID verification completed, gathering passenger data...",
             );
-            // Gather passenger data and voyage info then submit to server to create a hold
+            // STEP 3: Gather passenger data and voyage info then submit to server
             const passengers = [];
             for (const formEl of passengerForms) {
+                const passengerNumber = formEl.dataset.passenger || "1";
                 const passengerType =
                     formEl.querySelector(".passenger-type").value;
                 const idNumberInput = formEl.querySelector(
-                    'input[name="id_number"]'
+                    'input[name="id_number"]',
                 );
 
                 // Get accommodation name from the selected option
                 const accommodationSelect = formEl.querySelector(
-                    ".accommodation-select"
+                    ".accommodation-select",
                 );
                 const selectedOption =
                     accommodationSelect.options[
@@ -593,7 +619,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     ? selectedOption.dataset.name
                     : "";
 
-                passengers.push({
+                const passengerData = {
                     type: passengerType,
                     suffix: formEl.querySelector('input[name="suffix"]').value,
                     first_name: formEl
@@ -622,20 +648,32 @@ document.addEventListener("DOMContentLoaded", function () {
                         .join(", "),
                     age: formEl.querySelector('input[name="age"]').value,
                     contact_number: formEl.querySelector(
-                        'input[name="contact_number"]'
+                        'input[name="contact_number"]',
                     ).value,
                     email: formEl.querySelector('input[name="email"]').value,
                     id_number:
                         passengerType === "Regular"
                             ? null
                             : idNumberInput
-                            ? idNumberInput.value
-                            : null,
+                              ? idNumberInput.value
+                              : null,
                     accommodation_type: accommodationName,
                     cot_number: formEl.querySelector(
-                        'select[name="cot_number"]'
+                        'select[name="cot_number"]',
                     ).value,
-                });
+                };
+
+                // Add per-passenger promo if available
+                if (passengerPromos[passengerNumber]) {
+                    passengerData.promo_id =
+                        passengerPromos[passengerNumber].promo_id;
+                    passengerData.promo_code =
+                        passengerPromos[passengerNumber].promo_code;
+                    passengerData.promo_discount_rate =
+                        passengerPromos[passengerNumber].promo_discount_rate;
+                }
+
+                passengers.push(passengerData);
             }
 
             // Voyage info from hidden inputs
@@ -656,15 +694,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 : null;
 
             const payload = {
-                passengers,
+                passengers, // Each passenger has their own promo_id, promo_code, promo_discount_rate
                 route_from: routeFrom,
                 route_to: routeTo,
                 departure_date: departureDate,
                 departure_time: departureTime,
                 voyage_id: voyageId,
-                promo_id: currentPromo ? currentPromo.promo_id : null,
-                promo_code: currentPromo ? currentPromo.promo_code : null,
-                promo_discount_rate: currentPromo ? currentPromo.promo_discount_rate : 0
             };
 
             console.log("Submitting booking with payload:", payload);
@@ -689,7 +724,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!result.success) {
                 alert(
                     result.message ||
-                        "Failed to create booking hold. Please try again."
+                        "Failed to create booking hold. Please try again.",
                 );
                 return;
             }
@@ -712,17 +747,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 alert(
                     "Error during ID verification: " +
                         err.message +
-                        ". Please try again."
+                        ". Please try again.",
                 );
             } else if (err.message && err.message.includes("fetch")) {
                 alert(
-                    "Network error occurred. Please check your connection and try again."
+                    "Network error occurred. Please check your connection and try again.",
                 );
             } else {
                 alert(
                     "Error during form submission: " +
                         (err.message || "Unknown error") +
-                        ". Please check the browser console for details."
+                        ". Please check the browser console for details.",
                 );
             }
         }
