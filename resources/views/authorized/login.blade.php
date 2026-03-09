@@ -14,6 +14,12 @@
                                 <h2 class="fw-bold text-uppercase">WELCOME</h2>
                                 <p class="mb-3">Enter your username and password</p>
 
+                                {{-- Display success message --}}
+                                @if(session('success'))
+                                    <div class="alert alert-success mx-auto" style="text-align: center;">
+                                        {{ session('success') }}
+                                    </div>
+                                @endif
 
                                 {{-- Display errors --}}
                                 @if ($errors->any())
