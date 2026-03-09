@@ -7,14 +7,19 @@
                 <div class="col-12 col-md-9 col-lg-7 col-xl-5">
                     <div class="card scanner-login-card shadow-lg border-0">
                         <div class="card-body p-0 text-center">
-                            <div class="scanner-login-top px-4 px-md-5 pt-4 pb-3">
-                                <div class="text-start mb-3">
-                                    
-                                </div>
+                            <div class="scanner-card-header px-4 px-md-5 pt-0">
+                             
 
-                                
+                                @if (auth()->guard('staff')->check())
+                                    <form action="{{ route('logout') }}" method="POST" class="m-0">
+                                        @csrf
+                                        <input type="hidden" name="redirect_to" value="scanner">
+                                        <button type="submit" class="scanner-logout-btn">Logout</button>
+                                    </form>
+                                @endif
+                            </div>
 
-                              
+                            <div class="scanner-login-top px-4 px-md-5 pt-3 pb-3">
 
                                 <p class="scanner-eyebrow mb-2">Staff Access Only</p>
                                 <h2 class="fw-bold text-uppercase mb-2">QR Scanner Portal</h2>
@@ -91,6 +96,28 @@
             border-bottom: 1px solid rgba(72, 91, 140, 0.14);
         }
 
+        .scanner-card-header {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            background: rgba(72, 91, 140, 0.06);
+            border-bottom: 1px solid rgba(72, 91, 140, 0.12);
+        }
+
+        .scanner-card-title {
+            grid-column: 2;
+            justify-self: center;
+            font-size: 0.82rem;
+            font-weight: 800;
+            letter-spacing: 0.3rem;
+            color: #485B8C;
+        }
+
+        .scanner-card-header form {
+            grid-column: 3;
+            justify-self: end;
+        }
+
         .scanner-badge {
             width: 72px;
             height: 72px;
@@ -139,6 +166,23 @@
 
         .scanner-login-btn {
             min-width: 220px;
+        }
+
+        .scanner-logout-btn {
+            border: 1px solid rgba(72, 91, 140, 0.2);
+            background: #fff;
+            color: #485B8C;
+            border-radius: 999px;
+            padding: 0.45rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .scanner-logout-btn:hover {
+            background: #485B8C;
+            border-color: #485B8C;
+            color: #fff;
         }
     </style>
 @endsection

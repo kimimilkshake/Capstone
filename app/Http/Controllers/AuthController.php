@@ -129,11 +129,15 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        $redirectRoute = $request->input('redirect_to') === 'scanner'
+            ? 'scanner.login.form'
+            : 'login.form';
+
         auth()->guard('admin')->logout(); // Logout admin guard
         auth()->guard('staff')->logout(); // Logout staff guard
         auth()->guard('web')->logout();   // Logout default guard (if any)
         Session::flush(); // clears all session data
-        return redirect()->route('login.form');
+        return redirect()->route($redirectRoute);
     }
 
 }
