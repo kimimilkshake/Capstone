@@ -258,6 +258,14 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
 
     Route::post('/admin_cargo/placement/remove-row', [CargoAutoPlacementController::class, 'removeRow'])
         ->name('admin.cargo.removeRow');
+
+    // Cargo Booking Review (View Only)
+    Route::get('/cargo-bookings/pending', [StaffCargoController::class, 'pending'])
+        ->name('admin.cargo.bookings.pending');
+    Route::get('/cargo-bookings/{id}', [StaffCargoController::class, 'show'])
+        ->name('admin.cargo.bookings.show');
+    Route::get('/cargo-bookings/{id}/bol', [StaffCargoController::class, 'bolView'])
+        ->name('admin.cargo.bookings.bol');
 });
 
 //STAFF

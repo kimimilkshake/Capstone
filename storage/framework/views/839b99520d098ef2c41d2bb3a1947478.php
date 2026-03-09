@@ -57,4 +57,4 @@
 </body>
 
 </html>
-<?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/layouts/app.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/layouts/app.blade.php ENDPATH**/ ?>

@@ -39,9 +39,9 @@
     </li>
 
     <li class="anav-item">
-      <a href="#" class="anav-link">
+      <a href="{{ route('admin.cargo.bookings.pending') }}" class="anav-link">
         <i class="fa-solid fa-eye me-1"></i>
-        <span class="snav-label">Review Cargo</span>
+        <span class="anav-label">Review Cargo</span>
       </a>
     </li>
 

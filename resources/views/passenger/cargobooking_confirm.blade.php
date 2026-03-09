@@ -46,7 +46,6 @@
                         <th>Height</th>
                         <th>CBM</th>
                         <th>Freight Rate</th>
-                        <th>Arrastre Rate</th>
                         <th>Subtotal</th>
                     </tr>
                 </thead>
@@ -55,9 +54,7 @@
                     @foreach($cargoItems as $item)
                         @php
                             $cbm = (float) ($item->cbm ?? 0);
-
-                            // Subtotal: (freight + arrastre) * quantity * CBM
-                            $subtotal = $cbm * ($item->freight + $item->arrastre) * $item->quantity;
+                            $subtotal = $cbm * $item->freight * $item->quantity;
                             $totalExpense += $subtotal;
                         @endphp
                         <tr>
@@ -69,14 +66,13 @@
                             <td>{{ number_format((float) $item->height, 2) }}{{ $item->measurement_unit_abbreviation ?? 'cm' }}</td>
                             <td>{{ number_format($cbm, 3) }}</td>
                             <td>₱{{ number_format($item->freight, 2) }}</td>
-                            <td>₱{{ number_format($item->arrastre, 2) }}</td>
                             <td>₱{{ number_format($subtotal, 2) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
                 <tfoot>
                     <tr>
-                        <th colspan="9" class="text-end">Total Expense:</th>
+                        <th colspan="8" class="text-end">Total Expense:</th>
                         <th>₱{{ number_format($totalExpense, 2) }}</th>
                     </tr>
                 </tfoot>
