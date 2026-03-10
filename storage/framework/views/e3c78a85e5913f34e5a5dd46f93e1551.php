@@ -1,33 +1,33 @@
-@extends('layouts.app')
-@section('content')
+<?php $__env->startSection('content'); ?>
     <section class="vh-100 d-flex align-items-center justify-content-center login-bg"
-        style="background-image: url('{{ asset('images/login-bg.png') }}');">
+        style="background-image: url('<?php echo e(asset('images/login-bg.png')); ?>');">
         <div class="container py-5 h-100">
             <div class="row d-flex justify-content-center align-items-center h-100">
                 <div class="col-12 col-md-6 col-lg-5">
                     <div class="card">
                         <div class="card-body text-center p-4">
-                            <a href="{{ route('authorized.forgot_password') }}" class="back-icon">
+                            <a href="<?php echo e(route('authorized.forgot_password')); ?>" class="back-icon">
                                 <i class="fa-solid fa-chevron-left"></i>
                             </a>
-                            <img src="{{ asset('images/lslc_logo_name2.png') }}" alt="App Logo" class="img-fluid mb-1"
+                            <img src="<?php echo e(asset('images/lslc_logo_name2.png')); ?>" alt="App Logo" class="img-fluid mb-1"
                                 style="height:150px">
                             <h2 class="fw-bold mb-4">VERIFY OTP</h2>
 
-                            @if (session('success'))
+                            <?php if(session('success')): ?>
                                 <div class="alert alert-success" style="width:100%; margin-left:0; text-align:center;">
-                                    {{ session('success') }}</div>
-                            @endif
+                                    <?php echo e(session('success')); ?></div>
+                            <?php endif; ?>
 
-                            @if ($errors->any())
+                            <?php if($errors->any()): ?>
                                 <div class="alert alert-danger">
-                                    {{ $errors->first() }}
-                                </div>
-                            @endif
+                                    <?php echo e($errors->first()); ?>
 
-                            <form method="POST" action="{{ route('verify.otp') }}">
-                                @csrf
-                                <input type="hidden" name="username" value="{{ session('username') ?? '' }}">
+                                </div>
+                            <?php endif; ?>
+
+                            <form method="POST" action="<?php echo e(route('verify.otp')); ?>">
+                                <?php echo csrf_field(); ?>
+                                <input type="hidden" name="username" value="<?php echo e(session('username') ?? ''); ?>">
 
                                 <div class="form-floating mb-3">
                                     <input type="text" name="otp" class="form-control" placeholder="Enter OTP"
@@ -52,7 +52,7 @@
 
     <script>
         // Get OTP expiration time from session
-        const expiresAt = new Date("{{ session('otp_expires_at') }}").getTime();
+        const expiresAt = new Date("<?php echo e(session('otp_expires_at')); ?>").getTime();
 
         const timerDisplay = document.getElementById('otp-timer');
 
@@ -80,4 +80,6 @@
 
         startTimer();
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Shem\Desktop\Capstone\resources\views/authorized/verify_otp.blade.php ENDPATH**/ ?>

@@ -1,53 +1,53 @@
-@extends('layouts.app')
-@section('page-title', 'Cargo Auto Placement')
-@section('content')
-    @include('components.authHeader')
-    @include('components.staff_nav')
+<?php $__env->startSection('page-title', 'Cargo Auto Placement'); ?>
+<?php $__env->startSection('content'); ?>
+    <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    <?php echo $__env->make('components.admin_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-    <div class="staff-body">
-        <h3 class="text-center mb-4">Cargo Auto Placement</h3>
+    <div class="admin-body">
+        <h3 class="text-center mb-4">CARGO AUTO PLACEMENT</h3>
 
         <div class="scs-form_container">
-            <form method="GET" action="{{ route('staff.cargo.placement') }}" class="mb-4">
+            <form method="GET" action="<?php echo e(route('admin.cargo.placement')); ?>" class="mb-4">
                 <div class="form-group">
                     <label for="voyage_id">Select Voyage:</label>
                     <select name="voyage_id" id="voyage_id" class="form-control" onchange="this.form.submit()">
                         <option value="">-- Select a Voyage --</option>
-                        @foreach ($voyages as $voyage)
-                            <option value="{{ $voyage->voyage_id }}"
-                                {{ $selectedVoyageId == $voyage->voyage_id ? 'selected' : '' }}>
-                                {{ $voyage->voyage_code }} -
-                                {{ $voyage->routePort->route_origin }} → {{ $voyage->routePort->route_destination }}
-                                ({{ \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('M j, Y') }})
+                        <?php $__currentLoopData = $voyages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $voyage): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($voyage->voyage_id); ?>"
+                                <?php echo e($selectedVoyageId == $voyage->voyage_id ? 'selected' : ''); ?>>
+                                <?php echo e($voyage->voyage_code); ?> -
+                                <?php echo e($voyage->routePort->route_origin); ?> → <?php echo e($voyage->routePort->route_destination); ?>
+
+                                (<?php echo e(\Carbon\Carbon::parse($voyage->voyage_departure_date)->format('M j, Y')); ?>)
                             </option>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
             </form>
 
-            @if ($errors->any())
+            <?php if($errors->any()): ?>
                 <div class="alert alert-danger">
-                    @foreach ($errors->all() as $error)
-                        <p>{{ $error }}</p>
-                    @endforeach
+                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <p><?php echo e($error); ?></p>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
-            @endif
+            <?php endif; ?>
 
-            @if ($selectedVoyageId && $placementData)
-                @if (isset($placementData['error']))
-                    <div class="alert alert-warning">{{ $placementData['error'] }}</div>
-                @else
+            <?php if($selectedVoyageId && $placementData): ?>
+                <?php if(isset($placementData['error'])): ?>
+                    <div class="alert alert-warning"><?php echo e($placementData['error']); ?></div>
+                <?php else: ?>
                     <div class="card mb-4">
                         <div class="card-header text-white" style="background-color: #485b8c;">
                             <h5>Voyage Information</h5>
                         </div>
                         <div class="card-body">
-                            <p><strong>Voyage Code:</strong> {{ $placementData['voyage']->voyage_code }}</p>
-                            <p><strong>Vessel:</strong> {{ $placementData['voyage']->vessel->vessel_name }}</p>
-                            <p><strong>Route:</strong> {{ $placementData['voyage']->routePort->route_origin }} →
-                                {{ $placementData['voyage']->routePort->route_destination }}</p>
-                            <p><strong>Total Hatches:</strong> {{ $placementData['hatches']->count() }}</p>
-                            <p><strong>Total Cargo Items:</strong> {{ $placementData['cargoReceipts']->count() }}</p>
+                            <p><strong>Voyage Code:</strong> <?php echo e($placementData['voyage']->voyage_code); ?></p>
+                            <p><strong>Vessel:</strong> <?php echo e($placementData['voyage']->vessel->vessel_name); ?></p>
+                            <p><strong>Route:</strong> <?php echo e($placementData['voyage']->routePort->route_origin); ?> →
+                                <?php echo e($placementData['voyage']->routePort->route_destination); ?></p>
+                            <p><strong>Total Hatches:</strong> <?php echo e($placementData['hatches']->count()); ?></p>
+                            <p><strong>Total Cargo Items:</strong> <?php echo e($placementData['cargoReceipts']->count()); ?></p>
                         </div>
                     </div>
 
@@ -77,15 +77,15 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($placementData['hatches'] as $hatch)
+                                    <?php $__currentLoopData = $placementData['hatches']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $hatch): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <tr>
-                                            <td>{{ $hatch->hatch_label }}</td>
-                                            <td>{{ $hatch->hatch_length }}</td>
-                                            <td>{{ $hatch->hatch_width }}</td>
-                                            <td>{{ $hatch->hatch_height }}</td>
-                                            <td>{{ $hatch->hatch_weight_capacity }}</td>
+                                            <td><?php echo e($hatch->hatch_label); ?></td>
+                                            <td><?php echo e($hatch->hatch_length); ?></td>
+                                            <td><?php echo e($hatch->hatch_width); ?></td>
+                                            <td><?php echo e($hatch->hatch_height); ?></td>
+                                            <td><?php echo e($hatch->hatch_weight_capacity); ?></td>
                                         </tr>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </tbody>
                             </table>
                         </div>
@@ -123,8 +123,8 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($placementData['cargoReceipts'] as $receipt)
-                                        @php
+                                    <?php $__currentLoopData = $placementData['cargoReceipts']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $receipt): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php
                                             $booking = \App\Models\CargoBooking::with('measurementUnit')
                                                 ->where('booking_ref_no', $receipt->booking_ref_no)
                                                 ->first();
@@ -142,39 +142,40 @@
                                             $lengthM = ($booking?->length ?? 0) * $conversionFactor;
                                             $widthM = ($booking?->width ?? 0) * $conversionFactor;
                                             $heightM = ($booking?->height ?? 0) * $conversionFactor;
-                                        @endphp
+                                        ?>
                                         <tr>
-                                            <td>{{ $receipt->cargo_receipt_id }}</td>
-                                            <td>{{ $receipt->booking_ref_no }}</td>
-                                            <td>{{ $receipt->cargoItem->cargo_item_description ?? 'N/A' }}</td>
-                                            <td>{{ $receipt->cargo_item_qty ?? 1 }}</td>
+                                            <td><?php echo e($receipt->cargo_receipt_id); ?></td>
+                                            <td><?php echo e($receipt->booking_ref_no); ?></td>
+                                            <td><?php echo e($receipt->cargoItem->cargo_item_description ?? 'N/A'); ?></td>
+                                            <td><?php echo e($receipt->cargo_item_qty ?? 1); ?></td>
                                             <td>
-                                                @if ($booking)
-                                                    {{ number_format($lengthM, 2) }} × {{ number_format($widthM, 2) }} ×
-                                                    {{ number_format($heightM, 2) }}<br>
-                                                    <small style="color: #666;">({{ $booking->length }} ×
-                                                        {{ $booking->width }} × {{ $booking->height }}
-                                                        {{ $unitName }})</small>
-                                                @else
+                                                <?php if($booking): ?>
+                                                    <?php echo e(number_format($lengthM, 2)); ?> × <?php echo e(number_format($widthM, 2)); ?> ×
+                                                    <?php echo e(number_format($heightM, 2)); ?><br>
+                                                    <small style="color: #666;">(<?php echo e($booking->length); ?> ×
+                                                        <?php echo e($booking->width); ?> × <?php echo e($booking->height); ?>
+
+                                                        <?php echo e($unitName); ?>)</small>
+                                                <?php else: ?>
                                                     No dimensions
-                                                @endif
+                                                <?php endif; ?>
                                             </td>
-                                            <td>{{ $booking->weight ?? 'N/A' }}</td>
+                                            <td><?php echo e($booking->weight ?? 'N/A'); ?></td>
                                             <td style="text-align: center;">
                                                 <button class="btn btn-sm btn-primary isolate-btn"
-                                                    data-receipt-id="{{ $receipt->cargo_receipt_id }}"
-                                                    onclick="cargoVisualizer.isolateItem('{{ $receipt->cargo_receipt_id }}')">
+                                                    data-receipt-id="<?php echo e($receipt->cargo_receipt_id); ?>"
+                                                    onclick="cargoVisualizer.isolateItem('<?php echo e($receipt->cargo_receipt_id); ?>')">
                                                     <i class="fas fa-search"></i> Isolate
                                                 </button>
                                             </td>
                                         </tr>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
-                    {{-- 3D CARGO VISUALIZATION CONTAINER (AUTO-DISPLAY) --}}
+                    
                     <div class="card mt-4">
                         <div class="card-header text-white" style="background-color: #485b8c;">
                             <h5>3D Cargo Visualization</h5>
@@ -186,32 +187,32 @@
                             </div>
                         </div>
                     </div>
-                @endif
-            @endif
+                <?php endif; ?>
+            <?php endif; ?>
 
-            @if (session('placement_results'))
+            <?php if(session('placement_results')): ?>
                 <div class="card mt-4">
-                    <div class="card-header text-white">
+                    <div class="card-header text-white" style="background-color: #485b8c;">
                         <h5>Placement Results</h5>
                     </div>
                     <div class="card-body">
-                        @foreach (session('placement_results') as $index => $hatchResult)
+                        <?php $__currentLoopData = session('placement_results'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $hatchResult): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="mb-4">
-                                <h6>{{ $hatchResult['hatch']->hatch_label }}</h6>
+                                <h6><?php echo e($hatchResult['hatch']->hatch_label); ?></h6>
 
-                                @if (isset($hatchResult['error']))
-                                    <div class="alert alert-danger">{{ $hatchResult['error'] }}</div>
-                                @else
-                                    @php
+                                <?php if(isset($hatchResult['error'])): ?>
+                                    <div class="alert alert-danger"><?php echo e($hatchResult['error']); ?></div>
+                                <?php else: ?>
+                                    <?php
                                         $result = $hatchResult['result'];
                                         $packedItems = $result['response']['packed_items'] ?? [];
                                         $unpackedItems = $result['response']['unpacked_items'] ?? [];
-                                    @endphp
+                                    ?>
 
-                                    <p><strong>Packed Items:</strong> {{ count($packedItems) }}</p>
-                                    <p><strong>Unpacked Items:</strong> {{ count($unpackedItems) }}</p>
+                                    <p><strong>Packed Items:</strong> <?php echo e(count($packedItems)); ?></p>
+                                    <p><strong>Unpacked Items:</strong> <?php echo e(count($unpackedItems)); ?></p>
 
-                                    @if (!empty($packedItems))
+                                    <?php if(!empty($packedItems)): ?>
                                         <table class="table table-sm table-bordered">
                                             <thead>
                                                 <tr>
@@ -221,36 +222,36 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @foreach ($packedItems as $item)
+                                                <?php $__currentLoopData = $packedItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <tr>
-                                                        <td>{{ $item['id'] ?? 'N/A' }}</td>
-                                                        <td>{{ $item['x'] ?? 0 }}, {{ $item['y'] ?? 0 }},
-                                                            {{ $item['z'] ?? 0 }}</td>
-                                                        <td>{{ $item['w'] ?? 0 }} × {{ $item['h'] ?? 0 }} ×
-                                                            {{ $item['d'] ?? 0 }}</td>
+                                                        <td><?php echo e($item['id'] ?? 'N/A'); ?></td>
+                                                        <td><?php echo e($item['x'] ?? 0); ?>, <?php echo e($item['y'] ?? 0); ?>,
+                                                            <?php echo e($item['z'] ?? 0); ?></td>
+                                                        <td><?php echo e($item['w'] ?? 0); ?> × <?php echo e($item['h'] ?? 0); ?> ×
+                                                            <?php echo e($item['d'] ?? 0); ?></td>
                                                     </tr>
-                                                @endforeach
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </tbody>
                                         </table>
-                                    @endif
-                                @endif
+                                    <?php endif; ?>
+                                <?php endif; ?>
                             </div>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-                        @if (session('remaining_items') && count(session('remaining_items')) > 0)
+                        <?php if(session('remaining_items') && count(session('remaining_items')) > 0): ?>
                             <div class="alert alert-warning">
-                                <strong>Warning:</strong> {{ count(session('remaining_items')) }} items could not be placed
+                                <strong>Warning:</strong> <?php echo e(count(session('remaining_items'))); ?> items could not be placed
                                 in any hatch.
                             </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="{{ asset('js/cargo-visualizer.js') }}"></script>
+    <script src="<?php echo e(asset('js/cargo-visualizer.js')); ?>"></script>
     <script>
         /**
          * Wait for CargoVisualizer to be available
@@ -273,7 +274,7 @@
 
             try {
                 // Fetch packing data from API
-                const response = await fetch(`{{ route('staff.cargo.packing-data') }}?voyage_id=${voyageId}`, {
+                const response = await fetch(`<?php echo e(route('admin.cargo.packing-data')); ?>?voyage_id=${voyageId}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -333,4 +334,6 @@
             }
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Shem\Desktop\Capstone\resources\views/authorized/admin/admin_cargoautoplacement.blade.php ENDPATH**/ ?>

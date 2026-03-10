@@ -322,7 +322,7 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     Route::post('/cargo_categories/store', [CargoCategoryController::class, 'store'])->name('staff.cargo_category_store');
     Route::get('/cargo_categories/{id}/edit', [CargoCategoryController::class, 'edit'])->name('staff.cargo_category_edit');
     Route::put('/cargo_categories/{id}/update', [CargoCategoryController::class, 'update'])->name('staff.cargo_category_update');
-    Route::delete('/cargo_categories/{id}/delete', [CargoCategoryController::class, 'destroy'])->name('staff.cargo_category_delete');  
+    Route::delete('/cargo_categories/{id}/delete', [CargoCategoryController::class, 'destroy'])->name('staff.cargo_category_delete');
 
     // Cargo Items
     Route::get('/cargo_items', [CargoItemController::class, 'index'])->name('staff.cargo_item_list');

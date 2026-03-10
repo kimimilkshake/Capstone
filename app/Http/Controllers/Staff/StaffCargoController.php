@@ -48,14 +48,14 @@ class StaffCargoController extends Controller
         // Show voyages within next 8 days (within the week)
         $startDate = \Carbon\Carbon::now()->startOfDay();
         $endDate = \Carbon\Carbon::now()->addDays(8)->endOfDay();
-        
+
         $voyages = Voyage::with('routePort')
             ->where('voyage_status', 'Scheduled')
             ->whereBetween('voyage_departure_date', [$startDate, $endDate])
             ->orderBy('voyage_departure_date')
             ->orderBy('voyage_estimated_TD')
             ->get();
-        
+
         $cargoItems = collect(CargoItem::with('measurementUnit')->get()); // <-- wrap in collect()
         $cargoClassifications = CargoClassification::orderBy('cargo_classification_name')->get();
         $measurementUnits = MeasurementUnit::whereNotNull('measurement_unit_abbreviation')
@@ -522,15 +522,15 @@ class StaffCargoController extends Controller
      */
     public function reject(Request $request, $id)
     {
-    // Allow both admin and staff
-    if (!auth()->guard('admin')->check() && !auth()->guard('staff')->check()) {
-        abort(403);
-    }
+        // Allow both admin and staff
+        if (!auth()->guard('admin')->check() && !auth()->guard('staff')->check()) {
+            abort(403);
+        }
 
-    $request->validate(['reason' => 'required|string|max:1000']);
+        $request->validate(['reason' => 'required|string|max:1000']);
 
-    $booking = Booking::with(['sender', 'consignee', 'cargoBookings.cargoItem', 'voyage'])->where('booking_ref_no', $id)->firstOrFail();
-    $staffId = auth()->guard('staff')->user()->staff_id ?? (auth()->guard('admin')->user()->admin_id ?? null);
+        $booking = Booking::with(['sender', 'consignee', 'cargoBookings.cargoItem', 'voyage'])->where('booking_ref_no', $id)->firstOrFail();
+        $staffId = auth()->guard('staff')->user()->staff_id ?? (auth()->guard('admin')->user()->admin_id ?? null);
 
         $booking->booking_status = 'Canceled';
         $booking->save();

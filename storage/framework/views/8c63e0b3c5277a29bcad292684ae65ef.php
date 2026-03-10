@@ -19,7 +19,7 @@
     <h2>✅ Cargo Booking Approved</h2>
     <p>Booking Reference: <strong>#<?php echo e($booking->booking_code); ?></strong></p>
     <p>Status: <strong><?php echo e($booking->booking_status); ?></strong></p>
-    <p>The Bill of Lading (B/L) for this booking is attached as a PDF for your records and printing.</p>
+    <p><strong>Note:</strong> Arrastre payment and printing will be done in the office.</p>
 
     <!-- Voyage Information -->
     <div class="section">
@@ -110,4 +110,4 @@
 </div>
 </body>
 </html>
-<?php /**PATH C:\Users\Shem\Desktop\Capstone\resources\views/emails/cargo_booking_approved.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/emails/cargo_booking_approved.blade.php ENDPATH**/ ?>

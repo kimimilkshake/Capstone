@@ -401,27 +401,20 @@
     <!-- Charges Table -->
     <?php
         $freight = 0;
-        $arrastre = 0;
         $stamp = 0;
         foreach($booking->cargoBookings as $cargo) {
             $cbm = (float) ($cargo->cbm ?? (($cargo->length * $cargo->width * $cargo->height) / 1000000));
             $qty = (float) ($cargo->quantity ?? 0);
             $freightRate = (float) ($cargo->cargoItem->cargo_item_freight ?? 0);
-            $arrastreRate = (float) ($cargo->cargoItem->cargo_item_arrastre ?? 0);
 
             $freight += $freightRate * $cbm * $qty;
-            $arrastre += $arrastreRate * $cbm * $qty;
         }
-        $total = $freight + $arrastre + $stamp;
+        $total = $freight + $stamp;
     ?>
     <table class="charges-table">
         <tr>
             <td class="label">FREIGHT CHARGES</td>
             <td class="amount">₱<?php echo e(number_format($freight, 2)); ?></td>
-        </tr>
-        <tr>
-            <td class="label">ARRASTRE CHARGES</td>
-            <td class="amount">₱<?php echo e(number_format($arrastre, 2)); ?></td>
         </tr>
         <tr>
             <td class="label">STAMP</td>

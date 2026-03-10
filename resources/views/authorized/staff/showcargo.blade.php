@@ -197,8 +197,8 @@
 
         @if ($booking->booking_status === 'Pending')
             <div class="d-flex justify-content-center gap-3 mt-4">
-                <form action="{{ route('cargo.bookings.approve', $booking->booking_ref_no) }}" method="POST" class="w-100"
-                    style="max-width: 200px;" id="acceptForm">
+                <form action="{{ route('cargo.bookings.approve', $booking->booking_ref_no) }}" method="POST"
+                    class="w-100" style="max-width: 200px;" id="acceptForm">
                     @csrf
                     <button type="button" class="btn btn-success btn-lg px-4 w-100" id="acceptBtn"
                         onclick="validateAndAccept(event)">Accept</button>
@@ -247,460 +247,494 @@
         </div>
     @endif
 
-        {{-- Placement Validation Modal --}}
-        <div class="modal fade" id="placementValidationModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header bg-warning text-dark">
-                        <h5 class="modal-title" id="placementModalTitle">⚠️ Cargo Placement Validation</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div id="placementMessage"></div>
-                        <div id="unpackedItemsList" class="mt-3"></div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-success" id="confirmAcceptBtn"
-                            onclick="proceedWithAcceptance()">Proceed with Acceptance</button>
-                    </div>
+    {{-- Placement Validation Modal --}}
+    <div class="modal fade" id="placementValidationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title" id="placementModalTitle">⚠️ Cargo Placement Validation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="placementMessage"></div>
+                    <div id="unpackedItemsList" class="mt-3"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="confirmAcceptBtn"
+                        onclick="proceedWithAcceptance()">Proceed with Acceptance</button>
                 </div>
             </div>
         </div>
+    </div>
 
-        <script>
-            /**
-             * Validate cargo placement before accepting booking
-             */
-            function validateAndAccept(event) {
-                event.preventDefault();
+    <script>
+        /**
+         * Validate cargo placement before accepting booking
+         */
+        function validateAndAccept(event) {
+            event.preventDefault();
 
-                const voyageId = {{ $booking->voyage_id }};
-                const cargoBookingIds = [
-                    @foreach ($booking->cargoBookings as $cargo)
-                        {{ $cargo->cargo_booking_id }},
-                    @endforeach
-                ];
+            const voyageId = {{ $booking->voyage_id }};
+            const cargoBookingIds = [
+                @foreach ($booking->cargoBookings as $cargo)
+                    {{ $cargo->cargo_booking_id }},
+                @endforeach
+            ];
 
-                if (cargoBookingIds.length === 0) {
-                    // If no cargo items, just submit
-                    document.getElementById('acceptForm').submit();
-                    return;
-                }
-
-                // Show loading indicator
-                const btn = event.target;
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Validating placement...';
-                btn.disabled = true;
-
-                // Call API to validate placement
-                fetch('{{ route('cargo.placement.validate') }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ||
-                                document.querySelector('input[name="_token"]')?.value
-                        },
-                        body: JSON.stringify({
-                            voyage_id: voyageId,
-                            cargo_booking_ids: cargoBookingIds
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        btn.innerHTML = originalText;
-                        btn.disabled = false;
-
-                        if (data.success || data.skipValidation) {
-                            // Cargo can fit, proceed with acceptance
-                            proceedWithAcceptance();
-                        } else {
-                            // Show warning modal
-                            showPlacementWarning(data);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        btn.innerHTML = originalText;
-                        btn.disabled = false;
-
-                        // If error, still allow to proceed (fail-open policy)
-                        proceedWithAcceptance();
-                    });
+            if (cargoBookingIds.length === 0) {
+                // If no cargo items, just submit
+                document.getElementById('acceptForm').submit();
+                return;
             }
 
-            /**
-             * Show placement validation warning modal
-             */
-            function showPlacementWarning(data) {
-                const messageDiv = document.getElementById('placementMessage');
-                const itemsList = document.getElementById('unpackedItemsList');
+            // Show loading indicator
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Validating placement...';
+            btn.disabled = true;
 
-                // Build message
-                let messageHtml = `
+            // Call API to validate placement
+            fetch('{{ route('cargo.placement.validate') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ||
+                            document.querySelector('input[name="_token"]')?.value
+                    },
+                    body: JSON.stringify({
+                        voyage_id: voyageId,
+                        cargo_booking_ids: cargoBookingIds
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+
+                    if (data.success || data.skipValidation) {
+                        // Cargo can fit, proceed with acceptance
+                        proceedWithAcceptance();
+                    } else {
+                        // Show warning modal
+                        showPlacementWarning(data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+
+                    // If error, still allow to proceed (fail-open policy)
+                    proceedWithAcceptance();
+                });
+        }
+
+        /**
+         * Show placement validation warning modal
+         */
+        function showPlacementWarning(data) {
+            const messageDiv = document.getElementById('placementMessage');
+            const itemsList = document.getElementById('unpackedItemsList');
+
+            // Build message
+            let messageHtml = `
                     <div class="alert alert-warning mb-3">
                         <h6 class="alert-heading">⚠️ Warning!</h6>
                         <p>${data.message}</p>
                     </div>
                 `;
 
-                if (data.unpackedItems && data.unpackedItems.length > 0) {
-                    messageHtml += `
+            if (data.unpackedItems && data.unpackedItems.length > 0) {
+                messageHtml += `
                         <div class="alert alert-danger">
                             <h6>Items that cannot fit:</h6>
                             <ul class="mb-0">
                                 ${data.unpackedItems.map(item => `
-                                            <li>${item.name || item.id} - Cannot fit in any hatch</li>
-                                        `).join('')}
+                                                <li>${item.name || item.id} - Cannot fit in any hatch</li>
+                                            `).join('')}
                             </ul>
                         </div>
                     `;
-                }
+            }
 
-                messageDiv.innerHTML = messageHtml;
-                itemsList.innerHTML = `
+            messageDiv.innerHTML = messageHtml;
+            itemsList.innerHTML = `
                     <div class="alert alert-info">
                         <strong>Note:</strong> You can still accept this booking, but these items will need manual placement or the booking may need to be split across voyages.
                     </div>
                 `;
 
-                // Show modal
-                const modal = new bootstrap.Modal(document.getElementById('placementValidationModal'));
-                modal.show();
-            }
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('placementValidationModal'));
+            modal.show();
+        }
 
-            /**
-             * Proceed with acceptance after validation
-             */
-            function proceedWithAcceptance() {
-                const form = document.getElementById('acceptForm');
-                if (form) {
-                    form.submit();
-                }
+        /**
+         * Proceed with acceptance after validation
+         */
+        function proceedWithAcceptance() {
+            const form = document.getElementById('acceptForm');
+            if (form) {
+                form.submit();
             }
-        </script>
-    @endsection
+        }
+    </script>
+@endsection
 
-    @section('styles')
-        <style>
-            /* Bootstrap Carousel Customization */
+@section('styles')
+    <style>
+        /* Bootstrap Carousel Customization */
+        #cargoCarousel {
+            background: #f8f9fa;
+            border-radius: 12px;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .carousel-inner {
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .carousel-item {
+            height: 500px;
+        }
+
+        .carousel-image-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e9ecef;
+            overflow: hidden;
+        }
+
+        .carousel-img {
+            object-fit: contain;
+            padding: 30px;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .carousel-item:hover .carousel-img {
+            transform: scale(1.05);
+        }
+
+        /* Zoom Overlay */
+        .carousel-zoom-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .carousel-item:hover .carousel-zoom-overlay {
+            opacity: 1;
+        }
+
+        .zoom-content {
+            text-align: center;
+            color: white;
+        }
+
+        .zoom-content i {
+            font-size: 3.5rem;
+            display: block;
+            margin-bottom: 12px;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        .zoom-content p {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Caption Overlay at Bottom */
+        .carousel-caption-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.6) 70%, rgba(0, 0, 0, 0));
+            color: white;
+            padding: 30px 20px 20px;
+            text-align: center;
+        }
+
+        .carousel-cargo-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+            line-height: 1.3;
+        }
+
+        .carousel-cargo-classification {
+            font-size: 1rem;
+            color: #e0e0e0;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        /* Indicators */
+        .carousel-indicators {
+            bottom: -50px;
+            padding: 20px 0 0;
+        }
+
+        .carousel-indicators button {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: #dee2e6;
+            border: 2px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        .carousel-indicators button:hover {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        .carousel-indicators button.active {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Navigation Controls */
+        .carousel-control-prev,
+        .carousel-control-next {
+            width: 50px;
+            height: 50px;
+            background: rgba(13, 110, 253, 0.9);
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: all 0.3s ease;
+            opacity: 1;
+        }
+
+        .carousel-control-prev:hover,
+        .carousel-control-next:hover {
+            background: rgba(13, 110, 253, 1);
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+        }
+
+        .carousel-control-prev-icon,
+        .carousel-control-next-icon {
+            filter: brightness(1.3);
+            font-size: 1.5rem;
+        }
+
+        .carousel-control-prev {
+            left: 20px;
+        }
+
+        .carousel-control-next {
+            right: 20px;
+        }
+
+        /* Fade Animation */
+        .carousel-fade .carousel-item {
+            opacity: 0;
+            transition-property: opacity;
+            transition-duration: 0.6s;
+        }
+
+        .carousel-fade .carousel-item.active {
+            opacity: 1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
             #cargoCarousel {
-                background: #f8f9fa;
-                border-radius: 12px;
-                overflow: hidden;
-                padding: 20px;
-            }
-
-            .carousel-inner {
-                border-radius: 8px;
-                overflow: hidden;
-                background: white;
+                padding: 15px;
             }
 
             .carousel-item {
-                height: 500px;
-            }
-
-            .carousel-image-container {
-                position: relative;
-                width: 100%;
-                height: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: #e9ecef;
-                overflow: hidden;
+                height: 400px;
             }
 
             .carousel-img {
-                object-fit: contain;
-                padding: 30px;
-                transition: transform 0.3s ease;
-                cursor: pointer;
-            }
-
-            .carousel-item:hover .carousel-img {
-                transform: scale(1.05);
-            }
-
-            /* Zoom Overlay */
-            .carousel-zoom-overlay {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.5);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            }
-
-            .carousel-item:hover .carousel-zoom-overlay {
-                opacity: 1;
-            }
-
-            .zoom-content {
-                text-align: center;
-                color: white;
-            }
-
-            .zoom-content i {
-                font-size: 3.5rem;
-                display: block;
-                margin-bottom: 12px;
-                text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-            }
-
-            .zoom-content p {
-                font-size: 1.1rem;
-                font-weight: 600;
-                margin: 0;
-                text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-            }
-
-            /* Caption Overlay at Bottom */
-            .carousel-caption-overlay {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.6) 70%, rgba(0, 0, 0, 0));
-                color: white;
-                padding: 30px 20px 20px;
-                text-align: center;
+                padding: 25px;
             }
 
             .carousel-cargo-title {
-                font-size: 1.6rem;
-                font-weight: 700;
-                margin: 0 0 10px 0;
-                line-height: 1.3;
+                font-size: 1.4rem;
             }
 
             .carousel-cargo-classification {
-                font-size: 1rem;
-                color: #e0e0e0;
-                margin: 0;
-                font-weight: 500;
+                font-size: 0.95rem;
             }
 
-            /* Indicators */
-            .carousel-indicators {
-                bottom: -50px;
-                padding: 20px 0 0;
+            .carousel-control-prev {
+                left: 10px;
             }
 
-            .carousel-indicators button {
-                width: 14px;
-                height: 14px;
-                border-radius: 50%;
-                background-color: #dee2e6;
-                border: 2px solid #dee2e6;
-                transition: all 0.3s ease;
+            .carousel-control-next {
+                right: 10px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            #cargoCarousel {
+                padding: 12px;
             }
 
-            .carousel-indicators button:hover {
-                background-color: #0d6efd;
-                border-color: #0d6efd;
+            .carousel-item {
+                height: 320px;
             }
 
-            .carousel-indicators button.active {
-                background-color: #0d6efd;
-                border-color: #0d6efd;
-                width: 16px;
-                height: 16px;
+            .carousel-img {
+                padding: 20px;
             }
 
-            /* Navigation Controls */
+            .zoom-content i {
+                font-size: 2.5rem;
+                margin-bottom: 8px;
+            }
+
+            .zoom-content p {
+                font-size: 0.95rem;
+            }
+
+            .carousel-cargo-title {
+                font-size: 1.2rem;
+                padding: 0 10px;
+            }
+
+            .carousel-cargo-classification {
+                font-size: 0.85rem;
+            }
+
             .carousel-control-prev,
             .carousel-control-next {
-                width: 50px;
-                height: 50px;
-                background: rgba(13, 110, 253, 0.9);
-                border-radius: 50%;
-                top: 50%;
-                transform: translateY(-50%);
-                transition: all 0.3s ease;
-                opacity: 1;
-            }
-
-            .carousel-control-prev:hover,
-            .carousel-control-next:hover {
-                background: rgba(13, 110, 253, 1);
-                box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+                width: 44px;
+                height: 44px;
             }
 
             .carousel-control-prev-icon,
             .carousel-control-next-icon {
-                filter: brightness(1.3);
-                font-size: 1.5rem;
+                font-size: 1.25rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            #cargoCarousel {
+                padding: 10px;
+            }
+
+            .carousel-item {
+                height: 250px;
+            }
+
+            .carousel-img {
+                padding: 15px;
+            }
+
+            .carousel-caption-overlay {
+                padding: 20px 15px 15px;
+            }
+
+            .zoom-content i {
+                font-size: 2rem;
+                margin-bottom: 6px;
+            }
+
+            .zoom-content p {
+                font-size: 0.85rem;
+            }
+
+            .carousel-cargo-title {
+                font-size: 1rem;
+                padding: 0 8px;
+            }
+
+            .carousel-cargo-classification {
+                font-size: 0.75rem;
+            }
+
+            .carousel-control-prev,
+            .carousel-control-next {
+                width: 40px;
+                height: 40px;
             }
 
             .carousel-control-prev {
-                left: 20px;
+                left: 5px;
             }
 
             .carousel-control-next {
-                right: 20px;
+                right: 5px;
             }
 
-            /* Fade Animation */
-            .carousel-fade .carousel-item {
-                opacity: 0;
-                transition-property: opacity;
-                transition-duration: 0.6s;
+            .carousel-indicators {
+                bottom: -40px;
             }
 
-            .carousel-fade .carousel-item.active {
-                opacity: 1;
+            .carousel-indicators button {
+                width: 12px;
+                height: 12px;
             }
 
-            /* Responsive Design */
-            @media (max-width: 992px) {
-                #cargoCarousel {
-                    padding: 15px;
-                }
-
-                .carousel-item {
-                    height: 400px;
-                }
-
-                .carousel-img {
-                    padding: 25px;
-                }
-
-                .carousel-cargo-title {
-                    font-size: 1.4rem;
-                }
-
-                .carousel-cargo-classification {
-                    font-size: 0.95rem;
-                }
-
-                .carousel-control-prev {
-                    left: 10px;
-                }
-
-                .carousel-control-next {
-                    right: 10px;
-                }
+            .carousel-indicators button.active {
+                width: 14px;
+                height: 14px;
             }
+        }
 
-            @media (max-width: 768px) {
-                #cargoCarousel {
-                    padding: 12px;
-                }
+        .cargo-items-table th,
+        .cargo-items-table td {
+            vertical-align: middle;
+        }
+    </style>
+@endsection
 
-                .carousel-item {
-                    height: 320px;
-                }
+@section('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('click', function(event) {
+                const trigger = event.target.closest('[data-bs-target="#photoModal"]');
+                if (!trigger) return;
 
-                .carousel-img {
-                    padding: 20px;
-                }
+                const image = trigger.getAttribute('data-image');
+                const description = trigger.getAttribute('data-description') || 'Cargo Item';
+                const classification = trigger.getAttribute('data-classification') || '--';
 
-                .zoom-content i {
-                    font-size: 2.5rem;
-                    margin-bottom: 8px;
-                }
+                const modalImage = document.getElementById('modalCargoPhoto');
+                const modalCaption = document.getElementById('modalPhotoCaption');
+                const modalClassification = document.getElementById('modalPhotoClassification');
 
-                .zoom-content p {
-                    font-size: 0.95rem;
-                }
+<<<<<<< HEAD
+                if (modalImage) modalImage.src = image || '';
+                if (modalCaption) modalCaption.textContent = description;
+                if (modalClassification) modalClassification.textContent = 'Classification: ' +
+                    classification;
+            });
 
-                .carousel-cargo-title {
-                    font-size: 1.2rem;
-                    padding: 0 10px;
-                }
-
-                .carousel-cargo-classification {
-                    font-size: 0.85rem;
-                }
-
-                .carousel-control-prev,
-                .carousel-control-next {
-                    width: 44px;
-                    height: 44px;
-                }
-
-                .carousel-control-prev-icon,
-                .carousel-control-next-icon {
-                    font-size: 1.25rem;
-                }
+            const photoModal = document.getElementById('photoModal');
+            if (photoModal) {
+                photoModal.addEventListener('hidden.bs.modal', function() {
+                    const modalImage = document.getElementById('modalCargoPhoto');
+                    if (modalImage) {
+                        modalImage.removeAttribute('src');
+                    }
+                });
             }
-
-            @media (max-width: 576px) {
-                #cargoCarousel {
-                    padding: 10px;
-                }
-
-                .carousel-item {
-                    height: 250px;
-                }
-
-                .carousel-img {
-                    padding: 15px;
-                }
-
-                .carousel-caption-overlay {
-                    padding: 20px 15px 15px;
-                }
-
-                .zoom-content i {
-                    font-size: 2rem;
-                    margin-bottom: 6px;
-                }
-
-                .zoom-content p {
-                    font-size: 0.85rem;
-                }
-
-                .carousel-cargo-title {
-                    font-size: 1rem;
-                    padding: 0 8px;
-                }
-
-                .carousel-cargo-classification {
-                    font-size: 0.75rem;
-                }
-
-                .carousel-control-prev,
-                .carousel-control-next {
-                    width: 40px;
-                    height: 40px;
-                }
-
-                .carousel-control-prev {
-                    left: 5px;
-                }
-
-                .carousel-control-next {
-                    right: 5px;
-                }
-
-                .carousel-indicators {
-                    bottom: -40px;
-                }
-
-                .carousel-indicators button {
-                    width: 12px;
-                    height: 12px;
-                }
-
-                .carousel-indicators button.active {
-                    width: 14px;
-                    height: 14px;
-                }
-            }
-
-            .cargo-items-table th,
-            .cargo-items-table td {
-                vertical-align: middle;
-            }
-        </style>
-    @endsection
-
+        });
+    </script>
+@endsection
