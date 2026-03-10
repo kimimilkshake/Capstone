@@ -10,26 +10,27 @@
 }
 
 .scanner-page-header{
-    display:grid;
-    grid-template-columns:1fr auto 1fr;
-    align-items:center;
-    gap:16px;
+    position:relative;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
     margin-bottom:20px;
+    min-height:42px;
 }
 
 .scanner-page-title{
-    grid-column:2;
-    justify-self:center;
     margin:0;
     font-size:0.9rem;
     font-weight:800;
     letter-spacing:0.34rem;
     color:#485B8C;
+    text-align:center;
 }
 
 .scanner-page-header form{
-    grid-column:3;
-    justify-self:end;
+    position:absolute;
+    top:0;
+    right:104px;
 }
 
 .scanner-header-logout{
@@ -70,28 +71,16 @@
     }
 
     .scanner-page-header{
-        grid-template-columns:1fr;
-        align-items:flex-start;
-    }
-
-    .scanner-page-title,
-    .scanner-page-header form{
-        grid-column:1;
+        min-height:36px;
     }
 
     .scanner-page-title{
-        justify-self:center;
         width:100%;
         text-align:center;
     }
 
     .scanner-page-header form{
-        justify-self:stretch;
-        width:100%;
-    }
-
-    .scanner-header-logout{
-        width:100%;
+        right:56px;
     }
 
     .scannerbox{
@@ -121,6 +110,10 @@
 
     .btn{
         width:100%;
+    }
+
+      .scanner-header-logout{
+          width:auto;
     }
 
 }

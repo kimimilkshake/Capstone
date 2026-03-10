@@ -59,9 +59,6 @@
                                         Open Scanner
                                     </button>
                                 </form>
-
-                                <a href="<?php echo e(route('authorized.forgot_password')); ?>" class="forgot-password">Forgot
-                                    Password?</a>
                             </div>
                         </div>
                     </div>

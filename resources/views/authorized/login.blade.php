@@ -52,6 +52,13 @@
                                 <a href="{{ route('authorized.forgot_password') }}" class="forgot-password">Forgot
                                     Password?</a>
 
+                                <div class="scanner-access mt-4">
+                                    <p class="scanner-access-label mb-2">Need the camera scanner?</p>
+                                    <a href="{{ route('scanner.login.form') }}" class="scanner-access-link">
+                                        Open QR Scanner Login
+                                    </a>
+                                </div>
+
                             </div> <!-- mb-md-5 mt-md-4 py-5 -->
 
                         </div> <!-- card-body -->
@@ -64,6 +71,37 @@
     <style>
         .alert {
             text-align: center !important;
+        }
+
+        .scanner-access {
+            border-top: 1px solid rgba(72, 91, 140, 0.12);
+            padding-top: 1rem;
+        }
+
+        .scanner-access-label {
+            color: #6b7390;
+            font-size: 0.92rem;
+        }
+
+        .scanner-access-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 220px;
+            padding: 0.75rem 1.25rem;
+            border: 1px solid rgba(72, 91, 140, 0.2);
+            border-radius: 999px;
+            color: #485B8C;
+            background: rgba(72, 91, 140, 0.05);
+            font-weight: 700;
+            text-decoration: none;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .scanner-access-link:hover {
+            background: #485B8C;
+            border-color: #485B8C;
+            color: #fff;
         }
     </style>
 @endsection
