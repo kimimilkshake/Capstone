@@ -1,10 +1,10 @@
 <header class="auheader-main main-header d-flex align-items-center justify-content-between px-4">
   <div class="header-left d-flex align-items-center gap-3">
-    <img src="{{ asset('images/lslc_logo_name2.png') }}" alt="Logo" class="auheader-logo">
+    <img src="<?php echo e(asset('images/lslc_logo_name2.png')); ?>" alt="Logo" class="auheader-logo">
   </div>
 
   <div class="auheader-title header-title text-center">
-    <h2 class="m-0 fw-bold">@yield('page-title')</h2>
+    <h2 class="m-0 fw-bold"><?php echo $__env->yieldContent('page-title'); ?></h2>
   </div>
 
   <div class="auheader-user d-flex align-items-center gap-3 position-relative">
@@ -31,15 +31,15 @@
     <div class="user-dropdown" id="userDropdownToggle">
       <div class="d-flex align-items-center gap-2">
         <i class="fa-solid fa-circle-user auheader-profile"></i>
-        <span class="fw-semibold">{{ Session::get('user_name') }}</span>
+        <span class="fw-semibold"><?php echo e(Session::get('user_name')); ?></span>
       </div>
 
         <div class="dropdown-menu">
           <a href="#" class="dropdown-item">
             <i class="fa-solid fa-user"></i> View Profile
           </a>
-          <form action="{{ route('logout') }}" method="POST">
-            @csrf
+          <form action="<?php echo e(route('logout')); ?>" method="POST">
+            <?php echo csrf_field(); ?>
             <button type="submit" class="dropdown-item logout">
               <i class="fa-solid fa-right-from-bracket"></i> Log out
             </button>
@@ -251,11 +251,11 @@
     }
 
     // Navigate to cargo booking page based on authenticated role
-    const cargoBookingsBaseUrl = @json(
+    const cargoBookingsBaseUrl = <?php echo json_encode(
       Session::get('user_role') === 'admin'
         ? url('/authorized/admin/cargo-bookings')
         : url('/authorized/staff/cargo-bookings')
-    );
+    , 15, 512) ?>;
 
     window.navigateToCargo = function(bookingRef) {
       console.log('Navigating to cargo booking:', bookingRef);
@@ -272,3 +272,4 @@
   });
 </script>
 
+<?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/components/authHeader.blade.php ENDPATH**/ ?>
