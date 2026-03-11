@@ -466,8 +466,7 @@ class BookingController extends Controller
                     'promo_code' => $promo->promo_code,
                     'promo_name' => $promo->promo_name,
                     'promo_description' => $promo->promo_description,
-                    'promo_discount_rate' => (float) $promo->promo_discount_rate,
-                    'promo_type' => $promo->promo_type
+                    'promo_discount_rate' => (float) $promo->promo_discount_rate
                 ]
             ]);
 
