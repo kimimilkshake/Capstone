@@ -455,6 +455,21 @@ class StaffCargoController extends Controller
             'cargoBookings.measurementUnit'
         ])->where('booking_ref_no', $id)->firstOrFail();
 
+        // Idempotency guard: avoid duplicate approval side effects (payment, BOL records, email sends).
+        if (strcasecmp((string) $booking->booking_status, 'Pending') !== 0) {
+            return redirect()->route('cargo.bookings.pending')
+                ->with('success', "Booking #{$booking->booking_ref_no} is already processed.");
+        }
+
+        $existingCompletedPayment = Payment::where('booking_ref_no', $booking->booking_ref_no)
+            ->where('payment_status', 'Completed')
+            ->first();
+
+        if ($existingCompletedPayment) {
+            return redirect()->route('cargo.bookings.pending')
+                ->with('success', "Booking #{$booking->booking_ref_no} is already processed.");
+        }
+
         // Step 1: Validate cargo can fit in available hatches
         $cargoBookingIds = $booking->cargoBookings->pluck('cargo_booking_id')->toArray();
         $placementValidation = CargoAutoPlacementService::validateCargoPlacement(

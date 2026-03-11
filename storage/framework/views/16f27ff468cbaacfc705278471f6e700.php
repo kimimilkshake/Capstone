@@ -288,7 +288,8 @@ function applyMeasurementRules(item, selectedOption){
         if(lengthInput) { lengthInput.value = avgLength; lengthInput.readOnly = true; }
         if(widthInput) { widthInput.value = avgWidth; widthInput.readOnly = true; }
         if(heightInput) { heightInput.value = avgHeight; heightInput.readOnly = true; }
-        if(unitSelect) unitSelect.disabled = true;
+        // Keep enabled so selected unit is included in form POST.
+        if(unitSelect) unitSelect.disabled = false;
         if(dimensionsBlock) dimensionsBlock.style.display = 'none';
     } else {
         if(lengthInput) { lengthInput.value = ''; lengthInput.readOnly = false; }
