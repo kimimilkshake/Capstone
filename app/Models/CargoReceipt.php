@@ -13,8 +13,14 @@ class CargoReceipt extends Model
     protected $primaryKey = 'cargo_receipt_id';
 
     protected $fillable = [
-        'booking_ref_no', 'sender_id', 'consignee_id',
-        'cargo_item_id', 'voyage_id', 'cargo_item_qty', 'total'
+        'booking_ref_no',
+        'cargo_booking_id',
+        'sender_id',
+        'consignee_id',
+        'cargo_item_id',
+        'voyage_id',
+        'cargo_item_qty',
+        'total'
     ];
 
     // Relationship to Booking
@@ -33,26 +39,26 @@ class CargoReceipt extends Model
 
     public function cargoItem()
     {
-    return $this->belongsTo(CargoItem::class, 'cargo_item_id', 'cargo_item_id');
+        return $this->belongsTo(CargoItem::class, 'cargo_item_id', 'cargo_item_id');
     }
 
     // App\Models\CargoReceipt.php
 
     public function sender()
     {
-       return $this->belongsTo(Sender::class, 'sender_id', 'sender_id');
+        return $this->belongsTo(Sender::class, 'sender_id', 'sender_id');
     }
 
     public function consignee()
     {
-       return $this->belongsTo(Consignee::class, 'consignee_id', 'consignee_id');
+        return $this->belongsTo(Consignee::class, 'consignee_id', 'consignee_id');
     }
 
     // App\Models\Booking.php
 
     public function payment()
-    {   
-       return $this->hasOne(Payment::class, 'booking_ref_no', 'booking_ref_no');
+    {
+        return $this->hasOne(Payment::class, 'booking_ref_no', 'booking_ref_no');
     }
 
 

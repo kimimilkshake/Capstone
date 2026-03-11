@@ -158,9 +158,18 @@
                             <th>Description</th>
                             <th>Classification</th>
                             <th>Qty</th>
-                            <th>Length <?php if($unitLabel !== 'Mixed Units'): ?>(<?php echo e($unitLabel); ?>)<?php endif; ?></th>
-                            <th>Width <?php if($unitLabel !== 'Mixed Units'): ?>(<?php echo e($unitLabel); ?>)<?php endif; ?></th>
-                            <th>Height <?php if($unitLabel !== 'Mixed Units'): ?>(<?php echo e($unitLabel); ?>)<?php endif; ?></th>
+                            <th>Length <?php if($unitLabel !== 'Mixed Units'): ?>
+                                    (<?php echo e($unitLabel); ?>)
+                                <?php endif; ?>
+                            </th>
+                            <th>Width <?php if($unitLabel !== 'Mixed Units'): ?>
+                                    (<?php echo e($unitLabel); ?>)
+                                <?php endif; ?>
+                            </th>
+                            <th>Height <?php if($unitLabel !== 'Mixed Units'): ?>
+                                    (<?php echo e($unitLabel); ?>)
+                                <?php endif; ?>
+                            </th>
                             <th>CBM</th>
                             <th>Freight</th>
                             <th>Subtotal</th>
@@ -178,16 +187,28 @@
                                 $total += $subtotal;
                                 $unit = $c->measurementUnit->measurement_unit_abbreviation ?? 'cm';
                                 // Only show unit in value if mixed units
-                                $showUnitSuffix = ($units->count() > 1);
+                                $showUnitSuffix = $units->count() > 1;
                             ?>
 
                             <tr>
                                 <td><?php echo e($c->cargoItem->cargo_item_description); ?></td>
                                 <td><?php echo e($c->cargoClassification->cargo_classification_name ?? 'N/A'); ?></td>
                                 <td class="text-center"><?php echo e($c->quantity); ?></td>
-                                <td class="text-end"><?php echo e(number_format($c->length, 2)); ?><?php if($showUnitSuffix): ?> <?php echo e($unit); ?><?php endif; ?></td>
-                                <td class="text-end"><?php echo e(number_format($c->width, 2)); ?><?php if($showUnitSuffix): ?> <?php echo e($unit); ?><?php endif; ?></td>
-                                <td class="text-end"><?php echo e(number_format($c->height, 2)); ?><?php if($showUnitSuffix): ?> <?php echo e($unit); ?><?php endif; ?></td>
+                                <td class="text-end"><?php echo e(number_format($c->length, 2)); ?><?php if($showUnitSuffix): ?>
+                                        <?php echo e($unit); ?>
+
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-end"><?php echo e(number_format($c->width, 2)); ?><?php if($showUnitSuffix): ?>
+                                        <?php echo e($unit); ?>
+
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-end"><?php echo e(number_format($c->height, 2)); ?><?php if($showUnitSuffix): ?>
+                                        <?php echo e($unit); ?>
+
+                                    <?php endif; ?>
+                                </td>
                                 <td class="text-end"><?php echo e(number_format($cbm, 4)); ?></td>
                                 <td class="text-end">₱<?php echo e(number_format($freight, 2)); ?></td>
                                 <td class="text-end">₱<?php echo e(number_format($subtotal, 2)); ?></td>
@@ -247,8 +268,7 @@
                         <?php echo csrf_field(); ?>
                         <div class="modal-header">
                             <h5 class="modal-title">Reason for Rejection</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             <div class="mb-3">
@@ -369,8 +389,8 @@
                             <h6>Items that cannot fit:</h6>
                             <ul class="mb-0">
                                 ${data.unpackedItems.map(item => `
-                                                <li>${item.name || item.id} - Cannot fit in any hatch</li>
-                                            `).join('')}
+                                                    <li>${item.name || item.id} - Cannot fit in any hatch</li>
+                                                `).join('')}
                             </ul>
                         </div>
                     `;
@@ -737,7 +757,8 @@
                 const modalCaption = document.getElementById('modalPhotoCaption');
                 const modalClassification = document.getElementById('modalPhotoClassification');
 
-<<<<<<< HEAD
+                <<
+                << << < HEAD
                 if (modalImage) modalImage.src = image || '';
                 if (modalCaption) modalCaption.textContent = description;
                 if (modalClassification) modalClassification.textContent = 'Classification: ' +

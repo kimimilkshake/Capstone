@@ -222,7 +222,8 @@ class CargoAutoPlacementController extends Controller
         }
 
         foreach ($cargoReceipts as $receipt) {
-            $bookingRow = CargoBooking::with('measurementUnit')->where('booking_ref_no', $receipt->booking_ref_no)->first();
+            // Use cargo_booking_id to get the exact CargoBooking this receipt came from
+            $bookingRow = CargoBooking::with('measurementUnit')->where('cargo_booking_id', $receipt->cargo_booking_id)->first();
             if ($bookingRow && $bookingRow->length && $bookingRow->width && $bookingRow->height) {
                 $quantity = (int) ($bookingRow->quantity ?? 1);
                 $totalWeight = (float) ($bookingRow->weight ?? 0);

@@ -126,7 +126,7 @@
                                     <?php $__currentLoopData = $placementData['cargoReceipts']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $receipt): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <?php
                                             $booking = \App\Models\CargoBooking::with('measurementUnit')
-                                                ->where('booking_ref_no', $receipt->booking_ref_no)
+                                                ->where('cargo_booking_id', $receipt->cargo_booking_id)
                                                 ->first();
 
                                             // Convert dimensions to meters for display
