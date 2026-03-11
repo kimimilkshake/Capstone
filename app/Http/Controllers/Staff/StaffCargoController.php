@@ -149,19 +149,30 @@ class StaffCargoController extends Controller
             $cargoBooking->cargo_classification_id = $request->cargo_classification[$index] ?? null;
             $cargoBooking->with_measurement = $cargoItem ? $cargoItem->cargo_item_measure_required : null;
 
-            // Store measurement unit if provided
-            if ($request->has("measurement_unit.$index") && $request->measurement_unit[$index]) {
-                $measurementUnit = MeasurementUnit::where('measurement_unit_abbreviation', $request->measurement_unit[$index])->first();
-                if ($measurementUnit) {
-                    $cargoBooking->measurement_unit_id = $measurementUnit->measurement_unit_id;
-                }
+            $measurementUnit = null;
+            $requiresPredefinedMeasurement = $cargoItem
+                && strcasecmp((string) $cargoItem->cargo_item_measure_required, 'Yes') === 0;
+
+            // For predefined-measure cargo, always honor the cargo_item's configured unit.
+            if ($requiresPredefinedMeasurement && $cargoItem && $cargoItem->measurement_unit_id) {
+                $measurementUnit = MeasurementUnit::find((int) $cargoItem->measurement_unit_id);
             }
 
-            if (!$cargoBooking->measurement_unit_id && $cargoItem && $cargoItem->measurement_unit_id) {
-                $cargoBooking->measurement_unit_id = $cargoItem->measurement_unit_id;
+            // For manual-measure cargo, use the unit posted from the form.
+            if (!$measurementUnit && $request->has("measurement_unit.$index") && $request->measurement_unit[$index]) {
+                $postedUnit = strtolower(trim((string) $request->measurement_unit[$index]));
+                $measurementUnit = MeasurementUnit::whereRaw('LOWER(measurement_unit_abbreviation) = ?', [$postedUnit])->first();
             }
 
-            $unitAbbreviation = $request->measurement_unit[$index] ?? 'cm';
+            if (!$measurementUnit && $cargoItem && $cargoItem->measurement_unit_id) {
+                $measurementUnit = MeasurementUnit::find((int) $cargoItem->measurement_unit_id);
+            }
+
+            if ($measurementUnit) {
+                $cargoBooking->measurement_unit_id = $measurementUnit->measurement_unit_id;
+            }
+
+            $unitAbbreviation = strtolower($measurementUnit?->measurement_unit_abbreviation ?? 'cm');
             $length = (float) $request->cargo_length[$index];
             $width = (float) $request->cargo_width[$index];
             $height = (float) $request->cargo_height[$index];
@@ -170,6 +181,14 @@ class StaffCargoController extends Controller
                 $length *= 2.54;
                 $width *= 2.54;
                 $height *= 2.54;
+            } elseif ($unitAbbreviation === 'mm') {
+                $length *= 0.1;
+                $width *= 0.1;
+                $height *= 0.1;
+            } elseif ($unitAbbreviation === 'm') {
+                $length *= 100;
+                $width *= 100;
+                $height *= 100;
             }
 
             $computedCbm = ($length * $width * $height) / 1000000;
@@ -304,8 +323,10 @@ class StaffCargoController extends Controller
         // For cargo item lookup
         $cargoItems = CargoItem::all();
 
-        // Measurement units for dropdown
-        $measurementUnits = MeasurementUnit::whereIn('measurement_unit_abbreviation', ['cm', 'in'])->get();
+        // Measurement units for dropdown (show all units from DB)
+        $measurementUnits = MeasurementUnit::whereNotNull('measurement_unit_abbreviation')
+            ->orderBy('measurement_unit_name')
+            ->get();
 
         // Load all routes for the Route Destination dropdown
         $routes = RoutePort::all(); // or whatever your model is called
@@ -329,6 +350,7 @@ class StaffCargoController extends Controller
             abort(403);
         }
         $request->validate([
+            'cargo_booking_id.*' => 'required|integer|exists:cargo_booking,cargo_booking_id',
             'classification.*' => 'required|integer|exists:cargo_classification,cargo_classification_id',
             'description.*' => 'required|integer|exists:cargo_item,cargo_item_id',
             'quantity.*' => 'required|integer|min:1',
@@ -336,19 +358,45 @@ class StaffCargoController extends Controller
             'width.*' => 'required|numeric|min:0',
             'height.*' => 'required|numeric|min:0',
             'weight.*' => 'required|numeric|min:0',
-            'measurement_unit.*' => 'required|string|in:cm,in',
+            'measurement_unit.*' => 'required',
             'cbm.*' => 'nullable|numeric|min:0',
         ]);
 
-        $booking = Booking::where('booking_ref_no', $id)
-            ->with('cargoBookings')
-            ->firstOrFail();
+        $booking = Booking::where('booking_ref_no', $id)->firstOrFail();
 
-        foreach ($booking->cargoBookings as $index => $cargo) {
+        $rowCount = count($request->cargo_booking_id ?? []);
+        for ($index = 0; $index < $rowCount; $index++) {
+            $cargoId = (int) ($request->cargo_booking_id[$index] ?? 0);
+            $cargo = CargoBooking::where('booking_ref_no', $booking->booking_ref_no)
+                ->where('cargo_booking_id', $cargoId)
+                ->firstOrFail();
+
             $length = (float) $request->length[$index];
             $width = (float) $request->width[$index];
             $height = (float) $request->height[$index];
-            $unitAbbreviation = $request->measurement_unit[$index] ?? 'cm';
+            $measurementUnitInput = $request->measurement_unit[$index] ?? $cargo->measurement_unit_id;
+            $measurementUnit = null;
+
+            if (is_numeric($measurementUnitInput)) {
+                $measurementUnit = MeasurementUnit::find((int) $measurementUnitInput);
+            }
+
+            // Backward compatibility for forms still posting abbreviation values (e.g. "cm", "in").
+            if (!$measurementUnit && is_string($measurementUnitInput)) {
+                $measurementUnit = MeasurementUnit::whereRaw('LOWER(measurement_unit_abbreviation) = ?', [strtolower(trim($measurementUnitInput))])->first();
+            }
+
+            if (!$measurementUnit && $cargo->measurement_unit_id) {
+                $measurementUnit = MeasurementUnit::find((int) $cargo->measurement_unit_id);
+            }
+
+            if (!$measurementUnit) {
+                return back()
+                    ->withErrors(['measurement_unit' => 'Invalid measurement unit selected for one or more cargo items.'])
+                    ->withInput();
+            }
+
+            $unitAbbreviation = strtolower($measurementUnit?->measurement_unit_abbreviation ?? 'cm');
 
             $lengthCm = $length;
             $widthCm = $width;
@@ -358,9 +406,16 @@ class StaffCargoController extends Controller
                 $lengthCm *= 2.54;
                 $widthCm *= 2.54;
                 $heightCm *= 2.54;
+            } elseif ($unitAbbreviation === 'mm') {
+                $lengthCm *= 0.1;
+                $widthCm *= 0.1;
+                $heightCm *= 0.1;
+            } elseif ($unitAbbreviation === 'm') {
+                $lengthCm *= 100;
+                $widthCm *= 100;
+                $heightCm *= 100;
             }
 
-            $measurementUnit = MeasurementUnit::where('measurement_unit_abbreviation', $unitAbbreviation)->first();
             $computedCbm = ($lengthCm * $widthCm * $heightCm) / 1000000;
 
             $cargo->update([
@@ -391,7 +446,29 @@ class StaffCargoController extends Controller
             abort(403);
         }
 
-        $booking = Booking::with(['sender', 'consignee', 'cargoBookings.cargoItem', 'voyage'])->where('booking_ref_no', $id)->firstOrFail();
+        $booking = Booking::with([
+            'sender',
+            'consignee',
+            'voyage',
+            'cargoBookings.cargoItem',
+            'cargoBookings.cargoClassification',
+            'cargoBookings.measurementUnit'
+        ])->where('booking_ref_no', $id)->firstOrFail();
+
+        // Idempotency guard: avoid duplicate approval side effects (payment, BOL records, email sends).
+        if (strcasecmp((string) $booking->booking_status, 'Pending') !== 0) {
+            return redirect()->route('cargo.bookings.pending')
+                ->with('success', "Booking #{$booking->booking_ref_no} is already processed.");
+        }
+
+        $existingCompletedPayment = Payment::where('booking_ref_no', $booking->booking_ref_no)
+            ->where('payment_status', 'Completed')
+            ->first();
+
+        if ($existingCompletedPayment) {
+            return redirect()->route('cargo.bookings.pending')
+                ->with('success', "Booking #{$booking->booking_ref_no} is already processed.");
+        }
 
         // Step 1: Validate cargo can fit in available hatches
         $cargoBookingIds = $booking->cargoBookings->pluck('cargo_booking_id')->toArray();
@@ -529,8 +606,15 @@ class StaffCargoController extends Controller
 
         $request->validate(['reason' => 'required|string|max:1000']);
 
-        $booking = Booking::with(['sender', 'consignee', 'cargoBookings.cargoItem', 'voyage'])->where('booking_ref_no', $id)->firstOrFail();
-        $staffId = auth()->guard('staff')->user()->staff_id ?? (auth()->guard('admin')->user()->admin_id ?? null);
+    $booking = Booking::with([
+        'sender',
+        'consignee',
+        'voyage',
+        'cargoBookings.cargoItem',
+        'cargoBookings.cargoClassification',
+        'cargoBookings.measurementUnit'
+    ])->where('booking_ref_no', $id)->firstOrFail();
+    $staffId = auth()->guard('staff')->user()->staff_id ?? (auth()->guard('admin')->user()->admin_id ?? null);
 
         $booking->booking_status = 'Canceled';
         $booking->save();
@@ -587,6 +671,10 @@ class StaffCargoController extends Controller
             ->firstOrFail();
 
         $pdf = BillOfLadingPdf::generate($booking);
+
+        if ($pdf === null) {
+            return response()->view('authorized.staff.bill_of_lading_pdf', compact('booking'));
+        }
 
         return response($pdf, 200)
             ->header('Content-Type', 'application/pdf')

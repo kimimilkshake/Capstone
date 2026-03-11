@@ -9,6 +9,7 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Mail\Mailables\Attachment;
 use App\Services\BillOfLadingPdf;
+use Throwable;
 
 class CargoBookingApproved extends Mailable
 {
@@ -52,11 +53,22 @@ class CargoBookingApproved extends Mailable
 
     public function attachments(): array
     {
-        // attach generated PDF of the Bill of Lading
-        return [
-            Attachment::fromData(function () {
-                return BillOfLadingPdf::generate($this->booking);
-            }, 'bill_of_lading.pdf')->withMime('application/pdf')
-        ];
+        try {
+            $pdf = BillOfLadingPdf::generate($this->booking);
+
+            if ($pdf === null) {
+                return [];
+            }
+
+            // Attach generated PDF of the Bill of Lading.
+            return [
+                Attachment::fromData(function () use ($pdf) {
+                    return $pdf;
+                }, 'bill_of_lading.pdf')->withMime('application/pdf')
+            ];
+        } catch (Throwable $e) {
+            report($e);
+            return [];
+        }
     }
 }
