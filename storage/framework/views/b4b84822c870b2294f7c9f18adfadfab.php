@@ -5,6 +5,7 @@
 <title>Bill of Lading - <?php echo e($booking->booking_ref_no); ?></title>
 
 <style>
+
 @page { margin:25px; }
 
 body{
@@ -26,12 +27,6 @@ td,th{
     border:1px solid #111;
 }
 
-.section{
-    background:#8fa9cf;
-    font-weight:bold;
-    padding:6px;
-}
-
 .header-table td{
     border:none;
 }
@@ -44,13 +39,21 @@ td,th{
     text-align:right;
 }
 
-.logo{
-    width:90px;
+.section-title{
+    font-weight:bold;
+    padding:6px 0;
+    background:#e8eef7;
+    border:1px solid #111;
+    padding-left:6px;
+}
+
+.booking-info td{
+    vertical-align:top;
 }
 
 .cargo-header th{
-    background:#8fa9cf;
     border:1px solid #111;
+    background:#e8eef7;
 }
 
 .cargo-row td{
@@ -72,6 +75,16 @@ td,th{
     margin-top:25px;
     text-align:center;
     font-size:10px;
+}
+
+.page-number{
+    text-align:right;
+    font-size:9px;
+    margin-top:10px;
+}
+
+.charges-table td{
+    border:1px solid #fff;
 }
 
 </style>
@@ -99,6 +112,10 @@ foreach ($booking->cargoBookings as $cargo) {
 }
 
 $total = $freight + $stamp;
+
+$printedBy = optional(auth()->guard('staff')->user())->staff_name
+    ?? optional(auth()->guard('admin')->user())->admin_name
+    ?? 'System';
 ?>
 
 
@@ -125,7 +142,6 @@ TEL NO. 232-8864; 232-8865
 TIN: 200-308-788-000-VAT
 
 </td>
-
 </tr>
 </table>
 
@@ -133,17 +149,21 @@ TIN: 200-308-788-000-VAT
 <br>
 
 
-<!-- BOOKING INFO -->
+<!-- BOOKING INFORMATION -->
 
-<table class="border">
+<table class="border booking-info">
 
 <tr>
 
 <td style="width:50%" class="border">
 
-<strong>Booking Information:</strong><br>
+<strong>Booking Information:</strong><br><br>
 
-B/L No: <?php echo e($booking->booking_code ?? $booking->booking_ref_no); ?><br>
+Voyage No:
+<?php echo e($booking->voyage->voyage_code ?? 'N/A'); ?>
+
+
+<br>
 
 Sailing Date:
 <?php echo e($booking->voyage ? \Carbon\Carbon::parse($booking->voyage->voyage_departure_date)->format('F d, Y') : 'N/A'); ?>
@@ -160,14 +180,10 @@ Vessel:
 
 <td class="border">
 
-<strong>Booking Reference No:</strong>
-<?php echo e($booking->booking_ref_no); ?>
-
-
 <br>
 
-Voyage No:
-<?php echo e($booking->voyage->voyage_code ?? 'N/A'); ?>
+Booking Reference No:
+<?php echo e($booking->booking_code ?? $booking->booking_ref_no); ?>
 
 
 <br>
@@ -179,7 +195,7 @@ Confirmed On:
 <br>
 
 Confirmed By:
-<?php echo e(optional(auth()->user())->name ?? 'System'); ?>
+<?php echo e($printedBy); ?>
 
 
 </td>
@@ -193,9 +209,9 @@ Confirmed By:
 <br>
 
 
-<!-- SENDER -->
+<!-- SENDER INFORMATION -->
 
-<div class="section">Sender Information</div>
+<div class="section-title">Sender Information</div>
 
 <table>
 
@@ -214,9 +230,9 @@ Confirmed By:
 <br>
 
 
-<!-- CONSIGNEE -->
+<!-- CONSIGNEE INFORMATION -->
 
-<div class="section">Consignee Information</div>
+<div class="section-title">Consignee Information</div>
 
 <table>
 
@@ -241,11 +257,11 @@ Confirmed By:
 
 <tr>
 
-<td class="border" style="width:50%">
+<td class="border left" style="width:50%">
 <strong>Loading Port</strong>
 </td>
 
-<td class="border">
+<td class="border left">
 <strong>Unloading Port</strong>
 </td>
 
@@ -253,12 +269,12 @@ Confirmed By:
 
 <tr>
 
-<td class="border">
+<td class="border left">
 <?php echo e($booking->voyage->routePort->port_origin_name ?? 'N/A'); ?>
 
 </td>
 
-<td class="border">
+<td class="border left">
 <?php echo e($booking->voyage->routePort->port_destination_name ?? 'N/A'); ?>
 
 </td>
@@ -272,53 +288,64 @@ Confirmed By:
 <br>
 
 
-<!-- CARGO TABLE -->
+<!-- CARGO ITEMS -->
 
 <table>
 
 <tr>
-<th colspan="7" class="border" style="text-align:left;">Cargo Items Description</th>
+<th colspan="7" class="border" style="text-align:left;">
+Cargo Items Description
+</th>
 </tr>
 
 <tr class="cargo-header">
 
-<th>QTY</th>
-<th>Classification</th>
-<th>Description</th>
-<th>Length</th>
-<th>Width</th>
-<th>Height</th>
-<th>Weight</th>
+<th style="width:8%">QTY</th>
+<th style="width:18%">Classification</th>
+<th style="width:32%">Description</th>
+<th style="width:10%">Length</th>
+<th style="width:10%">Width</th>
+<th style="width:10%">Height</th>
+<th style="width:12%">Weight</th>
 
 </tr>
 
-<?php $__currentLoopData = $booking->cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cargo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+<?php $__empty_1 = true; $__currentLoopData = $booking->cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cargo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+<?php $unit = $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm'; ?>
 
 <tr class="cargo-row">
 
-<td><?php echo e($cargo->quantity); ?></td>
+<td class="center"><?php echo e($cargo->quantity); ?></td>
 
 <td>
-<?php echo e($cargo->cargoClassification->cargo_classification_name ?? ''); ?>
+<?php echo e($cargo->cargoClassification->cargo_classification_name ?? 'General Cargo'); ?>
 
 </td>
 
 <td>
-<?php echo e($cargo->cargoItem->cargo_item_description ?? ''); ?>
+<?php echo e($cargo->cargoItem->cargo_item_description ?? 'N/A'); ?>
 
 </td>
 
-<td><?php echo e($cargo->length); ?></td>
+<td class="center"><?php echo e($cargo->length); ?><?php echo e($unit); ?></td>
 
-<td><?php echo e($cargo->width); ?></td>
+<td class="center"><?php echo e($cargo->width); ?><?php echo e($unit); ?></td>
 
-<td><?php echo e($cargo->height); ?></td>
+<td class="center"><?php echo e($cargo->height); ?><?php echo e($unit); ?></td>
 
-<td><?php echo e($cargo->weight); ?></td>
+<td class="center"><?php echo e($cargo->weight); ?>kg</td>
 
 </tr>
 
-<?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+<?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+
+<tr class="cargo-row">
+<td colspan="7" class="center">
+No cargo items found.
+</td>
+</tr>
+
+<?php endif; ?>
 
 </table>
 
@@ -327,12 +354,12 @@ Confirmed By:
 <br>
 
 
-<!-- CHARGES -->
+<!-- CHARGES (NOW SAME WIDTH ALIGNMENT AS CARGO TABLE) -->
 
-<table style="width:300px; float:right">
+<table class="charges-table">
 
 <tr>
-<td>Freight Charges</td>
+<td style="width:80%">Freight Charges</td>
 <td class="right">₱ <?php echo e(number_format($freight,2)); ?></td>
 </tr>
 
@@ -347,10 +374,6 @@ Confirmed By:
 </tr>
 
 </table>
-
-
-
-<div style="clear:both"></div>
 
 
 
@@ -388,6 +411,13 @@ Quartermaster
 <div class="footer-note">
 
 Printing of the Bill of Lading, Arrastre Payment and Doc Stamp will be done in the office.
+
+</div>
+
+
+<div class="page-number">
+
+Page 1 of 1
 
 </div>
 

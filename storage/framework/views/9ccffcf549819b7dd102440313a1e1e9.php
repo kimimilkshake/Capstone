@@ -40,6 +40,7 @@
                         <th>Item</th>
                         <th>Classification</th>
                         <th>Quantity</th>
+                        <th>Unit</th>
                         <th>Length</th>
                         <th>Width</th>
                         <th>Height</th>
@@ -60,9 +61,10 @@
                             <td><?php echo e($item->cargo_item_description); ?></td>
                             <td><?php echo e($item->cargo_classification_name ?? 'N/A'); ?></td>
                             <td><?php echo e($item->quantity); ?></td>
-                            <td><?php echo e(number_format((float) $item->length, 2)); ?><?php echo e($item->measurement_unit_abbreviation ?? 'cm'); ?></td>
-                            <td><?php echo e(number_format((float) $item->width, 2)); ?><?php echo e($item->measurement_unit_abbreviation ?? 'cm'); ?></td>
-                            <td><?php echo e(number_format((float) $item->height, 2)); ?><?php echo e($item->measurement_unit_abbreviation ?? 'cm'); ?></td>
+                            <td><?php echo e($item->display_measurement_unit); ?></td>
+                            <td><?php echo e(number_format((float) $item->length, 2)); ?> <?php echo e($item->display_measurement_unit); ?></td>
+                            <td><?php echo e(number_format((float) $item->width, 2)); ?> <?php echo e($item->display_measurement_unit); ?></td>
+                            <td><?php echo e(number_format((float) $item->height, 2)); ?> <?php echo e($item->display_measurement_unit); ?></td>
                             <td><?php echo e(number_format($cbm, 3)); ?></td>
                             <td>₱<?php echo e(number_format($item->freight, 2)); ?></td>
                             <td>₱<?php echo e(number_format($subtotal, 2)); ?></td>
@@ -71,7 +73,7 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <th colspan="8" class="text-end">Total Expense:</th>
+                        <th colspan="9" class="text-end">Total Expense:</th>
                         <th>₱<?php echo e(number_format($totalExpense, 2)); ?></th>
                     </tr>
                 </tfoot>
