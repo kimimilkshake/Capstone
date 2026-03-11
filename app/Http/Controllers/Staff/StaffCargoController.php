@@ -606,15 +606,15 @@ class StaffCargoController extends Controller
 
         $request->validate(['reason' => 'required|string|max:1000']);
 
-    $booking = Booking::with([
-        'sender',
-        'consignee',
-        'voyage',
-        'cargoBookings.cargoItem',
-        'cargoBookings.cargoClassification',
-        'cargoBookings.measurementUnit'
-    ])->where('booking_ref_no', $id)->firstOrFail();
-    $staffId = auth()->guard('staff')->user()->staff_id ?? (auth()->guard('admin')->user()->admin_id ?? null);
+        $booking = Booking::with([
+            'sender',
+            'consignee',
+            'voyage',
+            'cargoBookings.cargoItem',
+            'cargoBookings.cargoClassification',
+            'cargoBookings.measurementUnit'
+        ])->where('booking_ref_no', $id)->firstOrFail();
+        $staffId = auth()->guard('staff')->user()->staff_id ?? (auth()->guard('admin')->user()->admin_id ?? null);
 
         $booking->booking_status = 'Canceled';
         $booking->save();

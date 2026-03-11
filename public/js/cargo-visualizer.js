@@ -47,13 +47,42 @@ class SimpleBinPacker {
             `🎯 2-ZONE PACKING BY BOOKING: ${bookingRefs.length} bookings`,
         );
 
-        // Assign bookings to zones (LEFT=0, RIGHT=1) in round-robin
+        // Calculate weight for each booking
+        const bookingWeights = {};
+        bookingRefs.forEach((ref) => {
+            bookingWeights[ref] = bookingGroups[ref].reduce(
+                (sum, item) => sum + (item.weight || 0),
+                0,
+            );
+        });
+
+        // Assign bookings to zones - check weight balance first, then use round-robin or assign to lighter zone
         const bookingZones = {};
+        let leftZoneWeight = 0;
+        let rightZoneWeight = 0;
+
         bookingRefs.forEach((ref, idx) => {
-            bookingZones[ref] = idx % 2;
+            const bookingWeight = bookingWeights[ref];
+            
+            // Check if zones are balanced (equal weight or first booking)
+            if (leftZoneWeight === rightZoneWeight) {
+                // Zones balanced - use round-robin
+                bookingZones[ref] = idx % 2;
+            } else {
+                // Zones imbalanced - assign to lighter zone
+                bookingZones[ref] = leftZoneWeight <= rightZoneWeight ? 0 : 1;
+            }
+            
+            // Update zone weight
+            if (bookingZones[ref] === 0) {
+                leftZoneWeight += bookingWeight;
+            } else {
+                rightZoneWeight += bookingWeight;
+            }
+            
             const zoneName = bookingZones[ref] === 0 ? "LEFT" : "RIGHT";
             console.log(
-                `   Booking ${ref}: ${zoneName} zone (${bookingGroups[ref].length} items)`,
+                `   Booking ${ref}: ${zoneName} zone (${bookingGroups[ref].length} items, ${bookingWeights[ref]}kg) [LEFT: ${leftZoneWeight}kg, RIGHT: ${rightZoneWeight}kg]`,
             );
         });
 

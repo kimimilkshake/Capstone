@@ -423,4 +423,4 @@ Page 1 of 1
 
 
 </body>
-</html><?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/authorized/staff/bill_of_lading_pdf.blade.php ENDPATH**/ ?>
+</html><?php /**PATH C:\Users\Shem\Desktop\Capstone\resources\views/authorized/staff/bill_of_lading_pdf.blade.php ENDPATH**/ ?>
