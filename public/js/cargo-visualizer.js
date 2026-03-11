@@ -63,7 +63,7 @@ class SimpleBinPacker {
 
         bookingRefs.forEach((ref, idx) => {
             const bookingWeight = bookingWeights[ref];
-            
+
             // Check if zones are balanced (equal weight or first booking)
             if (leftZoneWeight === rightZoneWeight) {
                 // Zones balanced - use round-robin
@@ -72,14 +72,14 @@ class SimpleBinPacker {
                 // Zones imbalanced - assign to lighter zone
                 bookingZones[ref] = leftZoneWeight <= rightZoneWeight ? 0 : 1;
             }
-            
+
             // Update zone weight
             if (bookingZones[ref] === 0) {
                 leftZoneWeight += bookingWeight;
             } else {
                 rightZoneWeight += bookingWeight;
             }
-            
+
             const zoneName = bookingZones[ref] === 0 ? "LEFT" : "RIGHT";
             console.log(
                 `   Booking ${ref}: ${zoneName} zone (${bookingGroups[ref].length} items, ${bookingWeights[ref]}kg) [LEFT: ${leftZoneWeight}kg, RIGHT: ${rightZoneWeight}kg]`,

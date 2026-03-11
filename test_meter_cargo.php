@@ -71,7 +71,7 @@ $testData = [
 echo "\nSimulating CargoAutoPlacementService conversion:\n";
 echo "  Input: 40 (unit: m)\n";
 echo "  Output (converted to meters): 40 m\n";
-echo "  Input: 30 (unit: m)\n";  
+echo "  Input: 30 (unit: m)\n";
 echo "  Output (converted to meters): 30 m\n";
 echo "  Input: 50 (unit: m)\n";
 echo "  Output (converted to meters): 50 m\n";
