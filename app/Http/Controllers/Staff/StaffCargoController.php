@@ -588,6 +588,10 @@ class StaffCargoController extends Controller
 
         $pdf = BillOfLadingPdf::generate($booking);
 
+        if ($pdf === null) {
+            return response()->view('authorized.staff.bill_of_lading_pdf', compact('booking'));
+        }
+
         return response($pdf, 200)
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'inline; filename="bill_of_lading_' . $id . '.pdf"');
