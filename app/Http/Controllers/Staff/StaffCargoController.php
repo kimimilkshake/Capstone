@@ -520,6 +520,7 @@ class StaffCargoController extends Controller
         foreach ($booking->cargoBookings as $cargo) {
             $receipt = new CargoReceipt();
             $receipt->booking_ref_no = $booking->booking_ref_no;
+            $receipt->cargo_booking_id = $cargo->cargo_booking_id;  // Link to the specific CargoBooking
             $receipt->sender_id = $booking->sender_id;
             $receipt->consignee_id = $booking->consignee_id;
             $receipt->cargo_item_id = $cargo->cargo_item_id ?? null;

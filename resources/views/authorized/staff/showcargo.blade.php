@@ -159,9 +159,18 @@
                             <th>Description</th>
                             <th>Classification</th>
                             <th>Qty</th>
-                            <th>Length @if($unitLabel !== 'Mixed Units')({{ $unitLabel }})@endif</th>
-                            <th>Width @if($unitLabel !== 'Mixed Units')({{ $unitLabel }})@endif</th>
-                            <th>Height @if($unitLabel !== 'Mixed Units')({{ $unitLabel }})@endif</th>
+                            <th>Length @if ($unitLabel !== 'Mixed Units')
+                                    ({{ $unitLabel }})
+                                @endif
+                            </th>
+                            <th>Width @if ($unitLabel !== 'Mixed Units')
+                                    ({{ $unitLabel }})
+                                @endif
+                            </th>
+                            <th>Height @if ($unitLabel !== 'Mixed Units')
+                                    ({{ $unitLabel }})
+                                @endif
+                            </th>
                             <th>CBM</th>
                             <th>Freight</th>
                             <th>Subtotal</th>
@@ -179,16 +188,25 @@
                                 $total += $subtotal;
                                 $unit = $c->measurementUnit->measurement_unit_abbreviation ?? 'cm';
                                 // Only show unit in value if mixed units
-                                $showUnitSuffix = ($units->count() > 1);
+                                $showUnitSuffix = $units->count() > 1;
                             @endphp
 
                             <tr>
                                 <td>{{ $c->cargoItem->cargo_item_description }}</td>
                                 <td>{{ $c->cargoClassification->cargo_classification_name ?? 'N/A' }}</td>
                                 <td class="text-center">{{ $c->quantity }}</td>
-                                <td class="text-end">{{ number_format($c->length, 2) }}@if($showUnitSuffix) {{ $unit }}@endif</td>
-                                <td class="text-end">{{ number_format($c->width, 2) }}@if($showUnitSuffix) {{ $unit }}@endif</td>
-                                <td class="text-end">{{ number_format($c->height, 2) }}@if($showUnitSuffix) {{ $unit }}@endif</td>
+                                <td class="text-end">{{ number_format($c->length, 2) }}@if ($showUnitSuffix)
+                                        {{ $unit }}
+                                    @endif
+                                </td>
+                                <td class="text-end">{{ number_format($c->width, 2) }}@if ($showUnitSuffix)
+                                        {{ $unit }}
+                                    @endif
+                                </td>
+                                <td class="text-end">{{ number_format($c->height, 2) }}@if ($showUnitSuffix)
+                                        {{ $unit }}
+                                    @endif
+                                </td>
                                 <td class="text-end">{{ number_format($cbm, 4) }}</td>
                                 <td class="text-end">₱{{ number_format($freight, 2) }}</td>
                                 <td class="text-end">₱{{ number_format($subtotal, 2) }}</td>
@@ -246,8 +264,7 @@
                         @csrf
                         <div class="modal-header">
                             <h5 class="modal-title">Reason for Rejection</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             <div class="mb-3">
@@ -368,8 +385,8 @@
                             <h6>Items that cannot fit:</h6>
                             <ul class="mb-0">
                                 ${data.unpackedItems.map(item => `
-                                                <li>${item.name || item.id} - Cannot fit in any hatch</li>
-                                            `).join('')}
+                                                    <li>${item.name || item.id} - Cannot fit in any hatch</li>
+                                                `).join('')}
                             </ul>
                         </div>
                     `;
@@ -736,7 +753,8 @@
                 const modalCaption = document.getElementById('modalPhotoCaption');
                 const modalClassification = document.getElementById('modalPhotoClassification');
 
-<<<<<<< HEAD
+                <<
+                << << < HEAD
                 if (modalImage) modalImage.src = image || '';
                 if (modalCaption) modalCaption.textContent = description;
                 if (modalClassification) modalClassification.textContent = 'Classification: ' +
