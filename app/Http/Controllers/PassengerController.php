@@ -178,19 +178,25 @@ class PassengerController extends Controller
                     $picturePath = $request->file('cargo_picture')[$index]->store('cargo_pictures', 'public');
                 }
 
-                $measurementUnitId = null;
-                if ($request->has("measurement_unit.$index") && $request->measurement_unit[$index]) {
-                    $measurementUnit = MeasurementUnit::where('measurement_unit_abbreviation', $request->measurement_unit[$index])->first();
-                    if ($measurementUnit) {
-                        $measurementUnitId = $measurementUnit->measurement_unit_id;
-                    }
+                $measurementUnit = null;
+                $requiresPredefinedMeasurement = $cargoItem
+                    && strcasecmp((string) $cargoItem->cargo_item_measure_required, 'Yes') === 0;
+
+                if ($requiresPredefinedMeasurement && $cargoItem && $cargoItem->measurement_unit_id) {
+                    $measurementUnit = MeasurementUnit::find((int) $cargoItem->measurement_unit_id);
                 }
 
-                if (!$measurementUnitId && $cargoItem && $cargoItem->measurement_unit_id) {
-                    $measurementUnitId = $cargoItem->measurement_unit_id;
+                if (!$measurementUnit && $request->has("measurement_unit.$index") && $request->measurement_unit[$index]) {
+                    $postedUnit = strtolower(trim((string) $request->measurement_unit[$index]));
+                    $measurementUnit = MeasurementUnit::whereRaw('LOWER(measurement_unit_abbreviation) = ?', [$postedUnit])->first();
                 }
 
-                $unitAbbreviation = $request->measurement_unit[$index] ?? 'cm';
+                if (!$measurementUnit && $cargoItem && $cargoItem->measurement_unit_id) {
+                    $measurementUnit = MeasurementUnit::find((int) $cargoItem->measurement_unit_id);
+                }
+
+                $measurementUnitId = $measurementUnit?->measurement_unit_id;
+                $unitAbbreviation = strtolower($measurementUnit?->measurement_unit_abbreviation ?? 'cm');
                 $length = (float) $request->cargo_length[$index];
                 $width = (float) $request->cargo_width[$index];
                 $height = (float) $request->cargo_height[$index];
@@ -199,6 +205,14 @@ class PassengerController extends Controller
                     $length *= 2.54;
                     $width *= 2.54;
                     $height *= 2.54;
+                } elseif ($unitAbbreviation === 'mm') {
+                    $length *= 0.1;
+                    $width *= 0.1;
+                    $height *= 0.1;
+                } elseif ($unitAbbreviation === 'm') {
+                    $length *= 100;
+                    $width *= 100;
+                    $height *= 100;
                 }
 
                 $computedCbm = ($length * $width * $height) / 1000000;
@@ -251,15 +265,16 @@ class PassengerController extends Controller
         // Fetch cargo items with freight rates from cargo_item
         $cargoItems = \DB::table('cargo_booking')
             ->join('cargo_item', 'cargo_booking.cargo_item_id', '=', 'cargo_item.cargo_item_id')
-            ->leftJoin('measurement_unit', 'cargo_booking.measurement_unit_id', '=', 'measurement_unit.measurement_unit_id')
+            ->leftJoin('measurement_unit as selected_unit', 'cargo_booking.measurement_unit_id', '=', 'selected_unit.measurement_unit_id')
+            ->leftJoin('measurement_unit as default_unit', 'cargo_item.measurement_unit_id', '=', 'default_unit.measurement_unit_id')
             ->leftJoin('cargo_classification', 'cargo_booking.cargo_classification_id', '=', 'cargo_classification.cargo_classification_id')
             ->select(
                 'cargo_booking.*',
                 'cargo_item.cargo_item_description',
                 'cargo_item.cargo_item_freight as freight',
-                'measurement_unit.measurement_unit_abbreviation',
                 'cargo_classification.cargo_classification_name'
             )
+            ->selectRaw("COALESCE(selected_unit.measurement_unit_abbreviation, default_unit.measurement_unit_abbreviation, 'cm') as display_measurement_unit")
             ->where('booking_ref_no', $bookingRef)
             ->get();
 

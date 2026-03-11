@@ -19,7 +19,7 @@
     <h2>✅ Cargo Booking Approved</h2>
     <p>Booking Reference: <strong>#<?php echo e($booking->booking_code); ?></strong></p>
     <p>Status: <strong><?php echo e($booking->booking_status); ?></strong></p>
-    <p>The Bill of Lading (B/L) for this booking is attached as a PDF for your records and printing.</p>
+    <p><strong>Note:</strong> Arrastre payment and printing will be done in the office.</p>
 
     <!-- Voyage Information -->
     <div class="section">
@@ -62,31 +62,21 @@
                 <?php $__currentLoopData = $cargoItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cargo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <?php
                         $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
-                        $cbm = ($cargo->length * $cargo->width * $cargo->height) / 1000000;
+                        $cbm = (float) ($cargo->cbm ?? 0);
                         $subtotal = $freight * $cbm * $cargo->quantity;
                         $total += $subtotal;
                         $totalQuantity += $cargo->quantity;
-                        
-                        // Determine unit of measurement
-                        $unit = $cargo->measurement_unit ?? 'cm';
-                        $unitDisplay = ($unit === 'in') ? 'inches' : 'cm';
-                        
-                        // For display, show dimensions in the unit chosen by customer
-                        if ($unit === 'in') {
-                            $displayLength = round($cargo->length / 2.54, 2);
-                            $displayWidth = round($cargo->width / 2.54, 2);
-                            $displayHeight = round($cargo->height / 2.54, 2);
-                        } else {
-                            $displayLength = $cargo->length;
-                            $displayWidth = $cargo->width;
-                            $displayHeight = $cargo->height;
-                        }
+
+                        $unitDisplay = strtolower($cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm');
+                        $displayLength = (float) $cargo->length;
+                        $displayWidth = (float) $cargo->width;
+                        $displayHeight = (float) $cargo->height;
                     ?>
                     <tr>
                         <td><?php echo e($cargo->quantity); ?></td>
                         <td><?php echo e($cargo->cargoClassification->cargo_classification_name ?? 'N/A'); ?></td>
                         <td><?php echo e($cargo->cargoItem->cargo_item_description); ?></td>
-                        <td><?php echo e($displayLength); ?> × <?php echo e($displayWidth); ?> × <?php echo e($displayHeight); ?> <?php echo e($unitDisplay); ?></td>
+                        <td><?php echo e(number_format($displayLength, 2)); ?> x <?php echo e(number_format($displayWidth, 2)); ?> x <?php echo e(number_format($displayHeight, 2)); ?> <?php echo e($unitDisplay); ?></td>
                         <td><?php echo e($cargo->weight); ?> kg</td>
                         <td>₱<?php echo e(number_format($subtotal,2)); ?></td>
                     </tr>

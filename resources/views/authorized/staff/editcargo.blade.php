@@ -66,6 +66,7 @@
         @foreach($booking->cargoBookings as $index => $cargo)
             <div class="card shadow-sm p-4 mb-4">
                 <h5>Cargo Item #{{ $index + 1 }}</h5>
+                <input type="hidden" name="cargo_booking_id[]" value="{{ $cargo->cargo_booking_id }}">
 
                 <div class="form-row">
                     <div class="form-col">
@@ -134,10 +135,12 @@
                             <label>Unit</label>
                             <select name="measurement_unit[]" required>
                                 @php
-                                    $selectedUnit = old('measurement_unit.'.$index, $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm');
+                                    $selectedUnitId = old('measurement_unit.'.$index, $cargo->measurement_unit_id);
                                 @endphp
                                 @foreach($measurementUnits as $measurementUnit)
-                                    <option value="{{ $measurementUnit->measurement_unit_abbreviation }}" {{ $selectedUnit === $measurementUnit->measurement_unit_abbreviation ? 'selected' : '' }}>
+                                    <option value="{{ $measurementUnit->measurement_unit_id }}"
+                                        data-unit-abbrev="{{ strtolower($measurementUnit->measurement_unit_abbreviation ?? 'cm') }}"
+                                        {{ (string) $selectedUnitId === (string) $measurementUnit->measurement_unit_id ? 'selected' : '' }}>
                                         {{ $measurementUnit->measurement_unit_abbreviation }}
                                     </option>
                                 @endforeach
@@ -192,12 +195,25 @@
         let length = lengthInputs[index] ? (parseFloat(lengthInputs[index].value) || 0) : 0;
         let width = widthInputs[index] ? (parseFloat(widthInputs[index].value) || 0) : 0;
         let height = heightInputs[index] ? (parseFloat(heightInputs[index].value) || 0) : 0;
-        const unit = unitSelects[index] ? unitSelects[index].value : 'cm';
+        const selectedUnitOption = unitSelects[index]
+            ? unitSelects[index].options[unitSelects[index].selectedIndex]
+            : null;
+        const unit = selectedUnitOption
+            ? (selectedUnitOption.dataset.unitAbbrev || 'cm').toLowerCase()
+            : 'cm';
 
         if (unit === 'in') {
             length *= 2.54;
             width *= 2.54;
             height *= 2.54;
+        } else if (unit === 'mm') {
+            length *= 0.1;
+            width *= 0.1;
+            height *= 0.1;
+        } else if (unit === 'm') {
+            length *= 100;
+            width *= 100;
+            height *= 100;
         }
 
         const cbm = (length * width * height) / 1000000;

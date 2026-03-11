@@ -135,7 +135,22 @@
         </div>
 
         <div class="card shadow-sm p-3 mb-4">
-            <h5>Cargo Items</h5>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Cargo Items</h5>
+                @php
+                    $units = $cargoBookings->pluck('measurementUnit.measurement_unit_abbreviation')->unique();
+                    $unitLabel = $units->count() === 1 ? $units->first() : 'Mixed Units';
+                @endphp
+                @if ($unitLabel === 'm' || $unitLabel === 'M')
+                    <span class="badge bg-info">Measurements in Meters</span>
+                @elseif ($unitLabel === 'cm')
+                    <span class="badge bg-secondary">Measurements in Centimeters</span>
+                @elseif ($unitLabel === 'in' || $unitLabel === 'inch')
+                    <span class="badge bg-secondary">Measurements in Inches</span>
+                @elseif ($unitLabel !== 'Mixed Units')
+                    <span class="badge bg-secondary">Measurements: {{ $unitLabel }}</span>
+                @endif
+            </div>
 
             <div class="table-responsive">
                 <table class="table table-bordered table-striped mt-3 align-middle cargo-items-table">
@@ -144,9 +159,9 @@
                             <th>Description</th>
                             <th>Classification</th>
                             <th>Qty</th>
-                            <th>Length</th>
-                            <th>Width</th>
-                            <th>Height</th>
+                            <th>Length @if($unitLabel !== 'Mixed Units')({{ $unitLabel }})@endif</th>
+                            <th>Width @if($unitLabel !== 'Mixed Units')({{ $unitLabel }})@endif</th>
+                            <th>Height @if($unitLabel !== 'Mixed Units')({{ $unitLabel }})@endif</th>
                             <th>CBM</th>
                             <th>Freight</th>
                             <th>Subtotal</th>
@@ -163,15 +178,17 @@
                                 $subtotal = $freight * $cbm * $c->quantity;
                                 $total += $subtotal;
                                 $unit = $c->measurementUnit->measurement_unit_abbreviation ?? 'cm';
+                                // Only show unit in value if mixed units
+                                $showUnitSuffix = ($units->count() > 1);
                             @endphp
 
                             <tr>
                                 <td>{{ $c->cargoItem->cargo_item_description }}</td>
                                 <td>{{ $c->cargoClassification->cargo_classification_name ?? 'N/A' }}</td>
                                 <td class="text-center">{{ $c->quantity }}</td>
-                                <td class="text-end">{{ number_format($c->length, 2) }}{{ $unit }}</td>
-                                <td class="text-end">{{ number_format($c->width, 2) }}{{ $unit }}</td>
-                                <td class="text-end">{{ number_format($c->height, 2) }}{{ $unit }}</td>
+                                <td class="text-end">{{ number_format($c->length, 2) }}@if($showUnitSuffix) {{ $unit }}@endif</td>
+                                <td class="text-end">{{ number_format($c->width, 2) }}@if($showUnitSuffix) {{ $unit }}@endif</td>
+                                <td class="text-end">{{ number_format($c->height, 2) }}@if($showUnitSuffix) {{ $unit }}@endif</td>
                                 <td class="text-end">{{ number_format($cbm, 4) }}</td>
                                 <td class="text-end">₱{{ number_format($freight, 2) }}</td>
                                 <td class="text-end">₱{{ number_format($subtotal, 2) }}</td>

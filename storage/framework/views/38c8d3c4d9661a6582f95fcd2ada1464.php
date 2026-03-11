@@ -134,7 +134,22 @@
         </div>
 
         <div class="card shadow-sm p-3 mb-4">
-            <h5>Cargo Items</h5>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Cargo Items</h5>
+                <?php
+                    $units = $cargoBookings->pluck('measurementUnit.measurement_unit_abbreviation')->unique();
+                    $unitLabel = $units->count() === 1 ? $units->first() : 'Mixed Units';
+                ?>
+                <?php if($unitLabel === 'm' || $unitLabel === 'M'): ?>
+                    <span class="badge bg-info">Measurements in Meters</span>
+                <?php elseif($unitLabel === 'cm'): ?>
+                    <span class="badge bg-secondary">Measurements in Centimeters</span>
+                <?php elseif($unitLabel === 'in' || $unitLabel === 'inch'): ?>
+                    <span class="badge bg-secondary">Measurements in Inches</span>
+                <?php elseif($unitLabel !== 'Mixed Units'): ?>
+                    <span class="badge bg-secondary">Measurements: <?php echo e($unitLabel); ?></span>
+                <?php endif; ?>
+            </div>
 
             <div class="table-responsive">
                 <table class="table table-bordered table-striped mt-3 align-middle cargo-items-table">
@@ -143,9 +158,9 @@
                             <th>Description</th>
                             <th>Classification</th>
                             <th>Qty</th>
-                            <th>Length</th>
-                            <th>Width</th>
-                            <th>Height</th>
+                            <th>Length <?php if($unitLabel !== 'Mixed Units'): ?>(<?php echo e($unitLabel); ?>)<?php endif; ?></th>
+                            <th>Width <?php if($unitLabel !== 'Mixed Units'): ?>(<?php echo e($unitLabel); ?>)<?php endif; ?></th>
+                            <th>Height <?php if($unitLabel !== 'Mixed Units'): ?>(<?php echo e($unitLabel); ?>)<?php endif; ?></th>
                             <th>CBM</th>
                             <th>Freight</th>
                             <th>Subtotal</th>
@@ -162,15 +177,17 @@
                                 $subtotal = $freight * $cbm * $c->quantity;
                                 $total += $subtotal;
                                 $unit = $c->measurementUnit->measurement_unit_abbreviation ?? 'cm';
+                                // Only show unit in value if mixed units
+                                $showUnitSuffix = ($units->count() > 1);
                             ?>
 
                             <tr>
                                 <td><?php echo e($c->cargoItem->cargo_item_description); ?></td>
                                 <td><?php echo e($c->cargoClassification->cargo_classification_name ?? 'N/A'); ?></td>
                                 <td class="text-center"><?php echo e($c->quantity); ?></td>
-                                <td class="text-end"><?php echo e(number_format($c->length, 2)); ?><?php echo e($unit); ?></td>
-                                <td class="text-end"><?php echo e(number_format($c->width, 2)); ?><?php echo e($unit); ?></td>
-                                <td class="text-end"><?php echo e(number_format($c->height, 2)); ?><?php echo e($unit); ?></td>
+                                <td class="text-end"><?php echo e(number_format($c->length, 2)); ?><?php if($showUnitSuffix): ?> <?php echo e($unit); ?><?php endif; ?></td>
+                                <td class="text-end"><?php echo e(number_format($c->width, 2)); ?><?php if($showUnitSuffix): ?> <?php echo e($unit); ?><?php endif; ?></td>
+                                <td class="text-end"><?php echo e(number_format($c->height, 2)); ?><?php if($showUnitSuffix): ?> <?php echo e($unit); ?><?php endif; ?></td>
                                 <td class="text-end"><?php echo e(number_format($cbm, 4)); ?></td>
                                 <td class="text-end">₱<?php echo e(number_format($freight, 2)); ?></td>
                                 <td class="text-end">₱<?php echo e(number_format($subtotal, 2)); ?></td>

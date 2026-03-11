@@ -83,7 +83,8 @@ class CargoAutoPlacementController extends Controller
             return ['error' => 'No hatches found for this vessel.'];
         }
 
-        $cargoReceipts = $voyage->cargoReceipts;
+        // Order by booking_ref_no to show items in booking order (earliest bookings first)
+        $cargoReceipts = $voyage->cargoReceipts()->orderBy('booking_ref_no', 'asc')->get();
 
         if ($cargoReceipts->isEmpty()) {
             return ['error' => 'No cargo bookings found for this voyage.'];
@@ -209,87 +210,48 @@ class CargoAutoPlacementController extends Controller
             ];
         }
 
-        // Prefer confirmed bookings: one visual item per confirmed booking (assumes one cargoBooking per booking)
+        // Get all cargo receipts for confirmed bookings (matches table display)
+        // Order by booking_ref_no to show items in booking order (earliest bookings first)
         $cargoData = [];
-        $confirmedBookings = Booking::where('voyage_id', $voyage->voyage_id)
-            ->whereRaw("LOWER(booking.booking_status) = ?", ['confirmed'])
-            ->with('cargoBookings.measurementUnit', 'cargoBookings.cargoItem')
-            ->get();
+        $cargoReceipts = $voyage->cargoReceipts()->whereHas('booking', function ($q) {
+            $q->whereRaw("LOWER(booking.booking_status) = ?", ['confirmed']);
+        })->orderBy('booking_ref_no', 'asc')->get();
 
-        foreach ($confirmedBookings as $booking) {
-            $cb = $booking->cargoBookings->first();
-            if ($cb && $cb->length && $cb->width && $cb->height) {
-                $quantity = (int) ($cb->quantity ?? 1);
-                $totalWeight = (float) ($cb->weight ?? 0);
+        if ($hatches->isEmpty() || $cargoReceipts->isEmpty()) {
+            return response()->json(['error' => 'Missing hatches or cargo'], 400);
+        }
+
+        foreach ($cargoReceipts as $receipt) {
+            $bookingRow = CargoBooking::with('measurementUnit')->where('booking_ref_no', $receipt->booking_ref_no)->first();
+            if ($bookingRow && $bookingRow->length && $bookingRow->width && $bookingRow->height) {
+                $quantity = (int) ($bookingRow->quantity ?? 1);
+                $totalWeight = (float) ($bookingRow->weight ?? 0);
                 $weightPerItem = $quantity > 0 ? $totalWeight / $quantity : 0;
 
                 // Get measurement unit name
-                $unitName = $cb->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
+                $unitName = $bookingRow->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
 
                 // Convert dimensions to meters
-                $widthM = $this->convertToMeters($cb->width, $unitName);
-                $heightM = $this->convertToMeters($cb->height, $unitName);
-                $lengthM = $this->convertToMeters($cb->length, $unitName);
+                $widthM = $this->convertToMeters($bookingRow->width, $unitName);
+                $heightM = $this->convertToMeters($bookingRow->height, $unitName);
+                $lengthM = $this->convertToMeters($bookingRow->length, $unitName);
 
                 // Create one visual item per quantity unit
+                // Use cargo_receipt_id to match the isolate button in the table
                 for ($i = 0; $i < $quantity; $i++) {
                     $cargoData[] = [
-                        'id' => (string) ($cb->cargo_booking_id ?? $booking->booking_ref_no) . '_' . $i,
-                        'booking_ref' => $booking->booking_ref_no,
+                        'id' => (string) $receipt->cargo_receipt_id . '_' . $i,
+                        'booking_ref' => $receipt->booking_ref_no,
                         'width' => $widthM,
                         'height' => $heightM,
                         'depth' => $lengthM,
                         'weight' => $weightPerItem,
                         'quantity' => 1,
-                        'description' => $cb->cargoItem->cargo_item_description ?? 'Cargo Item',
-                        'is_breakable' => (bool) ($cb->cargoItem->is_breakable ?? false),
+                        'description' => $bookingRow->cargoItem->cargo_item_description ?? 'Cargo Item',
+                        'is_breakable' => (bool) ($bookingRow->cargoItem->is_breakable ?? false),
                         'original_unit' => $unitName,
-                        'original_dims' => "{$cb->length} × {$cb->width} × {$cb->height}",
+                        'original_dims' => "{$bookingRow->length} × {$bookingRow->width} × {$bookingRow->height}",
                     ];
-                }
-            }
-        }
-
-        // Fallback: if no confirmed bookings with cargo found, fall back to cargoReceipts as before
-        if (empty($cargoData)) {
-            $cargoReceipts = $voyage->cargoReceipts()->whereHas('booking', function ($q) {
-                $q->whereRaw("LOWER(booking.booking_status) = ?", ['confirmed']);
-            })->get();
-
-            if ($hatches->isEmpty() || $cargoReceipts->isEmpty()) {
-                return response()->json(['error' => 'Missing hatches or cargo'], 400);
-            }
-
-            foreach ($cargoReceipts as $receipt) {
-                $bookingRow = CargoBooking::with('measurementUnit')->where('booking_ref_no', $receipt->booking_ref_no)->first();
-                if ($bookingRow && $bookingRow->length && $bookingRow->width && $bookingRow->height) {
-                    $quantity = (int) ($bookingRow->quantity ?? 1);
-                    $totalWeight = (float) ($bookingRow->weight ?? 0);
-                    $weightPerItem = $quantity > 0 ? $totalWeight / $quantity : 0;
-
-                    // Get measurement unit name
-                    $unitName = $bookingRow->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
-
-                    // Convert dimensions to meters
-                    $widthM = $this->convertToMeters($bookingRow->width, $unitName);
-                    $heightM = $this->convertToMeters($bookingRow->height, $unitName);
-                    $lengthM = $this->convertToMeters($bookingRow->length, $unitName);
-
-                    // Create one visual item per quantity unit
-                    for ($i = 0; $i < $quantity; $i++) {
-                        $cargoData[] = [
-                            'id' => (string) $receipt->cargo_receipt_id . '_' . $i,
-                            'booking_ref' => $receipt->booking_ref_no,
-                            'width' => $widthM,
-                            'height' => $heightM,
-                            'depth' => $lengthM,
-                            'weight' => $weightPerItem,
-                            'quantity' => 1,
-                            'description' => $receipt->cargoItem->cargo_item_description ?? 'Cargo Item',
-                            'original_unit' => $unitName,
-                            'original_dims' => "{$bookingRow->length} × {$bookingRow->width} × {$bookingRow->height}",
-                        ];
-                    }
                 }
             }
         }

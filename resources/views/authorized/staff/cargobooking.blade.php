@@ -251,10 +251,17 @@ function calculateCBM(item){
 function applyMeasurementRules(item, selectedOption){
     if (!item || !selectedOption) return;
 
-    const measureRequired = (selectedOption.dataset.measureRequired || 'No').toString();
-    const minLength = selectedOption.dataset.minLength || '';
-    const minWidth = selectedOption.dataset.minWidth || '';
-    const minHeight = selectedOption.dataset.minHeight || '';
+    const measureRequired = (selectedOption.dataset.measureRequired || 'No').toString().trim().toLowerCase();
+    const minLength = parseFloat(selectedOption.dataset.minLength || '0');
+    const maxLength = parseFloat(selectedOption.dataset.maxLength || selectedOption.dataset.minLength || '0');
+    const minWidth = parseFloat(selectedOption.dataset.minWidth || '0');
+    const maxWidth = parseFloat(selectedOption.dataset.maxWidth || selectedOption.dataset.minWidth || '0');
+    const minHeight = parseFloat(selectedOption.dataset.minHeight || '0');
+    const maxHeight = parseFloat(selectedOption.dataset.maxHeight || selectedOption.dataset.minHeight || '0');
+
+    const avgLength = ((minLength + maxLength) / 2).toFixed(2);
+    const avgWidth = ((minWidth + maxWidth) / 2).toFixed(2);
+    const avgHeight = ((minHeight + maxHeight) / 2).toFixed(2);
     const unitFromItem = selectedOption.dataset.measurementUnit || 'cm';
 
     const lengthInput = item.querySelector('[name="cargo_length[]"]');
@@ -274,11 +281,12 @@ function applyMeasurementRules(item, selectedOption){
         }
     }
 
-    if (measureRequired === 'Yes') {
-        if(lengthInput) { lengthInput.value = minLength; lengthInput.readOnly = true; }
-        if(widthInput) { widthInput.value = minWidth; widthInput.readOnly = true; }
-        if(heightInput) { heightInput.value = minHeight; heightInput.readOnly = true; }
-        if(unitSelect) unitSelect.disabled = true;
+    if (measureRequired === 'yes') {
+        if(lengthInput) { lengthInput.value = avgLength; lengthInput.readOnly = true; }
+        if(widthInput) { widthInput.value = avgWidth; widthInput.readOnly = true; }
+        if(heightInput) { heightInput.value = avgHeight; heightInput.readOnly = true; }
+        // Keep enabled so selected unit is included in form POST.
+        if(unitSelect) unitSelect.disabled = false;
         if(dimensionsBlock) dimensionsBlock.style.display = 'none';
     } else {
         if(lengthInput) { lengthInput.value = ''; lengthInput.readOnly = false; }
