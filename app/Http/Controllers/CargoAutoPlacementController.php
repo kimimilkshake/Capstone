@@ -52,7 +52,7 @@ class CargoAutoPlacementController extends Controller
         // Prevent browser caching of this page
         $voyages = Voyage::with(['vessel', 'routePort'])
             ->where('voyage_status', '!=', 'Completed')
-            ->orderBy('voyage_departure_date', 'desc')
+            ->orderBy('voyage_departure_date', 'asc')
             ->get();
 
         $selectedVoyageId = $request->input('voyage_id');

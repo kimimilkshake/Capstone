@@ -981,13 +981,20 @@ class CargoVisualizer {
         const edges = new THREE.EdgesGeometry(geometry);
         const mesh = new THREE.LineSegments(edges, material);
 
-        // Position hatches FRONT-TO-BACK (same level, different Z positions)
-        // Hatch 1 at Z = 5 (0 to 10)
-        // Hatch 2 at Z = 16 (11 to 21, with 1m gap)
-        const hatchIndex = this.hatchMeshes.length;
+        // Position hatches FRONT-TO-BACK using cumulative Z calculation
+        // This ensures hatches touch each other with minimal gap
+        const gapBetweenHatches = 0.2; // 20cm gap between hatches
+        let cumulativeZ = hatch.depth / 2; // Start with half depth of current hatch
+        
+        // Add full depth of all previously added hatches to position this hatch after them
+        for (let i = 0; i < this.hatchMeshes.length; i++) {
+            const prevHatch = this.hatchMeshes[i].hatch;
+            cumulativeZ += prevHatch.depth + gapBetweenHatches;
+        }
+
         const worldX = hatch.width / 2; // Center X for both
         const worldY = hatch.height / 2; // Center Y for both (same level)
-        const worldZ = hatchIndex * (hatch.depth + 1.2) + hatch.depth / 2; // Stack front-to-back with 1.2m gap
+        const worldZ = cumulativeZ;
 
         mesh.position.set(worldX, worldY, worldZ);
 
