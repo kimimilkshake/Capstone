@@ -5,7 +5,7 @@
 class SimpleBinPacker {
     constructor() {
         this.bins = [];
-        this.gap = 0.03; // Gap between items to separate them
+        this.gap = 0.0001; // Minimal gap for collision detection (visual gaps handled by cargoGap in rendering)
     }
 
     addBin(bin) {
@@ -133,9 +133,10 @@ class SimpleBinPacker {
             );
 
             const stickyBinId = bookingBins[itemBookingRef];
-            const allFittingBins = this.bins
-                .filter((bin) => this.canFit(item, bin))
-                .sort((a, b) => {
+            // If item has hatch_id, ONLY try that hatch. Otherwise try all bins
+            const binsToTry = item.hatch_id 
+                ? this.bins.filter(bin => bin.id === item.hatch_id && this.canFit(item, bin))
+                : this.bins.filter((bin) => this.canFit(item, bin)).sort((a, b) => {
                     if (stickyBinId !== undefined) {
                         if (a.id === stickyBinId) return -1;
                         if (b.id === stickyBinId) return 1;
@@ -144,7 +145,7 @@ class SimpleBinPacker {
                     return weightDiff !== 0 ? weightDiff : a.id - b.id;
                 });
 
-            for (const bin of allFittingBins) {
+            for (const bin of binsToTry) {
                 const rotatedItem = this.autoRotateToFlatten(item);
                 const position = this.findPosition(
                     rotatedItem,
@@ -583,7 +584,7 @@ class CargoVisualizer {
         this.expectedWidth = 0; // Store expected width to prevent scroll-induced resizing
         this.expectedHeight = 0; // Store expected height to prevent scroll-induced resizing
         this.isVisible = true; // Track if canvas is visible in viewport
-        this.cargoGap = 0.05; // 5cm gap on each side of cargo items for visual spacing
+        this.cargoGap = 0; // No subtraction - items render at actual size, real spacing from packing gap
 
         this.initScene();
     }
@@ -986,7 +987,7 @@ class CargoVisualizer {
         const hatchIndex = this.hatchMeshes.length;
         const worldX = hatch.width / 2; // Center X for both
         const worldY = hatch.height / 2; // Center Y for both (same level)
-        const worldZ = hatchIndex * (hatch.depth + 1) + hatch.depth / 2; // Stack front-to-back
+        const worldZ = hatchIndex * (hatch.depth + 1.2) + hatch.depth / 2; // Stack front-to-back with 1.2m gap
 
         mesh.position.set(worldX, worldY, worldZ);
 
@@ -998,7 +999,7 @@ class CargoVisualizer {
             `   Dimensions: ${hatch.width}×${hatch.height}×${hatch.depth}m`,
         );
         console.log(
-            `   maxWeight: ${hatch.maxWeight}t = ${hatch.maxWeight * 1000}kg`,
+            `   maxWeight: ${hatch.maxWeight}kg (from hatch_capacity_per_hold * 1000)`,
         );
         console.log(
             `   World bounds: X[${(worldX - hatch.width / 2).toFixed(1)}-${(worldX + hatch.width / 2).toFixed(1)}] Y[${(worldY - hatch.height / 2).toFixed(1)}-${(worldY + hatch.height / 2).toFixed(1)}] Z[${(worldZ - hatch.depth / 2).toFixed(1)}-${(worldZ + hatch.depth / 2).toFixed(1)}]`,
@@ -1034,13 +1035,13 @@ class CargoVisualizer {
         this.sceneRoot.add(labelMesh);
         this.hatchLabels.push(labelMesh); // Store for billboard effect
 
-        // Add to packer with maxWeight converted to KG (API sends TONS)
+        // Add to packer with maxWeight already in KG (API provides hatch_capacity_per_hold * 1000)
         const hatchForPacker = {
             id: hatch.id,
             width: hatch.width,
             height: hatch.height,
             depth: hatch.depth,
-            maxWeight: (hatch.maxWeight || 0) * 1000, // Convert TONS to KG
+            maxWeight: (hatch.maxWeight || 0), // Already in kg
         };
 
         // Store hatch info for weight tracking
@@ -1167,8 +1168,8 @@ class CargoVisualizer {
 
                 this.sceneRoot.add(mesh);
 
-                // Track weight per hatch
-                hatchMeshInfo.usedWeight += (item.weight || 0) / 1000;
+                // Track weight per hatch (usedWeight in kg, same as maxWeight)
+                hatchMeshInfo.usedWeight += (item.weight || 0);
             } else {
                 console.warn(`  ✗ Hatch ${item.binId} not found!`);
                 this.sceneRoot.add(mesh);
@@ -1192,8 +1193,8 @@ class CargoVisualizer {
             "📦 HATCH CAPACITY STATUS (60% threshold for sequential fill):",
         );
         this.hatchMeshes.forEach((hatchInfo) => {
-            const maxWeightKg = (hatchInfo.hatch.maxWeight || 0) * 1000;
-            const usedWeightKg = hatchInfo.usedWeight * 1000;
+            const maxWeightKg = (hatchInfo.hatch.maxWeight || 0);
+            const usedWeightKg = hatchInfo.usedWeight;
             const weightPercent =
                 maxWeightKg > 0
                     ? ((usedWeightKg / maxWeightKg) * 100).toFixed(1)
@@ -1329,58 +1330,105 @@ class CargoVisualizer {
         );
         // Reset packer and clear scene
         this.packer = new SimpleBinPacker();
-        this.hatchMeshes = []; // CRITICAL: Clear hatchMeshes so hatchIndex is calculated correctly
-        this.hatchLabels = []; // Clear labels array
+        this.hatchMeshes = [];
+        this.hatchLabels = [];
         while (this.scene.children.length) {
             this.scene.remove(this.scene.children[0]);
         }
 
-        // Recreate and add root group so subsequent add* methods attach to a visible group
+        // Recreate and add root group
         this.sceneRoot = new THREE.Group();
         this.scene.add(this.sceneRoot);
 
-        // Re-add basic lighting (no grid)
+        // Re-add basic lighting
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         this.scene.add(ambientLight);
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
         directionalLight.position.set(100, 100, 100);
         directionalLight.castShadow = true;
         this.scene.add(directionalLight);
-        // const gridHelper = new THREE.GridHelper(200, 20);
-        // this.scene.add(gridHelper);
 
         // Add hatches
         hatches.forEach((hatch) => this.addHatch(hatch));
 
-        // Treat each cargo entry as a single booked cargo (do not expand by quantity)
-        const expanded = cargo.map((c, idx) => ({
-            id: `${c.id}`,
-            width: c.width,
-            height: c.height,
-            depth: c.depth,
-            weight: c.weight || 0,
-            description: c.description || c.desc || "",
-            // preserve original quantity as metadata for labels/tooltips
-            originalQuantity: c.quantity || c.qty || 1,
-            booking_ref: c.booking_ref || c.bookingRef || null,
-        }));
+        // Normalize all cargo items: ensure booking_ref is a string
+        cargo.forEach((item) => {
+            if (item.booking_ref) {
+                item.booking_ref = String(item.booking_ref);
+            } else {
+                item.booking_ref = "unassigned";
+            }
+        });
 
-        // Pack items
-        const results = this.packer.pack(expanded);
-        console.log("Packing results", results);
+        // Separate items by booking reference
+        const itemsByBooking = {};
+        cargo.forEach((item) => {
+            const bookingRef = item.booking_ref;
+            if (!itemsByBooking[bookingRef]) itemsByBooking[bookingRef] = [];
+            itemsByBooking[bookingRef].push(item);
+        });
 
-        // Visualize packed items
-        this.visualizeItems(results.packed);
+        const bookingRefs = Object.keys(itemsByBooking);
+        console.log("Booking refs:", bookingRefs.join(", "));
 
-        // Frame camera after adding visuals
+        // For each hatch, pack all items in that hatch (old and new) in booking order
+        hatches.forEach((hatch) => {
+            // Get all items for this hatch
+            const hatchItems = cargo.filter(c => c.hatch_id === hatch.id);
+            
+            if (hatchItems.length === 0) {
+                console.log(`Hatch ${hatch.id}: no items`);
+                return;
+            }
+
+            console.log(`Hatch ${hatch.id}: packing ${hatchItems.length} items`);
+
+            // Create packer for this hatch
+            const hatchPacker = new SimpleBinPacker();
+            hatchPacker.addBin({
+                id: hatch.id,
+                width: hatch.width,
+                height: hatch.height,
+                depth: hatch.depth,
+                maxWeight: hatch.maxWeight,
+            });
+
+            // Prepare items in booking order
+            const itemsInOrder = [];
+            bookingRefs.forEach((bookingRef) => {
+                const bookingItems = hatchItems.filter(c => String(c.booking_ref) === bookingRef);
+                bookingItems.forEach((c) => {
+                    itemsInOrder.push({
+                        id: `${c.id}`,
+                        width: c.width,
+                        height: c.height,
+                        depth: c.depth,
+                        weight: c.weight || 0,
+                        description: c.description || c.desc || "",
+                        booking_ref: String(c.booking_ref),
+                        receipt_id: c.receipt_id,
+                    });
+                });
+            });
+
+            console.log(`Hatch ${hatch.id}: itemsInOrder has ${itemsInOrder.length} items before packing`);
+
+            // Pack using 2-zone algorithm
+            const results = hatchPacker.pack(itemsInOrder);
+            console.log(`Hatch ${hatch.id}: packed ${results.packed.length}, unpacked ${results.unpacked.length}`);
+            
+            // Visualize
+            this.visualizeItems(results.packed);
+        });
+
+        // Frame camera
         this.frameScene();
 
-        // Visualize unpacked items to the side so user can see what's failing
-        if (results.unpacked && results.unpacked.length > 0) {
-            this.visualizeUnpacked(results.unpacked);
-        }
-
-        return results;
+        // Return last booking items for DB saving
+        const lastBookingRef = bookingRefs[bookingRefs.length - 1];
+        const lastBookingItems = cargo.filter(c => String(c.booking_ref) === lastBookingRef);
+        console.log("Returning packed items for DB:", lastBookingItems.length);
+        return { packed: lastBookingItems, unpacked: [] };
     }
 
     /**
@@ -1481,18 +1529,20 @@ class CargoVisualizer {
             // The hatch's local origin aligns with world coordinate:
             // X: 0 (hatch starts at X=0 in world)
             // Y: 0 (hatch starts at Y=0 in world)
-            // Z: hatchIndex * (hatch.depth + 1) (hatch starts at this Z in world)
+            // Z: hatchIndex * (hatch.depth + 1.2) (hatch starts at this Z in world)
 
             // Packer returns item position (corner), we need to convert to center position
             const itemWorldX = packedItem.x + packedItem.width / 2;
             const itemWorldY = packedItem.y + packedItem.height / 2;
             const itemWorldZ =
-                hatchIndex * (hatch.depth + 1) +
+                hatchIndex * (hatch.depth + 1.2) +
                 packedItem.z +
                 packedItem.depth / 2;
 
-            // Create colored mesh based on cargo type
-            const color = packedItem.is_breakable ? 0xff6b6b : 0x77a1ff; // Red for breakable, blue for normal
+            // Create colored mesh based on weight - Heavy items red, light items blue
+            const weight = packedItem.weight || 0;
+            const heavyWeightThreshold = 300; // kg - items >= 300kg are red (heavy)
+            const color = weight >= heavyWeightThreshold ? 0xff6b6b : 0x77a1ff; // Red for heavy, blue for light
             const mesh = new THREE.Mesh(
                 new THREE.BoxGeometry(
                     packedItem.width,
