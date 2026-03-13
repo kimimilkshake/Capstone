@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('page-title', 'Cargo Auto Placement')
+@section('page-title', 'CARGO AUTO PLACEMENT')
 @section('content')
     @include('components.authHeader')
     @include('components.admin_nav')
@@ -74,16 +74,30 @@
                                         <th
                                             style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">
                                             Weight Capacity (kg)</th>
+                                        <th
+                                            style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">
+                                            Current Weight (kg)</th>
+                                        <th
+                                            style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">
+                                            Weight Available (kg)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($placementData['hatches'] as $hatch)
+                                        @php
+                                            $currentWeight = \Illuminate\Support\Facades\DB::table('cargo_receipt')
+                                                ->join('cargo_booking', 'cargo_receipt.cargo_booking_id', '=', 'cargo_booking.cargo_booking_id')
+                                                ->where('cargo_receipt.hatch_id', $hatch->hatch_id)
+                                                ->sum('cargo_booking.weight');
+                                        @endphp
                                         <tr>
-                                            <td>{{ $hatch->hatch_label }}</td>
-                                            <td>{{ $hatch->hatch_length }}</td>
-                                            <td>{{ $hatch->hatch_width }}</td>
-                                            <td>{{ $hatch->hatch_height }}</td>
-                                            <td>{{ $hatch->hatch_weight_capacity }}</td>
+                                            <td style="text-align: center;">{{ $hatch->hatch_label }}</td>
+                                            <td style="text-align: center;">{{ $hatch->hatch_length }}</td>
+                                            <td style="text-align: center;">{{ $hatch->hatch_width }}</td>
+                                            <td style="text-align: center;">{{ $hatch->hatch_height }}</td>
+                                            <td style="text-align: center;">{{ $hatch->hatch_capacity_per_hold }} tons ({{ $hatch->hatch_capacity_per_hold * 1000 }}kg)</td>
+                                            <td style="text-align: center;" class="hatch-weight-cell" data-hatch-id="{{ $hatch->hatch_id }}">{{ number_format($currentWeight, 2) }}</td>
+                                            <td style="text-align: center;">{{ number_format(($hatch->hatch_capacity_per_hold * 1000) - $currentWeight, 2) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -143,7 +157,7 @@
                                             $widthM = ($booking?->width ?? 0) * $conversionFactor;
                                             $heightM = ($booking?->height ?? 0) * $conversionFactor;
                                         @endphp
-                                        <tr>
+                                        <tr data-receipt-id=\"{{ $receipt->cargo_receipt_id }}\">
                                             <td>{{ $receipt->cargo_receipt_id }}</td>
                                             <td>{{ $receipt->booking_ref_no }}</td>
                                             <td>{{ $receipt->cargoItem->cargo_item_description ?? 'N/A' }}</td>
@@ -159,7 +173,7 @@
                                                     No dimensions
                                                 @endif
                                             </td>
-                                            <td>{{ $booking->weight ?? 'N/A' }}</td>
+                                            <td class="cargo-weight-cell">{{ $booking->weight ?? 'N/A' }}</td>
                                             <td style="text-align: center;">
                                                 <button class="btn btn-sm btn-primary isolate-btn"
                                                     data-receipt-id="{{ $receipt->cargo_receipt_id }}"
@@ -176,8 +190,22 @@
 
                     {{-- 3D CARGO VISUALIZATION CONTAINER (AUTO-DISPLAY) --}}
                     <div class="card mt-4">
-                        <div class="card-header text-white" style="background-color: #485b8c;">
-                            <h5>3D Cargo Visualization</h5>
+                        <div class="card-header text-white" style="background-color: #485b8c; display: flex; justify-content: space-between; align-items: center;">
+                            <h5 style="margin: 0;">3D Cargo Visualization</h5>
+                            <div style="display: flex; gap: 20px; font-size: 13px;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="display: inline-block; width: 14px; height: 14px; background-color: #ff6b6b; border-radius: 2px;"></span>
+                                    <span>Heavy (≥300kg)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="display: inline-block; width: 14px; height: 14px; background-color: #77a1ff; border-radius: 2px;"></span>
+                                    <span>Light (<300kg)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="display: inline-block; width: 14px; height: 14px; background-color: #ff9999; border-radius: 2px;"></span>
+                                    <span>Unplaced</span>
+                                </div>
+                            </div>
                         </div>
                         <div class="card-body" style="padding: 15px;">
                             <div id="cargo-visualizer-container"
@@ -293,9 +321,27 @@
                 // Initialize Three.js scene with fallback rendering
                 window.cargoVisualizer = new window.CargoVisualizer('cargo-visualizer-container');
 
-                // Render using 2-zone packing algorithm
+                // Render using 2-zone packing algorithm and save results
                 if (data.cargo && Array.isArray(data.cargo)) {
-                    window.cargoVisualizer.packAndVisualize(data.hatches, data.cargo);
+                    const results = window.cargoVisualizer.packAndVisualize(
+                        data.hatches, 
+                        data.cargo
+                    );
+                    
+                    // Save placement results to database (only for unpacked items)
+                    if (results && results.packed && results.packed.length > 0) {
+                        const placements = results.packed.map(item => ({
+                            receiptId: parseInt(item.id.split('_')[0]),
+                            hatchId: item.binId,
+                            weight: item.weight || 0
+                        }));
+                        
+                        // Store cargo data for weight updates
+                        window.cargoItemWeights = data.cargo;
+                        
+                        // Call save API
+                        await savePlacementToDB(voyageId, placements);
+                    }
                 }
 
             } catch (error) {
@@ -304,6 +350,61 @@
                     '<div class="alert alert-danger" style="margin: 0; padding: 20px;">Error loading 3D visualization: ' +
                     error.message + '</div>';
             }
+        }
+
+        /**
+         * Save placement results to database
+         */
+        async function savePlacementToDB(voyageId, placements) {
+            try {
+                const response = await fetch(`{{ route('admin.cargo.placement.save') }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        voyage_id: voyageId,
+                        placements: placements
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log(`✅ Saved ${result.count} placements to database`);
+                    // Update weight table without reloading
+                    updateWeightTable(placements);
+                } else {
+                    console.error('Save failed:', result.message);
+                }
+            } catch (error) {
+                console.error('Error saving placement:', error);
+            }
+        }
+
+        /**
+         * Update the Current Weight column in the hatch table
+         */
+        function updateWeightTable(placements) {
+            // Group placements by hatch using weight data from placements
+            const weightByHatch = {};
+            placements.forEach(p => {
+                if (!weightByHatch[p.hatchId]) {
+                    weightByHatch[p.hatchId] = 0;
+                }
+                // Use weight directly from the placement data (passed from packing results)
+                const weight = p.weight || 0;
+                weightByHatch[p.hatchId] += weight;
+            });
+
+            // Update weight cells in hatch table
+            document.querySelectorAll('.hatch-weight-cell').forEach(cell => {
+                const hatchId = cell.getAttribute('data-hatch-id');
+                if (weightByHatch[hatchId] !== undefined) {
+                    cell.textContent = weightByHatch[hatchId].toFixed(2);
+                }
+            });
         }
 
 

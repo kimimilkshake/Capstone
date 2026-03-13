@@ -526,6 +526,35 @@ class StaffCargoController extends Controller
             $receipt->cargo_item_id = $cargo->cargo_item_id ?? null;
             $receipt->voyage_id = $booking->voyage_id;
             $receipt->cargo_item_qty = $cargo->quantity;
+            
+            // Auto-assign hatch based on available weight capacity
+            $voyage = $booking->voyage;
+            $cargoWeight = $cargo->weight ?? 0;
+            
+            // Find best hatch with available capacity
+            $bestHatch = null;
+            if ($voyage && $voyage->vessel) {
+                $hatches = $voyage->vessel->hatches;
+                foreach ($hatches as $hatch) {
+                    // Calculate current weight in this hatch
+                    $currentWeight = \DB::table('cargo_receipt')
+                        ->join('cargo_booking', 'cargo_receipt.cargo_booking_id', '=', 'cargo_booking.cargo_booking_id')
+                        ->where('cargo_receipt.hatch_id', $hatch->hatch_id)
+                        ->where('cargo_receipt.voyage_id', $voyage->voyage_id)
+                        ->sum('cargo_booking.weight') ?? 0;
+                    
+                    $maxCapacity = ((float)$hatch->hatch_capacity_per_hold) * 1000; // Convert tons to kg
+                    $availableCapacity = $maxCapacity - $currentWeight;
+                    
+                    // Check if cargo fits in this hatch
+                    if ($cargoWeight <= $availableCapacity) {
+                        $bestHatch = $hatch->hatch_id;
+                        break; // Use first hatch that fits
+                    }
+                }
+            }
+            
+            $receipt->hatch_id = $bestHatch; // Assign hatch_id
             $receipt->save();
 
             $cargoReceiptIds[] = $receipt->cargo_receipt_id;

@@ -279,6 +279,9 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
     Route::get('/api/admin_cargo/packing-data', [CargoAutoPlacementController::class, 'getPackingData'])
         ->name('admin.cargo.packing-data');
 
+    Route::post('/api/admin_cargo/placement/save', [CargoAutoPlacementController::class, 'savePlacement'])
+        ->name('admin.cargo.placement.save');
+
     Route::post('/admin_cargo/placement/add-row', [CargoAutoPlacementController::class, 'addRow'])
         ->name('admin.cargo.addRow');
 
@@ -395,6 +398,9 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
 
     Route::get('/api/staff_cargo/packing-data', [CargoAutoPlacementController::class, 'getPackingData'])
         ->name('staff.cargo.packing-data');
+
+    Route::post('/api/staff_cargo/placement/save', [CargoAutoPlacementController::class, 'savePlacement'])
+        ->name('staff.cargo.placement.save');
 
     Route::post('/staff_cargo/placement/add-row', [CargoAutoPlacementController::class, 'addRow'])
         ->name('staff.cargo.addRow');

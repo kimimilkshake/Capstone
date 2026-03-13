@@ -52,7 +52,7 @@ class CargoAutoPlacementController extends Controller
         // Prevent browser caching of this page
         $voyages = Voyage::with(['vessel', 'routePort'])
             ->where('voyage_status', '!=', 'Completed')
-            ->orderBy('voyage_departure_date', 'desc')
+            ->orderBy('voyage_departure_date', 'asc')
             ->get();
 
         $selectedVoyageId = $request->input('voyage_id');
@@ -189,59 +189,62 @@ class CargoAutoPlacementController extends Controller
             'voyage_id' => 'required|exists:voyage,voyage_id',
         ]);
 
+        $voyageId = $request->voyage_id;
         $voyage = Voyage::with(['vessel.hatches', 'cargoReceipts.cargoBooking.cargoItem'])
-            ->findOrFail($request->voyage_id);
+            ->findOrFail($voyageId);
 
         $hatches = $voyage->vessel->hatches;
 
         // Prepare hatches with weight information
         $hatchesData = [];
         foreach ($hatches as $hatch) {
-            $maxWeight = (float) $hatch->hatch_weight_capacity;
+            // Use hatch_capacity_per_hold (in tons) as the maximum weight limit
+            $maxWeightTons = (float) $hatch->hatch_capacity_per_hold;
+            $maxWeightKg = $maxWeightTons * 1000; // Convert tons to kg for cargo items
+            
             $hatchesData[] = [
                 'id' => $hatch->hatch_id,
                 'label' => $hatch->hatch_label,
                 'width' => (float) $hatch->hatch_width,
                 'height' => (float) $hatch->hatch_height,
                 'depth' => (float) $hatch->hatch_length,
-                'maxWeight' => $maxWeight,
-                'maxWeightKg' => $maxWeight * 1000, // Convert tons to kg for display
+                'maxWeight' => $maxWeightKg, // Use TOTAL capacity, not available
+                'maxWeightKg' => $maxWeightKg,
+                'totalCapacity' => $maxWeightKg,
                 'volume' => (float) $hatch->hatch_width * $hatch->hatch_height * $hatch->hatch_length,
             ];
         }
 
-        // Get all cargo receipts for confirmed bookings (matches table display)
-        // Order by booking_ref_no to show items in booking order (earliest bookings first)
+        // Get cargo receipts for the voyage - fetch ALL confirmed items
         $cargoData = [];
-        $cargoReceipts = $voyage->cargoReceipts()->whereHas('booking', function ($q) {
-            $q->whereRaw("LOWER(booking.booking_status) = ?", ['confirmed']);
-        })->orderBy('booking_ref_no', 'asc')->get();
+        
+        $cargoReceipts = $voyage->cargoReceipts()
+            ->whereHas('booking', function ($q) {
+                $q->whereRaw("LOWER(booking.booking_status) = ?", ['confirmed']);
+            })
+            ->orderBy('booking_ref_no', 'asc')
+            ->get();
 
-        if ($hatches->isEmpty() || $cargoReceipts->isEmpty()) {
-            return response()->json(['error' => 'Missing hatches or cargo'], 400);
+        if ($hatches->isEmpty()) {
+            return response()->json(['error' => 'Missing hatches'], 400);
         }
 
         foreach ($cargoReceipts as $receipt) {
-            // Use cargo_booking_id to get the exact CargoBooking this receipt came from
             $bookingRow = CargoBooking::with('measurementUnit')->where('cargo_booking_id', $receipt->cargo_booking_id)->first();
             if ($bookingRow && $bookingRow->length && $bookingRow->width && $bookingRow->height) {
                 $quantity = (int) ($bookingRow->quantity ?? 1);
                 $totalWeight = (float) ($bookingRow->weight ?? 0);
                 $weightPerItem = $quantity > 0 ? $totalWeight / $quantity : 0;
 
-                // Get measurement unit name
                 $unitName = $bookingRow->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
-
-                // Convert dimensions to meters
                 $widthM = $this->convertToMeters($bookingRow->width, $unitName);
                 $heightM = $this->convertToMeters($bookingRow->height, $unitName);
                 $lengthM = $this->convertToMeters($bookingRow->length, $unitName);
 
-                // Create one visual item per quantity unit
-                // Use cargo_receipt_id to match the isolate button in the table
                 for ($i = 0; $i < $quantity; $i++) {
                     $cargoData[] = [
                         'id' => (string) $receipt->cargo_receipt_id . '_' . $i,
+                        'receipt_id' => $receipt->cargo_receipt_id,
                         'booking_ref' => $receipt->booking_ref_no,
                         'width' => $widthM,
                         'height' => $heightM,
@@ -250,12 +253,17 @@ class CargoAutoPlacementController extends Controller
                         'quantity' => 1,
                         'description' => $bookingRow->cargoItem->cargo_item_description ?? 'Cargo Item',
                         'is_breakable' => (bool) ($bookingRow->cargoItem->is_breakable ?? false),
+                        'hatch_id' => $receipt->hatch_id, // If already assigned, use it; if null, needs packing
                         'original_unit' => $unitName,
                         'original_dims' => "{$bookingRow->length} × {$bookingRow->width} × {$bookingRow->height}",
                     ];
                 }
             }
         }
+
+        // Debug: Log what's being sent 
+        \Log::info('Packing Data - Total Hatches: ' . count($hatchesData));
+        \Log::info('Packing Data - Cargo Items Count: ' . count($cargoData));
 
         return response()->json([
             'voyage' => [
@@ -264,7 +272,7 @@ class CargoAutoPlacementController extends Controller
                 'vessel' => $voyage->vessel->vessel_name,
             ],
             'hatches' => $hatchesData,
-            'cargo' => $cargoData,
+            'cargo' => $cargoData, // All cargo with hatch_id if assigned, null if not
         ])->header('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');
@@ -286,5 +294,49 @@ class CargoAutoPlacementController extends Controller
     public function removeRow(Request $request)
     {
         return redirect()->route($this->isStaff() ? 'staff.cargo.placement' : 'admin.cargo.placement');
+    }
+
+    /**
+     * Save placement results - updates cargo_receipt.hatch_id for each packed item
+     */
+    public function savePlacement(Request $request)
+    {
+        $request->validate([
+            'voyage_id' => 'required|exists:voyage,voyage_id',
+            'placements' => 'required|array', // Array of {receiptId, hatchId}
+        ]);
+
+        $voyageId = $request->voyage_id;
+        $placements = $request->placements;
+
+        // Debug logging
+        \Log::info('savePlacement called with ' . count($placements) . ' placements:');
+        foreach ($placements as $p) {
+            \Log::info('  ReceiptId: ' . $p['receiptId'] . ', HatchId: ' . $p['hatchId'] . ', Weight: ' . ($p['weight'] ?? 'N/A'));
+        }
+
+        try {
+            foreach ($placements as $placement) {
+                $receiptId = $placement['receiptId'] ?? null;
+                $hatchId = $placement['hatchId'] ?? null;
+
+                if ($receiptId && $hatchId) {
+                    CargoReceipt::where('cargo_receipt_id', $receiptId)
+                        ->where('voyage_id', $voyageId)
+                        ->update(['hatch_id' => $hatchId]);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Placement saved successfully',
+                'count' => count($placements),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error saving placement: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }
