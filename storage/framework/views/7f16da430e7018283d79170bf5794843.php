@@ -369,10 +369,23 @@
                     if (accommodation && accommodation.available_cots) {
                         const selectedCots = getSelectedCots();
                         accommodation.available_cots.forEach(cot => {
-                            if (!selectedCots.includes(cot)) {
+                            // Handle both old format (number) and new format (object with number and bunk_type)
+                            let cotNumber, bunkType;
+                            
+                            if (typeof cot === 'object' && cot !== null && 'number' in cot) {
+                                cotNumber = parseInt(cot.number);
+                                bunkType = cot.bunk_type || null;
+                            } else {
+                                cotNumber = parseInt(cot);
+                                bunkType = null;
+                            }
+                            
+                            if (!selectedCots.includes(cotNumber)) {
                                 const option = document.createElement('option');
-                                option.value = cot;
-                                option.textContent = cot;
+                                option.value = cotNumber;
+                                option.textContent = bunkType 
+                                    ? `${cotNumber} (${bunkType} bunk)`
+                                    : `${cotNumber}`;
                                 cotSelect.appendChild(option);
                             }
                         });
@@ -410,11 +423,24 @@
                     if (accommodation && accommodation.available_cots) {
                         cotSelect.innerHTML = '<option value="">Select Cot</option>';
                         accommodation.available_cots.forEach(cot => {
-                            if (cot == currentValue || !selectedCots.includes(cot)) {
+                            // Handle both old format (number) and new format (object with number and bunk_type)
+                            let cotNumber, bunkType;
+                            
+                            if (typeof cot === 'object' && cot !== null && 'number' in cot) {
+                                cotNumber = parseInt(cot.number);
+                                bunkType = cot.bunk_type || null;
+                            } else {
+                                cotNumber = parseInt(cot);
+                                bunkType = null;
+                            }
+                            
+                            if (cotNumber == currentValue || !selectedCots.includes(cotNumber)) {
                                 const option = document.createElement('option');
-                                option.value = cot;
-                                option.textContent = cot;
-                                if (cot == currentValue) option.selected = true;
+                                option.value = cotNumber;
+                                option.textContent = bunkType 
+                                    ? `${cotNumber} (${bunkType} bunk)`
+                                    : `${cotNumber}`;
+                                if (cotNumber == currentValue) option.selected = true;
                                 cotSelect.appendChild(option);
                             }
                         });

@@ -168,14 +168,43 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (accommodation && accommodation.available_cots) {
                     // Populate cot options with only available cots
                     cotSelect.disabled = false;
+
+                    console.log(
+                        "Rendering COTs for accommodation:",
+                        accommodation,
+                    );
+                    console.log(
+                        "First COT sample:",
+                        accommodation.available_cots[0],
+                    );
+
+                    const options = accommodation.available_cots
+                        .map((cot) => {
+                            // Handle both old format (number) and new format (object with number and bunk_type)
+                            let cotNumber, bunkType;
+
+                            if (
+                                typeof cot === "object" &&
+                                cot !== null &&
+                                "number" in cot
+                            ) {
+                                cotNumber = parseInt(cot.number);
+                                bunkType = cot.bunk_type || null;
+                            } else {
+                                cotNumber = parseInt(cot);
+                                bunkType = null;
+                            }
+
+                            const displayText = bunkType
+                                ? `${cotNumber} (${bunkType} bunk)`
+                                : `${cotNumber}`;
+                            console.log(`COT ${cotNumber}: ${displayText}`);
+                            return `<option value="${cotNumber}">${displayText}</option>`;
+                        })
+                        .join("");
+
                     cotSelect.innerHTML =
-                        '<option value="">Select Cot</option>' +
-                        accommodation.available_cots
-                            .map(
-                                (cot) =>
-                                    `<option value="${cot}">${cot}</option>`,
-                            )
-                            .join("");
+                        '<option value="">Select Cot</option>' + options;
 
                     // Update cot availability when selection changes
                     updateCotAvailability();
@@ -391,13 +420,34 @@ document.addEventListener("DOMContentLoaded", function () {
             const options = ['<option value="">Select Cot</option>'];
 
             accommodation.available_cots.forEach((cot) => {
+                // Handle both old format (number) and new format (object with number and bunk_type)
+                let cotNumber, bunkType;
+
+                if (
+                    typeof cot === "object" &&
+                    cot !== null &&
+                    "number" in cot
+                ) {
+                    cotNumber = parseInt(cot.number);
+                    bunkType = cot.bunk_type || null;
+                } else {
+                    cotNumber = parseInt(cot);
+                    bunkType = null;
+                }
+
                 // Only show cots that aren't selected by other passengers
                 // OR this cot is the current selection of this passenger
-                if (!selectedCots.has(cot) || cot === currentValue) {
+                if (
+                    !selectedCots.has(cotNumber) ||
+                    cotNumber === currentValue
+                ) {
+                    const displayText = bunkType
+                        ? `${cotNumber} (${bunkType} bunk)`
+                        : `${cotNumber}`;
                     options.push(
-                        `<option value="${cot}"${
-                            cot === currentValue ? " selected" : ""
-                        }>${cot}</option>`,
+                        `<option value="${cotNumber}"${
+                            cotNumber === currentValue ? " selected" : ""
+                        }>${displayText}</option>`,
                     );
                 }
             });
