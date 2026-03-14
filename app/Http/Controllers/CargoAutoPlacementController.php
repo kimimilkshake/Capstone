@@ -50,17 +50,59 @@ class CargoAutoPlacementController extends Controller
     public function show(Request $request)
     {
         // Prevent browser caching of this page
-        $voyages = Voyage::with(['vessel', 'routePort'])
-            ->where('voyage_status', '!=', 'Completed')
-            ->orderBy('voyage_departure_date', 'asc')
-            ->get();
+        $viewPast = $request->input('view') === 'past';
+
+        if ($viewPast) {
+            // Show past voyages from the last 7 days
+            $voyages = Voyage::with(['vessel', 'routePort'])
+                ->where('voyage_status', '!=', 'Completed')
+                ->whereBetween('voyage_departure_date', [today()->subDays(7), today()])
+                ->where(function ($query) {
+                    // Only today's voyages that have already departed
+                    $query->whereDate('voyage_departure_date', '<', today())
+                        // OR today's voyages where departure time has passed
+                        ->orWhere(function ($q) {
+                        $q->whereDate('voyage_departure_date', '=', today())
+                            ->where('voyage_estimated_TD', '<', now()->format('H:i:s'));
+                    });
+                })
+                ->orderBy('voyage_departure_date', 'desc')
+                ->orderBy('voyage_estimated_TD', 'desc')
+                ->get();
+        } else {
+            // Show upcoming voyages
+            $voyages = Voyage::with(['vessel', 'routePort'])
+                ->where('voyage_status', '!=', 'Completed')
+                ->where(function ($query) {
+                    // Show voyages from tomorrow onwards
+                    $query->whereDate('voyage_departure_date', '>', today())
+                        // OR show today's voyages that haven't departed yet
+                        ->orWhere(function ($q) {
+                        $q->whereDate('voyage_departure_date', '=', today())
+                            ->where('voyage_estimated_TD', '>=', now()->format('H:i:s'));
+                    });
+                })
+                ->orderBy('voyage_departure_date', 'asc')
+                ->orderBy('voyage_estimated_TD', 'asc')
+                ->get();
+        }
 
         $selectedVoyageId = $request->input('voyage_id');
-        $placementData = null;
 
-        if ($selectedVoyageId) {
-            $placementData = $this->getVoyagePlacementData($selectedVoyageId);
+        // If no voyage_id, show the voyage selection page
+        if (!$selectedVoyageId) {
+            $view = $this->isStaff()
+                ? view('authorized.staff.staff_cargo_placement_select', compact('voyages', 'viewPast'))
+                : view('authorized.admin.admin_cargo_placement_select', compact('voyages', 'viewPast'));
+
+            return response($view)
+                ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
         }
+
+        // If voyage_id is provided, show the placement visualization page
+        $placementData = $this->getVoyagePlacementData($selectedVoyageId);
 
         $view = $this->isStaff()
             ? view('authorized.staff.staff_cargoautoplacement', compact('voyages', 'selectedVoyageId', 'placementData'))
@@ -201,7 +243,7 @@ class CargoAutoPlacementController extends Controller
             // Use hatch_capacity_per_hold (in tons) as the maximum weight limit
             $maxWeightTons = (float) $hatch->hatch_capacity_per_hold;
             $maxWeightKg = $maxWeightTons * 1000; // Convert tons to kg for cargo items
-            
+
             $hatchesData[] = [
                 'id' => $hatch->hatch_id,
                 'label' => $hatch->hatch_label,
@@ -217,7 +259,7 @@ class CargoAutoPlacementController extends Controller
 
         // Get cargo receipts for the voyage - fetch ALL confirmed items
         $cargoData = [];
-        
+
         $cargoReceipts = $voyage->cargoReceipts()
             ->whereHas('booking', function ($q) {
                 $q->whereRaw("LOWER(booking.booking_status) = ?", ['confirmed']);
@@ -261,7 +303,7 @@ class CargoAutoPlacementController extends Controller
             }
         }
 
-        // Debug: Log what's being sent 
+        // Debug: Log what's being sent
         \Log::info('Packing Data - Total Hatches: ' . count($hatchesData));
         \Log::info('Packing Data - Cargo Items Count: ' . count($cargoData));
 
