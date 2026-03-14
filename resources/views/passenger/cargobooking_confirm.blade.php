@@ -38,14 +38,12 @@
             <table class="table table-bordered">
                 <thead class="table-dark">
                     <tr>
-                        <th>Item</th>
-                        <th>Classification</th>
                         <th>Quantity</th>
-                        <th>Unit</th>
+                        <th>Classification</th>
+                        <th>Description</th>
                         <th>Length</th>
                         <th>Width</th>
                         <th>Height</th>
-                        <th>CBM</th>
                         <th>Freight Rate</th>
                         <th>Subtotal</th>
                     </tr>
@@ -59,14 +57,12 @@
                             $totalExpense += $subtotal;
                         @endphp
                         <tr>
-                            <td>{{ $item->cargo_item_description }}</td>
-                            <td>{{ $item->cargo_classification_name ?? 'N/A' }}</td>
                             <td>{{ $item->quantity }}</td>
-                            <td>{{ $item->display_measurement_unit }}</td>
+                            <td>{{ $item->cargo_classification_name ?? 'N/A' }}</td>
+                            <td>{{ $item->cargo_item_description }}</td>
                             <td>{{ number_format((float) $item->length, 2) }} {{ $item->display_measurement_unit }}</td>
                             <td>{{ number_format((float) $item->width, 2) }} {{ $item->display_measurement_unit }}</td>
                             <td>{{ number_format((float) $item->height, 2) }} {{ $item->display_measurement_unit }}</td>
-                            <td>{{ number_format($cbm, 3) }}</td>
                             <td>₱{{ number_format($item->freight, 2) }}</td>
                             <td>₱{{ number_format($subtotal, 2) }}</td>
                         </tr>
@@ -74,7 +70,7 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <th colspan="9" class="text-end">Total Expense:</th>
+                        <th colspan="7" class="text-end">Total Expense:</th>
                         <th>₱{{ number_format($totalExpense, 2) }}</th>
                     </tr>
                 </tfoot>
