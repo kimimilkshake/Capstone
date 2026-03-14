@@ -27,12 +27,25 @@ class StaffPassengerController extends Controller
 
     /**
      * Show passenger booking form for staff
+     * Uses same filtering as passenger side to prevent errors and maintain consistency
      */
     public function create()
     {
         $voyages = Voyage::with(['routePort', 'vessel.accommodations'])
             ->where('voyage_status', 'Scheduled')
+            ->where(function ($query) {
+                // Show voyages from tomorrow onwards
+                $query->whereDate('voyage_departure_date', '>', today())
+                    // OR show today's voyages that depart more than 2 hours from now
+                    ->orWhere(function ($q) {
+                    $q->whereDate('voyage_departure_date', '=', today())
+                        ->where('voyage_estimated_TD', '>', now()->addHours(2)->format('H:i:s'));
+                });
+            })
+            // Only show voyages within the next 7 days
+            ->whereDate('voyage_departure_date', '<=', today()->addDays(7))
             ->orderBy('voyage_departure_date', 'asc')
+            ->orderBy('voyage_estimated_TD', 'asc')
             ->get();
 
         // Get vessel cot plan for first voyage if available

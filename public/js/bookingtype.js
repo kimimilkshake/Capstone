@@ -12,6 +12,65 @@ const voyages = JSON.parse(document.getElementById("voyages-data").textContent);
 let availableDates = [];
 let availableVoyages = []; // Store voyages for selected route
 
+// Validate cargo booking cutoff based on departure date and time
+function validateCargoCutoff(departureDate, departureTimeStr) {
+    if (!departureDate || !departureTimeStr) {
+        return {
+            valid: false,
+            message: "Invalid voyage departure information.",
+        };
+    }
+
+    // Parse departure time (format: HH:MM:SS)
+    const timeParts = departureTimeStr.split(":");
+    const depHour = parseInt(timeParts[0]);
+
+    const now = new Date();
+    const depDate = new Date(departureDate);
+    const depDateStart = new Date(depDate);
+    depDateStart.setHours(0, 0, 0, 0);
+
+    // 12:00 AM to 6:00 PM (00:00 to 18:00) - must book day before
+    if (depHour <= 18) {
+        if (now >= depDateStart) {
+            return {
+                valid: false,
+                message: "Cargo booking is not allowed anymore at this time",
+            };
+        }
+        return { valid: true };
+    }
+
+    // 7:00 PM to 11:59 PM (19:00+) - same day booking with 5:00 PM cutoff
+    const depDateEnd = new Date(depDate);
+    depDateEnd.setHours(23, 59, 59, 999);
+
+    if (now > depDateEnd) {
+        return {
+            valid: false,
+            message: "Cargo booking is not allowed anymore at this time",
+        };
+    }
+
+    const isSameDay =
+        now.getFullYear() === depDate.getFullYear() &&
+        now.getMonth() === depDate.getMonth() &&
+        now.getDate() === depDate.getDate();
+
+    if (isSameDay) {
+        const cutoff = new Date(depDateStart);
+        cutoff.setHours(17, 0, 0, 0); // 5:00 PM
+        if (now >= cutoff) {
+            return {
+                valid: false,
+                message: "Cargo booking is not allowed anymore at this time",
+            };
+        }
+    }
+
+    return { valid: true };
+}
+
 // Initially disable proceed button
 proceedBtn.disabled = true;
 
@@ -212,6 +271,15 @@ proceedBtn.addEventListener("click", function () {
     if (!selectedVoyage) {
         alert("Selected voyage not found. Please try again.");
         return;
+    }
+
+    // Validate cargo booking cutoff if cargo type is selected
+    if (bookingType === "cargo") {
+        const cutoffValidation = validateCargoCutoff(tripDate, departureTime);
+        if (!cutoffValidation.valid) {
+            alert(cutoffValidation.message);
+            return;
+        }
     }
 
     const baseUrl =

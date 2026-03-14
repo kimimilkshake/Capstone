@@ -87,6 +87,21 @@
                                 </p>
                             </div>
 
+                            <!-- Center: Departure Info -->
+                            <div
+                                style="flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; margin: 0 2rem; padding: 1rem; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #485b8c;">
+                                <p
+                                    style="font-size: 0.75rem; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; font-weight: 600;">
+                                    Departure</p>
+                                <p style="font-size: 1.1rem; color: #485b8c; font-weight: bold; margin: 0;">
+                                    {{ \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('M d, Y') }}
+                                </p>
+                                <p style="font-size: 0.95rem; color: #666; margin: 0; font-weight: 600;">
+                                    <i class="fas fa-clock" style="color: #485b8c; margin-right: 0.3rem;"></i>
+                                    {{ \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:i A') }}
+                                </p>
+                            </div>
+
                             <!-- Right Side: Hatch Columns or Empty Message -->
                             <div style="flex: 0 0 auto; display: flex; gap: 2rem; margin-left: 2rem; align-items: center;">
                                 @if ($cargoCount === 0)

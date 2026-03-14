@@ -91,6 +91,7 @@
                                                     'cargo_booking.cargo_booking_id',
                                                 )
                                                 ->where('cargo_receipt.hatch_id', $hatch->hatch_id)
+                                                ->where('cargo_receipt.voyage_id', $selectedVoyageId)
                                                 ->sum('cargo_booking.weight');
                                         @endphp
                                         <tr>

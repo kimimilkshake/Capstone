@@ -30,13 +30,22 @@
                                 <div style="flex: 0 0 auto;">
                                     <p><strong>Voyage Code:</strong> <?php echo e($placementData['voyage']->voyage_code); ?></p>
                                     <p><strong>Vessel:</strong> <?php echo e($placementData['voyage']->vessel->vessel_name); ?></p>
-                                    <p><strong>Departure:</strong> <?php echo e(\Carbon\Carbon::parse($placementData['voyage']->voyage_departure_date)->format('M j, Y')); ?> at <?php echo e(\Carbon\Carbon::parse($placementData['voyage']->voyage_estimated_TD)->format('g:i A')); ?></p>
+                                    <p><strong>Departure:</strong>
+                                        <?php echo e(\Carbon\Carbon::parse($placementData['voyage']->voyage_departure_date)->format('M j, Y')); ?>
+
+                                        at
+                                        <?php echo e(\Carbon\Carbon::parse($placementData['voyage']->voyage_estimated_TD)->format('g:i A')); ?>
+
+                                    </p>
                                 </div>
                                 <!-- Right Side -->
                                 <div style="flex: 0 0 auto; margin-left: auto; margin-right: 10rem;">
-                                    <p><strong>Route:</strong> <?php echo e($placementData['voyage']->routePort->route_origin); ?> → <?php echo e($placementData['voyage']->routePort->route_destination); ?></p>
+                                    <p><strong>Route:</strong> <?php echo e($placementData['voyage']->routePort->route_origin); ?> →
+                                        <?php echo e($placementData['voyage']->routePort->route_destination); ?></p>
                                     <p><strong>Total Hatches:</strong> <?php echo e($placementData['hatches']->count()); ?></p>
-                                    <p><strong>Total Cargo Items:</strong> <?php echo e($placementData['cargoReceipts']->count()); ?></p>
+                                    <p><strong>Total Cargo Items:</strong> <?php echo e($placementData['cargoReceipts']->count()); ?>
+
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -84,6 +93,7 @@
                                                     'cargo_booking.cargo_booking_id',
                                                 )
                                                 ->where('cargo_receipt.hatch_id', $hatch->hatch_id)
+                                                ->where('cargo_receipt.voyage_id', $selectedVoyageId)
                                                 ->sum('cargo_booking.weight');
                                         ?>
                                         <tr>
@@ -92,7 +102,8 @@
                                             <td style="text-align: center;"><?php echo e($hatch->hatch_width); ?></td>
                                             <td style="text-align: center;"><?php echo e($hatch->hatch_height); ?></td>
                                             <td style="text-align: center;"><?php echo e($hatch->hatch_capacity_per_hold); ?> tons
-                                                (<?php echo e($hatch->hatch_capacity_per_hold * 1000); ?>kg)</td>
+                                                (<?php echo e($hatch->hatch_capacity_per_hold * 1000); ?>kg)
+                                            </td>
                                             <td style="text-align: center;" class="hatch-weight-cell"
                                                 data-hatch-id="<?php echo e($hatch->hatch_id); ?>">
                                                 <?php echo e(number_format($currentWeight, 2)); ?></td>
