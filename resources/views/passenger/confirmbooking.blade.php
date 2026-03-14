@@ -84,7 +84,7 @@
                         <h5 class="mb-0">Confirm Booking</h5>
                     </div>
                     <div class="card-body">
-                        <h6>Booking Reference: {{ $booking->booking_ref_no }}</h6>
+                        <h6>Booking Reference: {{ $booking->booking_code }}</h6>
                         <p>Status: <strong>{{ $booking->booking_status }}</strong></p>
 
                         @if ($payment)

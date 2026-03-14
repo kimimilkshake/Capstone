@@ -266,7 +266,7 @@ class StaffCargoController extends Controller
                         });
                 });
             })
-            ->orderBy('created_at', 'desc')
+            ->orderBy('created_at', 'asc')
             ->paginate(10)
             ->withQueryString();
 

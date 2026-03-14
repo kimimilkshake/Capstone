@@ -1,8 +1,7 @@
-@extends('layouts.app')
-@section('page-title', 'CARGO BOOKING')
+<?php $__env->startSection('page-title', 'CARGO BOOKING'); ?>
 
-@section('content')
-    @include('components.hero')
+<?php $__env->startSection('content'); ?>
+    <?php echo $__env->make('components.hero', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <div class="container-fluid my-5 px-3 px-xl-4">
         <div class="card shadow-sm mx-auto passenger-cargo-card" style="max-width:1520px; background-color:#f0f0f0;">
@@ -11,12 +10,12 @@
             </div>
 
             <div class="card-body">
-                @if (session('error'))
-                    <div class="alert alert-danger">{{ session('error') }}</div>
-                @endif
+                <?php if(session('error')): ?>
+                    <div class="alert alert-danger"><?php echo e(session('error')); ?></div>
+                <?php endif; ?>
 
-                <form id="passengerCargoForm" action="{{ route('cargobooking.confirm') }}" method="POST" enctype="multipart/form-data" novalidate>
-                    @csrf
+                <form id="passengerCargoForm" action="<?php echo e(route('cargobooking.confirm')); ?>" method="POST" enctype="multipart/form-data" novalidate>
+                    <?php echo csrf_field(); ?>
 
                     <div class="row">
 
@@ -24,14 +23,14 @@
                         <div class="col-md-6 mb-3">
                             <h6 class="fw-bold mt-4">Voyage Information</h6>
                             <div class="bg-white p-3 rounded shadow-sm mb-3 small">
-                                <p class="mb-1"><strong>Vessel Name:</strong> {{ $vesselName }}</p>
-                                <p class="mb-1"><strong>Route:</strong> {{ $routeFrom }} → {{ $routeTo }}</p>
-                                <p class="mb-1"><strong>Departure Date:</strong> {{ $departureDate }}</p>
-                                <p class="mb-1"><strong>Departure Time:</strong> {{ $departureTime }}</p>
-                                <p class="mb-0"><strong>Port of Origin:</strong> {{ $portOfOrigin }}</p>
+                                <p class="mb-1"><strong>Vessel Name:</strong> <?php echo e($vesselName); ?></p>
+                                <p class="mb-1"><strong>Route:</strong> <?php echo e($routeFrom); ?> → <?php echo e($routeTo); ?></p>
+                                <p class="mb-1"><strong>Departure Date:</strong> <?php echo e($departureDate); ?></p>
+                                <p class="mb-1"><strong>Departure Time:</strong> <?php echo e($departureTime); ?></p>
+                                <p class="mb-0"><strong>Port of Origin:</strong> <?php echo e($portOfOrigin); ?></p>
                             </div>
 
-                            <input type="hidden" name="voyage_id" value="{{ request()->voyage_id }}">
+                            <input type="hidden" name="voyage_id" value="<?php echo e(request()->voyage_id); ?>">
                             <h6 class="fw-bold">Sender Information</h6>
 
                             <div class="mb-2">
@@ -136,11 +135,12 @@
                                             <div class="input-group has-validation">
                                                 <select name="cargo_classification[]" class="form-control cargo-classification required-field">
                                                     <option value="">-- Select Classification --</option>
-                                                    @foreach($cargoClassifications as $classification)
-                                                        <option value="{{ $classification->cargo_classification_id }}">
-                                                            {{ $classification->cargo_classification_name }}
+                                                    <?php $__currentLoopData = $cargoClassifications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $classification): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <option value="<?php echo e($classification->cargo_classification_id); ?>">
+                                                            <?php echo e($classification->cargo_classification_name); ?>
+
                                                         </option>
-                                                    @endforeach
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                 </select>
                                                 <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
                                                     <i class="bi bi-exclamation-circle-fill text-danger"></i>
@@ -153,23 +153,24 @@
                                             <div class="input-group has-validation">
                                                 <select name="cargo_item_id[]" class="form-control cargo-description required-field">
                                                     <option value="">-- Select Description --</option>
-                                                    @foreach($cargoItems->sortBy('cargo_item_description') as $cargo)
-                                                            @if($cargo->route_code_id == ($voyage->routePort->route_code_id ?? null))
-                                                            <option value="{{ $cargo->cargo_item_id }}"
-                                                                data-route-code="{{ $cargo->route_code_id ?? '' }}"
-                                                                data-classification="{{ $cargo->cargo_item_classification ?? '' }}"
-                                                                data-measure-required="{{ $cargo->cargo_item_measure_required ?? 'No' }}"
-                                                                data-measurement-unit="{{ $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm' }}"
-                                                                data-min-length="{{ $cargo->cargo_item_min_length ?? '' }}"
-                                                                data-max-length="{{ $cargo->cargo_item_max_length ?? '' }}"
-                                                                data-min-width="{{ $cargo->cargo_item_min_width ?? '' }}"
-                                                                data-max-width="{{ $cargo->cargo_item_max_width ?? '' }}"
-                                                                data-min-height="{{ $cargo->cargo_item_min_height ?? '' }}"
-                                                                data-max-height="{{ $cargo->cargo_item_max_height ?? '' }}">
-                                                                {{ $cargo->cargo_item_description }}
+                                                    <?php $__currentLoopData = $cargoItems->sortBy('cargo_item_description'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cargo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                            <?php if($cargo->route_code_id == ($voyage->routePort->route_code_id ?? null)): ?>
+                                                            <option value="<?php echo e($cargo->cargo_item_id); ?>"
+                                                                data-route-code="<?php echo e($cargo->route_code_id ?? ''); ?>"
+                                                                data-classification="<?php echo e($cargo->cargo_item_classification ?? ''); ?>"
+                                                                data-measure-required="<?php echo e($cargo->cargo_item_measure_required ?? 'No'); ?>"
+                                                                data-measurement-unit="<?php echo e($cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm'); ?>"
+                                                                data-min-length="<?php echo e($cargo->cargo_item_min_length ?? ''); ?>"
+                                                                data-max-length="<?php echo e($cargo->cargo_item_max_length ?? ''); ?>"
+                                                                data-min-width="<?php echo e($cargo->cargo_item_min_width ?? ''); ?>"
+                                                                data-max-width="<?php echo e($cargo->cargo_item_max_width ?? ''); ?>"
+                                                                data-min-height="<?php echo e($cargo->cargo_item_min_height ?? ''); ?>"
+                                                                data-max-height="<?php echo e($cargo->cargo_item_max_height ?? ''); ?>">
+                                                                <?php echo e($cargo->cargo_item_description); ?>
+
                                                             </option>
-                                                        @endif
-                                                    @endforeach
+                                                        <?php endif; ?>
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                 </select>
                                                 <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
                                                     <i class="bi bi-exclamation-circle-fill text-danger"></i>
@@ -251,11 +252,12 @@
                                         <div class="flex-fill">
                                             <label class="form-label small">Unit</label>
                                             <select name="measurement_unit[]" class="form-select unitSelect">
-                                                @foreach($measurementUnits as $measurementUnit)
-                                                    <option value="{{ $measurementUnit->measurement_unit_abbreviation ?: 'cm' }}">
-                                                        {{ $measurementUnit->measurement_unit_abbreviation ?: 'cm' }}
+                                                <?php $__currentLoopData = $measurementUnits; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $measurementUnit): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <option value="<?php echo e($measurementUnit->measurement_unit_abbreviation ?: 'cm'); ?>">
+                                                        <?php echo e($measurementUnit->measurement_unit_abbreviation ?: 'cm'); ?>
+
                                                     </option>
-                                                @endforeach
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </select>
                                         </div>
                                         <div class="flex-fill">
@@ -290,7 +292,7 @@
                             </div>
 
                     <div class="d-flex justify-content-end mt-4 gap-3">
-                        <a href="{{ route('bookingtype') }}" class="btn btn-outline-danger fw-bold py-3"
+                        <a href="<?php echo e(route('bookingtype')); ?>" class="btn btn-outline-danger fw-bold py-3"
                             style="width:180px;">
                             CANCEL BOOKING
                         </a>
@@ -767,7 +769,7 @@ container.addEventListener('change', e => {
         }
     </script>
 
-@endsection
+<?php $__env->stopSection(); ?>
 
 <style>
     /* Error state styling */
@@ -883,3 +885,5 @@ container.addEventListener('change', e => {
     }
 </style>
 
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/passenger/cargobooking.blade.php ENDPATH**/ ?>
