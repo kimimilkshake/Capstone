@@ -50,9 +50,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 const routeCodeSelect = document.querySelector('#addRoutePortForm select[name="route_code_id"]');
                 if (routeCodeSelect && data.routeCode) {
                     const option = document.createElement('option');
-                    option.value = data.routeCode.id;
+                    option.value = data.routeCode.route_code_id;
                     option.text = data.routeCode.route_code_name;
-                    routeCodeSelect.add(option);
+                    routeCodeSelect.appendChild(option);
+
+                    const options = Array.from(routeCodeSelect.options)
+                        .slice(1) // skip "Select Route Code"
+                        .sort((a, b) => a.text.localeCompare(b.text));
+
+                    routeCodeSelect.innerHTML = '<option value="">Select Route Code</option>';
+                    options.forEach(o => routeCodeSelect.appendChild(o));
                 }
 
             } else {
@@ -100,11 +107,11 @@ document.addEventListener("DOMContentLoaded", function () {
             const response = await fetch("/authorized/admin/route_port", {
                 method: "POST",
                 headers: {
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                    "Accept": "application/json"
                 },
                 body: formData
             });
-
             const data = await response.json().catch(() => ({}));
 
             if (response.ok && data.status === "success") {

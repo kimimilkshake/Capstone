@@ -120,8 +120,12 @@ class VoyageController extends Controller
     {
         
 
-        $vessels = Vessel::where('vessel_status', 'Active')->get();
-        $route_port = RoutePort::all();
+        $vessels = Vessel::where('vessel_status', 'Active')
+                        ->orderBy('vessel_name')
+                        ->get();
+        $route_port = RoutePort::orderBy('route_origin')
+                        ->orderBy('route_destination')
+                        ->get();
 
         return auth()->guard('staff')->check()
             ? view('authorized.staff.screate_voyage', compact('vessels', 'route_port'))
@@ -191,8 +195,12 @@ class VoyageController extends Controller
     {
         $voyage = Voyage::findOrFail($id);
 
-        $vessels = Vessel::where('vessel_status', 'Active')->get();
-        $route_port = RoutePort::all();
+        $vessels = Vessel::where('vessel_status', 'Active')
+                        ->orderBy('vessel_name')
+                        ->get();
+        $route_port = RoutePort::orderBy('route_origin')
+                        ->orderBy('route_destination')
+                        ->get();
 
         // Flag for blade to know if voyage is completed
         $isCompleted = $voyage->voyage_status === 'Completed';

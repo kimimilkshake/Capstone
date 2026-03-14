@@ -32,7 +32,7 @@
                                 <div class="form-floating mb-3">
                                     <input type="text" name="otp" class="form-control" placeholder="Enter OTP"
                                         required>
-                                    <label>OTP</label>
+                                    <label>OTP <span class="text-danger">*</span></label>
                                 </div>
 
                                 <!-- Countdown Timer -->

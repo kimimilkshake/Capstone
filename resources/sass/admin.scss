@@ -514,15 +514,24 @@ body {
 
 .vcot-plan {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: center;
-  gap: 1rem;
+  gap: 0.25rem; // spacing between label, span, and input
   margin: 1.5rem auto;
   width: fit-content;
 }
 
 .vcot-plan label {
   font-weight: 500;
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+}
+
+.vcot-plan span {
+  font-size: 0.8rem;
+  color: #b03a48; // red for warning
+  margin-bottom: 0.5rem; // space between span and input
   white-space: nowrap;
 }
 

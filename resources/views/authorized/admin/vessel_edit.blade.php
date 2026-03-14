@@ -189,6 +189,7 @@
                         <div class="form-group vcot-plan"
                             style="display: flex; flex-direction: column; align-items: flex-start; width: 100%;">
                             <label for="vessel_cot_plan_url" style="margin-bottom: 8px;">Cot Plan</label>
+                            <span class="text-danger">Please upload jpg, jpeg, or png files only.</span>
                             @if ($vessel->vessel_cot_plan_url)
                                 <img src="{{ asset('storage/' . $vessel->vessel_cot_plan_url) }}" alt="Cot Plan"
                                     style="width: 100%; max-height: 250px; object-fit: contain; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px;">

@@ -110,20 +110,6 @@
               </div>
             </div>
 
-            <div class="form-col">
-              <div class="form-group">
-                <label>Unit</label>
-                <select name="measurement_unit_id">
-                  <option value="">Select Unit</option>
-                  @foreach ($measurement_units as $unit)
-                    <option value="{{ $unit->measurement_unit_id }}"
-                      {{ $cargo_item->measurement_unit_id == $unit->measurement_unit_id ? 'selected' : '' }}>
-                      {{ $unit->measurement_unit_name }}
-                    </option>
-                  @endforeach
-                </select>
-              </div>
-            </div>
           </div>
 
           {{-- Max LWH --}}
@@ -155,11 +141,11 @@
             <div class="form-col">
               <div class="form-group">
                 <label>Unit</label>
-                <select name="measurement_unit_id_max">
+                <select name="measurement_unit_id">
                   <option value="">Select Unit</option>
                   @foreach ($measurement_units as $unit)
                     <option value="{{ $unit->measurement_unit_id }}"
-                      {{ $cargo_item->measurement_unit_id_max == $unit->measurement_unit_id ? 'selected' : '' }}>
+                      {{ $cargo_item->measurement_unit_id == $unit->measurement_unit_id ? 'selected' : '' }}>
                       {{ $unit->measurement_unit_name }}
                     </option>
                   @endforeach

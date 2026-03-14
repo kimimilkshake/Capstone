@@ -40,9 +40,9 @@ class CargoItemController extends Controller
 
     public function create()
     {
-        $route_codes = RouteCode::all();
-        $measurement_units = MeasurementUnit::all();
-        $cargo_categories = CargoCategory::all();
+        $route_codes = RouteCode::orderBy('route_code_name')->get();
+        $measurement_units = MeasurementUnit::orderBy('measurement_unit_name')->get();
+        $cargo_categories = CargoCategory::orderBy('cargo_category_name')->get();
 
         return auth()->guard('staff')->check()
             ? view('authorized.staff.screate_cargo_item', compact('route_codes', 'measurement_units', 'cargo_categories'))
@@ -78,10 +78,10 @@ class CargoItemController extends Controller
 
     public function edit($id)
     {
-        $cargo_item = CargoItem::findOrFail($id); // get the cargo item
-        $route_codes = RouteCode::all();          // for route code dropdown
-        $measurement_units = MeasurementUnit::all(); // for measurement units dropdown
-        $cargo_categories = CargoCategory::all(); // for cargo category dropdown
+        $cargo_item = CargoItem::findOrFail($id);
+        $route_codes = RouteCode::orderBy('route_code_name')->get();
+        $measurement_units = MeasurementUnit::orderBy('measurement_unit_name')->get();
+        $cargo_categories = CargoCategory::orderBy('cargo_category_name')->get();
 
         return auth()->guard('staff')->check()
             ? view('authorized.staff.scargo_item_edit', compact('cargo_item', 'route_codes', 'measurement_units', 'cargo_categories'))

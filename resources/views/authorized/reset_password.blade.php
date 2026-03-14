@@ -13,6 +13,7 @@
                 </a>
                 <img src="{{ asset('images/lslc_logo_name2.png') }}" alt="App Logo" class="img-fluid mb-1" style="height:150px">
                 <h2 class="fw-bold text-uppercase">CHANGE  PASSWORD</h2>
+                <span class="text-danger">Password must be at least 8 characters and must contain at least one uppercase letter, one lowercase letter, one number, and one special character.</span>
 
                 <!-- Success or error messages -->
                 @if(session('success'))
@@ -32,12 +33,12 @@
 
                   <div class="form-floating mb-3">
                     <input type="password" name="new_password" class="form-control" placeholder="New Password" required>
-                    <label>New Password</label>
+                    <label>New Password <span class="text-danger">*</span></label>
                   </div>
 
                   <div class="form-floating mb-3">
                     <input type="password" name="confirm_password" class="form-control" placeholder="Confirm Password" required>
-                    <label>Confirm Password</label>
+                    <label>Confirm Password <span class="text-danger">*</span></label>
                   </div>
 
                   <button type="submit" class="loginBtn btn btn-lg px-5 mt-1 mb-4">Submit</button>

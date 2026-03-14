@@ -227,9 +227,20 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'new_password' => 'required|min:6',
+            'new_password' => [
+                'required',
+                'string',
+                'min:8',
+                'regex:/[a-z]/',
+                'regex:/[A-Z]/',
+                'regex:/[0-9]/',
+                'regex:/[@$!%*?&]/',
+            ],
             'confirm_password' => 'required|same:new_password',
+        ], [
+            'new_password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
         ]);
+
 
         $email = Session::get('reset_email');
         if (!$email) {

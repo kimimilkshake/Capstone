@@ -101,6 +101,7 @@
         {{-- Measurement Range Section --}}
         <div id="measurement-section" style="display: none;">
 
+        {{-- MIN AND MAX LWH --}}
           {{-- MIN LWH --}}
           <div class="form-row">
             <div class="form-col">
@@ -124,23 +125,7 @@
               </div>
             </div>
 
-            <div class="form-col">
-              <div class="form-group">
-                <label>Unit</label>
-                <select name="measurement_unit_id">
-                  <option value="">Select Unit</option>
-                  @foreach ($measurement_units as $unit)
-                    <option value="{{ $unit->measurement_unit_id }}">
-                      {{ $unit->measurement_unit_name }}
-                    </option>
-                  @endforeach
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {{-- MAX LWH --}}
-          <div class="form-row">
+            {{-- MAX LWH --}}
             <div class="form-col">
               <div class="form-group">
                 <label>Max Length</label>
@@ -165,7 +150,7 @@
             <div class="form-col">
               <div class="form-group">
                 <label>Unit</label>
-                <select name="measurement_unit_id_max">
+                <select name="measurement_unit_id">
                   <option value="">Select Unit</option>
                   @foreach ($measurement_units as $unit)
                     <option value="{{ $unit->measurement_unit_id }}">
