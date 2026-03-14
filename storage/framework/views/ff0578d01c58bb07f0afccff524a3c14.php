@@ -17,7 +17,8 @@
                                 <i class="fas fa-arrow-right"></i> View Upcoming
                             </a>
                         <?php else: ?>
-                            <a href="<?php echo e(route('staff.cargo.placement', ['view' => 'past'])); ?>" class="btn btn-secondary btn-sm">
+                            <a href="<?php echo e(route('staff.cargo.placement', ['view' => 'past'])); ?>"
+                                class="btn btn-secondary btn-sm">
                                 <i class="fas fa-history"></i> View Past
                             </a>
                         <?php endif; ?>
@@ -129,7 +130,7 @@
                     </div>
                 <?php endif; ?>
             </div>
-    </div>
+        </div>
     </div>
 <?php $__env->stopSection(); ?>
 

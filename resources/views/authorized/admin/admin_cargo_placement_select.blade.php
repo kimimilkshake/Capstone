@@ -18,7 +18,8 @@
                                 <i class="fas fa-arrow-right"></i> View Upcoming
                             </a>
                         @else
-                            <a href="{{ route('admin.cargo.placement', ['view' => 'past']) }}" class="btn btn-secondary btn-sm">
+                            <a href="{{ route('admin.cargo.placement', ['view' => 'past']) }}"
+                                class="btn btn-secondary btn-sm">
                                 <i class="fas fa-history"></i> View Past
                             </a>
                         @endif
@@ -127,6 +128,6 @@
                     </div>
                 @endif
             </div>
-    </div>
+        </div>
     </div>
 @endsection
