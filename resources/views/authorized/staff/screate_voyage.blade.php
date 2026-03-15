@@ -7,23 +7,21 @@
     <div class="svl-title">
       <h3>CREATE VOYAGE</h3>
     </div>
-    <div class="scs-form_container">
-      {{-- Validation Errors --}}
-      @if ($errors->any())
-        <div class="alert alert-danger" style="color: red; text-align: center;">
-          <strong>All fields are required.</strong><br>
-          @foreach ($errors->all() as $error)
-            {{ $error }}<br>
-          @endforeach
-        </div>
-      @endif
 
-      {{-- Success Message --}}
-      @if (session('success'))
-        <div class="alert alert-success" style="color: green; text-align: center; margin-bottom: 1rem;">
-          {{ session('success') }}
+    @if(session('success'))
+        <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
+    @endif
+    @if ($errors->any())
+        <div class="alert alert-danger text-center">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
-      @endif
+    @endif
+
+    <div class="scs-form_container">
 
       {{-- FORM START --}}
       <form action="{{ route('staff.store_voyage') }}" method="POST">
@@ -88,6 +86,7 @@
                 name="voyage_departure_date" 
                 required min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}"
                 max="{{ \Carbon\Carbon::today()->addDays(8)->format('Y-m-d') }}"
+                onchange="setArrivalMin(this.value)"
               >
             </div>
           </div>
@@ -100,8 +99,8 @@
                 type="date" 
                 name="voyage_arrival_date" 
                 required 
-                min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}"
-                max="{{ \Carbon\Carbon::today()->addDays(8)->format('Y-m-d') }}"
+                min="{{ \Carbon\Carbon::today()->addDay()->format('Y-m-d') }}"
+                max="{{ \Carbon\Carbon::today()->addDays(14)->format('Y-m-d') }}"
               >
             </div>
           </div>
@@ -164,5 +163,18 @@
             portDestinationInput.value = '';
         }
     });
+
+    function setArrivalMin(depDate) {
+        const arrival = document.getElementById('voyage_arrival_date');
+        if(depDate) {
+            // arrival must be >= departure date
+            arrival.min = depDate; 
+            
+            // optionally reset current arrival value if it's now before departure
+            if(arrival.value < depDate) {
+                arrival.value = depDate;
+            }
+        }
+    }
   </script>
 @endsection

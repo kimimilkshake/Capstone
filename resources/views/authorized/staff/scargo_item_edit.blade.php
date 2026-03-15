@@ -10,7 +10,16 @@
 
     <div class="aci-form_container">
       @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+          <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
+      @endif
+      @if ($errors->any())
+          <div class="alert alert-danger text-center">
+              <ul>
+                  @foreach ($errors->all() as $error)
+                      <li>{{ $error }}</li>
+                  @endforeach
+              </ul>
+          </div>
       @endif
       <form action="{{ route('staff.cargo_item_update', $cargo_item->cargo_item_id) }}" method="POST">
         @csrf

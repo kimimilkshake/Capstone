@@ -91,6 +91,12 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
+        // Clear previous logins
+        auth()->guard('admin')->logout();
+        auth()->guard('staff')->logout();
+        auth()->guard('web')->logout();
+        Session::flush();
+
         $username = trim($request->username);
         $password = trim($request->password);
 

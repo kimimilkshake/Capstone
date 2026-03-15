@@ -14,14 +14,17 @@
                                 style="height:150px">
                             <h2 class="fw-bold mb-4">VERIFY OTP</h2>
 
-                            @if (session('success'))
-                                <div class="alert alert-success" style="width:100%; margin-left:0; text-align:center;">
-                                    {{ session('success') }}</div>
+                            {{-- Display success message --}}
+                            @if(session('success'))
+                                <div class="alert alert-success mx-auto" style="text-align: center;">
+                                    {{ session('success') }}
+                                </div>
                             @endif
 
+                            {{-- Display errors --}}
                             @if ($errors->any())
-                                <div class="alert alert-danger">
-                                    {{ $errors->first() }}
+                                <div class="alert alert-danger mx-auto" style="text-align: center;">
+                                    <div>{{ $errors->first() }}</div>
                                 </div>
                             @endif
 

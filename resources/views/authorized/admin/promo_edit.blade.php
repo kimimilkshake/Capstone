@@ -10,19 +10,17 @@
       </div>
 
       <div class="acs-form_container">
-        @if ($errors->any())
-          <div class="alert alert-danger" style="color: red; text-align: center;">
-            <strong>All fields are required.</strong><br>
-            @foreach ($errors->all() as $error)
-              {{ $error }}<br>
-            @endforeach
-          </div>
+        @if(session('success'))
+            <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
         @endif
-
-        @if (session('success'))
-          <div class="alert alert-success" style="color: green; text-align: center; margin-bottom: 1rem;">
-            {{ session('success') }}
-          </div>
+        @if ($errors->any())
+            <div class="alert alert-danger text-center">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
         @endif
 
         <form action="{{ route('admin.promo_update', $promo->promo_id) }}" method="POST" class="create-promo-form">

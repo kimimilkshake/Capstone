@@ -17,11 +17,16 @@
 
                 <!-- Success or error messages -->
                 @if(session('success'))
-                  <div class="alert alert-success">{{ session('success') }}</div>
+                    <div class="alert alert-success mx-auto" style="text-align: center;">
+                        {{ session('success') }}
+                    </div>
                 @endif
 
-                @if($errors->any())
-                  <div class="alert alert-danger">{{ $errors->first() }}</div>
+                {{-- Display errors --}}
+                @if ($errors->any())
+                    <div class="alert alert-danger mx-auto" style="text-align: center;">
+                        <div>{{ $errors->first() }}</div>
+                    </div>
                 @endif
 
                 <!-- Reset Password Form -->

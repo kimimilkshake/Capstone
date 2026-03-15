@@ -10,21 +10,17 @@
 
     <div class="aci-form_container">
 
-      {{-- ERROR ALERT --}}
-      @if ($errors->any())
-        <div class="alert alert-danger">
-          <strong>All fields are required.</strong><br>
-          @foreach ($errors->all() as $error)
-            {{ $error }}<br>
-          @endforeach
-        </div>
+      @if(session('success'))
+          <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
       @endif
-
-      {{-- SUCCESS ALERT --}}
-      @if (session('success'))
-        <div class="alert alert-success">
-          {{ session('success') }}
-        </div>
+      @if ($errors->any())
+          <div class="alert alert-danger text-center">
+              <ul>
+                  @foreach ($errors->all() as $error)
+                      <li>{{ $error }}</li>
+                  @endforeach
+              </ul>
+          </div>
       @endif
 
       <form action="{{ route('staff.store_cargo_item') }}" method="POST" class="create-cargoitem-form">

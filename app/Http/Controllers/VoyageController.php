@@ -90,36 +90,37 @@ class VoyageController extends Controller
         $this->autoUpdateVoyageStatus();
         
         $search = $request->input('search');
-        $date = $request->input('date');
+        $start_date = $request->input('start_date');
+        $end_date   = $request->input('end_date');
 
         $voyages = Voyage::with(['vessel', 'routePort'])
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('voyage_code', 'like', "%{$search}%")
-                      ->orWhere('voyage_status', 'like', "%{$search}%")
-                      ->orWhereHas('vessel', fn($v) => $v->where('vessel_name', 'like', "%{$search}%"))
-                      ->orWhereHas('routePort', fn($r) =>
-                          $r->where('route_origin', 'like', "%{$search}%")
+                    ->orWhere('voyage_status', 'like', "%{$search}%")
+                    ->orWhereHas('vessel', fn($v) => $v->where('vessel_name', 'like', "%{$search}%"))
+                    ->orWhereHas('routePort', fn($r) =>
+                        $r->where('route_origin', 'like', "%{$search}%")
                             ->orWhere('route_destination', 'like', "%{$search}%")
-                      );
+                    );
                 });
             })
-            ->when($date, function ($query, $date) {
-                $query->whereDate('voyage_departure_date', $date)
-                      ->orWhereDate('voyage_arrival_date', $date);
+            ->when($start_date && $end_date, function ($query) use ($start_date, $end_date) {
+                $query->whereBetween('voyage_departure_date', [$start_date, $end_date])
+                    ->orWhereBetween('voyage_arrival_date', [$start_date, $end_date]);
             })
             ->orderBy('voyage_departure_date', 'desc')
-            ->paginate(8);
+            ->paginate(7);
 
-        return auth()->guard('staff')->check()
-            ? view('authorized.staff.svoyage_list', compact('voyages', 'search'))
-            : view('authorized.admin.voyage_list', compact('voyages', 'search'));
+        if (auth()->guard('admin')->check()) {
+            return view('authorized.admin.voyage_list', compact('voyages','search'));
+        }
+
+        return view('authorized.staff.svoyage_list', compact('voyages','search'));
     }
 
     public function create()
     {
-        
-
         $vessels = Vessel::where('vessel_status', 'Active')
                         ->orderBy('vessel_name')
                         ->get();
@@ -127,9 +128,10 @@ class VoyageController extends Controller
                         ->orderBy('route_destination')
                         ->get();
 
-        return auth()->guard('staff')->check()
-            ? view('authorized.staff.screate_voyage', compact('vessels', 'route_port'))
-            : view('authorized.admin.create_voyage', compact('vessels', 'route_port'));
+        if (auth()->guard('admin')->check()) {
+            return view('authorized.admin.create_voyage', compact('vessels', 'route_port'));
+        }
+        return view('authorized.staff.screate_voyage', compact('vessels', 'route_port'));
     }
 
     public function store(Request $request)
@@ -142,6 +144,20 @@ class VoyageController extends Controller
             'voyage_estimated_TD' => 'required',
             'voyage_estimated_TA' => 'required',
         ]);
+
+        $departure = Carbon::parse(
+            $request->voyage_departure_date . ' ' . $request->voyage_estimated_TD
+        );
+
+        $arrival = Carbon::parse(
+            $request->voyage_arrival_date . ' ' . $request->voyage_estimated_TA
+        );
+
+        if ($arrival->lessThanOrEqualTo($departure)) {
+            return back()->withErrors([
+                'time_error' => 'Arrival time must be AFTER the departure time.'
+            ])->withInput();
+        }
 
         if ($this->hasConflict(
             $request->vessel_id,
@@ -186,8 +202,12 @@ class VoyageController extends Controller
             'voyage_code' => $voyageCode,
         ]);
 
-        return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
-                         ->with('success', 'Voyage added successfully.');
+        if (auth()->guard('admin')->check()) {
+            return redirect()->route('admin.voyage_list')
+                ->with('success','Voyage added successfully.');
+        }
+        return redirect()->route('staff.voyage_list')
+            ->with('success','Voyage added successfully.');
 
     }
 
@@ -211,9 +231,10 @@ class VoyageController extends Controller
                              ->with('error', 'Only scheduled voyages can be edited.');
         }
 
-        return auth()->guard('staff')->check()
-            ? view('authorized.staff.svoyage_edit', compact('voyage', 'vessels', 'route_port', 'isCompleted'))
-            : view('authorized.admin.voyage_edit', compact('voyage', 'vessels', 'route_port', 'isCompleted'));
+        if (auth()->guard('admin')->check()) {
+            return view('authorized.admin.voyage_edit', compact('voyage', 'vessels', 'route_port', 'isCompleted'));
+        }
+        return view('authorized.staff.svoyage_edit', compact('voyage', 'vessels', 'route_port', 'isCompleted'));
     }
 
     public function update(Request $request, $id)
@@ -252,6 +273,28 @@ class VoyageController extends Controller
         }
 
         $request->validate($rules);
+
+        $departure = Carbon::parse($request->voyage_departure_date . ' ' . $request->voyage_estimated_TD);
+        $arrival   = Carbon::parse($request->voyage_arrival_date . ' ' . $request->voyage_estimated_TA);
+
+        if ($arrival->lessThanOrEqualTo($departure)) {
+            return back()->withErrors([
+                'time_error' => 'Arrival date and time must be AFTER departure date and time.'
+            ])->withInput();
+        }
+
+        if ($this->hasConflict(
+            $request->vessel_id,
+            $request->voyage_departure_date,
+            $request->voyage_estimated_TD,
+            $request->voyage_arrival_date,
+            $request->voyage_estimated_TA,
+            $voyage->voyage_id // ignore current voyage
+        )) {
+            return back()->withErrors([
+                'voyage_conflict' => 'This vessel already has a voyage scheduled during this time.'
+            ])->withInput();
+        }
 
         // If vessel or route changed, update voyage code
         if ($voyage->voyage_status !== 'Completed') {
