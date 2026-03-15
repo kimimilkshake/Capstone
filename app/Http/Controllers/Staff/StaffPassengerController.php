@@ -102,6 +102,7 @@ class StaffPassengerController extends Controller
         try {
             // Create booking
             $booking = Booking::create([
+                'voyage_id' => $voyage->voyage_id,
                 'booking_type' => 'passenger',
                 'booking_status' => $paymentMode === 'Physical' ? 'Confirmed' : 'Pending',
             ]);
