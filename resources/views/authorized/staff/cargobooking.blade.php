@@ -45,7 +45,7 @@
                             $depTime = $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:i A') : '';
                             $routeCodeId = $voyage->routePort->route_code_id ?? '';
                         @endphp
-                        <option value="{{ $voyage->voyage_id }}" data-route_port="{{ $voyage->route_port_id ?? $voyage->routePort->route_port_id ?? '' }}" data-route_code="{{ $routeCodeId }}">
+                        <option value="{{ $voyage->voyage_id }}" data-route_port="{{ $voyage->route_port_id ?? $voyage->routePort->route_port_id ?? '' }}" data-route_code="{{ $routeCodeId }}" data-departure-date="{{ $voyage->voyage_departure_date ?? '' }}" data-departure-time="{{ $voyage->voyage_estimated_TD ?? '' }}">
                             {{ $voyage->voyage_code }} - {{ $voyage->routePort->route_origin ?? 'N/A' }} → {{ $voyage->routePort->route_destination ?? 'N/A' }} - Departure: {{ $depDate }} {{ $depTime ? '(' . $depTime . ')' : '' }}
                         </option>
                     @endforeach
@@ -123,7 +123,7 @@
                                     <label class="form-label">Cargo Description <span class="text-danger">*</span></label>
                                     <select name="cargo_item_id[]" class="form-select cargo-description" required>
                                         <option value="">-- Select Description --</option>
-                                        @foreach($cargoItems as $item)
+                                        @foreach($cargoItems->sortBy('cargo_item_description') as $item)
                                             <option value="{{ $item->cargo_item_id }}" 
                                                 data-route-code="{{ $item->route_code_id ?? '' }}"
                                                 data-measure-required="{{ $item->cargo_item_measure_required ?? 'No' }}"
@@ -148,8 +148,8 @@
                                     <input type="number" name="cargo_quantity[]" class="form-control" placeholder="Qty" min="1" required>
                                 </div>
                                 <div class="col-6">
-                                    <label class="form-label">Weight (kg) <span class="text-danger">*</span></label>
-                                    <input type="number" name="cargo_weight[]" class="form-control" placeholder="Weight" step="0.01" required>
+                                    <label class="form-label">Total Weight (kg) <span class="text-danger">*</span></label>
+                                    <input type="number" name="cargo_weight[]" class="form-control" placeholder="Weight" step="0.01" min="0" required>
                                 </div>
                             </div>
 
@@ -159,17 +159,17 @@
                             <div class="d-flex gap-2 mb-3 align-items-end">
                                 <div class="flex-fill">
                                     <label class="form-label small">Length</label>
-                                    <input type="number" name="cargo_length[]" class="form-control dimension" placeholder="Length" step="0.01" required>
+                                    <input type="number" name="cargo_length[]" class="form-control dimension" placeholder="Length" step="0.01" min="0" required>
                                 </div>
 
                                 <div class="flex-fill">
                                     <label class="form-label small">Width</label>
-                                    <input type="number" name="cargo_width[]" class="form-control dimension" placeholder="Width" step="0.01" required>
+                                    <input type="number" name="cargo_width[]" class="form-control dimension" placeholder="Width" step="0.01" min="0" required>
                                 </div>
 
                                 <div class="flex-fill">
                                     <label class="form-label small">Height</label>
-                                    <input type="number" name="cargo_height[]" class="form-control dimension" placeholder="Height" step="0.01" required>
+                                    <input type="number" name="cargo_height[]" class="form-control dimension" placeholder="Height" step="0.01" min="0" required>
                                 </div>
 
                                 <div style="width: 120px;">
@@ -251,10 +251,17 @@ function calculateCBM(item){
 function applyMeasurementRules(item, selectedOption){
     if (!item || !selectedOption) return;
 
-    const measureRequired = (selectedOption.dataset.measureRequired || 'No').toString();
-    const minLength = selectedOption.dataset.minLength || '';
-    const minWidth = selectedOption.dataset.minWidth || '';
-    const minHeight = selectedOption.dataset.minHeight || '';
+    const measureRequired = (selectedOption.dataset.measureRequired || 'No').toString().trim().toLowerCase();
+    const minLength = parseFloat(selectedOption.dataset.minLength || '0');
+    const maxLength = parseFloat(selectedOption.dataset.maxLength || selectedOption.dataset.minLength || '0');
+    const minWidth = parseFloat(selectedOption.dataset.minWidth || '0');
+    const maxWidth = parseFloat(selectedOption.dataset.maxWidth || selectedOption.dataset.minWidth || '0');
+    const minHeight = parseFloat(selectedOption.dataset.minHeight || '0');
+    const maxHeight = parseFloat(selectedOption.dataset.maxHeight || selectedOption.dataset.minHeight || '0');
+
+    const maxLengthValue = maxLength.toFixed(2);
+    const maxWidthValue = maxWidth.toFixed(2);
+    const maxHeightValue = maxHeight.toFixed(2);
     const unitFromItem = selectedOption.dataset.measurementUnit || 'cm';
 
     const lengthInput = item.querySelector('[name="cargo_length[]"]');
@@ -274,11 +281,12 @@ function applyMeasurementRules(item, selectedOption){
         }
     }
 
-    if (measureRequired === 'Yes') {
-        if(lengthInput) { lengthInput.value = minLength; lengthInput.readOnly = true; }
-        if(widthInput) { widthInput.value = minWidth; widthInput.readOnly = true; }
-        if(heightInput) { heightInput.value = minHeight; heightInput.readOnly = true; }
-        if(unitSelect) unitSelect.disabled = true;
+    if (measureRequired === 'yes') {
+        if(lengthInput) { lengthInput.value = maxLengthValue; lengthInput.readOnly = true; }
+        if(widthInput) { widthInput.value = maxWidthValue; widthInput.readOnly = true; }
+        if(heightInput) { heightInput.value = maxHeightValue; heightInput.readOnly = true; }
+        // Keep enabled so selected unit is included in form POST.
+        if(unitSelect) unitSelect.disabled = false;
         if(dimensionsBlock) dimensionsBlock.style.display = 'none';
     } else {
         if(lengthInput) { lengthInput.value = ''; lengthInput.readOnly = false; }
@@ -296,6 +304,138 @@ function updateCargoItemComputedValues(item){
     if (!descriptionSelect) return;
     const selectedOption = descriptionSelect.options[descriptionSelect.selectedIndex];
     applyMeasurementRules(item, selectedOption);
+}
+
+function parseDepartureDateTime(dateValue, timeValue){
+    const dateText = String(dateValue || '').trim();
+    const timeText = String(timeValue || '').trim();
+    if (!dateText) return null;
+
+    let parsed = null;
+    if (timeText) {
+        parsed = new Date(`${dateText}T${timeText}`);
+        if (Number.isNaN(parsed.getTime())) {
+            parsed = new Date(`${dateText} ${timeText}`);
+        }
+    }
+
+    if (!parsed || Number.isNaN(parsed.getTime())) {
+        parsed = new Date(dateText);
+    }
+
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function validateBookingCutoffByDeparture(departureDateTime){
+    if (!departureDateTime) {
+        return { valid: false, message: 'Invalid voyage departure date/time.' };
+    }
+
+    const now = new Date();
+    const depHour = departureDateTime.getHours();
+    const depDateStart = new Date(
+        departureDateTime.getFullYear(),
+        departureDateTime.getMonth(),
+        departureDateTime.getDate(),
+        0, 0, 0, 0
+    );
+
+    if (depHour <= 18) {
+        if (now >= depDateStart) {
+            return {
+                valid: false,
+                message: 'For departures from 12:00 AM to 6:00 PM, booking must be completed the day before.'
+            };
+        }
+        return { valid: true };
+    }
+
+    const depDateEnd = new Date(
+        departureDateTime.getFullYear(),
+        departureDateTime.getMonth(),
+        departureDateTime.getDate(),
+        23, 59, 59, 999
+    );
+
+    if (now > depDateEnd) {
+        return { valid: false, message: 'This voyage booking window has already closed.' };
+    }
+
+    const isSameDay = now.getFullYear() === departureDateTime.getFullYear()
+        && now.getMonth() === departureDateTime.getMonth()
+        && now.getDate() === departureDateTime.getDate();
+
+    if (isSameDay) {
+        const cutoff = new Date(depDateStart);
+        cutoff.setHours(17, 0, 0, 0);
+        if (now >= cutoff) {
+            return {
+                valid: false,
+                message: 'For departures from 7:00 PM to 11:59 PM, same-day booking cutoff is 5:00 PM.'
+            };
+        }
+    }
+
+    return { valid: true };
+}
+
+function refreshVoyageAvailabilityByCutoff(){
+    if(!voyageSelect) return;
+
+    const options = Array.from(voyageSelect.options);
+    let hasAvailableVoyage = false;
+
+    options.forEach((opt, index) => {
+        // Keep placeholder option always visible and enabled.
+        if (index === 0 || !opt.value) {
+            opt.disabled = false;
+            opt.hidden = false;
+            return;
+        }
+
+        const departureDateTime = parseDepartureDateTime(opt.dataset.departureDate, opt.dataset.departureTime);
+        const cutoffValidation = validateBookingCutoffByDeparture(departureDateTime);
+
+        opt.disabled = !cutoffValidation.valid;
+        opt.hidden = !cutoffValidation.valid;
+
+        if (cutoffValidation.valid) {
+            hasAvailableVoyage = true;
+        }
+    });
+
+    const selectedOption = voyageSelect.options[voyageSelect.selectedIndex];
+    if (selectedOption && selectedOption.disabled) {
+        voyageSelect.value = '';
+    }
+
+    if (!hasAvailableVoyage) {
+        voyageSelect.value = '';
+    }
+}
+
+function validateStaffNumericInputs(form){
+    const quantityInputs = form.querySelectorAll('input[name="cargo_quantity[]"]');
+    for (const quantityInput of quantityInputs) {
+        const value = parseFloat(quantityInput.value);
+        if (quantityInput.value !== '' && !Number.isNaN(value) && value <= 0) {
+            quantityInput.focus();
+            alert('Quantity must be greater than zero.');
+            return false;
+        }
+    }
+
+    const numberInputs = form.querySelectorAll('input[type="number"]');
+    for (const input of numberInputs) {
+        const value = parseFloat(input.value);
+        if (input.value !== '' && !Number.isNaN(value) && value < 0) {
+            input.focus();
+            alert('Negative values are not allowed in numeric fields.');
+            return false;
+        }
+    }
+
+    return true;
 }
 
 // CBM listener
@@ -372,6 +512,8 @@ container.addEventListener('change', e => {
 // Handle voyage selection and filter cargo descriptions by route_code
 const voyageSelect = document.querySelector('select[name="voyage_id"]');
 if(voyageSelect) {
+    refreshVoyageAvailabilityByCutoff();
+
     voyageSelect.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
         const routeCodeId = selectedOption.dataset.route_code;
@@ -391,6 +533,23 @@ if(voyageSelect) {
 const staffForm = document.getElementById('staffCargoForm');
 if(staffForm){
     staffForm.addEventListener('submit', function(e){
+        const selectedVoyageOption = voyageSelect ? voyageSelect.options[voyageSelect.selectedIndex] : null;
+        const departureDateTime = selectedVoyageOption
+            ? parseDepartureDateTime(selectedVoyageOption.dataset.departureDate, selectedVoyageOption.dataset.departureTime)
+            : null;
+
+        const cutoffValidation = validateBookingCutoffByDeparture(departureDateTime);
+        if (!cutoffValidation.valid) {
+            e.preventDefault();
+            alert(cutoffValidation.message);
+            return false;
+        }
+
+        if (!validateStaffNumericInputs(staffForm)) {
+            e.preventDefault();
+            return false;
+        }
+
         const overlay = document.getElementById('staffOverlay');
         if(overlay){ overlay.style.display = 'flex'; }
     });

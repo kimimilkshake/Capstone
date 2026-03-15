@@ -1,0 +1,43 @@
+{
+  "vessel_id": 3,
+  "vessel_name": "MV ROSALIA 3",
+  "vessel_code": "R3",
+  "accommodations": [
+    {
+      "accommodation_id": 9,
+      "accommodation_name": "Aircon",
+      "price": 640.00,
+      "cot_range": "99-140",
+      "description": "Air-conditioned cabin accommodation",
+      "lower_bunks": [],
+      "upper_bunks": []
+    },
+    {
+      "accommodation_id": 10,
+      "accommodation_name": "Economy A",
+      "price": 520.00,
+      "cot_range": "1-98",
+      "description": "Economy class accommodation type A",
+      "lower_bunks": [],
+      "upper_bunks": []
+    },
+    {
+      "accommodation_id": 11,
+      "accommodation_name": "Economy B",
+      "price": 510.00,
+      "cot_range": "141-250, 259-260",
+      "description": "Economy class accommodation type B",
+      "lower_bunks": [],
+      "upper_bunks": []
+    },
+    {
+      "accommodation_id": 12,
+      "accommodation_name": "Economy C",
+      "price": 450.00,
+      "cot_range": "261-303, 305-320, 329-377, 382, 395, 398",
+      "description": "Economy class accommodation type C",
+      "lower_bunks": [],
+      "upper_bunks": []
+    }
+  ]
+}

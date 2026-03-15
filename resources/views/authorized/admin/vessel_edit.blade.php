@@ -10,9 +10,16 @@
         </div>
 
         <div class="acs-form_container">
-            @if (session('success'))
-                <div class="alert alert-success" style="color: green; text-align: center; margin-bottom: 1rem;">
-                    {{ session('success') }}
+            @if(session('success'))
+                <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
+            @endif
+            @if ($errors->any())
+                <div class="alert alert-danger text-center">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
                 </div>
             @endif
 
@@ -189,6 +196,7 @@
                         <div class="form-group vcot-plan"
                             style="display: flex; flex-direction: column; align-items: flex-start; width: 100%;">
                             <label for="vessel_cot_plan_url" style="margin-bottom: 8px;">Cot Plan</label>
+                            <span class="text-danger">Please upload jpg, jpeg, or png files only.</span>
                             @if ($vessel->vessel_cot_plan_url)
                                 <img src="{{ asset('storage/' . $vessel->vessel_cot_plan_url) }}" alt="Cot Plan"
                                     style="width: 100%; max-height: 250px; object-fit: contain; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px;">

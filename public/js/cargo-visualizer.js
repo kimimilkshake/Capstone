@@ -5,7 +5,7 @@
 class SimpleBinPacker {
     constructor() {
         this.bins = [];
-        this.gap = 0.05; // Small gap between items to separate them
+        this.gap = 0.0001; // Minimal gap for collision detection (visual gaps handled by cargoGap in rendering)
     }
 
     addBin(bin) {
@@ -33,103 +33,134 @@ class SimpleBinPacker {
         const packed = [];
         const unpacked = [];
 
-        // Sort items by weight (heaviest first) for better weight distribution
-        const sortedItems = [...items].sort(
-            (a, b) => (b.weight || 0) - (a.weight || 0),
+        // ===== 2-ZONE PACKING BY BOOKING =====
+        // Group items by booking_ref
+        const bookingGroups = {};
+        items.forEach((item) => {
+            const bookingRef = item.booking_ref || "unassigned";
+            if (!bookingGroups[bookingRef]) bookingGroups[bookingRef] = [];
+            bookingGroups[bookingRef].push(item);
+        });
+
+        const bookingRefs = Object.keys(bookingGroups);
+        console.log(
+            `🎯 2-ZONE PACKING BY BOOKING: ${bookingRefs.length} bookings`,
         );
 
-        console.log(
-            "🎯 SEQUENTIAL HATCH PACKING (100% FULL CAPACITY WITH WEIGHT DISTRIBUTION)",
-        );
+        // Calculate weight for each booking
+        const bookingWeights = {};
+        bookingRefs.forEach((ref) => {
+            bookingWeights[ref] = bookingGroups[ref].reduce(
+                (sum, item) => sum + (item.weight || 0),
+                0,
+            );
+        });
+
+        // Assign bookings to zones - check weight balance first, then use round-robin or assign to lighter zone
+        const bookingZones = {};
+        let leftZoneWeight = 0;
+        let rightZoneWeight = 0;
+
+        bookingRefs.forEach((ref, idx) => {
+            const bookingWeight = bookingWeights[ref];
+
+            // Check if zones are balanced (equal weight or first booking)
+            if (leftZoneWeight === rightZoneWeight) {
+                // Zones balanced - use round-robin
+                bookingZones[ref] = idx % 2;
+            } else {
+                // Zones imbalanced - assign to lighter zone
+                bookingZones[ref] = leftZoneWeight <= rightZoneWeight ? 0 : 1;
+            }
+
+            // Update zone weight
+            if (bookingZones[ref] === 0) {
+                leftZoneWeight += bookingWeight;
+            } else {
+                rightZoneWeight += bookingWeight;
+            }
+
+            const zoneName = bookingZones[ref] === 0 ? "LEFT" : "RIGHT";
+            console.log(
+                `   Booking ${ref}: ${zoneName} zone (${bookingGroups[ref].length} items, ${bookingWeights[ref]}kg) [LEFT: ${leftZoneWeight}kg, RIGHT: ${rightZoneWeight}kg]`,
+            );
+        });
+
         console.log(`📦 PACKER STATE:`);
-        console.log(`   Bins: ${this.bins.length}`);
+        console.log(`   Total Hatches: ${this.bins.length}`);
         this.bins.forEach((bin, idx) => {
             const binVolume = bin.width * bin.height * bin.depth;
             console.log(
                 `      Bin ${idx}: id=${bin.id}, size=${bin.width}×${bin.height}×${bin.depth}m, volume=${binVolume.toFixed(2)}m³, maxWeight=${bin.maxWeight}kg`,
             );
         });
-        console.log(`   Items to pack: ${sortedItems.length}`);
-        let totalItemVolume = 0;
-        sortedItems.forEach((item) => {
-            const itemVolume = item.width * item.height * item.depth;
-            totalItemVolume += itemVolume;
-            const fragility = item.is_breakable ? "🔴 BREAKABLE" : "🟢 ROBUST";
-            console.log(
-                `      ${fragility} ${item.description} (${item.weight}kg): ${item.width}×${item.height}×${item.depth}m, vol=${itemVolume.toFixed(3)}m³`,
-            );
-        });
-        console.log(`   Total item volume: ${totalItemVolume.toFixed(2)}m³`);
+        console.log(
+            `\n   Items to pack: ${items.length} (in ${bookingRefs.length} bookings)`,
+        );
         console.log("");
 
-        for (const item of sortedItems) {
+        // Sort bookings by total weight (heaviest first)
+        const sortedBookingRefs = [...bookingRefs].sort((a, b) => {
+            const wA = bookingGroups[a].reduce(
+                (s, i) => s + (i.weight || 0),
+                0,
+            );
+            const wB = bookingGroups[b].reduce(
+                (s, i) => s + (i.weight || 0),
+                0,
+            );
+            return wB - wA;
+        });
+
+        // Track sticky bin per booking (first hatch where booking lands)
+        const bookingBins = {};
+
+        // Process items booking-by-booking so all items from same booking are consecutive
+        const orderedItems = sortedBookingRefs.flatMap((ref) =>
+            [...bookingGroups[ref]].sort(
+                (a, b) => (b.weight || 0) - (a.weight || 0),
+            ),
+        );
+
+        for (const item of orderedItems) {
             let placed = false;
+            const itemBookingRef = item.booking_ref || "unassigned";
+            const assignedZone = bookingZones[itemBookingRef];
+            const zoneName = assignedZone === 0 ? "LEFT" : "RIGHT";
 
-            // Find available hatches: fill sequentially to FULL capacity
-            // Pack sequentially into hatches (fill one completely before using next)
-            const availableBins = this.bins
-                .filter((bin) => {
-                    const percentUsed = (bin.usedWeight / bin.maxWeight) * 100;
-                    const canFit = this.canFit(item, bin);
+            console.log(
+                `  📦 "${item.description}" (${item.width}×${item.height}×${item.depth}m, ${item.weight}kg) → ${zoneName} zone [Booking: ${itemBookingRef}]:`,
+            );
 
-                    return canFit; // No threshold - fill to 100%
-                })
-                .sort((a, b) => {
-                    // SEQUENTIAL FILL: Prefer hatch with MOST weight already (fill up one hatch first)
-                    // Tie-breaker: if same weight, prefer lower ID (prefer Hatch 1 over Hatch 2)
+            const stickyBinId = bookingBins[itemBookingRef];
+            // If item has hatch_id, ONLY try that hatch. Otherwise try all bins
+            const binsToTry = item.hatch_id 
+                ? this.bins.filter(bin => bin.id === item.hatch_id && this.canFit(item, bin))
+                : this.bins.filter((bin) => this.canFit(item, bin)).sort((a, b) => {
+                    if (stickyBinId !== undefined) {
+                        if (a.id === stickyBinId) return -1;
+                        if (b.id === stickyBinId) return 1;
+                    }
                     const weightDiff = b.usedWeight - a.usedWeight;
                     return weightDiff !== 0 ? weightDiff : a.id - b.id;
                 });
 
-            // Debug: Check which bins passed the canFit filter
-            const allBinsStatus = this.bins.map((bin) => {
-                const volumeOk =
-                    this.getVolume(item) + bin.usedVolume <=
-                    this.getVolume(bin);
-                const weightOk =
-                    (item.weight || 0) + bin.usedWeight <= bin.maxWeight;
-                const usedVol = bin.usedVolume.toFixed(2);
-                const maxVol = this.getVolume(bin).toFixed(2);
-                const volPercent = (
-                    (bin.usedVolume / this.getVolume(bin)) *
-                    100
-                ).toFixed(1);
-                const weightPercent = (
-                    (bin.usedWeight / bin.maxWeight) *
-                    100
-                ).toFixed(1);
-                return {
-                    id: bin.id,
-                    volumeOk,
-                    weightOk,
-                    usedVol,
-                    maxVol,
-                    volPercent,
-                    weightPercent,
-                };
-            });
-
-            console.log(
-                `  📊 "${item.description}" (${item.width}×${item.height}×${item.depth}m, ${item.weight}kg):`,
-            );
-            allBinsStatus.forEach((status) => {
-                const volStatus = status.volumeOk ? "✓ VOL" : "✗ VOL";
-                const wgtStatus = status.weightOk ? "✓ WGT" : "✗ WGT";
-                console.log(
-                    `     ${status.id}: ${volStatus} (${status.volPercent}% used: ${status.usedVol}/${status.maxVol}m³) ${wgtStatus} (${status.weightPercent}% used)`,
-                );
-            });
-
-            for (const bin of availableBins) {
-                // Auto-rotate tree-like items to lay flat (horizontal placement)
+            for (const bin of binsToTry) {
                 const rotatedItem = this.autoRotateToFlatten(item);
-
-                const position = this.findPosition(rotatedItem, bin);
+                const position = this.findPosition(
+                    rotatedItem,
+                    bin,
+                    assignedZone,
+                );
                 if (position) {
                     this.placeItem(rotatedItem, bin, position);
+                    if (bookingBins[itemBookingRef] === undefined) {
+                        bookingBins[itemBookingRef] = bin.id;
+                    }
                     packed.push({
                         ...rotatedItem,
                         binId: bin.id,
+                        zone: assignedZone,
                         x: position.x,
                         y: position.y,
                         z: position.z,
@@ -138,11 +169,8 @@ class SimpleBinPacker {
                         (bin.usedWeight / bin.maxWeight) *
                         100
                     ).toFixed(1);
-                    const strategy = rotatedItem.is_breakable
-                        ? "📚 STACKED"
-                        : "📦 SPREAD";
                     console.log(
-                        `  ✓ "${rotatedItem.description}" (${rotatedItem.weight}kg) → ${bin.id} (${percentUsed}% full) ${strategy}`,
+                        `     ✓ Placed in ${bin.id} (${percentUsed}% full)`,
                     );
                     placed = true;
                     break;
@@ -169,50 +197,27 @@ class SimpleBinPacker {
                 `  ${bin.id}: ${bin.usedWeight.toFixed(0)}kg / ${bin.maxWeight.toFixed(0)}kg (${percentUsed}%) - Items: ${bin.items.length}`,
             );
 
-            // Calculate weight distribution per 4-zone in this bin
-            const zones = {
-                frontLeft: { weight: 0, count: 0 },
-                frontRight: { weight: 0, count: 0 },
-                backLeft: { weight: 0, count: 0 },
-                backRight: { weight: 0, count: 0 },
-            };
-
-            bin.items.forEach((item) => {
-                const centerX = item.x + item.width / 2;
-                const centerZ = item.z + item.depth / 2;
-                const weight = item.weight || 0;
-
-                let zone = null;
-                if (centerX < bin.width / 2 && centerZ < bin.depth / 2)
-                    zone = zones.frontLeft;
-                else if (centerX >= bin.width / 2 && centerZ < bin.depth / 2)
-                    zone = zones.frontRight;
-                else if (centerX < bin.width / 2 && centerZ >= bin.depth / 2)
-                    zone = zones.backLeft;
-                else zone = zones.backRight;
-
-                if (zone) {
-                    zone.weight += weight;
-                    zone.count++;
-                }
-            });
-
+            // 2-zone LEFT/RIGHT balance
+            const leftWeight = bin.items
+                .filter((i) => i.x + i.width / 2 < bin.width / 2)
+                .reduce((s, i) => s + (i.weight || 0), 0);
+            const rightWeight = bin.items
+                .filter((i) => i.x + i.width / 2 >= bin.width / 2)
+                .reduce((s, i) => s + (i.weight || 0), 0);
+            const leftCount = bin.items.filter(
+                (i) => i.x + i.width / 2 < bin.width / 2,
+            ).length;
+            const rightCount = bin.items.filter(
+                (i) => i.x + i.width / 2 >= bin.width / 2,
+            ).length;
             console.log(
-                `     🔵 Front-Left: ${zones.frontLeft.weight}kg (${zones.frontLeft.count} items)`,
+                `     ⬅️  LEFT:  ${leftWeight.toFixed(1)}kg (${leftCount} items)`,
             );
             console.log(
-                `     🔴 Front-Right: ${zones.frontRight.weight}kg (${zones.frontRight.count} items)`,
-            );
-            console.log(
-                `     ⚫ Back-Left: ${zones.backLeft.weight}kg (${zones.backLeft.count} items)`,
-            );
-            console.log(
-                `     🟡 Back-Right: ${zones.backRight.weight}kg (${zones.backRight.count} items)`,
+                `     ➡️  RIGHT: ${rightWeight.toFixed(1)}kg (${rightCount} items)`,
             );
         });
-        console.log(
-            "🎯 PACKING COMPLETE (4-zone distribution across all corners)\n",
-        );
+        console.log("🎯 PACKING COMPLETE (2-zone LEFT/RIGHT distribution)\n");
 
         return { packed, unpacked };
     }
@@ -264,6 +269,7 @@ class SimpleBinPacker {
 
     // Check if item at position collides with any existing item in the bin
     collidesWith(item, position, bin) {
+        const g = this.gap;
         const itemBox = {
             x1: position.x,
             x2: position.x + item.width,
@@ -274,16 +280,17 @@ class SimpleBinPacker {
         };
 
         for (const existing of bin.items) {
+            // Expand existing item box by gap on all sides to enforce spacing
             const existBox = {
-                x1: existing.x,
-                x2: existing.x + existing.width,
-                y1: existing.y,
-                y2: existing.y + existing.height,
-                z1: existing.z,
-                z2: existing.z + existing.depth,
+                x1: existing.x - g,
+                x2: existing.x + existing.width + g,
+                y1: existing.y - g,
+                y2: existing.y + existing.height + g,
+                z1: existing.z - g,
+                z2: existing.z + existing.depth + g,
             };
 
-            // Check if boxes overlap (strict, no gap in collision check)
+            // Check if boxes overlap (with gap)
             if (
                 !(
                     itemBox.x2 <= existBox.x1 ||
@@ -300,610 +307,89 @@ class SimpleBinPacker {
         return false; // no collision
     }
 
-    findPosition(item, bin) {
-        const gap = this.gap;
+    findPosition(item, bin, zoneConstraint = undefined) {
+        // 2-ZONE PLACEMENT: LEFT half (x < width/2) or RIGHT half (x >= width/2)
+        const halfW = bin.width / 2;
+        const xMin = zoneConstraint === 1 ? halfW : 0;
+        const xMax = zoneConstraint === 0 ? halfW : bin.width;
+        const zoneName =
+            zoneConstraint === 0
+                ? "LEFT"
+                : zoneConstraint === 1
+                  ? "RIGHT"
+                  : "FULL";
 
-        // 4-ZONE WEIGHT DISTRIBUTION: Divide hatch into 4 corners
-        // Zones: Front-Left (x<w/2, z<d/2), Front-Right (x>=w/2, z<d/2)
-        //        Back-Left (x<w/2, z>=d/2), Back-Right (x>=w/2, z>=d/2)
-        const zones = {
-            frontLeft: {
-                weight: 0,
-                count: 0,
-                minX: 0,
-                maxX: bin.width / 2,
-                minZ: 0,
-                maxZ: bin.depth / 2,
-            },
-            frontRight: {
-                weight: 0,
-                count: 0,
-                minX: bin.width / 2,
-                maxX: bin.width,
-                minZ: 0,
-                maxZ: bin.depth / 2,
-            },
-            backLeft: {
-                weight: 0,
-                count: 0,
-                minX: 0,
-                maxX: bin.width / 2,
-                minZ: bin.depth / 2,
-                maxZ: bin.depth,
-            },
-            backRight: {
-                weight: 0,
-                count: 0,
-                minX: bin.width / 2,
-                maxX: bin.width,
-                minZ: bin.depth / 2,
-                maxZ: bin.depth,
-            },
+        // Fine-grained grid scan within the zone's x-range
+        const step = 0.05;
+        let candidates = [];
+
+        const scanRange = (startX, endX) => {
+            for (
+                let x = startX;
+                x + item.width <= endX + 0.001;
+                x = Math.round((x + step) * 1000) / 1000
+            ) {
+                const posX = Math.min(x, endX - item.width);
+                if (posX < startX - 0.001) continue;
+                for (
+                    let z = 0;
+                    z + item.depth <= bin.depth + 0.001;
+                    z = Math.round((z + step) * 1000) / 1000
+                ) {
+                    const posZ = Math.min(z, bin.depth - item.depth);
+                    // Stack height at (posX, posZ)
+                    let stackHeight = 0;
+                    for (const existing of bin.items) {
+                        const xOv = !(
+                            posX + item.width <= existing.x ||
+                            posX >= existing.x + existing.width
+                        );
+                        const zOv = !(
+                            posZ + item.depth <= existing.z ||
+                            posZ >= existing.z + existing.depth
+                        );
+                        if (xOv && zOv)
+                            stackHeight = Math.max(
+                                stackHeight,
+                                existing.y + existing.height + this.gap,
+                            );
+                    }
+                    if (stackHeight + item.height > bin.height) continue;
+                    const pos = { x: posX, y: stackHeight, z: posZ };
+                    if (!this.collidesWith(item, pos, bin))
+                        candidates.push(pos);
+                }
+            }
         };
 
-        // Classify existing items into zones
-        bin.items.forEach((existing) => {
-            const centerX = existing.x + existing.width / 2;
-            const centerZ = existing.z + existing.depth / 2;
-            const weight = existing.weight || 0;
+        scanRange(xMin, xMax);
 
-            let zone = null;
-            if (centerX < bin.width / 2 && centerZ < bin.depth / 2)
-                zone = zones.frontLeft;
-            else if (centerX >= bin.width / 2 && centerZ < bin.depth / 2)
-                zone = zones.frontRight;
-            else if (centerX < bin.width / 2 && centerZ >= bin.depth / 2)
-                zone = zones.backLeft;
-            else zone = zones.backRight;
+        // If item is wider than the zone half, fall back to full width
+        if (candidates.length === 0 && item.width > xMax - xMin) {
+            scanRange(0, bin.width);
+        }
 
-            if (zone) {
-                zone.weight += weight;
-                zone.count++;
-            }
+        if (candidates.length === 0) {
+            console.log(
+                `    >>> NO VALID POSITION for ${item.width}×${item.height}×${item.depth} in ${zoneName} zone`,
+            );
+            return null;
+        }
+
+        // Prefer floor (y===0) first, fill floor space before stacking
+        candidates.sort((a, b) => {
+            const aFloor = a.y < 0.001 ? 0 : 1;
+            const bFloor = b.y < 0.001 ? 0 : 1;
+            if (aFloor !== bFloor) return aFloor - bFloor; // floor first
+            if (Math.abs(a.z - b.z) > 0.001) return a.z - b.z;
+            return a.x - b.x;
         });
 
-        // Find zone with least weight (prefer balancing weight evenly across all 4 zones)
-        // PRIORITY: Fill sequentially left-to-right, front-to-back
-        // Prefer zones with fewer items first, then lower weight for balance
-        let preferredZone = zones.frontLeft;
-        let minScore = Infinity;
-
-        // Score zones by item count first (to fill sequentially), then weight (to balance)
-        const zoneScores = {
-            frontLeft:
-                zones.frontLeft.count * 1000 + zones.frontLeft.weight,
-            frontRight:
-                zones.frontRight.count * 1000 + zones.frontRight.weight,
-            backLeft:
-                zones.backLeft.count * 1000 + zones.backLeft.weight,
-            backRight:
-                zones.backRight.count * 1000 + zones.backRight.weight,
-        };
-
-        // Find zone with lowest score (fewest items, then least weight)
-        for (const [zoneName, score] of Object.entries(zoneScores)) {
-            if (score < minScore) {
-                minScore = score;
-                preferredZone = zones[zoneName];
-            }
-        }
-
-        const zoneName = Object.keys(zones).find(
-            (k) => zones[k] === preferredZone,
-        );
-
-        // Map each zone to its designated corner
-        // NOTE: Corners are at the actual bin edges (0, width, depth)
-        // Items will be adjusted to fit within bounds when placed
-        const zoneCornerInfo = {
-            frontLeft: {
-                baseX: 0,
-                baseZ: 0,
-                alignRight: false,
-                alignBack: false,
-            },
-            frontRight: {
-                baseX: bin.width,
-                baseZ: 0,
-                alignRight: true,
-                alignBack: false,
-            },
-            backLeft: {
-                baseX: 0,
-                baseZ: bin.depth,
-                alignRight: false,
-                alignBack: true,
-            },
-            backRight: {
-                baseX: bin.width,
-                baseZ: bin.depth,
-                alignRight: true,
-                alignBack: true,
-            },
-        };
-        const zoneCorner = zoneCornerInfo[zoneName];
-
+        const chosen = candidates[0];
         console.log(
-            `    4-Zone balance: FL=${zones.frontLeft.weight}kg, FR=${zones.frontRight.weight}kg, BL=${zones.backLeft.weight}kg, BR=${zones.backRight.weight}kg → Placing ${item.weight}kg in ${zoneName} at bin corner (${zoneCorner.baseX}, 0, ${zoneCorner.baseZ})`,
+            `    >>> findPosition: ${item.width}×${item.height}×${item.depth} → (${chosen.x.toFixed(2)}, ${chosen.y.toFixed(2)}, ${chosen.z.toFixed(2)}) in ${zoneName} zone ${chosen.y > 0 ? "📚 STACKED" : "🟢 FLOOR"} ✓`,
         );
-
-        // Filter corners strictly to preferred zone only
-        let validCorners = bin.corners
-            .filter((corner) => {
-                // Calculate item position based on zone alignment
-                // Right-aligned zones: item ENDS at bin edge, so x = bin.width - item.width
-                // Back-aligned zones: item ENDS at bin edge, so z = bin.depth - item.depth
-                let itemX = zoneCorner.alignRight
-                    ? Math.max(0, bin.width - item.width)
-                    : corner.x;
-                let itemZ = zoneCorner.alignBack
-                    ? Math.max(0, bin.depth - item.depth)
-                    : corner.z;
-                let itemY = corner.y;
-
-                // Check boundaries - items must fit completely within bin
-                const fitsX = itemX >= 0 && itemX + item.width <= bin.width;
-                const fitsY = itemY >= 0 && itemY + item.height <= bin.height;
-                const fitsZ = itemZ >= 0 && itemZ + item.depth <= bin.depth;
-
-                if (!fitsX || !fitsY || !fitsZ) return false;
-
-                // STRICT zone check: item center must be in preferred zone
-                const itemCenterX = itemX + item.width / 2;
-                const itemCenterZ = itemZ + item.depth / 2;
-
-                const inZone =
-                    itemCenterX >= preferredZone.minX &&
-                    itemCenterX < preferredZone.maxX &&
-                    itemCenterZ >= preferredZone.minZ &&
-                    itemCenterZ < preferredZone.maxZ;
-
-                if (!inZone) return false;
-
-                // Check for collisions with existing items
-                const noCollision = !this.collidesWith(
-                    item,
-                    { x: itemX, y: itemY, z: itemZ },
-                    bin,
-                );
-                if (!noCollision) return false;
-
-                // Return the adjusted position as part of the corner object
-                return true;
-            })
-            // CALCULATE STACK HEIGHT: For each valid position, calculate the Y height where this item should sit
-            .map((corner) => {
-                let posX = zoneCorner.alignRight
-                    ? Math.max(0, bin.width - item.width)
-                    : corner.x;
-                let posZ = zoneCorner.alignBack
-                    ? Math.max(0, bin.depth - item.depth)
-                    : corner.z;
-
-                // Calculate stack height at this X-Z position
-                // Find the maximum Y of any existing item that overlaps with this item's XZ footprint
-                let stackHeight = 0;
-                let supportedOnAllSides = false;
-
-                for (const existing of bin.items) {
-                    // Check if existing item overlaps with the proposed position in X-Z plane
-                    const xOverlap = !(
-                        posX + item.width <= existing.x ||
-                        posX >= existing.x + existing.width
-                    );
-                    const zOverlap = !(
-                        posZ + item.depth <= existing.z ||
-                        posZ >= existing.z + existing.depth
-                    );
-
-                    if (xOverlap && zOverlap) {
-                        // This existing item occupies space directly below/above, so stack on top
-                        const topOfExisting = existing.y + existing.height;
-                        stackHeight = Math.max(stackHeight, topOfExisting);
-                    }
-                }
-
-                // Check if item is fully supported on all sides at stackHeight
-                // For an item at stackHeight to be safe, check if all 4 edges have support
-                if (stackHeight > 0) {
-                    let leftSupported = false,
-                        rightSupported = false,
-                        frontSupported = false,
-                        backSupported = false;
-
-                    for (const existing of bin.items) {
-                        // Check if existing item supports the left edge
-                        if (
-                            Math.abs(posX - (existing.x + existing.width)) <
-                                0.05 &&
-                            !(
-                                posZ + item.depth <= existing.z ||
-                                posZ >= existing.z + existing.depth
-                            )
-                        ) {
-                            leftSupported = true;
-                        }
-                        // Check if existing item supports the right edge
-                        if (
-                            Math.abs(posX + item.width - existing.x) < 0.05 &&
-                            !(
-                                posZ + item.depth <= existing.z ||
-                                posZ >= existing.z + existing.depth
-                            )
-                        ) {
-                            rightSupported = true;
-                        }
-                        // Check if existing item supports the front edge
-                        if (
-                            Math.abs(posZ - (existing.z + existing.depth)) <
-                                0.05 &&
-                            !(
-                                posX + item.width <= existing.x ||
-                                posX >= existing.x + existing.width
-                            )
-                        ) {
-                            frontSupported = true;
-                        }
-                        // Check if existing item supports the back edge
-                        if (
-                            Math.abs(posZ + item.depth - existing.z) < 0.05 &&
-                            !(
-                                posX + item.width <= existing.x ||
-                                posX >= existing.x + existing.width
-                            )
-                        ) {
-                            backSupported = true;
-                        }
-                    }
-
-                    // Item is only safely stacked if it has support on at least 2 sides or is fully enclosed
-                    supportedOnAllSides =
-                        (leftSupported || posX <= 0.05) &&
-                        (rightSupported ||
-                            posX + item.width >= bin.width - 0.05) &&
-                        (frontSupported || posZ <= 0.05) &&
-                        (backSupported ||
-                            posZ + item.depth >= bin.depth - 0.05);
-                }
-
-                // If stacked but not supported on all sides, don't allow this position
-                if (stackHeight > 0 && !supportedOnAllSides) {
-                    return null;
-                }
-
-                // Ensure stacked item doesn't exceed bin height
-                if (stackHeight + item.height > bin.height) {
-                    return null; // Can't stack this high
-                }
-
-                return { ...corner, x: posX, y: stackHeight, z: posZ };
-            })
-            .filter((c) => c !== null) // Remove positions that would exceed height
-            .sort((a, b) => {
-                // STACK OPTIMIZATION: Prefer positions with existing stacks (use space efficiently)
-                // Secondary sort: distance to zone corner
-                const aHasStack = a.y > 0 ? 1 : 0;
-                const bHasStack = b.y > 0 ? 1 : 0;
-
-                if (aHasStack !== bHasStack) {
-                    return bHasStack - aHasStack; // Prefer stacking (higher Y first)
-                }
-
-                // Tie-breaker: Distance from corner to the zone's starting corner
-                const distA =
-                    Math.abs(a.x - zoneCorner.baseX) +
-                    Math.abs(a.z - zoneCorner.baseZ);
-                const distB =
-                    Math.abs(b.x - zoneCorner.baseX) +
-                    Math.abs(b.z - zoneCorner.baseZ);
-
-                return distA - distB; // Closer to zone corner = higher priority
-            });
-
-        // If preferred zone has no spots, try other zones in order of weight (least weight first)
-        if (validCorners.length === 0) {
-            // Get zones sorted by weight
-            const zonesByWeight = Object.entries(zones)
-                .sort((a, b) => a[1].weight - b[1].weight)
-                .map(([name]) => zones[name]);
-
-            // Try each zone in order
-            for (const zone of zonesByWeight) {
-                const fallbackZoneInfo =
-                    Object.entries(zoneCornerInfo).find(
-                        ([name]) => zones[name] === zone,
-                    )?.[1] || zoneCornerInfo.frontLeft;
-
-                validCorners = bin.corners
-                    .filter((corner) => {
-                        let itemX = fallbackZoneInfo.alignRight
-                            ? Math.max(0, bin.width - item.width)
-                            : corner.x;
-                        let itemZ = fallbackZoneInfo.alignBack
-                            ? Math.max(0, bin.depth - item.depth)
-                            : corner.z;
-                        let itemY = corner.y;
-
-                        const fitsX =
-                            itemX >= 0 && itemX + item.width <= bin.width;
-                        const fitsY =
-                            itemY >= 0 && itemY + item.height <= bin.height;
-                        const fitsZ =
-                            itemZ >= 0 && itemZ + item.depth <= bin.depth;
-
-                        if (!fitsX || !fitsY || !fitsZ) return false;
-
-                        const itemCenterX = itemX + item.width / 2;
-                        const itemCenterZ = itemZ + item.depth / 2;
-
-                        const inZone =
-                            itemCenterX >= zone.minX &&
-                            itemCenterX < zone.maxX &&
-                            itemCenterZ >= zone.minZ &&
-                            itemCenterZ < zone.maxZ;
-
-                        if (!inZone) return false;
-                        return !this.collidesWith(
-                            item,
-                            { x: itemX, y: itemY, z: itemZ },
-                            bin,
-                        );
-                    })
-                    .map((corner) => {
-                        let posX = fallbackZoneInfo.alignRight
-                            ? Math.max(0, bin.width - item.width)
-                            : corner.x;
-                        let posZ = fallbackZoneInfo.alignBack
-                            ? Math.max(0, bin.depth - item.depth)
-                            : corner.z;
-
-                        // Calculate stack height at this X-Z position
-                        let stackHeight = 0;
-                        let supportedOnAllSides = false;
-
-                        for (const existing of bin.items) {
-                            const xOverlap = !(
-                                posX + item.width <= existing.x ||
-                                posX >= existing.x + existing.width
-                            );
-                            const zOverlap = !(
-                                posZ + item.depth <= existing.z ||
-                                posZ >= existing.z + existing.depth
-                            );
-
-                            if (xOverlap && zOverlap) {
-                                const topOfExisting =
-                                    existing.y + existing.height;
-                                stackHeight = Math.max(
-                                    stackHeight,
-                                    topOfExisting,
-                                );
-                            }
-                        }
-
-                        // Check if item is fully supported on all sides at stackHeight
-                        if (stackHeight > 0) {
-                            let leftSupported = false,
-                                rightSupported = false,
-                                frontSupported = false,
-                                backSupported = false;
-
-                            for (const existing of bin.items) {
-                                // Check if existing item supports the left edge
-                                if (
-                                    Math.abs(
-                                        posX - (existing.x + existing.width),
-                                    ) < 0.05 &&
-                                    !(
-                                        posZ + item.depth <= existing.z ||
-                                        posZ >= existing.z + existing.depth
-                                    )
-                                ) {
-                                    leftSupported = true;
-                                }
-                                // Check if existing item supports the right edge
-                                if (
-                                    Math.abs(posX + item.width - existing.x) <
-                                        0.05 &&
-                                    !(
-                                        posZ + item.depth <= existing.z ||
-                                        posZ >= existing.z + existing.depth
-                                    )
-                                ) {
-                                    rightSupported = true;
-                                }
-                                // Check if existing item supports the front edge
-                                if (
-                                    Math.abs(
-                                        posZ - (existing.z + existing.depth),
-                                    ) < 0.05 &&
-                                    !(
-                                        posX + item.width <= existing.x ||
-                                        posX >= existing.x + existing.width
-                                    )
-                                ) {
-                                    frontSupported = true;
-                                }
-                                // Check if existing item supports the back edge
-                                if (
-                                    Math.abs(posZ + item.depth - existing.z) <
-                                        0.05 &&
-                                    !(
-                                        posX + item.width <= existing.x ||
-                                        posX >= existing.x + existing.width
-                                    )
-                                ) {
-                                    backSupported = true;
-                                }
-                            }
-
-                            supportedOnAllSides =
-                                (leftSupported || posX <= 0.05) &&
-                                (rightSupported ||
-                                    posX + item.width >= bin.width - 0.05) &&
-                                (frontSupported || posZ <= 0.05) &&
-                                (backSupported ||
-                                    posZ + item.depth >= bin.depth - 0.05);
-                        }
-
-                        if (stackHeight > 0 && !supportedOnAllSides) {
-                            return null;
-                        }
-
-                        if (stackHeight + item.height > bin.height) {
-                            return null;
-                        }
-
-                        return { ...corner, x: posX, y: stackHeight, z: posZ };
-                    })
-                    .filter((c) => c !== null)
-                    .sort((a, b) => {
-                        // Prefer existing stacks
-                        const aHasStack = a.y > 0 ? 1 : 0;
-                        const bHasStack = b.y > 0 ? 1 : 0;
-
-                        if (aHasStack !== bHasStack) {
-                            return bHasStack - aHasStack;
-                        }
-
-                        return a.x + a.y + a.z - (b.x + b.y + b.z);
-                    });
-
-                if (validCorners.length > 0) break; // Found a zone with space
-            }
-        }
-
-        if (validCorners.length > 0) {
-            const chosen = validCorners[0];
-
-            // STRICT VALIDATION: Verify chosen position actually fits
-            if (
-                chosen.x + item.width > bin.width ||
-                chosen.y + item.height > bin.height ||
-                chosen.z + item.depth > bin.depth
-            ) {
-                console.error(
-                    `🚨 VALIDATION FAILED: Position violates bounds!`,
-                );
-                console.error(
-                    `   Position: (${chosen.x}, ${chosen.y}, ${chosen.z})`,
-                );
-                console.error(
-                    `   Item size: ${item.width}×${item.height}×${item.depth}`,
-                );
-                console.error(
-                    `   Bin size: ${bin.width}×${bin.height}×${bin.depth}`,
-                );
-                return null;
-            }
-
-            const itemCenterX = chosen.x + item.width / 2;
-            const itemCenterZ = chosen.z + item.depth / 2;
-            let placedZone = "unknown";
-            if (itemCenterX < bin.width / 2 && itemCenterZ < bin.depth / 2)
-                placedZone = "frontLeft";
-            else if (
-                itemCenterX >= bin.width / 2 &&
-                itemCenterZ < bin.depth / 2
-            )
-                placedZone = "frontRight";
-            else if (
-                itemCenterX < bin.width / 2 &&
-                itemCenterZ >= bin.depth / 2
-            )
-                placedZone = "backLeft";
-            else placedZone = "backRight";
-
-            console.log(
-                `    >>> findPosition: ${item.width}×${item.height}×${item.depth} → (${chosen.x.toFixed(2)}, ${chosen.y.toFixed(2)}, ${chosen.z.toFixed(2)}) in ${placedZone} ${chosen.y > 0 ? "📚 STACKED" : "🟢 FLOOR"} ✓ VALID`,
-            );
-            return chosen;
-        }
-
-        // FALLBACK: Try greedy bottom-left placement as last resort
-        // This is more flexible than zone-based packing
-        console.log(
-            `    >>> Zone-based placement failed. Trying greedy bottom-left fallback...`,
-        );
-
-        // Build a 2D ground profile to find stacking opportunities
-        // Sample stack heights at different X-Z coordinates
-        const samplePoints = [];
-        const step = Math.max(item.width, item.depth) * 0.5; // Use item size as step size
-
-        for (let x = 0; x + item.width <= bin.width; x += step) {
-            for (let z = 0; z + item.depth <= bin.depth; z += step) {
-                // Find the maximum Y (stack height) at this location
-                let maxY = 0;
-                for (const existing of bin.items) {
-                    // Check if item would overlap in X-Z plane at this position
-                    const testBox = {
-                        x1: x,
-                        x2: x + item.width,
-                        z1: z,
-                        z2: z + item.depth,
-                    };
-                    const existBox = {
-                        x1: existing.x,
-                        x2: existing.x + existing.width,
-                        z1: existing.z,
-                        z2: existing.z + existing.depth,
-                    };
-
-                    // Check XZ overlap
-                    if (
-                        !(
-                            testBox.x2 <= existBox.x1 ||
-                            testBox.x1 >= existBox.x2 ||
-                            testBox.z2 <= existBox.z1 ||
-                            testBox.z1 >= existBox.z2
-                        )
-                    ) {
-                        // Check if the item is properly supported (footprint fits within support item)
-                        const tolerance = 0.02;
-                        const fullySupported =
-                            x >= existing.x - tolerance &&
-                            x + item.width <=
-                                existing.x + existing.width + tolerance &&
-                            z >= existing.z - tolerance &&
-                            z + item.depth <=
-                                existing.z + existing.depth + tolerance;
-
-                        if (fullySupported) {
-                            // Overlaps in XZ plane and is properly supported, so we can stack on top
-                            const topOfExisting = existing.y + existing.height;
-                            maxY = Math.max(maxY, topOfExisting);
-                        }
-                        // If not fully supported, don't stack on this item
-                    }
-                }
-
-                // Try placing item at this height
-                if (maxY + item.height <= bin.height) {
-                    const testPos = { x, y: maxY, z };
-                    if (!this.collidesWith(item, testPos, bin)) {
-                        console.log(
-                            `    >>> Greedy fallback: Found position at (${x.toFixed(2)}, ${maxY.toFixed(2)}, ${z.toFixed(2)}) ✓`,
-                        );
-                        return testPos;
-                    }
-                }
-
-                samplePoints.push({ x, z, maxY });
-            }
-        }
-
-        console.log(
-            `    >>> findPosition: NO VALID POSITION for ${item.width}×${item.height}×${item.depth}`,
-        );
-        console.log(
-            `        Preferred zone had ${validCorners.length} valid corners before fallback`,
-        );
-        console.log(
-            `        Current bin items: ${bin.items.length}, volume used: ${((bin.usedVolume / this.getVolume(bin)) * 100).toFixed(1)}%`,
-        );
-        console.log(`        Tested ${samplePoints.length} fallback positions`);
-        return null;
+        return chosen;
     }
 
     placeItem(item, bin, position) {
@@ -1098,7 +584,7 @@ class CargoVisualizer {
         this.expectedWidth = 0; // Store expected width to prevent scroll-induced resizing
         this.expectedHeight = 0; // Store expected height to prevent scroll-induced resizing
         this.isVisible = true; // Track if canvas is visible in viewport
-        this.cargoGap = 0.05; // 5cm gap on each side of cargo items for visual spacing
+        this.cargoGap = 0; // No subtraction - items render at actual size, real spacing from packing gap
 
         this.initScene();
     }
@@ -1206,7 +692,7 @@ class CargoVisualizer {
             }
         };
 
-        window.addEventListener('resize', this.onWindowResize);
+        window.addEventListener("resize", this.onWindowResize);
 
         // Start animation loop
         this.animate();
@@ -1495,13 +981,20 @@ class CargoVisualizer {
         const edges = new THREE.EdgesGeometry(geometry);
         const mesh = new THREE.LineSegments(edges, material);
 
-        // Position hatches FRONT-TO-BACK (same level, different Z positions)
-        // Hatch 1 at Z = 5 (0 to 10)
-        // Hatch 2 at Z = 16 (11 to 21, with 1m gap)
-        const hatchIndex = this.hatchMeshes.length;
+        // Position hatches FRONT-TO-BACK using cumulative Z calculation
+        // This ensures hatches touch each other with minimal gap
+        const gapBetweenHatches = 0.2; // 20cm gap between hatches
+        let cumulativeZ = hatch.depth / 2; // Start with half depth of current hatch
+        
+        // Add full depth of all previously added hatches to position this hatch after them
+        for (let i = 0; i < this.hatchMeshes.length; i++) {
+            const prevHatch = this.hatchMeshes[i].hatch;
+            cumulativeZ += prevHatch.depth + gapBetweenHatches;
+        }
+
         const worldX = hatch.width / 2; // Center X for both
         const worldY = hatch.height / 2; // Center Y for both (same level)
-        const worldZ = hatchIndex * (hatch.depth + 1) + hatch.depth / 2; // Stack front-to-back
+        const worldZ = cumulativeZ;
 
         mesh.position.set(worldX, worldY, worldZ);
 
@@ -1513,7 +1006,7 @@ class CargoVisualizer {
             `   Dimensions: ${hatch.width}×${hatch.height}×${hatch.depth}m`,
         );
         console.log(
-            `   maxWeight: ${hatch.maxWeight}t = ${hatch.maxWeight * 1000}kg`,
+            `   maxWeight: ${hatch.maxWeight}kg (from hatch_capacity_per_hold * 1000)`,
         );
         console.log(
             `   World bounds: X[${(worldX - hatch.width / 2).toFixed(1)}-${(worldX + hatch.width / 2).toFixed(1)}] Y[${(worldY - hatch.height / 2).toFixed(1)}-${(worldY + hatch.height / 2).toFixed(1)}] Z[${(worldZ - hatch.depth / 2).toFixed(1)}-${(worldZ + hatch.depth / 2).toFixed(1)}]`,
@@ -1549,13 +1042,13 @@ class CargoVisualizer {
         this.sceneRoot.add(labelMesh);
         this.hatchLabels.push(labelMesh); // Store for billboard effect
 
-        // Add to packer with maxWeight converted to KG (API sends TONS)
+        // Add to packer with maxWeight already in KG (API provides hatch_capacity_per_hold * 1000)
         const hatchForPacker = {
             id: hatch.id,
             width: hatch.width,
             height: hatch.height,
             depth: hatch.depth,
-            maxWeight: (hatch.maxWeight || 0) * 1000, // Convert TONS to KG
+            maxWeight: (hatch.maxWeight || 0), // Already in kg
         };
 
         // Store hatch info for weight tracking
@@ -1682,8 +1175,8 @@ class CargoVisualizer {
 
                 this.sceneRoot.add(mesh);
 
-                // Track weight per hatch
-                hatchMeshInfo.usedWeight += (item.weight || 0) / 1000;
+                // Track weight per hatch (usedWeight in kg, same as maxWeight)
+                hatchMeshInfo.usedWeight += (item.weight || 0);
             } else {
                 console.warn(`  ✗ Hatch ${item.binId} not found!`);
                 this.sceneRoot.add(mesh);
@@ -1707,8 +1200,8 @@ class CargoVisualizer {
             "📦 HATCH CAPACITY STATUS (60% threshold for sequential fill):",
         );
         this.hatchMeshes.forEach((hatchInfo) => {
-            const maxWeightKg = (hatchInfo.hatch.maxWeight || 0) * 1000;
-            const usedWeightKg = hatchInfo.usedWeight * 1000;
+            const maxWeightKg = (hatchInfo.hatch.maxWeight || 0);
+            const usedWeightKg = hatchInfo.usedWeight;
             const weightPercent =
                 maxWeightKg > 0
                     ? ((usedWeightKg / maxWeightKg) * 100).toFixed(1)
@@ -1844,58 +1337,105 @@ class CargoVisualizer {
         );
         // Reset packer and clear scene
         this.packer = new SimpleBinPacker();
-        this.hatchMeshes = []; // CRITICAL: Clear hatchMeshes so hatchIndex is calculated correctly
-        this.hatchLabels = []; // Clear labels array
+        this.hatchMeshes = [];
+        this.hatchLabels = [];
         while (this.scene.children.length) {
             this.scene.remove(this.scene.children[0]);
         }
 
-        // Recreate and add root group so subsequent add* methods attach to a visible group
+        // Recreate and add root group
         this.sceneRoot = new THREE.Group();
         this.scene.add(this.sceneRoot);
 
-        // Re-add basic lighting (no grid)
+        // Re-add basic lighting
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         this.scene.add(ambientLight);
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
         directionalLight.position.set(100, 100, 100);
         directionalLight.castShadow = true;
         this.scene.add(directionalLight);
-        // const gridHelper = new THREE.GridHelper(200, 20);
-        // this.scene.add(gridHelper);
 
         // Add hatches
         hatches.forEach((hatch) => this.addHatch(hatch));
 
-        // Treat each cargo entry as a single booked cargo (do not expand by quantity)
-        const expanded = cargo.map((c, idx) => ({
-            id: `${c.id}`,
-            width: c.width,
-            height: c.height,
-            depth: c.depth,
-            weight: c.weight || 0,
-            description: c.description || c.desc || "",
-            // preserve original quantity as metadata for labels/tooltips
-            originalQuantity: c.quantity || c.qty || 1,
-            booking_ref: c.booking_ref || c.bookingRef || null,
-        }));
+        // Normalize all cargo items: ensure booking_ref is a string
+        cargo.forEach((item) => {
+            if (item.booking_ref) {
+                item.booking_ref = String(item.booking_ref);
+            } else {
+                item.booking_ref = "unassigned";
+            }
+        });
 
-        // Pack items
-        const results = this.packer.pack(expanded);
-        console.log("Packing results", results);
+        // Separate items by booking reference
+        const itemsByBooking = {};
+        cargo.forEach((item) => {
+            const bookingRef = item.booking_ref;
+            if (!itemsByBooking[bookingRef]) itemsByBooking[bookingRef] = [];
+            itemsByBooking[bookingRef].push(item);
+        });
 
-        // Visualize packed items
-        this.visualizeItems(results.packed);
+        const bookingRefs = Object.keys(itemsByBooking);
+        console.log("Booking refs:", bookingRefs.join(", "));
 
-        // Frame camera after adding visuals
+        // For each hatch, pack all items in that hatch (old and new) in booking order
+        hatches.forEach((hatch) => {
+            // Get all items for this hatch
+            const hatchItems = cargo.filter(c => c.hatch_id === hatch.id);
+            
+            if (hatchItems.length === 0) {
+                console.log(`Hatch ${hatch.id}: no items`);
+                return;
+            }
+
+            console.log(`Hatch ${hatch.id}: packing ${hatchItems.length} items`);
+
+            // Create packer for this hatch
+            const hatchPacker = new SimpleBinPacker();
+            hatchPacker.addBin({
+                id: hatch.id,
+                width: hatch.width,
+                height: hatch.height,
+                depth: hatch.depth,
+                maxWeight: hatch.maxWeight,
+            });
+
+            // Prepare items in booking order
+            const itemsInOrder = [];
+            bookingRefs.forEach((bookingRef) => {
+                const bookingItems = hatchItems.filter(c => String(c.booking_ref) === bookingRef);
+                bookingItems.forEach((c) => {
+                    itemsInOrder.push({
+                        id: `${c.id}`,
+                        width: c.width,
+                        height: c.height,
+                        depth: c.depth,
+                        weight: c.weight || 0,
+                        description: c.description || c.desc || "",
+                        booking_ref: String(c.booking_ref),
+                        receipt_id: c.receipt_id,
+                    });
+                });
+            });
+
+            console.log(`Hatch ${hatch.id}: itemsInOrder has ${itemsInOrder.length} items before packing`);
+
+            // Pack using 2-zone algorithm
+            const results = hatchPacker.pack(itemsInOrder);
+            console.log(`Hatch ${hatch.id}: packed ${results.packed.length}, unpacked ${results.unpacked.length}`);
+            
+            // Visualize
+            this.visualizeItems(results.packed);
+        });
+
+        // Frame camera
         this.frameScene();
 
-        // Visualize unpacked items to the side so user can see what's failing
-        if (results.unpacked && results.unpacked.length > 0) {
-            this.visualizeUnpacked(results.unpacked);
-        }
-
-        return results;
+        // Return last booking items for DB saving
+        const lastBookingRef = bookingRefs[bookingRefs.length - 1];
+        const lastBookingItems = cargo.filter(c => String(c.booking_ref) === lastBookingRef);
+        console.log("Returning packed items for DB:", lastBookingItems.length);
+        return { packed: lastBookingItems, unpacked: [] };
     }
 
     /**
@@ -1912,7 +1452,7 @@ class CargoVisualizer {
         // Reset scene but preserve sceneRoot
         this.packer = new SimpleBinPacker();
         this.hatchMeshes = []; // Clear hatch tracking for proper indexing
-        
+
         // Clear only sceneRoot children, not the entire scene
         while (this.sceneRoot.children.length) {
             this.sceneRoot.remove(this.sceneRoot.children[0]);
@@ -1925,12 +1465,12 @@ class CargoVisualizer {
 
         // Clear lights (but not sceneRoot itself)
         const lightsToRemove = [];
-        this.scene.children.forEach(child => {
+        this.scene.children.forEach((child) => {
             if (child instanceof THREE.Light) {
                 lightsToRemove.push(child);
             }
         });
-        lightsToRemove.forEach(light => this.scene.remove(light));
+        lightsToRemove.forEach((light) => this.scene.remove(light));
 
         // Re-add lighting
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -1970,7 +1510,9 @@ class CargoVisualizer {
         // Use packing algorithm to place items intelligently
         const { packed, unpacked } = this.packer.pack(expandedCargo);
 
-        console.log(`📊 Packing Results: ${packed.length} packed, ${unpacked.length} unpacked`);
+        console.log(
+            `📊 Packing Results: ${packed.length} packed, ${unpacked.length} unpacked`,
+        );
 
         // Store packing results for stats display
         this.lastPackingResults = { packed, unpacked, hatches };
@@ -1978,29 +1520,42 @@ class CargoVisualizer {
         // Render PACKED items (using calculated positions)
         packed.forEach((packedItem) => {
             // Find the hatch this item belongs to
-            const hatchIndex = hatches.findIndex(h => h.id === packedItem.binId);
+            const hatchIndex = hatches.findIndex(
+                (h) => h.id === packedItem.binId,
+            );
             if (hatchIndex === -1) {
-                console.warn(`Hatch ${packedItem.binId} not found for item ${packedItem.id}`);
+                console.warn(
+                    `Hatch ${packedItem.binId} not found for item ${packedItem.id}`,
+                );
                 return;
             }
 
             const hatch = hatches[hatchIndex];
-            
+
             // Convert LOCAL position (relative to hatch origin 0,0,0) to WORLD position
             // The hatch's local origin aligns with world coordinate:
             // X: 0 (hatch starts at X=0 in world)
             // Y: 0 (hatch starts at Y=0 in world)
-            // Z: hatchIndex * (hatch.depth + 1) (hatch starts at this Z in world)
-            
+            // Z: hatchIndex * (hatch.depth + 1.2) (hatch starts at this Z in world)
+
             // Packer returns item position (corner), we need to convert to center position
             const itemWorldX = packedItem.x + packedItem.width / 2;
             const itemWorldY = packedItem.y + packedItem.height / 2;
-            const itemWorldZ = hatchIndex * (hatch.depth + 1) + packedItem.z + packedItem.depth / 2;
+            const itemWorldZ =
+                hatchIndex * (hatch.depth + 1.2) +
+                packedItem.z +
+                packedItem.depth / 2;
 
-            // Create colored mesh based on cargo type
-            const color = packedItem.is_breakable ? 0xff6b6b : 0x77a1ff; // Red for breakable, blue for normal
+            // Create colored mesh based on weight - Heavy items red, light items blue
+            const weight = packedItem.weight || 0;
+            const heavyWeightThreshold = 300; // kg - items >= 300kg are red (heavy)
+            const color = weight >= heavyWeightThreshold ? 0xff6b6b : 0x77a1ff; // Red for heavy, blue for light
             const mesh = new THREE.Mesh(
-                new THREE.BoxGeometry(packedItem.width, packedItem.height, packedItem.depth),
+                new THREE.BoxGeometry(
+                    packedItem.width,
+                    packedItem.height,
+                    packedItem.depth,
+                ),
                 new THREE.MeshStandardMaterial({
                     color: color,
                     metalness: 0.3,
@@ -2010,7 +1565,7 @@ class CargoVisualizer {
                     side: THREE.DoubleSide,
                 }),
             );
-            
+
             mesh.position.set(itemWorldX, itemWorldY, itemWorldZ);
             mesh.userData = {
                 itemId: packedItem.id,
@@ -2026,7 +1581,7 @@ class CargoVisualizer {
             console.log(
                 `✅ PACKED: ${packedItem.description} → Hatch ${hatch.label}`,
                 `Local: (${packedItem.x.toFixed(2)}, ${packedItem.y.toFixed(2)}, ${packedItem.z.toFixed(2)})`,
-                `World: (${itemWorldX.toFixed(2)}, ${itemWorldY.toFixed(2)}, ${itemWorldZ.toFixed(2)})`
+                `World: (${itemWorldX.toFixed(2)}, ${itemWorldY.toFixed(2)}, ${itemWorldZ.toFixed(2)})`,
             );
         });
 
@@ -2034,7 +1589,11 @@ class CargoVisualizer {
         unpacked.forEach((unpackedItem, idx) => {
             // Place unpacked items outside hatches as visual indicator
             const mesh = new THREE.Mesh(
-                new THREE.BoxGeometry(unpackedItem.width, unpackedItem.height, unpackedItem.depth),
+                new THREE.BoxGeometry(
+                    unpackedItem.width,
+                    unpackedItem.height,
+                    unpackedItem.depth,
+                ),
                 new THREE.MeshStandardMaterial({
                     color: 0xff9999, // Light red for warning
                     metalness: 0.2,
@@ -2051,7 +1610,7 @@ class CargoVisualizer {
             mesh.position.set(
                 5 + idx * (unpackedItem.width + 0.5),
                 10 + unpackedItem.height / 2,
-                baseZ + 5
+                baseZ + 5,
             );
 
             mesh.userData = {
@@ -2070,9 +1629,12 @@ class CargoVisualizer {
 
         // Frame camera to show all content
         this.frameScene();
-        
+
         // Force a render immediately
-        console.log("CargoVisualizer: forcing render, scene children:", this.scene.children.length);
+        console.log(
+            "CargoVisualizer: forcing render, scene children:",
+            this.scene.children.length,
+        );
         this.renderer.render(this.scene, this.camera);
     }
 
@@ -2088,15 +1650,15 @@ class CargoVisualizer {
         if (this.isolatedItemId === itemIdStr) {
             // Toggle off - reset the view
             console.log("🔄 Toggling OFF - resetting view");
-            
+
             // Remove active class from all buttons
-            document.querySelectorAll('.isolate-btn').forEach(btn => {
-                btn.classList.remove('active');
-                btn.style.backgroundColor = '';
-                btn.style.borderColor = '';
-                btn.style.color = '';
+            document.querySelectorAll(".isolate-btn").forEach((btn) => {
+                btn.classList.remove("active");
+                btn.style.backgroundColor = "";
+                btn.style.borderColor = "";
+                btn.style.color = "";
             });
-            
+
             this.resetIsolation();
             this.isolatedItemId = null;
             return false;
@@ -2107,16 +1669,18 @@ class CargoVisualizer {
             console.log(
                 `🔄 Switching from item ${this.isolatedItemId} to ${itemIdStr}`,
             );
-            
+
             // Remove active class from previously isolated button
-            const prevBtn = document.querySelector(`.isolate-btn[data-receipt-id="${this.isolatedItemId}"]`);
+            const prevBtn = document.querySelector(
+                `.isolate-btn[data-receipt-id="${this.isolatedItemId}"]`,
+            );
             if (prevBtn) {
-                prevBtn.classList.remove('active');
-                prevBtn.style.backgroundColor = '';
-                prevBtn.style.borderColor = '';
-                prevBtn.style.color = '';
+                prevBtn.classList.remove("active");
+                prevBtn.style.backgroundColor = "";
+                prevBtn.style.borderColor = "";
+                prevBtn.style.color = "";
             }
-            
+
             this.resetIsolation();
         }
 
@@ -2195,14 +1759,16 @@ class CargoVisualizer {
             console.log(
                 `✅ Isolation complete: Highlighted ${matchCount} item(s) with ID "${itemIdStr}", hidden ${itemCount - matchCount} items`,
             );
-            
+
             // Add active class to the button and apply inline styles
-            const btn = document.querySelector(`.isolate-btn[data-receipt-id="${itemIdStr}"]`);
+            const btn = document.querySelector(
+                `.isolate-btn[data-receipt-id="${itemIdStr}"]`,
+            );
             if (btn) {
-                btn.classList.add('active');
-                btn.style.backgroundColor = '#dc3545';
-                btn.style.borderColor = '#c82333';
-                btn.style.color = 'white';
+                btn.classList.add("active");
+                btn.style.backgroundColor = "#dc3545";
+                btn.style.borderColor = "#c82333";
+                btn.style.color = "white";
             }
             this.isolatedItemId = itemIdStr; // Track that this item is now isolated
             return true;

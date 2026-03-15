@@ -11,6 +11,7 @@ use App\Models\Voyage;
 use App\Models\Accommodation;
 use App\Models\Notification;
 use App\Jobs\SendTicketEmail;
+use App\Helpers\CotPlanHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Traits\StaffGuard;
@@ -26,12 +27,25 @@ class StaffPassengerController extends Controller
 
     /**
      * Show passenger booking form for staff
+     * Uses same filtering as passenger side to prevent errors and maintain consistency
      */
     public function create()
     {
         $voyages = Voyage::with(['routePort', 'vessel.accommodations'])
             ->where('voyage_status', 'Scheduled')
+            ->where(function ($query) {
+                // Show voyages from tomorrow onwards
+                $query->whereDate('voyage_departure_date', '>', today())
+                    // OR show today's voyages that depart more than 2 hours from now
+                    ->orWhere(function ($q) {
+                    $q->whereDate('voyage_departure_date', '=', today())
+                        ->where('voyage_estimated_TD', '>', now()->addHours(2)->format('H:i:s'));
+                });
+            })
+            // Only show voyages within the next 7 days
+            ->whereDate('voyage_departure_date', '<=', today()->addDays(7))
             ->orderBy('voyage_departure_date', 'asc')
+            ->orderBy('voyage_estimated_TD', 'asc')
             ->get();
 
         // Get vessel cot plan for first voyage if available
@@ -325,6 +339,9 @@ class StaffPassengerController extends Controller
             ->values()
             ->all();
 
+        // Get vessel COT plan for bunk type information
+        $vesselPlan = CotPlanHelper::getVesselPlan($voyage->vessel_id);
+
         $result = [];
         foreach ($voyage->vessel->accommodations as $accommodation) {
             $cotRange = $accommodation->accommodation_cot_range;
@@ -341,13 +358,20 @@ class StaffPassengerController extends Controller
 
                         for ($i = $start; $i <= $end; $i++) {
                             if (!in_array($i, $bookedCots)) {
-                                $availableCots[] = $i;
+                                // Determine bunk type
+                                $bunkType = $this->determineBunkType($vesselPlan, $accommodation->accommodation_id, $i);
+                                $availableCots[] = [
+                                    'number' => $i,
+                                    'bunk_type' => $bunkType
+                                ];
                             }
                         }
                     }
                 }
 
-                sort($availableCots);
+                usort($availableCots, function ($a, $b) {
+                    return $a['number'] - $b['number'];
+                });
             }
 
             $result[] = [
@@ -360,6 +384,66 @@ class StaffPassengerController extends Controller
         }
 
         return response()->json(['success' => true, 'accommodations' => $result]);
+    }
+
+    /**
+     * Determine if a COT number is a lower or upper bunk
+     */
+    private function determineBunkType($vesselPlan, $accommodationId, $cotNumber)
+    {
+        if (!$vesselPlan || !isset($vesselPlan['accommodations'])) {
+            return null;
+        }
+
+        foreach ($vesselPlan['accommodations'] as $acc) {
+            if ($acc['accommodation_id'] == $accommodationId) {
+                // Expand "all" keyword to actual COT numbers
+                $lowerBunks = $this->expandBunkArray($acc['lower_bunks'] ?? [], $acc['cot_range'] ?? '');
+                $upperBunks = $this->expandBunkArray($acc['upper_bunks'] ?? [], $acc['cot_range'] ?? '');
+
+                if (in_array($cotNumber, $lowerBunks)) {
+                    return 'lower';
+                }
+                if (in_array($cotNumber, $upperBunks)) {
+                    return 'upper';
+                }
+                break;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Expand bunk array, handling the special "all" keyword
+     * If "all" is in the array, expands to all COT numbers in the range
+     */
+    private function expandBunkArray($bunkArray, $cotRange)
+    {
+        // Check if "all" or ["all"] is in the array
+        if (in_array('all', $bunkArray) || in_array('[all]', $bunkArray)) {
+            // Parse cot range and return all COT numbers
+            $allCots = [];
+            if ($cotRange) {
+                $ranges = array_map('trim', explode(',', $cotRange));
+                foreach ($ranges as $range) {
+                    if (strpos($range, '-') !== false) {
+                        list($start, $end) = explode('-', $range);
+                        $start = (int) trim($start);
+                        $end = (int) trim($end);
+                        for ($i = $start; $i <= $end; $i++) {
+                            $allCots[] = $i;
+                        }
+                    } else {
+                        $allCots[] = (int) trim($range);
+                    }
+                }
+            }
+            return $allCots;
+        }
+
+        // Otherwise, return the array with values converted to integers
+        return array_map(fn($val) => (int) $val, $bunkArray);
     }
 
     /**

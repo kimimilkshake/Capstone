@@ -8,25 +8,17 @@
       <h3>VIEW RATES</h3>
     </div>
 
-    {{-- ERROR MESSAGE --}}
-    @if ($errors->any())
-      <div class="alert-wrapper">
-        <div class="alert alert-danger">
-          <strong>All fields are required.</strong><br>
-          @foreach ($errors->all() as $error)
-            {{ $error }}<br>
-          @endforeach
-        </div>
-      </div>
+    @if(session('success'))
+        <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
     @endif
-
-    {{-- SUCCESS MESSAGE --}}
-    @if (session('success'))
-      <div class="alert-wrapper">
-        <div class="alert alert-success">
-          {{ session('success') }}
+    @if ($errors->any())
+        <div class="alert alert-danger text-center">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
-      </div>
     @endif
 
     <div class="search-filter-row" style="display: flex; gap: 10px; margin-bottom: 20px;">

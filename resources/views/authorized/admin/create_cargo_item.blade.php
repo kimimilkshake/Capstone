@@ -101,7 +101,7 @@
 
         {{-- Measurement Range Section --}}
         <div id="measurement-section" style="display: none;">
-
+        {{-- MIN AND MAX LWH --}}
           {{-- MIN LWH --}}
           <div class="form-row">
             <div class="form-col">
@@ -125,58 +125,45 @@
               </div>
             </div>
 
-            <div class="form-col">
-              <div class="form-group">
-                <label>Unit</label>
-                <select name="measurement_unit_id">
-                  <option value="">Select Unit</option>
-                  @foreach ($measurement_units as $unit)
-                    <option value="{{ $unit->measurement_unit_id }}">
-                      {{ $unit->measurement_unit_name }}
-                    </option>
-                  @endforeach
-                </select>
+            {{-- MAX LWH --}}
+              <div class="form-col">
+                <div class="form-group">
+                  <label>Max Length</label>
+                  <input type="number" step="0.01" name="cargo_item_max_length">
+                </div>
               </div>
-            </div>
+
+              <div class="form-col">
+                <div class="form-group">
+                  <label>Max Width</label>
+                  <input type="number" step="0.01" name="cargo_item_max_width">
+                </div>
+              </div>
+
+              <div class="form-col">
+                <div class="form-group">
+                  <label>Max Height</label>
+                  <input type="number" step="0.01" name="cargo_item_max_height">
+                </div>
+              </div>
+
+              <div class="form-col">
+                <div class="form-group">
+                  <label>Unit</label>
+                  <select name="measurement_unit_id">
+                    <option value="">Select Unit</option>
+                    @foreach ($measurement_units as $unit)
+                      <option value="{{ $unit->measurement_unit_id }}">
+                        {{ $unit->measurement_unit_name }}
+                      </option>
+                    @endforeach
+                  </select>
+                </div>
+              </div>
+
           </div>
-
-          {{-- MAX LWH --}}
-          <div class="form-row">
-            <div class="form-col">
-              <div class="form-group">
-                <label>Max Length</label>
-                <input type="number" step="0.01" name="cargo_item_max_length">
-              </div>
-            </div>
-
-            <div class="form-col">
-              <div class="form-group">
-                <label>Max Width</label>
-                <input type="number" step="0.01" name="cargo_item_max_width">
-              </div>
-            </div>
-
-            <div class="form-col">
-              <div class="form-group">
-                <label>Max Height</label>
-                <input type="number" step="0.01" name="cargo_item_max_height">
-              </div>
-            </div>
-
-            <div class="form-col">
-              <div class="form-group">
-                <label>Unit</label>
-                <select name="measurement_unit_id_max">
-                  <option value="">Select Unit</option>
-                  @foreach ($measurement_units as $unit)
-                    <option value="{{ $unit->measurement_unit_id }}">
-                      {{ $unit->measurement_unit_name }}
-                    </option>
-                  @endforeach
-                </select>
-              </div>
-            </div>
-          </div>
+          
+        </div>
 
         </div>
 

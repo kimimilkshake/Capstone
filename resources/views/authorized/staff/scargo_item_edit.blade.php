@@ -10,7 +10,16 @@
 
     <div class="aci-form_container">
       @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+          <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
+      @endif
+      @if ($errors->any())
+          <div class="alert alert-danger text-center">
+              <ul>
+                  @foreach ($errors->all() as $error)
+                      <li>{{ $error }}</li>
+                  @endforeach
+              </ul>
+          </div>
       @endif
       <form action="{{ route('staff.cargo_item_update', $cargo_item->cargo_item_id) }}" method="POST">
         @csrf
@@ -113,24 +122,6 @@
 
             <div class="form-col">
               <div class="form-group">
-                <label>Unit</label>
-                <select name="measurement_unit_id">
-                  <option value="">Select Unit</option>
-                  @foreach ($measurement_units as $unit)
-                    <option value="{{ $unit->measurement_unit_id }}"
-                      {{ $cargo_item->measurement_unit_id == $unit->measurement_unit_id ? 'selected' : '' }}>
-                      {{ $unit->measurement_unit_name }}
-                    </option>
-                  @endforeach
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {{-- Max LWH --}}
-          <div class="form-row">
-            <div class="form-col">
-              <div class="form-group">
                 <label>Max Length</label>
                 <input type="number" step="0.01" name="cargo_item_max_length" 
                        value="{{ old('cargo_item_max_length', $cargo_item->cargo_item_max_length) }}">
@@ -156,18 +147,21 @@
             <div class="form-col">
               <div class="form-group">
                 <label>Unit</label>
-                <select name="measurement_unit_id_max">
+                <select name="measurement_unit_id">
                   <option value="">Select Unit</option>
                   @foreach ($measurement_units as $unit)
                     <option value="{{ $unit->measurement_unit_id }}"
-                      {{ $cargo_item->measurement_unit_id_max == $unit->measurement_unit_id ? 'selected' : '' }}>
+                      {{ $cargo_item->measurement_unit_id == $unit->measurement_unit_id ? 'selected' : '' }}>
                       {{ $unit->measurement_unit_name }}
                     </option>
                   @endforeach
                 </select>
               </div>
             </div>
+
           </div>
+
+        </div>
         </div>
 
         <div class="form-actions">

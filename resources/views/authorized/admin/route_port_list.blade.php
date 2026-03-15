@@ -119,8 +119,8 @@
     <span class="close-btn" id="closeAddModal">&times;</span>
     <h3>Add Route and Port</h3>
 
-    <form id="addRoutePortForm">
-      @csrf
+    <form id="addRoutePortForm" method="POST" action="{{ route('admin.route_port_store') }}">
+    @csrf
 
       <!-- 2 columns for route -->
       <div class="rpmodal-row three-col">

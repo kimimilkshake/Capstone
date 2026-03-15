@@ -66,8 +66,10 @@ class CargoAutoPlacementService
                 ];
             }
 
-            // Prepare cargo items with unit conversion
+            // Calculate total cargo weight
+            $totalCargoWeight = 0;
             $cargoItems = [];
+            
             foreach ($cargoBookings as $cargo) {
                 if ($cargo->length && $cargo->width && $cargo->height) {
                     // Get measurement unit (default: cm)
@@ -78,12 +80,15 @@ class CargoAutoPlacementService
                     $heightM = self::convertToMeters($cargo->height, $unitName);
                     $lengthM = self::convertToMeters($cargo->length, $unitName);
 
+                    $cargoWeight = (float) ($cargo->weight ?? 0);
+                    $totalCargoWeight += $cargoWeight;
+
                     $cargoItems[] = [
                         'id' => $cargo->cargo_booking_id,
                         'w' => (float) $widthM,
                         'h' => (float) $heightM,
                         'd' => (float) $lengthM,
-                        'weight' => (float) ($cargo->weight ?? 0),
+                        'weight' => $cargoWeight,
                         'q' => (int) ($cargo->quantity ?? 1),
                         'item_name' => $cargo->cargoItem->cargo_item_description ?? 'Unknown',
                         'original_unit' => $unitName,
@@ -101,12 +106,79 @@ class CargoAutoPlacementService
                 ];
             }
 
-            // All cargo items are available for manual placement
+            // Check if cargo fits in available hatch capacity
+            $hatches = $voyage->vessel->hatches;
+            $totalAvailableCapacity = 0;
+            $hatchCapacities = [];
+
+            foreach ($hatches as $hatch) {
+                $maxWeightKg = (float) $hatch->hatch_capacity_per_hold * 1000; // Convert tons to kg
+                
+                // Get current weight used in this hatch
+                $currentWeight = \Illuminate\Support\Facades\DB::table('cargo_receipt')
+                    ->join('cargo_booking', 'cargo_receipt.cargo_booking_id', '=', 'cargo_booking.cargo_booking_id')
+                    ->where('cargo_receipt.hatch_id', $hatch->hatch_id)
+                    ->where('cargo_receipt.voyage_id', $voyageId)
+                    ->sum('cargo_booking.weight');
+
+                $availableWeight = $maxWeightKg - ($currentWeight ?? 0);
+                $totalAvailableCapacity += $availableWeight;
+
+                $hatchCapacities[$hatch->hatch_id] = [
+                    'label' => $hatch->hatch_label,
+                    'maxWeight' => $maxWeightKg,
+                    'currentWeight' => $currentWeight ?? 0,
+                    'availableWeight' => $availableWeight
+                ];
+            }
+
+            // Check if total cargo weight exceeds total available capacity
+            if ($totalCargoWeight > $totalAvailableCapacity) {
+                $shortfall = $totalCargoWeight - $totalAvailableCapacity;
+                return [
+                    'success' => false,
+                    'message' => "Cargo exceeds available hatch capacity. Total cargo weight: {$totalCargoWeight}kg. Available capacity: {$totalAvailableCapacity}kg. Shortfall: {$shortfall}kg.",
+                    'packedItems' => [],
+                    'unpackedItems' => $cargoItems,
+                    'hatchCapacities' => $hatchCapacities
+                ];
+            }
+
+            // Check if each individual cargo item can fit in at least one hatch
+            $itemsThatCantFit = [];
+            foreach ($cargoItems as $item) {
+                $itemWeight = $item['weight'];
+                $canFitInAnyHatch = false;
+
+                foreach ($hatchCapacities as $hatchId => $hatchInfo) {
+                    if ($itemWeight <= $hatchInfo['availableWeight']) {
+                        $canFitInAnyHatch = true;
+                        break;
+                    }
+                }
+
+                if (!$canFitInAnyHatch) {
+                    $itemsThatCantFit[] = $item;
+                }
+            }
+
+            if (!empty($itemsThatCantFit)) {
+                return [
+                    'success' => false,
+                    'message' => "Insufficient weight allowance",
+                    'packedItems' => [],
+                    'unpackedItems' => $itemsThatCantFit,
+                    'hatchCapacities' => $hatchCapacities
+                ];
+            }
+
+            // All cargo weight fits - ready for placement
             return [
                 'success' => true,
-                'message' => 'Cargo items are ready for manual placement review (dimensions converted to meters).',
+                'message' => "Cargo weight validation passed. Total cargo: {$totalCargoWeight}kg. Available capacity: {$totalAvailableCapacity}kg.",
                 'packedItems' => $cargoItems,
                 'unpackedItems' => [],
+                'hatchCapacities' => $hatchCapacities,
                 'skipValidation' => true
             ];
 

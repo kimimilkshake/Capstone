@@ -16,9 +16,15 @@
 
                   {{-- Display error if username not found --}}
                   @if($errors->has('username'))
-                    <div class="alert alert-danger mt-3">
+                    <div class="alert alert-danger mx-auto" style="text-align: center;">
                       {{ $errors->first('username') }}
                     </div>
+                  @endif
+                  {{-- Display success message --}}
+                  @if(session('success'))
+                      <div class="alert alert-success mx-auto" style="text-align: center;">
+                          {{ session('success') }}
+                      </div>
                   @endif
 
                   <div class="form-floating mt-5 mb-4">
@@ -27,7 +33,7 @@
 
                         <div class="form-floating mt-5 mb-4">
                             <input type="text" name="username" class="form-control form-control-lg" placeholder="Username" required>
-                            <label>Username</label>
+                            <label>Username <span class="text-danger">*</span></label>
                         </div>
 
                         <button class="loginBtn btn btn-lg px-5 mt-1 mb-4" type="submit">

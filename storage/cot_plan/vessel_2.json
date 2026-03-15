@@ -1,0 +1,43 @@
+{
+  "vessel_id": 2,
+  "vessel_name": "MV LAPULAPU FERRY 8",
+  "vessel_code": "F8",
+  "accommodations": [
+    {
+      "accommodation_id": 5,
+      "accommodation_name": "Aircon A",
+      "price": 450.00,
+      "cot_range": "201-296",
+      "description": "Air-conditioned cabin accommodation type A",
+      "lower_bunks": [],
+      "upper_bunks": []
+    },
+    {
+      "accommodation_id": 6,
+      "accommodation_name": "Aircon B",
+      "price": 430.00,
+      "cot_range": "401-468",
+      "description": "Air-conditioned cabin accommodation type B",
+      "lower_bunks": [],
+      "upper_bunks": []
+    },
+    {
+      "accommodation_id": 7,
+      "accommodation_name": "Economy A",
+      "price": 370.00,
+      "cot_range": "1-12, 15-107, 109, 111, 113",
+      "description": "Economy class accommodation type A",
+      "lower_bunks": [],
+      "upper_bunks": []
+    },
+    {
+      "accommodation_id": 8,
+      "accommodation_name": "Economy B",
+      "price": 350.00,
+      "cot_range": "301-336",
+      "description": "Economy class accommodation type B",
+      "lower_bunks": [],
+      "upper_bunks": []
+    }
+  ]
+}

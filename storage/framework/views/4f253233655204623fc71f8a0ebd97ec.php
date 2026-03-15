@@ -7,19 +7,17 @@
       <h3>SEARCH VOYAGE</h3>
     </div>
 
-    
     <?php if(session('success')): ?>
-      <div class="alert alert-success mb-3">
-          <?php echo e(session('success')); ?>
-
-      </div>
+        <div class="alert alert-success text-center mx-auto w-75" role="alert"><?php echo e(session('success')); ?></div>
     <?php endif; ?>
-
-    <?php if(session('error')): ?>
-      <div class="alert alert-danger mb-3">
-          <?php echo e(session('error')); ?>
-
-      </div>
+    <?php if($errors->any()): ?>
+        <div class="alert alert-danger text-center">
+            <ul>
+                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <li><?php echo e($error); ?></li>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            </ul>
+        </div>
     <?php endif; ?>
 
     <div class="search-add-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
@@ -31,10 +29,16 @@
               value="<?php echo e(request('search')); ?>">
           <input 
               type="date" 
-              name="date" 
-              placeholder="Search by date"
-              value="<?php echo e(request('date')); ?>"
-              style="margin-left:10px;">
+              name="start_date" 
+              value="<?php echo e(request('start_date')); ?>"
+              style="margin-left:10px;"
+              placeholder="Start date">
+          <input 
+              type="date" 
+              name="end_date" 
+              value="<?php echo e(request('end_date')); ?>"
+              style="margin-left:10px;"
+              placeholder="End date">
           <button type="submit">
               <i class="fa-solid fa-magnifying-glass me-2"></i>Search
           </button>

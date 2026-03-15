@@ -66,6 +66,7 @@
         @foreach($booking->cargoBookings as $index => $cargo)
             <div class="card shadow-sm p-4 mb-4">
                 <h5>Cargo Item #{{ $index + 1 }}</h5>
+                <input type="hidden" name="cargo_booking_id[]" value="{{ $cargo->cargo_booking_id }}">
 
                 <div class="form-row">
                     <div class="form-col">
@@ -91,6 +92,12 @@
                                 @foreach($cargoItems as $item)
                                     <option value="{{ $item->cargo_item_id }}"
                                         data-freight="{{ $item->cargo_item_freight }}"
+                                        data-min-length="{{ $item->cargo_item_min_length ?? '' }}"
+                                        data-max-length="{{ $item->cargo_item_max_length ?? '' }}"
+                                        data-min-width="{{ $item->cargo_item_min_width ?? '' }}"
+                                        data-max-width="{{ $item->cargo_item_max_width ?? '' }}"
+                                        data-min-height="{{ $item->cargo_item_min_height ?? '' }}"
+                                        data-max-height="{{ $item->cargo_item_max_height ?? '' }}"
                                         {{ $cargo->cargo_item_id == $item->cargo_item_id ? 'selected' : '' }}>
                                         {{ $item->cargo_item_description }}
                                     </option>
@@ -134,10 +141,12 @@
                             <label>Unit</label>
                             <select name="measurement_unit[]" required>
                                 @php
-                                    $selectedUnit = old('measurement_unit.'.$index, $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm');
+                                    $selectedUnitId = old('measurement_unit.'.$index, $cargo->measurement_unit_id);
                                 @endphp
                                 @foreach($measurementUnits as $measurementUnit)
-                                    <option value="{{ $measurementUnit->measurement_unit_abbreviation }}" {{ $selectedUnit === $measurementUnit->measurement_unit_abbreviation ? 'selected' : '' }}>
+                                    <option value="{{ $measurementUnit->measurement_unit_id }}"
+                                        data-unit-abbrev="{{ strtolower($measurementUnit->measurement_unit_abbreviation ?? 'cm') }}"
+                                        {{ (string) $selectedUnitId === (string) $measurementUnit->measurement_unit_id ? 'selected' : '' }}>
                                         {{ $measurementUnit->measurement_unit_abbreviation }}
                                     </option>
                                 @endforeach
@@ -182,6 +191,85 @@
 </div>
 
 <script>
+    function setDimensionConstraint(input, minValue, maxValue, label) {
+        if (!input) return;
+
+        const hasMin = minValue !== null && minValue !== '' && !Number.isNaN(Number(minValue));
+        const hasMax = maxValue !== null && maxValue !== '' && !Number.isNaN(Number(maxValue));
+
+        if (hasMin) {
+            input.min = Number(minValue);
+        } else {
+            input.removeAttribute('min');
+        }
+
+        if (hasMax) {
+            input.max = Number(maxValue);
+        } else {
+            input.removeAttribute('max');
+        }
+
+        input.oninput = function() {
+            const value = parseFloat(input.value);
+            if (input.value === '' || Number.isNaN(value)) {
+                input.setCustomValidity('');
+                return;
+            }
+
+            if (hasMin && value < Number(minValue)) {
+                input.setCustomValidity(`${label} must be at least ${Number(minValue).toFixed(2)}.`);
+                return;
+            }
+
+            if (hasMax && value > Number(maxValue)) {
+                input.setCustomValidity(`${label} must not exceed ${Number(maxValue).toFixed(2)}.`);
+                return;
+            }
+
+            input.setCustomValidity('');
+        };
+
+        // Trigger initial validity check for pre-filled values.
+        input.dispatchEvent(new Event('input'));
+    }
+
+    function applyMeasurementRange(index) {
+        const descriptionSelects = document.querySelectorAll('select[name="description[]"]');
+        const lengthInputs = document.querySelectorAll('input[name="length[]"]');
+        const widthInputs = document.querySelectorAll('input[name="width[]"]');
+        const heightInputs = document.querySelectorAll('input[name="height[]"]');
+
+        const descriptionSelect = descriptionSelects[index];
+        if (!descriptionSelect) return;
+
+        const selectedOption = descriptionSelect.options[descriptionSelect.selectedIndex];
+        if (!selectedOption || !selectedOption.value) {
+            setDimensionConstraint(lengthInputs[index], null, null, 'Length');
+            setDimensionConstraint(widthInputs[index], null, null, 'Width');
+            setDimensionConstraint(heightInputs[index], null, null, 'Height');
+            return;
+        }
+
+        setDimensionConstraint(
+            lengthInputs[index],
+            selectedOption.dataset.minLength,
+            selectedOption.dataset.maxLength || selectedOption.dataset.minLength,
+            'Length'
+        );
+        setDimensionConstraint(
+            widthInputs[index],
+            selectedOption.dataset.minWidth,
+            selectedOption.dataset.maxWidth || selectedOption.dataset.minWidth,
+            'Width'
+        );
+        setDimensionConstraint(
+            heightInputs[index],
+            selectedOption.dataset.minHeight,
+            selectedOption.dataset.maxHeight || selectedOption.dataset.minHeight,
+            'Height'
+        );
+    }
+
     function calculateCBM(index) {
         const lengthInputs = document.querySelectorAll('input[name="length[]"]');
         const widthInputs = document.querySelectorAll('input[name="width[]"]');
@@ -192,12 +280,25 @@
         let length = lengthInputs[index] ? (parseFloat(lengthInputs[index].value) || 0) : 0;
         let width = widthInputs[index] ? (parseFloat(widthInputs[index].value) || 0) : 0;
         let height = heightInputs[index] ? (parseFloat(heightInputs[index].value) || 0) : 0;
-        const unit = unitSelects[index] ? unitSelects[index].value : 'cm';
+        const selectedUnitOption = unitSelects[index]
+            ? unitSelects[index].options[unitSelects[index].selectedIndex]
+            : null;
+        const unit = selectedUnitOption
+            ? (selectedUnitOption.dataset.unitAbbrev || 'cm').toLowerCase()
+            : 'cm';
 
         if (unit === 'in') {
             length *= 2.54;
             width *= 2.54;
             height *= 2.54;
+        } else if (unit === 'mm') {
+            length *= 0.1;
+            width *= 0.1;
+            height *= 0.1;
+        } else if (unit === 'm') {
+            length *= 100;
+            width *= 100;
+            height *= 100;
         }
 
         const cbm = (length * width * height) / 1000000;
@@ -230,8 +331,12 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         calculateValues();
-        document.querySelectorAll('select[name="description[]"]').forEach(input => {
-            input.addEventListener('change', calculateValues);
+        document.querySelectorAll('select[name="description[]"]').forEach((input, index) => {
+            applyMeasurementRange(index);
+            input.addEventListener('change', function() {
+                applyMeasurementRange(index);
+                calculateValues();
+            });
         });
         document.querySelectorAll('select[name="measurement_unit[]"]').forEach(input => {
             input.addEventListener('change', calculateValues);

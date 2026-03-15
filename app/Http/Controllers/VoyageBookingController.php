@@ -10,13 +10,21 @@ class VoyageBookingController extends Controller
 {
     public function index()
     {
-        // Get voyages within next 8 days with status Scheduled
-        $startDate = Carbon::now()->startOfDay();
-        $endDate = Carbon::now()->addDays(8)->endOfDay();
-
+        // Get voyages - only future/upcoming voyages within next 7 days
+        // Voyages are hidden 2 hours before departure time
         $voyages = Voyage::with(['vessel', 'routePort'])
             ->where('voyage_status', 'Scheduled')
-            ->whereBetween('voyage_departure_date', [$startDate, $endDate])
+            ->where(function ($query) {
+                // Show voyages from tomorrow onwards
+                $query->whereDate('voyage_departure_date', '>', today())
+                    // OR show today's voyages that depart more than 2 hours from now
+                    ->orWhere(function ($q) {
+                    $q->whereDate('voyage_departure_date', '=', today())
+                        ->where('voyage_estimated_TD', '>', now()->addHours(2)->format('H:i:s'));
+                });
+            })
+            // Only show voyages within the next 7 days
+            ->whereDate('voyage_departure_date', '<=', today()->addDays(7))
             ->orderBy('voyage_departure_date')
             ->orderBy('voyage_estimated_TD')
             ->get()

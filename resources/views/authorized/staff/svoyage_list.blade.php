@@ -8,17 +8,17 @@
       <h3>SEARCH VOYAGE</h3>
     </div>
 
-    {{-- Display Success / Error Messages --}}
     @if(session('success'))
-      <div class="alert alert-success mb-3">
-          {{ session('success') }}
-      </div>
+        <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
     @endif
-
-    @if(session('error'))
-      <div class="alert alert-danger mb-3">
-          {{ session('error') }}
-      </div>
+    @if ($errors->any())
+        <div class="alert alert-danger text-center">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
     @endif
 
     <div class="search-add-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
@@ -30,10 +30,16 @@
               value="{{ request('search') }}">
           <input 
               type="date" 
-              name="date" 
-              placeholder="Search by date"
-              value="{{ request('date') }}"
-              style="margin-left:10px;">
+              name="start_date" 
+              value="{{ request('start_date') }}"
+              style="margin-left:10px;"
+              placeholder="Start date">
+          <input 
+              type="date" 
+              name="end_date" 
+              value="{{ request('end_date') }}"
+              style="margin-left:10px;"
+              placeholder="End date">
           <button type="submit">
               <i class="fa-solid fa-magnifying-glass me-2"></i>Search
           </button>

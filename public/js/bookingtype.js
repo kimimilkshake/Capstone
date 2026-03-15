@@ -12,6 +12,65 @@ const voyages = JSON.parse(document.getElementById("voyages-data").textContent);
 let availableDates = [];
 let availableVoyages = []; // Store voyages for selected route
 
+// Validate cargo booking cutoff based on departure date and time
+function validateCargoCutoff(departureDate, departureTimeStr) {
+    if (!departureDate || !departureTimeStr) {
+        return {
+            valid: false,
+            message: "Invalid voyage departure information.",
+        };
+    }
+
+    // Parse departure time (format: HH:MM:SS)
+    const timeParts = departureTimeStr.split(":");
+    const depHour = parseInt(timeParts[0]);
+
+    const now = new Date();
+    const depDate = new Date(departureDate);
+    const depDateStart = new Date(depDate);
+    depDateStart.setHours(0, 0, 0, 0);
+
+    // 12:00 AM to 6:00 PM (00:00 to 18:00) - must book day before
+    if (depHour <= 18) {
+        if (now >= depDateStart) {
+            return {
+                valid: false,
+                message: "Cargo booking is not allowed anymore at this time",
+            };
+        }
+        return { valid: true };
+    }
+
+    // 7:00 PM to 11:59 PM (19:00+) - same day booking with 5:00 PM cutoff
+    const depDateEnd = new Date(depDate);
+    depDateEnd.setHours(23, 59, 59, 999);
+
+    if (now > depDateEnd) {
+        return {
+            valid: false,
+            message: "Cargo booking is not allowed anymore at this time",
+        };
+    }
+
+    const isSameDay =
+        now.getFullYear() === depDate.getFullYear() &&
+        now.getMonth() === depDate.getMonth() &&
+        now.getDate() === depDate.getDate();
+
+    if (isSameDay) {
+        const cutoff = new Date(depDateStart);
+        cutoff.setHours(17, 0, 0, 0); // 5:00 PM
+        if (now >= cutoff) {
+            return {
+                valid: false,
+                message: "Cargo booking is not allowed anymore at this time",
+            };
+        }
+    }
+
+    return { valid: true };
+}
+
 // Initially disable proceed button
 proceedBtn.disabled = true;
 
@@ -21,7 +80,7 @@ routeToSelect.addEventListener("change", updateAvailableDates);
 tripDateInput.addEventListener("input", updateAvailableTimes);
 departureTimeSelect.addEventListener("change", checkProceedButton);
 bookingTypeRadios.forEach((radio) =>
-    radio.addEventListener("change", checkProceedButton)
+    radio.addEventListener("change", checkProceedButton),
 );
 
 // Check all fields to enable/disable proceed button
@@ -86,11 +145,11 @@ function updateAvailableDates() {
 
     // Find all voyages for this route
     availableVoyages = voyages.filter(
-        (v) => v.route_from === origin && v.route_to === destination
+        (v) => v.route_from === origin && v.route_to === destination,
     );
 
     if (!availableVoyages.length) {
-        alert("No voyages found for this route in the next 8 days.");
+        alert("No voyages found for this route in the next 7 days.");
         resetSelection();
         return;
     }
@@ -103,9 +162,9 @@ function updateAvailableDates() {
     tripDateInput.disabled = false;
     tripDateInput.min = new Date().toISOString().split("T")[0];
 
-    // Set max date to 8 days from now
+    // Set max date to 7 days from now
     const maxDate = new Date();
-    maxDate.setDate(maxDate.getDate() + 8);
+    maxDate.setDate(maxDate.getDate() + 7);
     tripDateInput.max = maxDate.toISOString().split("T")[0];
 
     checkProceedButton();
@@ -142,7 +201,7 @@ function updateAvailableTimes() {
 
     // Find voyages for the selected date
     const dateVoyages = availableVoyages.filter(
-        (v) => v.departure_date === selectedDate
+        (v) => v.departure_date === selectedDate,
     );
 
     // Populate departure times
@@ -150,7 +209,7 @@ function updateAvailableTimes() {
         const option = document.createElement("option");
         option.value = voyage.voyage_id;
         option.textContent = new Date(
-            "2000-01-01 " + voyage.departure_time
+            "2000-01-01 " + voyage.departure_time,
         ).toLocaleTimeString("en-US", {
             hour: "2-digit",
             minute: "2-digit",
@@ -182,13 +241,13 @@ function resetSelection() {
 proceedBtn.addEventListener("click", function () {
     if (proceedBtn.disabled) {
         alert(
-            "Please select origin, destination, date, and departure time before proceeding."
+            "Please select origin, destination, date, and departure time before proceeding.",
         );
         return;
     }
 
     const bookingType = document.querySelector(
-        'input[name="bookingType"]:checked'
+        'input[name="bookingType"]:checked',
     ).value;
     const routeFrom = routeFromSelect.value;
     const routeTo = routeToSelect.value;
@@ -206,12 +265,21 @@ proceedBtn.addEventListener("click", function () {
 
     // Find the specific voyage for verification
     const selectedVoyage = availableVoyages.find(
-        (v) => v.voyage_id == voyageId
+        (v) => v.voyage_id == voyageId,
     );
 
     if (!selectedVoyage) {
         alert("Selected voyage not found. Please try again.");
         return;
+    }
+
+    // Validate cargo booking cutoff if cargo type is selected
+    if (bookingType === "cargo") {
+        const cutoffValidation = validateCargoCutoff(tripDate, departureTime);
+        if (!cutoffValidation.valid) {
+            alert(cutoffValidation.message);
+            return;
+        }
     }
 
     const baseUrl =
@@ -221,15 +289,15 @@ proceedBtn.addEventListener("click", function () {
 
     // Include voyage information in URL
     const url = `${baseUrl}?route_from=${encodeURIComponent(
-        routeFrom
+        routeFrom,
     )}&route_to=${encodeURIComponent(
-        routeTo
+        routeTo,
     )}&departure_date=${encodeURIComponent(
-        tripDate
+        tripDate,
     )}&departure_time=${encodeURIComponent(
-        departureTime
+        departureTime,
     )}&voyage_id=${encodeURIComponent(voyageId)}&type=${encodeURIComponent(
-        bookingType
+        bookingType,
     )}`;
 
     window.location.href = url;

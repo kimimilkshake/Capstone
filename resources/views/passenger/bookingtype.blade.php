@@ -8,7 +8,7 @@
             <!-- Left Side: Available Voyages -->
             <div class="col-lg-6">
                 <div class="table-container">
-                    <h4 class="text-center text-primary">Available Voyages (Next 8 Days)</h4>
+                    <h4 class="text-center text-primary">Available Voyages (Next 7 Days)</h4>
 
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped">
@@ -28,7 +28,8 @@
                                             $depTime = data_get($voyage, 'departure_time');
                                         @endphp
                                         <td>{{ $depDate ? \Carbon\Carbon::parse($depDate)->format('M d') : '-' }}</td>
-                                        <td>{{ data_get($voyage, 'route_from', '-') }} - {{ data_get($voyage, 'route_to', '-') }}</td>
+                                        <td>{{ data_get($voyage, 'route_from', '-') }} -
+                                            {{ data_get($voyage, 'route_to', '-') }}</td>
                                         <td>{{ $depTime ? \Carbon\Carbon::parse($depTime)->format('h:i A') : '-' }}</td>
                                         <td>{{ data_get($voyage, 'vessel_name', '-') }}</td>
                                     </tr>

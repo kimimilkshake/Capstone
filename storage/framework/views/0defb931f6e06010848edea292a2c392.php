@@ -35,9 +35,6 @@
       </div>
 
         <div class="dropdown-menu">
-          <a href="#" class="dropdown-item">
-            <i class="fa-solid fa-user"></i> View Profile
-          </a>
           <form action="<?php echo e(route('logout')); ?>" method="POST">
             <?php echo csrf_field(); ?>
             <button type="submit" class="dropdown-item logout">
@@ -250,10 +247,16 @@
         .catch(error => console.error('Error loading unread count:', error));
     }
 
-    // Navigate to cargo booking page
+    // Navigate to cargo booking page based on authenticated role
+    const cargoBookingsBaseUrl = <?php echo json_encode(
+      Session::get('user_role') === 'admin'
+        ? url('/authorized/admin/cargo-bookings')
+        : url('/authorized/staff/cargo-bookings')
+    , 15, 512) ?>;
+
     window.navigateToCargo = function(bookingRef) {
       console.log('Navigating to cargo booking:', bookingRef);
-      const url = `<?php echo e(url('/authorized/staff/cargo-bookings')); ?>/${bookingRef}`;
+      const url = `${cargoBookingsBaseUrl}/${bookingRef}`;
       console.log('Navigation URL:', url);
       window.location.href = url;
     };

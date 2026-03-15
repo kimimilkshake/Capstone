@@ -1,4 +1,3 @@
-
 <?php $__env->startSection('content'); ?>
     <section class="vh-100 d-flex align-items-center justify-content-center login-bg scanner-login-shell"
         style="background-image: url('<?php echo e(asset('images/login-bg.png')); ?>');">
@@ -8,7 +7,10 @@
                     <div class="card scanner-login-card shadow-lg border-0">
                         <div class="card-body p-0 text-center">
                             <div class="scanner-card-header px-4 px-md-5 pt-0">
-                             
+                            
+                                <a href="<?php echo e(route('login')); ?>" class="back-icon">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </a>
 
                                 <?php if(auth()->guard('staff')->check()): ?>
                                     <form action="<?php echo e(route('logout')); ?>" method="POST" class="m-0">
@@ -50,7 +52,7 @@
 
                                     <div class="form-floating mb-4">
                                         <input type="password" name="password" id="scannerPassword"
-                                            class="form-control form-control-lg text-white bg-dark border-light"
+                                            class="form-control form-control-lg"
                                             placeholder="Password" />
                                         <label for="scannerPassword" class="#485B8C">Password</label>
                                     </div>

@@ -35,9 +35,6 @@
       </div>
 
         <div class="dropdown-menu">
-          <a href="#" class="dropdown-item">
-            <i class="fa-solid fa-user"></i> View Profile
-          </a>
           <form action="<?php echo e(route('logout')); ?>" method="POST">
             <?php echo csrf_field(); ?>
             <button type="submit" class="dropdown-item logout">

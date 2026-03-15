@@ -4,8 +4,8 @@
 @section('content')
     @include('components.hero')
 
-    <div class="container my-5">
-        <div class="card shadow-sm mx-auto passenger-cargo-card" style="max-width:1300px; background-color:#f0f0f0;">
+    <div class="container-fluid my-5 px-3 px-xl-4">
+        <div class="card shadow-sm mx-auto passenger-cargo-card" style="max-width:1520px; background-color:#f0f0f0;">
             <div class="card-header bg-dark text-white text-center mb-1">
                 <h5 class="mb-0">CARGO BOOKING FORM</h5>
             </div>
@@ -153,7 +153,7 @@
                                             <div class="input-group has-validation">
                                                 <select name="cargo_item_id[]" class="form-control cargo-description required-field">
                                                     <option value="">-- Select Description --</option>
-                                                    @foreach($cargoItems as $cargo)
+                                                    @foreach($cargoItems->sortBy('cargo_item_description') as $cargo)
                                                             @if($cargo->route_code_id == ($voyage->routePort->route_code_id ?? null))
                                                             <option value="{{ $cargo->cargo_item_id }}"
                                                                 data-route-code="{{ $cargo->route_code_id ?? '' }}"
@@ -184,7 +184,7 @@
                                         <div class="flex-fill">
                                             <label class="form-label">Quantity <span class="text-danger">*</span></label>
                                             <div class="input-group has-validation">
-                                                <input type="number" name="cargo_quantity[]" class="form-control"
+                                                <input type="number" name="cargo_quantity[]" class="form-control required-field"
                                                     placeholder="Quantity" min="1" required>
                                                 <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
                                                     <i class="bi bi-exclamation-circle-fill text-danger"></i>
@@ -193,10 +193,10 @@
                                             <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
                                         </div>
                                         <div class="flex-fill">
-                                            <label class="form-label">Weight (kg) <span class="text-danger">*</span></label>
+                                            <label class="form-label">Total Weight (kg) <span class="text-danger">*</span></label>
                                             <div class="input-group has-validation">
-                                                <input type="number" name="cargo_weight[]" class="form-control"
-                                                    placeholder="Weight" step="0.01" required>
+                                                <input type="number" name="cargo_weight[]" class="form-control required-field"
+                                                    placeholder="Weight" step="0.01" min="0" required>
                                                 <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
                                                     <i class="bi bi-exclamation-circle-fill text-danger"></i>
                                                 </span>
@@ -214,7 +214,7 @@
                                                     class="text-danger">*</span></label>
                                             <div class="input-group has-validation">
                                                 <input type="number" name="cargo_length[]" class="form-control dimension"
-                                                    placeholder="Length" step="0.01" required>
+                                                    placeholder="Length" step="0.01" min="0" required>
                                                 <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
                                                     <i class="bi bi-exclamation-circle-fill text-danger"></i>
                                                 </span>
@@ -227,7 +227,7 @@
                                                     class="text-danger">*</span></label>
                                             <div class="input-group has-validation">
                                                 <input type="number" name="cargo_width[]" class="form-control dimension"
-                                                    placeholder="Width" step="0.01" required>
+                                                    placeholder="Width" step="0.01" min="0" required>
                                                 <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
                                                     <i class="bi bi-exclamation-circle-fill text-danger"></i>
                                                 </span>
@@ -240,7 +240,7 @@
                                                     class="text-danger">*</span></label>
                                             <div class="input-group has-validation">
                                                 <input type="number" name="cargo_height[]" class="form-control dimension"
-                                                    placeholder="Height" step="0.01" required>
+                                                    placeholder="Height" step="0.01" min="0" required>
                                                 <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
                                                     <i class="bi bi-exclamation-circle-fill text-danger"></i>
                                                 </span>
@@ -252,8 +252,8 @@
                                             <label class="form-label small">Unit</label>
                                             <select name="measurement_unit[]" class="form-select unitSelect">
                                                 @foreach($measurementUnits as $measurementUnit)
-                                                    <option value="{{ $measurementUnit->measurement_unit_abbreviation }}">
-                                                        {{ $measurementUnit->measurement_unit_abbreviation }}
+                                                    <option value="{{ $measurementUnit->measurement_unit_abbreviation ?: 'cm' }}">
+                                                        {{ $measurementUnit->measurement_unit_abbreviation ?: 'cm' }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -272,14 +272,17 @@
                                         <div class="photo-input-wrapper">
                                             <label class="btn btn-sm btn-outline-primary">
                                                 <i class="bi bi-cloud-arrow-up"></i> Choose Photo
-                                                <input type="file" name="cargo_picture[]" class="form-control cargo-photo required-field" style="display:none;" accept="image/*">
+                                                <input type="file" name="cargo_picture[]" class="form-control cargo-photo required-field" style="display:none;" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
                                             </label>
+                                                                            <div class="mb-2">
+                                    <small class="text-muted">Accepted file types are JPG, JPEG, PNG, and WEBP. Maximum file size is 5 MB per photo.</small>
+                                </div>
                                             <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da; margin-top: 0.5rem; border-radius: 0.25rem; padding: 0.375rem 0.75rem;">
                                                 <i class="bi bi-exclamation-circle-fill text-danger"></i>
                                             </span>
+                                            <small class="error-message photo-error-message text-danger ms-2" style="display:none;"></small>
                                         </div>
                                         <small class="text-success photo-confirmation" style="display:none;">Photo selected!</small>
-                                        <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
                                     </div>
 
                                 </div> <!-- end cargo-item -->
@@ -312,6 +315,9 @@
         const container = document.getElementById('cargo-items-container');
         const noInput = document.getElementById('no_of_cargo');
         const MAX_ITEMS = 5;
+        const MAX_PHOTO_SIZE_MB = 5;
+        const MAX_PHOTO_SIZE_BYTES = MAX_PHOTO_SIZE_MB * 1024 * 1024;
+        const ALLOWED_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
         function normalizeUnitValue(unitValue) {
             const normalized = String(unitValue || '').trim().toLowerCase();
@@ -335,15 +341,41 @@
             return numericValue;
         }
 
+
+        function validatePhotoFileInput(photoInput) {
+            if (!photoInput || !photoInput.files || photoInput.files.length === 0) {
+                return { valid: true };
+            }
+
+            const file = photoInput.files[0];
+            const isAllowedType = ALLOWED_PHOTO_TYPES.includes(String(file.type || '').toLowerCase());
+            if (!isAllowedType) {
+                return {
+                    valid: false,
+                    message: 'Invalid photo type. Allowed: JPG, JPEG, PNG, WEBP.'
+                };
+            }
+
+            if (file.size > MAX_PHOTO_SIZE_BYTES) {
+                return {
+                    valid: false,
+                    message: `Photo exceeds ${MAX_PHOTO_SIZE_MB} MB limit.`
+                };
+            }
+
+            return { valid: true };
+        }
+
         function clearAllErrors() {
             document.querySelectorAll('.required-field').forEach(field => {
                 if (field.type === 'file') {
+                    const cargoItem = field.closest('.cargo-item');
                     const wrapper = field.closest('.photo-input-wrapper');
-                    if (wrapper) {
+                    if (cargoItem && wrapper) {
                         const errorIcon = wrapper.querySelector('.error-icon');
-                        const errorMessage = wrapper.nextElementSibling;
+                        const errorMessage = cargoItem.querySelector('.photo-error-message');
                         if (errorIcon) errorIcon.style.display = 'none';
-                        if (errorMessage && errorMessage.classList.contains('error-message')) {
+                        if (errorMessage) {
                             errorMessage.style.display = 'none';
                             errorMessage.textContent = '';
                         }
@@ -366,13 +398,19 @@
         function showFieldError(field, message) {
             if (!field) return;
             if (field.type === 'file') {
+                const cargoItem = field.closest('.cargo-item');
                 const wrapper = field.closest('.photo-input-wrapper');
-                if (wrapper) {
+                if (cargoItem && wrapper) {
                     const errorIcon = wrapper.querySelector('.error-icon');
-                    const errorMessage = wrapper.nextElementSibling;
+                    const errorMessage = cargoItem.querySelector('.photo-error-message');
+                    const confirmation = cargoItem.querySelector('.photo-confirmation');
 
                     if (errorIcon) errorIcon.style.display = 'flex';
-                    if (errorMessage && errorMessage.classList.contains('error-message')) {
+                    if (confirmation) {
+                        confirmation.style.display = 'none';
+                        confirmation.textContent = '';
+                    }
+                    if (errorMessage) {
                         errorMessage.textContent = message;
                         errorMessage.style.display = 'block';
                     }
@@ -410,10 +448,17 @@
         function applyMeasurementRules(item, selectedOption) {
             if (!item || !selectedOption) return;
 
-            const measureRequired = (selectedOption.dataset.measureRequired || 'No').toString();
-            const minLength = selectedOption.dataset.minLength || '';
-            const minWidth = selectedOption.dataset.minWidth || '';
-            const minHeight = selectedOption.dataset.minHeight || '';
+            const measureRequired = (selectedOption.dataset.measureRequired || 'No').toString().trim().toLowerCase();
+            const minLength = parseFloat(selectedOption.dataset.minLength || '0');
+            const maxLength = parseFloat(selectedOption.dataset.maxLength || selectedOption.dataset.minLength || '0');
+            const minWidth = parseFloat(selectedOption.dataset.minWidth || '0');
+            const maxWidth = parseFloat(selectedOption.dataset.maxWidth || selectedOption.dataset.minWidth || '0');
+            const minHeight = parseFloat(selectedOption.dataset.minHeight || '0');
+            const maxHeight = parseFloat(selectedOption.dataset.maxHeight || selectedOption.dataset.minHeight || '0');
+
+            const maxLengthValue = maxLength.toFixed(2);
+            const maxWidthValue = maxWidth.toFixed(2);
+            const maxHeightValue = maxHeight.toFixed(2);
             const unitFromItem = selectedOption.dataset.measurementUnit || 'cm';
 
             const lengthInput = item.querySelector('[name="cargo_length[]"]');
@@ -433,21 +478,22 @@
                 }
             }
 
-            if (measureRequired === 'Yes') {
+            if (measureRequired === 'yes') {
                 if (lengthInput) {
-                    lengthInput.value = minLength;
+                    lengthInput.value = maxLengthValue;
                     lengthInput.readOnly = true;
                 }
                 if (widthInput) {
-                    widthInput.value = minWidth;
+                    widthInput.value = maxWidthValue;
                     widthInput.readOnly = true;
                 }
                 if (heightInput) {
-                    heightInput.value = minHeight;
+                    heightInput.value = maxHeightValue;
                     heightInput.readOnly = true;
                 }
+                // Keep the select enabled so its value is submitted with the form.
                 if (unitSelect) {
-                    unitSelect.disabled = true;
+                    unitSelect.disabled = false;
                 }
                 if (dimensionsBlock) {
                     dimensionsBlock.style.display = 'none';
@@ -495,11 +541,52 @@
             if (desired > current) {
                 for (let i = current; i < desired; i++) {
                     const newItem = original.cloneNode(true);
-                    newItem.querySelectorAll('input').forEach(el => { if(el.type==='file') el.value = null; else el.value = ''; });
+                    newItem.querySelectorAll('input').forEach(el => {
+                        if (el.type === 'file') {
+                            el.value = '';
+                        } else {
+                            el.value = '';
+                        }
+                    });
                     newItem.querySelectorAll('select').forEach(el => {
                         el.selectedIndex = 0;
                         el.querySelectorAll('option').forEach(o => { o.style.display = ''; });
                     });
+
+                    const photoInput = newItem.querySelector('input[type="file"][name="cargo_picture[]"]');
+                    if (photoInput) {
+                        const freshPhotoInput = photoInput.cloneNode();
+                        photoInput.replaceWith(freshPhotoInput);
+                    }
+
+                    const photoConfirmation = newItem.querySelector('.photo-confirmation');
+                    if (photoConfirmation) {
+                        photoConfirmation.style.display = 'none';
+                        photoConfirmation.textContent = 'Photo selected!';
+                    }
+
+                    const photoError = newItem.querySelector('.photo-error-message');
+                    if (photoError) {
+                        photoError.style.display = 'none';
+                        photoError.textContent = '';
+                    }
+
+                    const photoErrorIcon = newItem.querySelector('.photo-input-wrapper .error-icon');
+                    if (photoErrorIcon) {
+                        photoErrorIcon.style.display = 'none';
+                    }
+
+                    newItem.querySelectorAll('.error-message').forEach(msg => {
+                        msg.style.display = 'none';
+                        msg.textContent = '';
+                    });
+                    newItem.querySelectorAll('.error-icon').forEach(icon => {
+                        icon.style.display = 'none';
+                    });
+                    newItem.querySelectorAll('.is-invalid').forEach(field => {
+                        field.classList.remove('is-invalid');
+                    });
+
                     newItem.querySelector('.cbm-output').value = '0.0000';
                     const hiddenCbmInput = newItem.querySelector('.cargo-cbm-input');
                     if (hiddenCbmInput) hiddenCbmInput.value = '0.0000';
@@ -544,10 +631,52 @@
                 const classification = item.querySelector('[name="cargo_classification[]"]');
                 const description = item.querySelector('[name="cargo_item_id[]"]');
                 const photo = item.querySelector('[name="cargo_picture[]"]');
+                const quantity = item.querySelector('[name="cargo_quantity[]"]');
+                const weight = item.querySelector('[name="cargo_weight[]"]');
+                const length = item.querySelector('[name="cargo_length[]"]');
+                const width = item.querySelector('[name="cargo_width[]"]');
+                const height = item.querySelector('[name="cargo_height[]"]');
 
                 if (!classification.value.trim()) { showFieldError(classification, 'Classification is required'); isValid = false; }
                 if (!description.value.trim()) { showFieldError(description, 'Description is required'); isValid = false; }
                 if (photo && photo.files.length === 0) { showFieldError(photo, 'Photo is required'); isValid = false; }
+                if (quantity && !quantity.value.trim()) { showFieldError(quantity, 'Quantity is required'); isValid = false; }
+                if (weight && !weight.value.trim()) { showFieldError(weight, 'Weight is required'); isValid = false; }
+
+                if (quantity && quantity.value !== '' && Number(quantity.value) <= 0) {
+                    showFieldError(quantity, 'Quantity must be greater than zero');
+                    isValid = false;
+                }
+                if (weight && weight.value !== '' && Number(weight.value) < 0) {
+                    showFieldError(weight, 'Weight cannot be negative');
+                    isValid = false;
+                }
+                if (length && length.value !== '' && Number(length.value) < 0) {
+                    showFieldError(length, 'Length cannot be negative');
+                    isValid = false;
+                }
+                if (width && width.value !== '' && Number(width.value) < 0) {
+                    showFieldError(width, 'Width cannot be negative');
+                    isValid = false;
+                }
+                if (height && height.value !== '' && Number(height.value) < 0) {
+                    showFieldError(height, 'Height cannot be negative');
+                    isValid = false;
+                }
+
+                const photoValidation = validatePhotoFileInput(photo);
+                if (!photoValidation.valid) {
+                    showFieldError(photo, photoValidation.message);
+                    isValid = false;
+                }
+            });
+
+            const allNumberInputs = form.querySelectorAll('input[type="number"]');
+            allNumberInputs.forEach(input => {
+                if (input.value !== '' && Number(input.value) < 0) {
+                    showFieldError(input, 'Negative values are not allowed');
+                    isValid = false;
+                }
             });
 
             if (!isValid) { window.scrollTo(0, 0); }
@@ -593,10 +722,35 @@ container.addEventListener('change', e => {
 
         container.addEventListener('change', function(e) {
             if (!e.target.classList.contains('cargo-photo')) return;
-            const confirmation = e.target.closest('.cargo-item').querySelector('.photo-confirmation');
+            const cargoItem = e.target.closest('.cargo-item');
+            const confirmation = cargoItem.querySelector('.photo-confirmation');
+            const errorMessage = cargoItem.querySelector('.photo-error-message');
+            const errorIcon = cargoItem.querySelector('.photo-input-wrapper .error-icon');
             if (e.target.files.length > 0) {
+                const photoValidation = validatePhotoFileInput(e.target);
+                if (!photoValidation.valid) {
+                    confirmation.style.display = 'none';
+                    confirmation.textContent = '';
+                    if (errorMessage) {
+                        errorMessage.style.display = 'block';
+                        errorMessage.textContent = photoValidation.message;
+                    }
+                    if (errorIcon) {
+                        errorIcon.style.display = 'flex';
+                    }
+                    e.target.value = '';
+                    return;
+                }
+
                 confirmation.style.display = 'inline';
                 confirmation.textContent = `Photo selected: ${e.target.files[0].name}`;
+                if (errorMessage) {
+                    errorMessage.style.display = 'none';
+                    errorMessage.textContent = '';
+                }
+                if (errorIcon) {
+                    errorIcon.style.display = 'none';
+                }
             } else {
                 confirmation.style.display = 'none';
                 confirmation.textContent = '';
@@ -641,22 +795,41 @@ container.addEventListener('change', e => {
 
     /* Passenger cargo card custom roundness */
     .passenger-cargo-card {
-        border-radius: 0;
+        border-radius: 14px;
         overflow: hidden;
-        max-width: 1300px;
+        max-width: 1520px;
+        border: 1px solid #d7dee9;
+    }
+
+    .passenger-cargo-card .card-header {
+        border-top-left-radius: 14px;
+        border-top-right-radius: 14px;
+        margin-bottom: 0 !important;
+    }
+
+    .passenger-cargo-card .card-body {
+        border-bottom-left-radius: 14px;
+        border-bottom-right-radius: 14px;
     }
 
     .passenger-cargo-card .bg-white {
-        border-radius: 0;
+        border-radius: var(--bs-border-radius);
     }
 
     /* Slightly larger inner padding for the passenger card to breathe with wider layout */
     .passenger-cargo-card .card-body {
-        padding: 1.5rem;
+        padding: 1.75rem;
     }
 
     .photo-input-wrapper .btn {
-        border-radius: 0;
+        border-radius: var(--bs-border-radius-sm);
+    }
+
+    .photo-input-wrapper {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
     }
 
     /* Rounded inputs/selects inside passenger card to match system forms */
@@ -664,17 +837,49 @@ container.addEventListener('change', e => {
     .passenger-cargo-card .form-select,
     .passenger-cargo-card .input-group-text,
     .passenger-cargo-card .btn {
-        border-radius: 0;
+        border-radius: var(--bs-border-radius);
     }
 
     .passenger-cargo-card .input-group .form-control {
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
+        border-top-left-radius: var(--bs-border-radius);
+        border-bottom-left-radius: var(--bs-border-radius);
     }
 
     .passenger-cargo-card .input-group .input-group-text {
-        border-top-right-radius: 0;
-        border-bottom-right-radius: 0;
+        border-top-right-radius: var(--bs-border-radius);
+        border-bottom-right-radius: var(--bs-border-radius);
+    }
+
+    /* When error icon is hidden, restore right-side radius that Bootstrap removes for non-last-child inputs */
+    .passenger-cargo-card .input-group:has(.error-icon[style*="display:none"]) > .form-control,
+    .passenger-cargo-card .input-group:has(.error-icon[style*="display:none"]) > .form-select {
+        border-top-right-radius: var(--bs-border-radius) !important;
+        border-bottom-right-radius: var(--bs-border-radius) !important;
+    }
+
+    .cargo-dimensions-block .d-flex.align-items-end {
+        display: grid !important;
+        grid-template-columns: minmax(130px, 1fr) minmax(130px, 1fr) minmax(130px, 1fr) 96px 140px;
+        gap: 0.5rem;
+        align-items: end;
+    }
+
+    .cargo-dimensions-block .d-flex.align-items-end > .flex-fill {
+        min-width: 0;
+    }
+
+    .cargo-dimensions-block .unitSelect {
+        width: 100%;
+        min-width: 0;
+        padding-right: 2rem;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    @media (max-width: 992px) {
+        .cargo-dimensions-block .d-flex.align-items-end {
+            grid-template-columns: 1fr 1fr;
+        }
     }
 </style>
 

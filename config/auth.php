@@ -23,13 +23,11 @@ return [
             'provider' => 'users',
         ],
 
-        // ✅ Admin guard
         'admin' => [
             'driver' => 'session',
             'provider' => 'admin',
         ],
 
-        // ✅ Staff guard (add this)
         'staff' => [
             'driver' => 'session',
             'provider' => 'staff',
@@ -49,13 +47,11 @@ return [
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
 
-        // ✅ Admin model
         'admin' => [
             'driver' => 'eloquent',
             'model' => App\Models\Admin::class,
         ],
 
-        // ✅ Staff model
         'staff' => [
             'driver' => 'eloquent',
             'model' => App\Models\Staff::class,

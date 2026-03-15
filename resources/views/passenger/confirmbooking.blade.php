@@ -84,31 +84,12 @@
                         <h5 class="mb-0">Confirm Booking</h5>
                     </div>
                     <div class="card-body">
-                        <h6>Booking Reference: {{ $booking->booking_ref_no }}</h6>
+                        <h6>Booking Reference: {{ $booking->booking_code }}</h6>
                         <p>Status: <strong>{{ $booking->booking_status }}</strong></p>
 
                         @if ($payment)
                             <p>Total: <strong>PHP {{ number_format($payment->total_amount, 2) }}</strong></p>
                             <p>Payment Status: <strong>{{ $payment->payment_status }}</strong></p>
-                        @endif
-
-                        @php
-                            // Check if any passenger has a promo applied
-                            $promoApplied = null;
-                            foreach ($passengers as $item) {
-                                if ($item['ticket']->promo) {
-                                    $promoApplied = $item['ticket']->promo;
-                                    break;
-                                }
-                            }
-                        @endphp
-
-                        @if ($promoApplied)
-                            <div class="alert alert-success mb-3">
-                                <strong>🎉 Promo Applied!</strong><br>
-                                <small>{{ $promoApplied->promo_name }} ({{ $promoApplied->promo_code }})<br>
-                                {{ $promoApplied->promo_description }}</small>
-                            </div>
                         @endif
 
                         <hr>
@@ -123,7 +104,8 @@
                                     <div>Cot: {{ $item['ticket']->pt_cot_no }}</div>
                                     <div>Price: PHP {{ number_format($item['ticket']->pt_ticket_price, 2) }}
                                         @if ($item['ticket']->promo)
-                                            <span class="badge bg-success">Promo: -{{ $item['ticket']->promo->promo_discount_rate }}%</span>
+                                            <span class="badge bg-success">Promo:
+                                                -{{ $item['ticket']->promo->promo_discount_rate }}%</span>
                                         @endif
                                     </div>
                                 </li>
@@ -210,13 +192,22 @@
                 return;
             }
 
+            let hasExpired = false;
+
             function update() {
                 const now = new Date();
                 const diff = validUntil - now;
                 if (diff <= 0) {
-                    document.getElementById('countdown').innerText = 'Expired';
-                    const payBtn = document.getElementById('payBtn');
-                    if (payBtn) payBtn.classList.add('disabled');
+                    if (!hasExpired) {
+                        hasExpired = true;
+                        document.getElementById('countdown').innerText = 'Expired';
+                        const payBtn = document.getElementById('payBtn');
+                        if (payBtn) payBtn.classList.add('disabled');
+                        // Redirect to booking page after 2 seconds
+                        setTimeout(() => {
+                            window.location.href = '/passenger/bookingtype';
+                        }, 2000);
+                    }
                     return;
                 }
                 const mins = Math.floor(diff / 60000);

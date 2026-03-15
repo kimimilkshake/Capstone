@@ -139,7 +139,7 @@ class DatabaseSeeder extends Seeder
                 'cargo_classification_name' => 'bag',
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],    
+            ],
             [
                 'cargo_classification_name' => 'box',
                 'created_at' => now(),
@@ -154,7 +154,7 @@ class DatabaseSeeder extends Seeder
                 'cargo_classification_name' => 'carbouy',
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],    
+            ],
             [
                 'cargo_classification_name' => 'carton',
                 'created_at' => now(),
@@ -179,7 +179,7 @@ class DatabaseSeeder extends Seeder
                 'cargo_classification_name' => 'roll',
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],  
+            ],
             [
                 'cargo_classification_name' => 'sack',
                 'created_at' => now(),
@@ -198,7 +198,7 @@ class DatabaseSeeder extends Seeder
                 'cargo_category_name' => 'Animals/Livestock',
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],    
+            ],
             [
                 'cargo_category_name' => 'Appliances',
                 'created_at' => now(),
@@ -213,7 +213,7 @@ class DatabaseSeeder extends Seeder
                 'cargo_category_name' => 'Electronics',
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],    
+            ],
             [
                 'cargo_category_name' => 'Fragile',
                 'created_at' => now(),
@@ -248,7 +248,7 @@ class DatabaseSeeder extends Seeder
                 'cargo_category_name' => 'Oversized/Heavy Cargo',
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],    
+            ],
             [
                 'cargo_category_name' => 'Perishable',
                 'created_at' => now(),

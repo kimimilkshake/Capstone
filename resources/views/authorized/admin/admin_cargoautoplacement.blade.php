@@ -1,29 +1,13 @@
 @extends('layouts.app')
-@section('page-title', 'Cargo Auto Placement')
+@section('page-title', 'CARGO AUTO PLACEMENT')
 @section('content')
     @include('components.authHeader')
     @include('components.admin_nav')
 
-<div class="admin-body">
-    <h3 class="text-center mb-4">CARGO AUTO PLACEMENT</h3>
+    <div class="admin-body">
+        <h3 class="text-center mb-4">CARGO AUTO PLACEMENT</h3>
 
         <div class="scs-form_container">
-            <form method="GET" action="{{ route('admin.cargo.placement') }}" class="mb-4">
-                <div class="form-group">
-                    <label for="voyage_id">Select Voyage:</label>
-                    <select name="voyage_id" id="voyage_id" class="form-control" onchange="this.form.submit()">
-                        <option value="">-- Select a Voyage --</option>
-                        @foreach ($voyages as $voyage)
-                            <option value="{{ $voyage->voyage_id }}"
-                                {{ $selectedVoyageId == $voyage->voyage_id ? 'selected' : '' }}>
-                                {{ $voyage->voyage_code }} -
-                                {{ $voyage->routePort->route_origin }} → {{ $voyage->routePort->route_destination }}
-                                ({{ \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('M j, Y') }})
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-            </form>
 
             @if ($errors->any())
                 <div class="alert alert-danger">
@@ -37,17 +21,31 @@
                 @if (isset($placementData['error']))
                     <div class="alert alert-warning">{{ $placementData['error'] }}</div>
                 @else
-                    <div class="card mb-4">
+                    <div class="card mb-4" style="margin-left: auto; max-width: 100%;">
                         <div class="card-header text-white" style="background-color: #485b8c;">
                             <h5>Voyage Information</h5>
                         </div>
                         <div class="card-body">
-                            <p><strong>Voyage Code:</strong> {{ $placementData['voyage']->voyage_code }}</p>
-                            <p><strong>Vessel:</strong> {{ $placementData['voyage']->vessel->vessel_name }}</p>
-                            <p><strong>Route:</strong> {{ $placementData['voyage']->routePort->route_origin }} →
-                                {{ $placementData['voyage']->routePort->route_destination }}</p>
-                            <p><strong>Total Hatches:</strong> {{ $placementData['hatches']->count() }}</p>
-                            <p><strong>Total Cargo Items:</strong> {{ $placementData['cargoReceipts']->count() }}</p>
+                            <div style="display: flex; justify-content: space-between; gap: 2rem;">
+                                <!-- Left Side -->
+                                <div style="flex: 0 0 auto;">
+                                    <p><strong>Voyage Code:</strong> {{ $placementData['voyage']->voyage_code }}</p>
+                                    <p><strong>Vessel:</strong> {{ $placementData['voyage']->vessel->vessel_name }}</p>
+                                    <p><strong>Departure:</strong>
+                                        {{ \Carbon\Carbon::parse($placementData['voyage']->voyage_departure_date)->format('M j, Y') }}
+                                        at
+                                        {{ \Carbon\Carbon::parse($placementData['voyage']->voyage_estimated_TD)->format('g:i A') }}
+                                    </p>
+                                </div>
+                                <!-- Right Side -->
+                                <div style="flex: 0 0 auto; margin-left: auto; margin-right: 10rem;">
+                                    <p><strong>Route:</strong> {{ $placementData['voyage']->routePort->route_origin }} →
+                                        {{ $placementData['voyage']->routePort->route_destination }}</p>
+                                    <p><strong>Total Hatches:</strong> {{ $placementData['hatches']->count() }}</p>
+                                    <p><strong>Total Cargo Items:</strong> {{ $placementData['cargoReceipts']->count() }}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -74,16 +72,42 @@
                                         <th
                                             style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">
                                             Weight Capacity (kg)</th>
+                                        <th
+                                            style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">
+                                            Current Weight (kg)</th>
+                                        <th
+                                            style="background-color: #485b8c; color: white; text-align: center; padding: 12px;">
+                                            Weight Available (kg)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($placementData['hatches'] as $hatch)
+                                        @php
+                                            $currentWeight = \Illuminate\Support\Facades\DB::table('cargo_receipt')
+                                                ->join(
+                                                    'cargo_booking',
+                                                    'cargo_receipt.cargo_booking_id',
+                                                    '=',
+                                                    'cargo_booking.cargo_booking_id',
+                                                )
+                                                ->where('cargo_receipt.hatch_id', $hatch->hatch_id)
+                                                ->where('cargo_receipt.voyage_id', $selectedVoyageId)
+                                                ->sum('cargo_booking.weight');
+                                        @endphp
                                         <tr>
-                                            <td>{{ $hatch->hatch_label }}</td>
-                                            <td>{{ $hatch->hatch_length }}</td>
-                                            <td>{{ $hatch->hatch_width }}</td>
-                                            <td>{{ $hatch->hatch_height }}</td>
-                                            <td>{{ $hatch->hatch_weight_capacity }}</td>
+                                            <td style="text-align: center;">{{ $hatch->hatch_label }}</td>
+                                            <td style="text-align: center;">{{ $hatch->hatch_length }}</td>
+                                            <td style="text-align: center;">{{ $hatch->hatch_width }}</td>
+                                            <td style="text-align: center;">{{ $hatch->hatch_height }}</td>
+                                            <td style="text-align: center;">{{ $hatch->hatch_capacity_per_hold }} tons
+                                                ({{ $hatch->hatch_capacity_per_hold * 1000 }}kg)
+                                            </td>
+                                            <td style="text-align: center;" class="hatch-weight-cell"
+                                                data-hatch-id="{{ $hatch->hatch_id }}">
+                                                {{ number_format($currentWeight, 2) }}</td>
+                                            <td style="text-align: center;">
+                                                {{ number_format($hatch->hatch_capacity_per_hold * 1000 - $currentWeight, 2) }}
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -126,7 +150,7 @@
                                     @foreach ($placementData['cargoReceipts'] as $receipt)
                                         @php
                                             $booking = \App\Models\CargoBooking::with('measurementUnit')
-                                                ->where('booking_ref_no', $receipt->booking_ref_no)
+                                                ->where('cargo_booking_id', $receipt->cargo_booking_id)
                                                 ->first();
 
                                             // Convert dimensions to meters for display
@@ -143,7 +167,7 @@
                                             $widthM = ($booking?->width ?? 0) * $conversionFactor;
                                             $heightM = ($booking?->height ?? 0) * $conversionFactor;
                                         @endphp
-                                        <tr>
+                                        <tr data-receipt-id=\"{{ $receipt->cargo_receipt_id }}\">
                                             <td>{{ $receipt->cargo_receipt_id }}</td>
                                             <td>{{ $receipt->booking_ref_no }}</td>
                                             <td>{{ $receipt->cargoItem->cargo_item_description ?? 'N/A' }}</td>
@@ -159,7 +183,7 @@
                                                     No dimensions
                                                 @endif
                                             </td>
-                                            <td>{{ $booking->weight ?? 'N/A' }}</td>
+                                            <td class="cargo-weight-cell">{{ $booking->weight ?? 'N/A' }}</td>
                                             <td style="text-align: center;">
                                                 <button class="btn btn-sm btn-primary isolate-btn"
                                                     data-receipt-id="{{ $receipt->cargo_receipt_id }}"
@@ -176,8 +200,26 @@
 
                     {{-- 3D CARGO VISUALIZATION CONTAINER (AUTO-DISPLAY) --}}
                     <div class="card mt-4">
-                        <div class="card-header text-white" style="background-color: #485b8c;">
-                            <h5>3D Cargo Visualization</h5>
+                        <div class="card-header text-white"
+                            style="background-color: #485b8c; display: flex; justify-content: space-between; align-items: center;">
+                            <h5 style="margin: 0;">3D Cargo Visualization</h5>
+                            <div style="display: flex; gap: 20px; font-size: 13px;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span
+                                        style="display: inline-block; width: 14px; height: 14px; background-color: #ff6b6b; border-radius: 2px;"></span>
+                                    <span>Heavy (≥300kg)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span
+                                        style="display: inline-block; width: 14px; height: 14px; background-color: #77a1ff; border-radius: 2px;"></span>
+                                    <span>Light (<300kg)< /span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span
+                                        style="display: inline-block; width: 14px; height: 14px; background-color: #ff9999; border-radius: 2px;"></span>
+                                    <span>Unplaced</span>
+                                </div>
+                            </div>
                         </div>
                         <div class="card-body" style="padding: 15px;">
                             <div id="cargo-visualizer-container"
@@ -250,7 +292,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="{{ asset('js/cargo-visualizer.js') }}" defer></script>
+    <script src="{{ asset('js/cargo-visualizer.js') }}"></script>
     <script>
         /**
          * Wait for CargoVisualizer to be available
@@ -293,10 +335,27 @@
                 // Initialize Three.js scene with fallback rendering
                 window.cargoVisualizer = new window.CargoVisualizer('cargo-visualizer-container');
 
-                // Render using auto-placement algorithm
+                // Render using 2-zone packing algorithm and save results
                 if (data.cargo && Array.isArray(data.cargo)) {
-                    // Use fallback rendering with intelligent packing algorithm
-                    window.cargoVisualizer.renderRaw(data.hatches, data.cargo);
+                    const results = window.cargoVisualizer.packAndVisualize(
+                        data.hatches,
+                        data.cargo
+                    );
+
+                    // Save placement results to database (only for unpacked items)
+                    if (results && results.packed && results.packed.length > 0) {
+                        const placements = results.packed.map(item => ({
+                            receiptId: parseInt(item.id.split('_')[0]),
+                            hatchId: item.binId,
+                            weight: item.weight || 0
+                        }));
+
+                        // Store cargo data for weight updates
+                        window.cargoItemWeights = data.cargo;
+
+                        // Call save API
+                        await savePlacementToDB(voyageId, placements);
+                    }
                 }
 
             } catch (error) {
@@ -307,29 +366,76 @@
             }
         }
 
+        /**
+         * Save placement results to database
+         */
+        async function savePlacementToDB(voyageId, placements) {
+            try {
+                const response = await fetch(`{{ route('admin.cargo.placement.save') }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        voyage_id: voyageId,
+                        placements: placements
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    console.log(`✅ Saved ${result.count} placements to database`);
+                    // Update weight table without reloading
+                    updateWeightTable(placements);
+                } else {
+                    console.error('Save failed:', result.message);
+                }
+            } catch (error) {
+                console.error('Error saving placement:', error);
+            }
+        }
+
+        /**
+         * Update the Current Weight column in the hatch table
+         */
+        function updateWeightTable(placements) {
+            // Group placements by hatch using weight data from placements
+            const weightByHatch = {};
+            placements.forEach(p => {
+                if (!weightByHatch[p.hatchId]) {
+                    weightByHatch[p.hatchId] = 0;
+                }
+                // Use weight directly from the placement data (passed from packing results)
+                const weight = p.weight || 0;
+                weightByHatch[p.hatchId] += weight;
+            });
+
+            // Update weight cells in hatch table
+            document.querySelectorAll('.hatch-weight-cell').forEach(cell => {
+                const hatchId = cell.getAttribute('data-hatch-id');
+                if (weightByHatch[hatchId] !== undefined) {
+                    cell.textContent = weightByHatch[hatchId].toFixed(2);
+                }
+            });
+        }
+
 
         /**
          * Auto-initialize visualization if voyage is selected
          */
         document.addEventListener('DOMContentLoaded', function() {
-            const voyageSelect = document.getElementById('voyage_id');
+            // Check if a voyage is currently selected (via URL parameter)
+            const urlParams = new URLSearchParams(window.location.search);
+            const voyageId = urlParams.get('voyage_id');
 
             // If a voyage is already selected, initialize visualization
-            if (voyageSelect && voyageSelect.value) {
+            if (voyageId) {
                 // Wait for CargoVisualizer to load, then initialize
                 waitForCargoVisualizer(() => {
-                    console.log('Initializing visualization for voyage:', voyageSelect.value);
-                    initializeVisualization(voyageSelect.value);
-                });
-            }
-
-            // Listen for voyage selection changes
-            if (voyageSelect) {
-                voyageSelect.addEventListener('change', function() {
-                    if (this.value) {
-                        console.log('Voyage selected, reloading page...');
-                        // Form will submit on change, reloading the page with new voyage_id
-                    }
+                    console.log('Initializing visualization for voyage:', voyageId);
+                    initializeVisualization(voyageId);
                 });
             }
         });

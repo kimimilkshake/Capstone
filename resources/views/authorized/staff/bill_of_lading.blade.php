@@ -379,11 +379,18 @@
                     <th style="width: 10%;">Width</th>
                     <th style="width: 10%;">Height</th>
                     <th style="width: 11%;">Weight (kg)</th>
+                    <th style="width: 10%;">Subtotal</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($booking->cargoBookings as $cargo)
-                    @php $unit = $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm'; @endphp
+                    @php
+                        $unit = $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm';
+                        $cbm = (float) ($cargo->cbm ?? (($cargo->length * $cargo->width * $cargo->height) / 1000000));
+                        $qty = (float) ($cargo->quantity ?? 0);
+                        $freightRate = (float) ($cargo->cargoItem->cargo_item_freight ?? 0);
+                        $subtotal = $freightRate * $cbm * $qty;
+                    @endphp
                     <tr>
                         <td style="text-align:center;">{{ $cargo->quantity }}</td>
                         <td>{{ $cargo->cargoClassification->cargo_classification_name ?? '' }}</td>
@@ -392,6 +399,7 @@
                         <td style="text-align:center;">{{ number_format($cargo->width, 2) . $unit }}</td>
                         <td style="text-align:center;">{{ number_format($cargo->height, 2) . $unit }}</td>
                         <td style="text-align:center;">{{ number_format($cargo->weight, 2) }}</td>
+                        <td style="text-align:right;">₱{{ number_format($subtotal, 2) }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -401,7 +409,7 @@
     <!-- Charges Table -->
     @php
         $freight = 0;
-        $stamp = 0;
+        $stamp = 20.00;
         foreach($booking->cargoBookings as $cargo) {
             $cbm = (float) ($cargo->cbm ?? (($cargo->length * $cargo->width * $cargo->height) / 1000000));
             $qty = (float) ($cargo->quantity ?? 0);
@@ -418,7 +426,7 @@
         </tr>
         <tr>
             <td class="label">STAMP</td>
-            <td class="amount">₱2{{ number_format($stamp, 2) }}</td>
+            <td class="amount">₱{{ number_format($stamp, 2) }}</td>
         </tr>
         <tr>
             <td class="label"><strong>TOTAL TRANSACTION</strong></td>

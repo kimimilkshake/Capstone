@@ -14,6 +14,12 @@
                                 <h2 class="fw-bold text-uppercase">WELCOME</h2>
                                 <p class="mb-3">Enter your username and password</p>
 
+                                {{-- Display success message --}}
+                                @if(session('success'))
+                                    <div class="alert alert-success mx-auto" style="text-align: center;">
+                                        {{ session('success') }}
+                                    </div>
+                                @endif
 
                                 {{-- Display errors --}}
                                 @if ($errors->any())
@@ -31,7 +37,7 @@
                                         <input type="text" name="username" id="typeEmailX"
                                             class="form-control form-control-lg" placeholder="Username"
                                             value="{{ old('username') }}" />
-                                        <label for="typeEmailX" class="#485B8C">Username</label>
+                                        <label for="typeEmailX" class="#485B8C">Username <span class="text-danger">*</span></label>
                                     </div>
 
                                     <!-- Password -->
@@ -40,7 +46,7 @@
                                             id="typePasswordX"class="form-control form-control-lg"
                                             class="form-control form-control-lg text-white bg-dark border-light"
                                             placeholder="Password" />
-                                        <label for="typePasswordX" class="#485B8C">Password</label>
+                                        <label for="typePasswordX" class="#485B8C">Password <span class="text-danger">*</span></label>
                                     </div>
 
                                     <button class="loginBtn btn btn-lg px-5 mt-1 mb-4" type="submit">

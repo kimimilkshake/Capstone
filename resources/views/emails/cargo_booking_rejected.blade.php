@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cargo Booking Rejected - #{{ $booking->booking_ref_no }}</title>
+    <title>Cargo Booking Rejected - #{{ $booking->booking_code }}</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
         .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; padding: 20px; }
@@ -45,49 +45,46 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Description</th>
+                        <th>QTY</th>
                         <th>Classification</th>
-                        <th>Quantity</th>
+                        <th>Description</th>
+                        <th>Dimensions</th>
                         <th>Weight</th>
-                        <th>Dimensions (L×W×H cm)</th>
-                        <th>CBM</th>
                         <th>Subtotal</th>
                     </tr>
                 </thead>
                 <tbody>
                 @php
                     $total = 0;
-                    $totalQuantity = 0;
                 @endphp
                 @foreach($cargoItems as $cargo)
                     @php
                         $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
-                        $cbm = $cargo->cbm ?? (($cargo->length * $cargo->width * $cargo->height) / 1000000);
+                        $cbm = (float) ($cargo->cbm ?? 0);
                         $subtotal = $freight * $cbm * $cargo->quantity;
                         $total += $subtotal;
-                        $totalQuantity += $cargo->quantity;
+
+                        $unitDisplay = strtolower($cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm');
+                        $displayLength = (float) $cargo->length;
+                        $displayWidth = (float) $cargo->width;
+                        $displayHeight = (float) $cargo->height;
                     @endphp
                     <tr>
-                        <td>{{ $cargo->cargoItem->cargo_item_description }}</td>
-                        <td>{{ $cargo->cargoClassification->cargo_classification_name ?? 'N/A' }}</td>
                         <td>{{ $cargo->quantity }}</td>
+                        <td>{{ $cargo->cargoClassification->cargo_classification_name ?? 'N/A' }}</td>
+                        <td>{{ $cargo->cargoItem->cargo_item_description }}</td>
+                        <td>{{ number_format($displayLength, 2) }} x {{ number_format($displayWidth, 2) }} x {{ number_format($displayHeight, 2) }} {{ $unitDisplay }}</td>
                         <td>{{ $cargo->weight }} kg</td>
-                        <td>{{ $cargo->length }} × {{ $cargo->width }} × {{ $cargo->height }}</td>
-                        <td>{{ number_format($cbm,4) }}</td>
                         <td>₱{{ number_format($subtotal,2) }}</td>
                     </tr>
                 @endforeach
                 <tr style="background-color: #f9f9f9; font-weight: bold;">
-                    <td colspan="2">Total Items</td>
-                    <td>{{ $totalQuantity }}</td>
                     <td colspan="4"></td>
+                    <td>Total</td>
+                    <td>₱{{ number_format($total,2) }}</td>
                 </tr>
                 </tbody>
             </table>
-
-            <div style="margin-top:15px; text-align:right;">
-                <p><strong>Estimated Total:</strong> ₱{{ number_format($total,2) }}</p>
-            </div>
         </div>
 
         <div style="text-align:center; margin-top: 20px;">

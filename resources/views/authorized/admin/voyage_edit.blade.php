@@ -10,10 +10,17 @@
     </div>
 
     <div class="acs-form_container">
-      @if (session('success'))
-        <div class="alert alert-success" style="color: green; text-align: center; margin-bottom: 1rem;">
-          {{ session('success') }}
-        </div>
+      @if(session('success'))
+          <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
+      @endif
+      @if ($errors->any())
+          <div class="alert alert-danger text-center">
+              <ul>
+                  @foreach ($errors->all() as $error)
+                      <li>{{ $error }}</li>
+                  @endforeach
+              </ul>
+          </div>
       @endif
 
       <form action="{{ route('admin.voyage_update', $voyage->voyage_id) }}" method="POST" enctype="multipart/form-data" id="editVoyageForm">
@@ -83,7 +90,10 @@
                 id="voyage_departure_date" 
                 name="voyage_departure_date" 
                 value="{{ $voyage->voyage_departure_date }}"
-                @if($isCompleted) disabled @endif 
+                @if($isCompleted) disabled @endif
+                min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}"
+                max="{{ \Carbon\Carbon::today()->addDays(8)->format('Y-m-d') }}"
+                onchange="setArrivalMin(this.value)"
                 required>
             </div>
           </div>
@@ -118,6 +128,8 @@
                 name="voyage_arrival_date" 
                 value="{{ $voyage->voyage_arrival_date }}" 
                 @if($isCompleted) disabled @endif
+                min="{{ $voyage->voyage_departure_date }}" 
+                max="{{ \Carbon\Carbon::today()->addDays(14)->format('Y-m-d') }}"
                 required>
             </div>
           </div>
@@ -175,4 +187,16 @@
       </form>
     </div>
   </div>
+
+  <script>
+    function setArrivalMin(depDate) {
+        const arrival = document.getElementById('voyage_arrival_date');
+        if(depDate) {
+            arrival.min = depDate;
+            if(arrival.value < depDate) {
+                arrival.value = depDate;
+            }
+        }
+    }
+  </script>
 @endsection
