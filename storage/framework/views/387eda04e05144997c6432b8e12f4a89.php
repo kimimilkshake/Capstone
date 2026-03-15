@@ -76,15 +76,20 @@
 
     .scanner-page-header{
         min-height:36px;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
     }
 
     .scanner-page-title{
         width:100%;
         text-align:center;
+        margin: 0;
     }
 
     .scanner-page-header form{
-        right:56px;
+        position: static;
+        margin: 0;
     }
 
     .scannerbox{
