@@ -29,15 +29,19 @@ class Booking extends Model
     // Booking.php
     public function cargoBookings()
     {
-    return $this->hasMany(CargoBooking::class, 'booking_ref_no', 'booking_ref_no');
+        return $this->hasMany(CargoBooking::class, 'booking_ref_no', 'booking_ref_no');
     }
 
-    // Human-friendly booking code (e.g., BK-000123)
+    // Human-friendly booking code (e.g., CBBK-000123 for cargo, just number for passenger)
     public function getBookingCodeAttribute()
     {
-        return 'CBBK-' . str_pad($this->booking_ref_no, 6, '0', STR_PAD_LEFT);
+        if ($this->booking_type === 'cargo') {
+            return 'CBBK-' . str_pad($this->booking_ref_no, 6, '0', STR_PAD_LEFT);
+        }
+        // Passenger bookings use just the raw number
+        return $this->booking_ref_no;
     }
-    
+
     // Relations
     public function sender()
     {
@@ -58,5 +62,5 @@ class Booking extends Model
     {
         return $this->belongsTo(CargoItem::class, 'cargo_item_id', 'cargo_item_id');
     }
-    
+
 }

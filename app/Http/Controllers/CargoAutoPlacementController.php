@@ -116,7 +116,7 @@ class CargoAutoPlacementController extends Controller
 
     private function getVoyagePlacementData($voyageId)
     {
-        $voyage = Voyage::with(['vessel.hatches', 'cargoReceipts.cargoBooking.cargoItem'])
+        $voyage = Voyage::with(['vessel.hatches', 'cargoReceipts.cargoBooking.cargoItem', 'cargoReceipts.booking'])
             ->findOrFail($voyageId);
 
         $hatches = $voyage->vessel->hatches;
@@ -126,7 +126,7 @@ class CargoAutoPlacementController extends Controller
         }
 
         // Order by booking_ref_no to show items in booking order (earliest bookings first)
-        $cargoReceipts = $voyage->cargoReceipts()->orderBy('booking_ref_no', 'asc')->get();
+        $cargoReceipts = $voyage->cargoReceipts()->with('booking')->orderBy('booking_ref_no', 'asc')->get();
 
         if ($cargoReceipts->isEmpty()) {
             return ['error' => 'No cargo bookings found for this voyage.'];
@@ -150,7 +150,7 @@ class CargoAutoPlacementController extends Controller
             'voyage_id' => 'required|exists:voyage,voyage_id',
         ]);
 
-        $voyage = Voyage::with(['vessel.hatches', 'cargoReceipts.cargoBooking.cargoItem'])
+        $voyage = Voyage::with(['vessel.hatches', 'cargoReceipts.cargoBooking.cargoItem', 'cargoReceipts.booking'])
             ->findOrFail($request->voyage_id);
 
         $hatches = $voyage->vessel->hatches;
@@ -232,7 +232,7 @@ class CargoAutoPlacementController extends Controller
         ]);
 
         $voyageId = $request->voyage_id;
-        $voyage = Voyage::with(['vessel.hatches', 'cargoReceipts.cargoBooking.cargoItem'])
+        $voyage = Voyage::with(['vessel.hatches', 'cargoReceipts.cargoBooking.cargoItem', 'cargoReceipts.booking'])
             ->findOrFail($voyageId);
 
         $hatches = $voyage->vessel->hatches;

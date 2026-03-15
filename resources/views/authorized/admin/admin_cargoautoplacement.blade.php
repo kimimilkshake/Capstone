@@ -169,7 +169,7 @@
                                         @endphp
                                         <tr data-receipt-id=\"{{ $receipt->cargo_receipt_id }}\">
                                             <td>{{ $receipt->cargo_receipt_id }}</td>
-                                            <td>{{ $receipt->booking_ref_no }}</td>
+                                            <td>{{ $receipt->booking->booking_code }}</td>
                                             <td>{{ $receipt->cargoItem->cargo_item_description ?? 'N/A' }}</td>
                                             <td>{{ $receipt->cargo_item_qty ?? 1 }}</td>
                                             <td>
