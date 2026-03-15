@@ -182,7 +182,8 @@
                                 <div class="col-6">
                                     <label for="requestRouteToMobile" class="form-label">To <span
                                             class="text-danger">*</span></label>
-                                    <select id="requestRouteToMobile" name="route_to" class="form-select" required disabled>
+                                    <select id="requestRouteToMobile" name="route_to" class="form-select" required
+                                        disabled>
                                         <option value="">Select Destination</option>
                                     </select>
                                 </div>
@@ -238,8 +239,7 @@
                             </select>
                         </div>
                         <div class="col-6">
-                            <label for="requestRouteTo" class="form-label">To <span
-                                    class="text-danger">*</span></label>
+                            <label for="requestRouteTo" class="form-label">To <span class="text-danger">*</span></label>
                             <select id="requestRouteTo" name="route_to" class="form-select" required disabled>
                                 <option value="">Select Destination</option>
                             </select>
@@ -365,11 +365,8 @@
 
                 const data = await response.json();
 
-                if (response.ok && data.success && data.pending_selection) {
-                    // Multiple passengers found - show selection
-                    showPassengerSelectionModal(data.passengers, this, btn, originalText);
-                } else if (response.ok && data.success) {
-                    // Single passenger or direct send
+                if (response.ok && data.success) {
+                    // Direct send - system automatically sends to most recent passenger
                     closeModal();
                     alert('Ticket sent to your email!');
                     this.reset();
@@ -384,108 +381,6 @@
                 btn.innerHTML = originalText;
             }
         });
-
-        // Show passenger selection modal
-        function showPassengerSelectionModal(passengers, form, btn, originalText) {
-            const selectionHtml = `
-                <div id="passengerSelectionModal" class="ticket-modal" style="display: block;">
-                    <div class="ticket-modal-overlay"></div>
-                    <div class="ticket-modal-content">
-                        <div class="ticket-modal-header">
-                            <h5><i class="fas fa-users me-2"></i>Select Passenger</h5>
-                            <button type="button" class="ticket-modal-close" id="closeSelectionModal">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <div class="ticket-modal-body">
-                            <p class="text-muted text-center mb-3">Multiple passengers found. Who are you?</p>
-                            <div class="list-group">
-                                ${passengers.map(p => `
-                                    <button type="button" class="list-group-item list-group-item-action passenger-option" data-passenger-id="${p.passenger_id}">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <h6 class="mb-1">${p.name}</h6>
-                                                <small class="text-muted">${p.type}</small>
-                                            </div>
-                                            <i class="fas fa-check-circle text-primary" style="display: none;"></i>
-                                        </div>
-                                    </button>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Insert modal into page
-            const modalContainer = document.createElement('div');
-            modalContainer.innerHTML = selectionHtml;
-            document.body.appendChild(modalContainer);
-
-            const selectionModal = document.getElementById('passengerSelectionModal');
-            const closeSelectionBtn = document.getElementById('closeSelectionModal');
-            const overlay = selectionModal.querySelector('.ticket-modal-overlay');
-
-            // Close modal
-            function closeSelectionModal() {
-                selectionModal.remove();
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }
-
-            closeSelectionBtn.addEventListener('click', closeSelectionModal);
-            overlay.addEventListener('click', closeSelectionModal);
-
-            // Handle passenger selection
-            document.querySelectorAll('.passenger-option').forEach(option => {
-                option.addEventListener('click', async function() {
-                    const passengerId = this.dataset.passengerId;
-
-                    // Add passenger_id to form and resubmit
-                    const passengerIdInput = document.createElement('input');
-                    passengerIdInput.type = 'hidden';
-                    passengerIdInput.name = 'passenger_id';
-                    passengerIdInput.value = passengerId;
-                    form.appendChild(passengerIdInput);
-
-                    closeSelectionModal();
-
-                    // Resubmit form
-                    const btn2 = document.getElementById('requestTicketBtn');
-                    btn2.disabled = true;
-                    btn2.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
-
-                    const formData = new FormData(form);
-                    try {
-                        const response = await fetch('{{ route('ticket.request-copy') }}', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Accept': 'application/json',
-                            },
-                            body: formData
-                        });
-
-                        const data = await response.json();
-
-                        if (response.ok && data.success) {
-                            closeModal();
-                            alert('Ticket sent to your email!');
-                            form.reset();
-                            passengerIdInput.remove();
-                        } else {
-                            alert(data.message || 'Error sending ticket.');
-                        }
-                    } catch (error) {
-                        console.error('Error:', error);
-                        alert('An error occurred. Please try again.');
-                    } finally {
-                        btn2.disabled = false;
-                        btn2.innerHTML = originalText;
-                    }
-                });
-            });
-        }
 
         // Mobile form submission (same logic)
         const mobileForm = document.getElementById('requestTicketFormMobile');
@@ -512,11 +407,9 @@
 
                     const data = await response.json();
 
-                    if (response.ok && data.success && data.pending_selection) {
-                        // Multiple passengers found - show selection
-                        showPassengerSelectionModal(data.passengers, mobileForm, btn, originalText);
-                    } else if (response.ok && data.success) {
+                    if (response.ok && data.success) {
                         alert('Ticket sent to your email!');
+                        closeModal();
                         this.reset();
                     } else {
                         alert(data.message || 'No ticket found.');

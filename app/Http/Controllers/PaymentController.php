@@ -73,7 +73,7 @@ class PaymentController extends Controller
         }
 
         try {
-            $response = Http::withBasicAuth($secret, '')->post('https://api.paymongo.com/v1/sources', $payload);
+            $response = Http::withBasicAuth($secret, '')->timeout(10)->post('https://api.paymongo.com/v1/sources', $payload);
             if ($response->failed()) {
                 \Log::error('PayMongo create source failed', ['status' => $response->status(), 'body' => $response->body()]);
                 return response()->json(['success' => false, 'message' => 'Failed to create PayMongo source'], 500);
@@ -143,7 +143,7 @@ class PaymentController extends Controller
                             ],
                         ],
                     ];
-                    $chargeResp = Http::withBasicAuth($secret, '')->post('https://api.paymongo.com/v1/payments', $chargePayload);
+                    $chargeResp = Http::withBasicAuth($secret, '')->timeout(10)->post('https://api.paymongo.com/v1/payments', $chargePayload);
                     if ($chargeResp->successful()) {
                         $chargeJson = $chargeResp->json();
                         $chargeStatus = $chargeJson['data']['attributes']['status'] ?? null;
@@ -198,6 +198,27 @@ class PaymentController extends Controller
                             'booking_status' => 'Canceled',
                             'updated_at' => now(),
                         ]);
+
+                        // Get all passengers for this booking
+                        $passengerIds = DB::table('passenger_ticket')
+                            ->where('booking_ref_no', $payment->booking_ref_no)
+                            ->pluck('passenger_id')
+                            ->toArray();
+
+                        // Delete passengers if they only belong to this booking
+                        foreach ($passengerIds as $passengerId) {
+                            $otherBookings = DB::table('passenger_ticket')
+                                ->where('passenger_id', $passengerId)
+                                ->where('booking_ref_no', '!=', $payment->booking_ref_no)
+                                ->count();
+
+                            if ($otherBookings == 0) {
+                                DB::table('passenger')->where('passenger_id', $passengerId)->delete();
+                            }
+                        }
+
+                        // Delete passenger tickets when payment fails
+                        DB::table('passenger_ticket')->where('booking_ref_no', $payment->booking_ref_no)->delete();
                     }
                 }
             }
@@ -212,6 +233,7 @@ class PaymentController extends Controller
     public function redirectReturn(Request $request)
     {
         $bookingRef = $request->query('booking_ref_no');
+        Log::info('PayMongo redirectReturn called', ['booking_ref_no' => $bookingRef]);
         if (!$bookingRef) {
             return redirect()->route('homepage');
         }
@@ -219,13 +241,17 @@ class PaymentController extends Controller
         // Try to verify payment status immediately by querying PayMongo using stored transaction_code (source id)
         $payment = DB::table('payment')->where('booking_ref_no', $bookingRef)->first();
         $secret = env('PAYMONGO_SECRET');
+        $status = null; // Initialize status variable
         if ($payment && $payment->transaction_code && $secret) {
             try {
                 $sourceId = $payment->transaction_code;
-                $response = Http::withBasicAuth($secret, '')->get("https://api.paymongo.com/v1/sources/{$sourceId}");
+                Log::info('Querying PayMongo for source', ['source_id' => $sourceId]);
+                $response = Http::withBasicAuth($secret, '')->timeout(10)->get("https://api.paymongo.com/v1/sources/{$sourceId}");
+                Log::info('PayMongo source response', ['status_code' => $response->status(), 'ok' => $response->ok()]);
                 if ($response->ok()) {
                     $body = $response->json();
                     $status = $body['data']['attributes']['status'] ?? null;
+                    Log::info('PayMongo source status', ['status' => $status]);
                     // If PayMongo reports a paid/succeeded status, mark completed
                     if (in_array($status, ['paid', 'succeeded'])) {
                         DB::table('payment')->where('payment_id', $payment->payment_id)->update([
@@ -239,50 +265,10 @@ class PaymentController extends Controller
 
                         // Send ticket email
                         SendTicketEmail::dispatch($bookingRef);
-                    } elseif ($status === 'chargeable') {
-                        // Attempt to charge immediately if still pending
-                        $amountPhp = (float) $payment->total_amount;
-                        $amount = (int) round($amountPhp * 100);
-                        try {
-                            $chargePayload = [
-                                'data' => [
-                                    'attributes' => [
-                                        'amount' => $amount,
-                                        'currency' => 'PHP',
-                                        'source' => [
-                                            'id' => $sourceId,
-                                            'type' => 'source',
-                                        ],
-                                        'description' => 'Booking #' . $payment->booking_ref_no,
-                                        'statement_descriptor' => 'Booking ' . $payment->booking_ref_no,
-                                    ],
-                                ],
-                            ];
-                            $chargeResp = Http::withBasicAuth($secret, '')->post('https://api.paymongo.com/v1/payments', $chargePayload);
-                            if ($chargeResp->successful()) {
-                                $chargeJson = $chargeResp->json();
-                                $chargeStatus = $chargeJson['data']['attributes']['status'] ?? null;
-                                if ($chargeStatus === 'paid') {
-                                    DB::table('payment')->where('payment_id', $payment->payment_id)->update([
-                                        'payment_status' => 'Completed',
-                                        'updated_at' => now(),
-                                    ]);
-                                    DB::table('booking')->where('booking_ref_no', $bookingRef)->update([
-                                        'booking_status' => 'Confirmed',
-                                        'updated_at' => now(),
-                                    ]);
-
-                                    // Send ticket email
-                                    SendTicketEmail::dispatch($bookingRef);
-                                    $status = 'paid';
-                                }
-                            } else {
-                                Log::error('PayMongo redirect charge failed', ['status' => $chargeResp->status(), 'body' => $chargeResp->body()]);
-                            }
-                        } catch (\Exception $e) {
-                            Log::error('PayMongo redirect charge exception', ['message' => $e->getMessage()]);
-                        }
                     }
+                    // If status is "chargeable", don't try to charge here - let webhook handle it
+                    // Just return and let the user see the success/error in the redirect
+
                 }
             } catch (\Exception $e) {
                 Log::warning('PayMongo redirect verification failed: ' . $e->getMessage());
@@ -290,11 +276,15 @@ class PaymentController extends Controller
         }
 
         // If payment succeeded, redirect to homepage with success message
+        Log::info('PayMongo redirectReturn final check', ['status' => $status, 'is_paid_or_succeeded' => !empty($status) && in_array($status, ['paid', 'succeeded'])]);
+
         if (!empty($status) && in_array($status, ['paid', 'succeeded'])) {
-            return redirect()->route('homepage')->with('success', "Payment successful! Your booking reference is: {$bookingRef}");
+            Log::info('Redirecting to homepage with success message', ['booking_ref_no' => $bookingRef]);
+            return redirect()->route('homepage', ['payment_success' => $bookingRef])->with('success', "Payment successful! Your booking reference is: {$bookingRef}");
         }
 
-        // Otherwise redirect to confirmbooking which will show updated booking/payment status
-        return redirect()->to(url('/passenger/confirmbooking/' . $bookingRef));
+        // If payment failed or status unknown, redirect to homepage with error
+        Log::info('Redirecting to homepage with error message', ['status' => $status, 'booking_ref_no' => $bookingRef]);
+        return redirect()->route('homepage', ['payment_error' => 1])->with('error', 'Payment could not be completed. Please try again.');
     }
 }

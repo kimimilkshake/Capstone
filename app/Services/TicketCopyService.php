@@ -14,13 +14,12 @@ class TicketCopyService
      * Searches for matching tickets by:
      * 1. Starting from passenger_ticket table
      * 2. Matching voyage by date and route
-     * 3. Getting passenger_id from passenger_ticket
-     * 4. Finding passenger email
-     * 5. Verifying booking is Confirmed and payment is Completed
+     * 3. Automatically sends to the most recent passenger (by booking date)
+     * 4. No manual selection needed - system picks the most recent booking
      */
-    public function requestTicketCopy($email, $departureDate, $routeFrom, $routeTo, $passengerId = null)
+    public function requestTicketCopy($email, $departureDate, $routeFrom, $routeTo)
     {
-        Log::info("TicketCopyService: Searching for email={$email}, date={$departureDate}, route={$routeFrom}->{$routeTo}, passengerId={$passengerId}");
+        Log::info("TicketCopyService: Searching for email={$email}, date={$departureDate}, route={$routeFrom}->{$routeTo}");
 
         // Step 1: Find route_port_id
         $routePort = DB::table('route_port')
@@ -56,7 +55,8 @@ class TicketCopyService
         Log::info("TicketCopyService: Found " . count($voyages) . " voyages for this route and date: " . implode(', ', $voyages));
 
         // Step 3: Start from passenger_ticket, find all passengers in these voyages with matching email
-        // This is the critical query - starting from passenger_ticket as source of truth
+        // CRITICAL: Don't join via booking.voyage_id because it's often NULL
+        // Instead, use passenger_ticket.voyage_id which is always populated
         $matchingTickets = DB::table('passenger_ticket as pt')
             ->whereIn('pt.voyage_id', $voyages)
             ->join('passenger as p', 'pt.passenger_id', '=', 'p.passenger_id')
@@ -94,59 +94,15 @@ class TicketCopyService
             ];
         }
 
-        // Step 4: If passenger_id specified, send to that specific passenger only
-        if ($passengerId) {
-            $selectedTicket = $matchingTickets
-                ->where('passenger_id', $passengerId)
-                ->first();
+        // Step 4: Get the most recent passenger (tickets are already sorted by booking date DESC)
+        $mostRecentTicket = $matchingTickets->first();
 
-            if (!$selectedTicket) {
-                Log::warning("TicketCopyService: Selected passenger_id={$passengerId} not found in matching tickets");
-                return [
-                    'success' => false,
-                    'message' => 'Selected passenger not found in this booking.'
-                ];
-            }
+        Log::info("TicketCopyService: Found " . $matchingTickets->count() . " matching tickets, sending to most recent: {$mostRecentTicket->passenger_firstname} {$mostRecentTicket->passenger_lastname}");
+        SendTicketEmail::dispatch($mostRecentTicket->booking_ref_no, $mostRecentTicket->passenger_id);
 
-            Log::info("TicketCopyService: Dispatching email for specific passenger {$selectedTicket->passenger_firstname} {$selectedTicket->passenger_lastname}");
-            SendTicketEmail::dispatch($selectedTicket->booking_ref_no, $selectedTicket->passenger_id);
-
-            return [
-                'success' => true,
-                'message' => "Ticket copy for {$selectedTicket->passenger_firstname} {$selectedTicket->passenger_lastname} has been sent to {$selectedTicket->passenger_email}."
-            ];
-        }
-
-        // Step 5: Return list of passengers for selection
-        $passengers = $matchingTickets->map(function ($ticket) {
-            return [
-                'passenger_id' => $ticket->passenger_id,
-                'name' => "{$ticket->passenger_firstname} {$ticket->passenger_lastname}",
-                'type' => $ticket->passenger_type,
-                'booking_ref_no' => $ticket->booking_ref_no
-            ];
-        })->unique('passenger_id')->values();
-
-        // If only 1 passenger, send directly
-        if ($passengers->count() === 1) {
-            $selectedPassenger = $passengers->first();
-            Log::info("TicketCopyService: Only one passenger found, sending directly");
-            SendTicketEmail::dispatch($selectedPassenger['booking_ref_no'], $selectedPassenger['passenger_id']);
-
-            return [
-                'success' => true,
-                'message' => "Ticket copy for {$selectedPassenger['name']} has been sent to {$email}.",
-                'direct_send' => true
-            ];
-        }
-
-        // Multiple passengers - return list for user to select
-        Log::info("TicketCopyService: Multiple passengers found (" . $passengers->count() . "), returning list for selection");
         return [
             'success' => true,
-            'message' => 'Multiple passengers found. Please select which passenger you are:',
-            'passengers' => $passengers->toArray(),
-            'pending_selection' => true
+            'message' => "Ticket copy for {$mostRecentTicket->passenger_firstname} {$mostRecentTicket->passenger_lastname} has been sent to {$email}."
         ];
     }
 }

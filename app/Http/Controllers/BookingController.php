@@ -594,13 +594,26 @@ class BookingController extends Controller
                     ]);
                 }
 
-                // Free up the reserved tickets
-                DB::table('passenger_ticket')->where('booking_ref_no', $bookingRef)->update([
-                    'booking_ref_no' => null,
-                    'payment_id' => null,
-                    'pt_valid_until_ts' => null,
-                    'updated_at' => now(),
-                ]);
+                // Get all passengers for this booking
+                $passengerIds = DB::table('passenger_ticket')
+                    ->where('booking_ref_no', $bookingRef)
+                    ->pluck('passenger_id')
+                    ->toArray();
+
+                // Delete passengers if they only belong to this booking
+                foreach ($passengerIds as $passengerId) {
+                    $otherBookings = DB::table('passenger_ticket')
+                        ->where('passenger_id', $passengerId)
+                        ->where('booking_ref_no', '!=', $bookingRef)
+                        ->count();
+
+                    if ($otherBookings == 0) {
+                        DB::table('passenger')->where('passenger_id', $passengerId)->delete();
+                    }
+                }
+
+                // Delete all passenger_ticket records for this booking
+                DB::table('passenger_ticket')->where('booking_ref_no', $bookingRef)->delete();
             });
 
             return response()->json([
@@ -624,8 +637,7 @@ class BookingController extends Controller
                 'email' => 'required|email',
                 'departure_date' => 'required|date',
                 'route_from' => 'required|string',
-                'route_to' => 'required|string',
-                'passenger_id' => 'sometimes|nullable|integer'
+                'route_to' => 'required|string'
             ]);
 
             $service = new TicketCopyService();
@@ -633,8 +645,7 @@ class BookingController extends Controller
                 $request->email,
                 $request->departure_date,
                 $request->input('route_from'),
-                $request->input('route_to'),
-                $request->input('passenger_id')
+                $request->input('route_to')
             );
 
             return response()->json($result, $result['success'] ? 200 : 404);

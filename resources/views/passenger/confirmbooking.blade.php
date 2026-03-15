@@ -69,8 +69,14 @@
         // Also check on page load if booking is still valid
         window.addEventListener('DOMContentLoaded', function() {
             const bookingStatus = '{{ strtolower($booking->booking_status) }}';
-            if (bookingStatus !== 'pending') {
-                // Booking is no longer pending, redirect away
+            const paymentStatus = '{{ $payment ? strtolower($payment->payment_status) : '' }}';
+
+            // If booking is confirmed and payment is completed, reload to show updated state
+            if (bookingStatus === 'confirmed' && paymentStatus === 'completed') {
+                // Booking was completed - redirect to homepage
+                window.location.href = '{{ route('homepage') }}';
+            } else if (bookingStatus !== 'pending') {
+                // For other non-pending statuses, redirect immediately
                 window.location.href = '{{ route('bookingtype') }}';
             }
         });
@@ -84,6 +90,17 @@
                         <h5 class="mb-0">Confirm Booking</h5>
                     </div>
                     <div class="card-body">
+                        @if (
+                            $payment &&
+                                strtolower($payment->payment_status) === 'completed' &&
+                                strtolower($booking->booking_status) === 'confirmed')
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <strong>✓ Payment Successful!</strong> Your booking has been confirmed. Check your email for
+                                your ticket details.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        @endif
+
                         <h6>Booking Reference: #{{ $booking->booking_ref_no }}</h6>
                         <p>Status: <strong>{{ $booking->booking_status }}</strong></p>
 

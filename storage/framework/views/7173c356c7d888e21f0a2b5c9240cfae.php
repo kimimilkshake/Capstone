@@ -99,9 +99,18 @@ $printedBy = optional(auth()->guard('staff')->user())->staff_name
     ?? 'System';
 
 // Get tickets with passengers
-$tickets = \App\Models\PassengerTicket::where('booking_ref_no', $booking->booking_ref_no)
+$allTickets = \App\Models\PassengerTicket::where('booking_ref_no', $booking->booking_ref_no)
     ->with('passenger', 'promo')
     ->get();
+
+// Filter tickets by passenger email if provided
+if ($passengerEmail) {
+    $tickets = $allTickets->filter(function ($ticket) use ($passengerEmail) {
+        return $ticket->passenger->passenger_email === $passengerEmail;
+    });
+} else {
+    $tickets = $allTickets;
+}
 
 foreach ($tickets as $ticket) {
     $totalAmount += $ticket->pt_ticket_price;
@@ -225,8 +234,8 @@ Departure Time:
 </tr>
 
 <tr>
-<td><strong>Loading Port:</strong> <?php echo e($booking->voyage->routePort->port_origin_name ?? 'N/A'); ?></td>
-<td><strong>Unloading Port:</strong> <?php echo e($booking->voyage->routePort->port_destination_name ?? 'N/A'); ?></td>
+<td><strong>Port of Origin:</strong> <?php echo e($booking->voyage->routePort->port_origin_name ?? 'N/A'); ?></td>
+<td><strong>Port of Destination:</strong> <?php echo e($booking->voyage->routePort->port_destination_name ?? 'N/A'); ?></td>
 </tr>
 
 </table>
@@ -249,17 +258,40 @@ Passenger Details
 <tr class="passenger-header">
 
 <th style="width:5%">No.</th>
-<th style="width:30%">Name</th>
-<th style="width:15%">Type</th>
-<th style="width:10%">Cot #</th>
-<th style="width:20%">Price</th>
-<th style="width:20%">Promo</th>
+<th style="width:25%">Name</th>
+<th style="width:12%">Type</th>
+<th style="width:8%">Cot #</th>
+<th style="width:15%">Accommodation</th>
+<th style="width:18%">Price</th>
+<th style="width:17%">Promo</th>
 
 </tr>
 
 <?php $__empty_1 = true; $__currentLoopData = $tickets; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $ticket): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
 <?php
     $passenger = $ticket->passenger;
+    // Find accommodation by COT number
+    $accommodation = null;
+    if ($booking->voyage && $booking->voyage->vessel && $booking->voyage->vessel->accommodations) {
+        foreach ($booking->voyage->vessel->accommodations as $accom) {
+            $ranges = explode(',', $accom->accommodation_cot_range);
+            foreach ($ranges as $range) {
+                $range = trim($range);
+                if (strpos($range, '-') !== false) {
+                    list($start, $end) = explode('-', $range);
+                    if ($ticket->pt_cot_no >= (int)trim($start) && $ticket->pt_cot_no <= (int)trim($end)) {
+                        $accommodation = $accom;
+                        break 2;
+                    }
+                } else {
+                    if ($ticket->pt_cot_no == (int)trim($range)) {
+                        $accommodation = $accom;
+                        break 2;
+                    }
+                }
+            }
+        }
+    }
 ?>
 
 <tr class="passenger-row">
@@ -283,6 +315,8 @@ Passenger Details
 <td class="center"><?php echo e($passenger->passenger_type); ?></td>
 
 <td class="center"><?php echo e($ticket->pt_cot_no); ?></td>
+
+<td class="center"><?php echo e($accommodation ? $accommodation->accommodation_name : 'N/A'); ?></td>
 
 <td class="right">₱<?php echo e(number_format($ticket->pt_ticket_price, 2)); ?></td>
 
@@ -316,11 +350,6 @@ No passengers found.
 <!-- CHARGES -->
 
 <table class="charges-table">
-
-<tr>
-<td style="width:80%"><strong>Number of Passengers:</strong></td>
-<td class="right"><strong><?php echo e(count($tickets)); ?></strong></td>
-</tr>
 
 <tr>
 <td><strong>Subtotal</strong></td>

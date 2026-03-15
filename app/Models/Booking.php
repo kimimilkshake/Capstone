@@ -63,4 +63,14 @@ class Booking extends Model
         return $this->belongsTo(CargoItem::class, 'cargo_item_id', 'cargo_item_id');
     }
 
+    public function payment()
+    {
+        return $this->hasOne(Payment::class, 'booking_ref_no', 'booking_ref_no');
+    }
+
+    public function passengerTickets()
+    {
+        return $this->hasMany(PassengerTicket::class, 'booking_ref_no', 'booking_ref_no');
+    }
+
 }

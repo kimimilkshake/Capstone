@@ -182,21 +182,13 @@ class StaffPassengerController extends Controller
 
             DB::commit();
 
-            // Send ticket emails to all unique passenger emails if payment is Physical (Cash)
+            // Send ticket email (to first passenger only - all tickets included)
             if ($paymentMode === 'Physical') {
-                $uniqueEmails = collect($passengers)
-                    ->pluck('email')
-                    ->filter()
-                    ->unique()
-                    ->values();
-
-                foreach ($uniqueEmails as $email) {
-                    SendTicketEmail::dispatch($booking->booking_ref_no, $email);
-                }
+                SendTicketEmail::dispatch($booking->booking_ref_no);
             }
 
             $message = $paymentMode === 'Physical'
-                ? "Booking confirmed! Reference: {$booking->booking_ref_no}. Payment received via cash. Ticket emails sent to all passengers."
+                ? "Booking confirmed! Reference: {$booking->booking_ref_no}. Payment received via cash. Ticket emails sent to primary passenger."
                 : "Reservation created! Reference: {$booking->booking_ref_no}. Complete payment to confirm booking.";
 
             // Redirect to reservation page for Pending payment mode
@@ -465,6 +457,27 @@ class StaffPassengerController extends Controller
             Payment::where('booking_ref_no', $bookingRef)
                 ->update(['payment_status' => 'Canceled']);
 
+            // Get all passengers for this booking
+            $passengerIds = DB::table('passenger_ticket')
+                ->where('booking_ref_no', $bookingRef)
+                ->pluck('passenger_id')
+                ->toArray();
+
+            // Delete passengers if they only belong to this booking
+            foreach ($passengerIds as $passengerId) {
+                $otherBookings = DB::table('passenger_ticket')
+                    ->where('passenger_id', $passengerId)
+                    ->where('booking_ref_no', '!=', $bookingRef)
+                    ->count();
+
+                if ($otherBookings == 0) {
+                    DB::table('passenger')->where('passenger_id', $passengerId)->delete();
+                }
+            }
+
+            // Delete all passenger_ticket records when booking is canceled
+            DB::table('passenger_ticket')->where('booking_ref_no', $bookingRef)->delete();
+
             return redirect()->route('staff.passenger_booking.create')
                 ->with('success', 'Reservation cancelled successfully.');
         } catch (\Exception $e) {
@@ -517,15 +530,13 @@ class StaffPassengerController extends Controller
                 ->distinct()
                 ->pluck('passenger_email');
 
-            // Send ticket email to all unique emails
-            foreach ($passengerEmails as $email) {
-                SendTicketEmail::dispatch($bookingRef, $email);
-            }
+            // Send ticket email (to first passenger only - all tickets included)
+            SendTicketEmail::dispatch($bookingRef);
 
             DB::commit();
 
             $message = "Booking #{$bookingRef} confirmed! Cash payment received." .
-                ($passengerEmails->count() > 0 ? " Ticket emails sent to all passengers." : "");
+                ($passengerEmails->count() > 0 ? " Ticket emails sent to primary passenger." : "");
 
             return redirect()->route('staff.dashboard')->with('success', $message);
 
@@ -580,15 +591,13 @@ class StaffPassengerController extends Controller
                 ->distinct()
                 ->pluck('passenger_email');
 
-            // Send ticket email to all unique emails
-            foreach ($passengerEmails as $email) {
-                SendTicketEmail::dispatch($bookingRef, $email);
-            }
+            // Send ticket email (to first passenger only - all tickets included)
+            SendTicketEmail::dispatch($bookingRef);
 
             DB::commit();
 
             $message = "Booking #{$bookingRef} confirmed! GCash payment received." .
-                ($passengerEmails->count() > 0 ? " Ticket emails sent to all passengers." : "");
+                ($passengerEmails->count() > 0 ? " Ticket emails sent to primary passenger." : "");
 
             return redirect()->route('staff.dashboard')->with('success', $message);
 

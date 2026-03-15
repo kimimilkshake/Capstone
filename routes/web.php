@@ -428,3 +428,16 @@ Route::prefix('authorized/staff')->group(function () {
     Route::post('/voyages/{id}/update', [VoyageController::class, 'update'])->name('staff.voyage_update');
 });
 */
+
+
+// Debug: Check if session data persists
+Route::get('/debug-session', function () {
+    $allSession = session()->all();
+    return response()->json([
+        'success_msg' => session('success'),
+        'error_msg' => session('error'),
+        'all_session' => $allSession,
+        'session_id' => session()->getId(),
+        'cookies' => request()->cookie(),
+    ]);
+});

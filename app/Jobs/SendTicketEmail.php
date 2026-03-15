@@ -18,13 +18,15 @@ class SendTicketEmail implements ShouldQueue
 
     public $bookingRef;
     public $recipientEmail;
+    public $passengerId; // Optional: for sending only a specific passenger's ticket
 
     /**
      * Create a new job instance.
      */
-    public function __construct($bookingRef, $recipientEmail = null)
+    public function __construct($bookingRef, $passengerId = null, $recipientEmail = null)
     {
         $this->bookingRef = $bookingRef;
+        $this->passengerId = $passengerId;
         $this->recipientEmail = $recipientEmail;
     }
 
@@ -34,23 +36,7 @@ class SendTicketEmail implements ShouldQueue
     public function handle(): void
     {
         try {
-            // Get recipient email if not provided
-            if (!$this->recipientEmail) {
-                $firstPassenger = DB::table('passenger')
-                    ->join('passenger_ticket', 'passenger.passenger_id', '=', 'passenger_ticket.passenger_id')
-                    ->where('passenger_ticket.booking_ref_no', $this->bookingRef)
-                    ->select('passenger.passenger_email', 'passenger.passenger_firstname', 'passenger.passenger_lastname')
-                    ->first();
-
-                if (!$firstPassenger || !$firstPassenger->passenger_email) {
-                    Log::warning("SendTicketEmail: No email found for booking {$this->bookingRef}");
-                    return;
-                }
-
-                $this->recipientEmail = $firstPassenger->passenger_email;
-            }
-
-            // Verify booking is confirmed and paid
+            // Verify booking is confirmed and paid first
             $booking = DB::table('booking')->where('booking_ref_no', $this->bookingRef)->first();
             $payment = DB::table('payment')->where('booking_ref_no', $this->bookingRef)->first();
 
@@ -64,17 +50,50 @@ class SendTicketEmail implements ShouldQueue
                 return;
             }
 
-            // Count passengers with this email
-            $passengerCount = DB::table('passenger')
-                ->join('passenger_ticket', 'passenger.passenger_id', '=', 'passenger_ticket.passenger_id')
-                ->where('passenger_ticket.booking_ref_no', $this->bookingRef)
-                ->where('passenger.passenger_email', $this->recipientEmail)
-                ->count();
+            // If passengerId is specified, send only that passenger's ticket
+            if ($this->passengerId) {
+                $passenger = DB::table('passenger')
+                    ->where('passenger_id', $this->passengerId)
+                    ->select('passenger_email', 'passenger_firstname', 'passenger_lastname')
+                    ->first();
 
-            // Send the ticket email (TicketMailable will only include passengers with this email)
-            Mail::to($this->recipientEmail)->send(new TicketMailable($this->bookingRef, $this->recipientEmail));
+                if (!$passenger || !$passenger->passenger_email) {
+                    Log::warning("SendTicketEmail: Passenger {$this->passengerId} not found for booking {$this->bookingRef}");
+                    return;
+                }
 
-            Log::info("SendTicketEmail: Successfully sent ticket email for booking {$this->bookingRef} to {$this->recipientEmail} ({$passengerCount} passenger(s))");
+                $this->recipientEmail = $passenger->passenger_email;
+
+                // Send the individual passenger ticket email
+                Mail::to($this->recipientEmail)->send(new \App\Mail\PassengerTicketConfirmed($this->bookingRef, $passenger->passenger_email));
+
+                Log::info("SendTicketEmail: Successfully sent individual ticket email for booking {$this->bookingRef} to passenger {$passenger->passenger_firstname} {$passenger->passenger_lastname} ({$this->recipientEmail})");
+            } else {
+                // Original behavior: send all passengers' tickets to first passenger's email
+                $firstPassenger = DB::table('passenger')
+                    ->join('passenger_ticket', 'passenger.passenger_id', '=', 'passenger_ticket.passenger_id')
+                    ->where('passenger_ticket.booking_ref_no', $this->bookingRef)
+                    ->orderBy('passenger_ticket.passenger_ticket_id', 'asc')
+                    ->select('passenger.passenger_email', 'passenger.passenger_firstname', 'passenger.passenger_lastname')
+                    ->first();
+
+                if (!$firstPassenger || !$firstPassenger->passenger_email) {
+                    Log::warning("SendTicketEmail: No email found for booking {$this->bookingRef}");
+                    return;
+                }
+
+                $this->recipientEmail = $firstPassenger->passenger_email;
+
+                // Count total passengers in booking
+                $passengerCount = DB::table('passenger_ticket')
+                    ->where('booking_ref_no', $this->bookingRef)
+                    ->count();
+
+                // Send the ticket email with PassengerTicketConfirmed mailable (which includes multiple PDFs)
+                Mail::to($this->recipientEmail)->send(new \App\Mail\PassengerTicketConfirmed($this->bookingRef));
+
+                Log::info("SendTicketEmail: Successfully sent ticket email for booking {$this->bookingRef} to {$this->recipientEmail} with {$passengerCount} ticket(s)");
+            }
 
         } catch (\Exception $e) {
             Log::error("SendTicketEmail failed for booking {$this->bookingRef}: " . $e->getMessage());

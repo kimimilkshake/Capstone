@@ -68,8 +68,14 @@
         // Also check on page load if booking is still valid
         window.addEventListener('DOMContentLoaded', function() {
             const bookingStatus = '<?php echo e(strtolower($booking->booking_status)); ?>';
-            if (bookingStatus !== 'pending') {
-                // Booking is no longer pending, redirect away
+            const paymentStatus = '<?php echo e($payment ? strtolower($payment->payment_status) : ''); ?>';
+
+            // If booking is confirmed and payment is completed, reload to show updated state
+            if (bookingStatus === 'confirmed' && paymentStatus === 'completed') {
+                // Booking was completed - redirect to homepage
+                window.location.href = '<?php echo e(route('homepage')); ?>';
+            } else if (bookingStatus !== 'pending') {
+                // For other non-pending statuses, redirect immediately
                 window.location.href = '<?php echo e(route('bookingtype')); ?>';
             }
         });
@@ -83,6 +89,17 @@
                         <h5 class="mb-0">Confirm Booking</h5>
                     </div>
                     <div class="card-body">
+                        <?php if(
+                            $payment &&
+                                strtolower($payment->payment_status) === 'completed' &&
+                                strtolower($booking->booking_status) === 'confirmed'): ?>
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <strong>✓ Payment Successful!</strong> Your booking has been confirmed. Check your email for
+                                your ticket details.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        <?php endif; ?>
+
                         <h6>Booking Reference: #<?php echo e($booking->booking_ref_no); ?></h6>
                         <p>Status: <strong><?php echo e($booking->booking_status); ?></strong></p>
 
