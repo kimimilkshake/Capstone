@@ -77,7 +77,7 @@ class StaffPassengerController extends Controller
             'passengers.*.city' => 'required|string',
             'passengers.*.barangay' => 'required|string',
             'passengers.*.contact_number' => 'required|string',
-            'passengers.*.email' => 'nullable|email',
+            'passengers.*.email' => 'required|email',
         ]);
 
         $voyage = Voyage::findOrFail($request->voyage_id);

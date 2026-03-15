@@ -237,8 +237,8 @@
                     <input type="tel" name="passengers[${i}][contact_number]" class="form-control" placeholder="09XXXXXXXXX" required>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Email Address</label>
-                    <input type="email" name="passengers[${i}][email]" class="form-control" placeholder="name@email.com">
+                    <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                    <input type="email" name="passengers[${i}][email]" class="form-control" placeholder="name@email.com" required>
                 </div>
             </div>
 
