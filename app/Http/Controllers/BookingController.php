@@ -633,6 +633,8 @@ class BookingController extends Controller
             $routeTo = $request->input('route_to');
             $passengerId = $request->input('passenger_id');
 
+            \Log::info("RequestTicketCopy: Looking for email={$email}, date={$departureDate}, route={$routeFrom}->{$routeTo}");
+
             // First, find the route_port_id from origin and destination
             $routePort = DB::table('route_port')
                 ->where('route_origin', $routeFrom)
@@ -640,10 +642,38 @@ class BookingController extends Controller
                 ->first();
 
             if (!$routePort) {
+                \Log::warning("RequestTicketCopy: Route not found for {$routeFrom}->{$routeTo}");
                 return response()->json([
                     'success' => false,
                     'message' => 'Route not found. Please select a valid route.'
                 ], 404);
+            }
+
+            \Log::info("RequestTicketCopy: Found route_port_id={$routePort->route_port_id}");
+
+            // DEBUG: Check what's available without strict filters
+            $debugCheck = DB::table('passenger_ticket as pt')
+                ->join('passenger as p', 'pt.passenger_id', '=', 'p.passenger_id')
+                ->join('voyage as v', 'pt.voyage_id', '=', 'v.voyage_id')
+                ->join('booking as b', 'pt.booking_ref_no', '=', 'b.booking_ref_no')
+                ->join('payment as pay', 'b.booking_ref_no', '=', 'pay.booking_ref_no')
+                ->where('p.passenger_email', $email)
+                ->select(
+                    'pt.passenger_id',
+                    'p.passenger_firstname',
+                    'p.passenger_lastname',
+                    'v.voyage_departure_date',
+                    'v.route_port_id',
+                    'b.booking_status',
+                    'pay.payment_status'
+                )
+                ->get();
+
+            \Log::info("RequestTicketCopy: Found " . $debugCheck->count() . " bookings for email={$email}");
+            if ($debugCheck->isNotEmpty()) {
+                foreach ($debugCheck as $d) {
+                    \Log::info("  DEBUG: {$d->passenger_firstname} - Date: {$d->voyage_departure_date}, Route: {$d->route_port_id}, BookingStatus: {$d->booking_status}, PaymentStatus: {$d->payment_status}");
+                }
             }
 
             // Find all matching tickets for this email + departure date + route
@@ -667,6 +697,14 @@ class BookingController extends Controller
                 )
                 ->orderByDesc('b.created_at')
                 ->get();
+
+            \Log::info("RequestTicketCopy: Query returned " . $matchingTickets->count() . " matching tickets");
+
+            if ($matchingTickets->isNotEmpty()) {
+                foreach ($matchingTickets as $ticket) {
+                    \Log::info("  - Passenger: {$ticket->passenger_firstname} {$ticket->passenger_lastname} ({$ticket->passenger_id}), Booking: {$ticket->booking_ref_no}");
+                }
+            }
 
             if ($matchingTickets->isEmpty()) {
                 return response()->json([
