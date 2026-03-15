@@ -265,6 +265,37 @@ class PaymentController extends Controller
 
                         // Send ticket email
                         SendTicketEmail::dispatch($bookingRef);
+                    } elseif (in_array($status, ['failed', 'canceled'])) {
+                        // If payment failed or was canceled, update booking status
+                        DB::table('payment')->where('payment_id', $payment->payment_id)->update([
+                            'payment_status' => 'Canceled',
+                            'updated_at' => now(),
+                        ]);
+                        DB::table('booking')->where('booking_ref_no', $bookingRef)->update([
+                            'booking_status' => 'Canceled',
+                            'updated_at' => now(),
+                        ]);
+
+                        // Get all passengers for this booking
+                        $passengerIds = DB::table('passenger_ticket')
+                            ->where('booking_ref_no', $bookingRef)
+                            ->pluck('passenger_id')
+                            ->toArray();
+
+                        // Delete passengers if they only belong to this booking
+                        foreach ($passengerIds as $passengerId) {
+                            $otherBookings = DB::table('passenger_ticket')
+                                ->where('passenger_id', $passengerId)
+                                ->where('booking_ref_no', '!=', $bookingRef)
+                                ->count();
+
+                            if ($otherBookings == 0) {
+                                DB::table('passenger')->where('passenger_id', $passengerId)->delete();
+                            }
+                        }
+
+                        // Delete passenger tickets when payment fails
+                        DB::table('passenger_ticket')->where('booking_ref_no', $bookingRef)->delete();
                     }
                     // If status is "chargeable", don't try to charge here - let webhook handle it
                     // Just return and let the user see the success/error in the redirect
@@ -280,11 +311,34 @@ class PaymentController extends Controller
 
         if (!empty($status) && in_array($status, ['paid', 'succeeded'])) {
             Log::info('Redirecting to homepage with success message', ['booking_ref_no' => $bookingRef]);
-            return redirect()->route('homepage', ['payment_success' => $bookingRef])->with('success', "Payment successful! Your booking reference is: {$bookingRef}");
+            return redirect()->route('homepage')->with('success', "Your booking is confirmed! Booking Reference: {$bookingRef}. Please check your email (including spam folder) for your ticket details.");
+        }
+
+        // If status is "chargeable", webhook will handle charging - show success message
+        if (!empty($status) && $status === 'chargeable') {
+            Log::info('Payment chargeable - waiting for webhook to charge', ['booking_ref_no' => $bookingRef]);
+
+            // Update both payment and booking to mark as confirmed/completed
+            DB::table('payment')->where('payment_id', $payment->payment_id)->update([
+                'payment_status' => 'Completed',
+                'updated_at' => now(),
+            ]);
+            DB::table('booking')->where('booking_ref_no', $bookingRef)->update([
+                'booking_status' => 'Confirmed',
+                'updated_at' => now(),
+            ]);
+
+            // Send ticket email immediately (backup - in case webhook is delayed)
+            SendTicketEmail::dispatch($bookingRef);
+
+            Log::info('Before redirect with success message', ['booking_ref_no' => $bookingRef]);
+            $response = redirect()->route('homepage')->with('success', "Your booking is confirmed! Booking Reference: {$bookingRef}. Please check your email (including spam folder) for your ticket details.");
+            Log::info('After redirect with success message', ['booking_ref_no' => $bookingRef]);
+            return $response;
         }
 
         // If payment failed or status unknown, redirect to homepage with error
         Log::info('Redirecting to homepage with error message', ['status' => $status, 'booking_ref_no' => $bookingRef]);
-        return redirect()->route('homepage', ['payment_error' => 1])->with('error', 'Payment could not be completed. Please try again.');
+        return redirect()->route('homepage')->with('error', 'Payment could not be completed. Please try again.');
     }
 }
