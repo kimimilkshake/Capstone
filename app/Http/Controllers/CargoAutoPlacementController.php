@@ -182,6 +182,8 @@ class CargoAutoPlacementController extends Controller
 
                 $cargoItems[] = [
                     'id' => $receipt->cargo_receipt_id,
+                    'voyage_id' => $request->voyage_id,
+                    'vessel_id' => $voyage->vessel_id,
                     'w' => (float) $widthM,
                     'h' => (float) $heightM,
                     'd' => (float) $lengthM,
@@ -288,6 +290,8 @@ class CargoAutoPlacementController extends Controller
                         'id' => (string) $receipt->cargo_receipt_id . '_' . $i,
                         'receipt_id' => $receipt->cargo_receipt_id,
                         'booking_ref' => $receipt->booking_ref_no,
+                        'voyage_id' => $voyageId,
+                        'vessel_id' => $voyage->vessel_id,
                         'width' => $widthM,
                         'height' => $heightM,
                         'depth' => $lengthM,
