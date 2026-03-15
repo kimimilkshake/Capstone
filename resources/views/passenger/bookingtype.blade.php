@@ -168,6 +168,25 @@
                                 <input type="date" class="form-control" id="departureDateMobile" name="departure_date"
                                     required>
                             </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label for="requestRouteFromMobile" class="form-label">From <span
+                                            class="text-danger">*</span></label>
+                                    <select id="requestRouteFromMobile" name="route_from" class="form-select" required>
+                                        <option value="">Select Origin</option>
+                                        @foreach (collect($voyages)->pluck('route_from')->unique() as $origin)
+                                            <option value="{{ $origin }}">{{ $origin }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label for="requestRouteToMobile" class="form-label">To <span
+                                            class="text-danger">*</span></label>
+                                    <select id="requestRouteToMobile" name="route_to" class="form-select" required disabled>
+                                        <option value="">Select Destination</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="text-center">
                                 <button type="submit" class="btn btn-primary w-100" id="requestTicketBtnMobile">
                                     <i class="fas fa-paper-plane me-2"></i>Request Ticket Copy
@@ -206,6 +225,25 @@
                         <label for="departureDate" class="form-label">Departure Date <span
                                 class="text-danger">*</span></label>
                         <input type="date" class="form-control" id="departureDate" name="departure_date" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label for="requestRouteFrom" class="form-label">From <span
+                                    class="text-danger">*</span></label>
+                            <select id="requestRouteFrom" name="route_from" class="form-select" required>
+                                <option value="">Select Origin</option>
+                                @foreach (collect($voyages)->pluck('route_from')->unique() as $origin)
+                                    <option value="{{ $origin }}">{{ $origin }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label for="requestRouteTo" class="form-label">To <span
+                                    class="text-danger">*</span></label>
+                            <select id="requestRouteTo" name="route_to" class="form-select" required disabled>
+                                <option value="">Select Destination</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="text-center">
                         <button type="submit" class="btn btn-primary w-100" id="requestTicketBtn">
@@ -257,6 +295,52 @@
                 closeModal();
             }
         });
+
+        // Handle route filtering for request ticket form
+        const voyagesData = JSON.parse(document.getElementById('voyages-data').textContent);
+        const requestRouteFromSelect = document.getElementById('requestRouteFrom');
+        const requestRouteToSelect = document.getElementById('requestRouteTo');
+        const requestRouteFromMobileSelect = document.getElementById('requestRouteFromMobile');
+        const requestRouteToMobileSelect = document.getElementById('requestRouteToMobile');
+
+        // Update destinations based on selected origin for request form
+        function updateRequestDestinations(fromSelect, toSelect) {
+            const origin = fromSelect.value;
+            toSelect.innerHTML = '<option value="">Select Destination</option>';
+
+            if (!origin) {
+                toSelect.disabled = true;
+                return;
+            }
+
+            const destinations = voyagesData
+                .filter((v) => v.route_from === origin)
+                .map((v) => v.route_to)
+                .filter((v, i, a) => a.indexOf(v) === i);
+
+            destinations.forEach((dest) => {
+                const option = document.createElement('option');
+                option.value = dest;
+                option.textContent = dest;
+                toSelect.appendChild(option);
+            });
+
+            toSelect.disabled = false;
+        }
+
+        // Add listeners for desktop form
+        if (requestRouteFromSelect) {
+            requestRouteFromSelect.addEventListener('change', function() {
+                updateRequestDestinations(requestRouteFromSelect, requestRouteToSelect);
+            });
+        }
+
+        // Add listeners for mobile form
+        if (requestRouteFromMobileSelect) {
+            requestRouteFromMobileSelect.addEventListener('change', function() {
+                updateRequestDestinations(requestRouteFromMobileSelect, requestRouteToMobileSelect);
+            });
+        }
 
         // Form submission
         document.getElementById('requestTicketForm').addEventListener('submit', async function(e) {

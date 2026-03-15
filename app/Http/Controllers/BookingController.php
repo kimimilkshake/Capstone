@@ -93,6 +93,7 @@ class BookingController extends Controller
         try {
             // Create booking (auto-increment id booking_ref_no)
             $bookingId = DB::table('booking')->insertGetId([
+                'voyage_id' => $voyage->voyage_id,
                 'booking_date' => now(),
                 'booking_status' => 'Pending',
                 'booking_type' => 'passenger',
@@ -620,38 +621,113 @@ class BookingController extends Controller
         try {
             $request->validate([
                 'email' => 'required|email',
-                'departure_date' => 'required|date'
+                'departure_date' => 'required|date',
+                'route_from' => 'required|string',
+                'route_to' => 'required|string',
+                'passenger_id' => 'sometimes|nullable|integer' // Optional: if specified, send only that passenger's copy
             ]);
 
             $email = $request->email;
             $departureDate = $request->departure_date;
+            $routeFrom = $request->input('route_from');
+            $routeTo = $request->input('route_to');
+            $passengerId = $request->input('passenger_id');
 
-            // Search for tickets with this email and departure date
-            $tickets = DB::table('passenger_ticket as pt')
+            // First, find the route_port_id from origin and destination
+            $routePort = DB::table('route_port')
+                ->where('route_origin', $routeFrom)
+                ->where('route_destination', $routeTo)
+                ->first();
+
+            if (!$routePort) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Route not found. Please select a valid route.'
+                ], 404);
+            }
+
+            // Find all matching tickets for this email + departure date + route
+            $matchingTickets = DB::table('passenger_ticket as pt')
                 ->join('passenger as p', 'pt.passenger_id', '=', 'p.passenger_id')
                 ->join('voyage as v', 'pt.voyage_id', '=', 'v.voyage_id')
                 ->join('booking as b', 'pt.booking_ref_no', '=', 'b.booking_ref_no')
                 ->join('payment as pay', 'b.booking_ref_no', '=', 'pay.booking_ref_no')
                 ->where('p.passenger_email', $email)
                 ->whereDate('v.voyage_departure_date', $departureDate)
+                ->where('v.route_port_id', $routePort->route_port_id)
                 ->where('b.booking_status', 'Confirmed')
                 ->where('pay.payment_status', 'Completed')
-                ->select('pt.booking_ref_no')
-                ->first();
+                ->select(
+                    'pt.passenger_id',
+                    'p.passenger_firstname',
+                    'p.passenger_lastname',
+                    'p.passenger_type',
+                    'pt.booking_ref_no',
+                    'b.created_at as booking_date'
+                )
+                ->orderByDesc('b.created_at')
+                ->get();
 
-            if (!$tickets) {
+            if ($matchingTickets->isEmpty()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No ticket found.'
                 ], 404);
             }
 
-            // Send ticket email
-            SendTicketEmail::dispatch($tickets->booking_ref_no, $email);
+            // If passenger_id is not specified, return list of matching passengers for selection
+            if (!$passengerId) {
+                // Group unique passengers from matching results
+                $passengers = $matchingTickets->map(function ($ticket) {
+                    return [
+                        'passenger_id' => $ticket->passenger_id,
+                        'name' => "{$ticket->passenger_firstname} {$ticket->passenger_lastname}",
+                        'type' => $ticket->passenger_type,
+                        'booking_ref_no' => $ticket->booking_ref_no
+                    ];
+                })->unique('passenger_id')->values();
+
+                // If only 1 passenger matches, proceed directly to send
+                if ($passengers->count() === 1) {
+                    $selectedPassenger = $passengers->first();
+                    SendTicketEmail::dispatch($selectedPassenger['booking_ref_no'], $selectedPassenger['passenger_id']);
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => "Ticket copy for {$selectedPassenger['name']} has been sent to {$email}.",
+                        'direct_send' => true
+                    ]);
+                }
+
+                // Multiple passengers - return list for user to select
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Multiple passengers found. Please select which passenger you are:',
+                    'passengers' => $passengers,
+                    'pending_selection' => true
+                ]);
+            }
+
+            // If passenger_id is specified, find the most recent booking for that passenger
+            $selectedTicket = $matchingTickets
+                ->where('passenger_id', $passengerId)
+                ->first();
+
+            if (!$selectedTicket) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Selected passenger not found in this booking.'
+                ], 404);
+            }
+
+            // Send only this passenger's ticket
+            SendTicketEmail::dispatch($selectedTicket->booking_ref_no, $selectedTicket->passenger_id);
+
+            $passengerName = "{$selectedTicket->passenger_firstname} {$selectedTicket->passenger_lastname}";
 
             return response()->json([
                 'success' => true,
-                'message' => 'Ticket copy has been sent to your email address.'
+                'message' => "Personal ticket copy for {$passengerName} has been sent to {$email}."
             ]);
 
         } catch (\Exception $e) {
