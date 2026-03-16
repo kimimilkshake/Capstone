@@ -8,7 +8,7 @@ trait StaffGuard
     protected function ensureStaff()
     {
         if (!auth()->guard('staff')->check()) {
-            abort(403);
+            abort(403, 'Access Restricted');
         }
     }
 

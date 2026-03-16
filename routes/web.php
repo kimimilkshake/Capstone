@@ -195,6 +195,19 @@ Route::get('/reset-password-page', function () {
     return view('authorized.reset_password');
 })->name('reset.password.page');
 
+//MIDDLEWARE PROTECTION FOR ADMIN AND STAFF ROUTES
+// ADMIN ONLY
+Route::middleware(['admin.only'])->group(function () {
+    Route::get('/admin/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])
+        ->name('admin.dashboard');
+});
+
+// STAFF ONLY
+Route::middleware(['staff.only'])->group(function () {
+    Route::get('/staff/dashboard', [\App\Http\Controllers\Staff\DashboardController::class, 'index'])
+        ->name('staff.dashboard');
+});
+
 //ADMIN ROUTES
 Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
 

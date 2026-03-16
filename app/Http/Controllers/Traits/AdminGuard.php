@@ -8,7 +8,7 @@ trait AdminGuard
     protected function ensureAdmin()
     {
         if (!auth()->guard('admin')->check()) {
-            abort(403);
+            abort(403, 'Access Restricted');
         }
     }
 

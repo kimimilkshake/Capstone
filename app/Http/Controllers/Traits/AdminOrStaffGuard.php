@@ -10,7 +10,7 @@ trait AdminOrStaffGuard
             !auth()->guard('admin')->check() &&
             !auth()->guard('staff')->check()
         ) {
-            abort(403);
+            abort(403, 'Access Restricted');
         }
     }
 }
