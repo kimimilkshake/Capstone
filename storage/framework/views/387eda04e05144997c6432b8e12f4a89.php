@@ -1,6 +1,6 @@
-@extends('layouts.app')
-@section('page-title', 'QR SCANNER')
-@section('content')
+
+<?php $__env->startSection('page-title', 'QR SCANNER'); ?>
+<?php $__env->startSection('content'); ?>
 
 <style>
 .scanner-page-shell{
@@ -133,8 +133,8 @@
         <div class="scanner-page-header">
             <p class="scanner-page-title">QR SCANNER</p>
 
-            <form action="{{ route('logout') }}" method="POST" class="m-0">
-                @csrf
+            <form action="<?php echo e(route('logout')); ?>" method="POST" class="m-0">
+                <?php echo csrf_field(); ?>
                 <input type="hidden" name="redirect_to" value="scanner">
                 <button type="submit" class="scanner-header-logout">Logout</button>
             </form>
@@ -218,4 +218,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/authorized/staff/qr_scanner.blade.php ENDPATH**/ ?>
