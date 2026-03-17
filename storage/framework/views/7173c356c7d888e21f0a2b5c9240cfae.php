@@ -379,26 +379,35 @@ No passengers found.
 
 <br><br><br>
 
+<!-- QR CODE SECTION -->
+<?php if(!empty($qrCodes)): ?>
+<div class="qr-section">
+    <h4>BOARDING QR CODE &mdash; Present at Terminal Check-in</h4>
+    <table style="width:100%;">
+        <tr>
+            <?php $__currentLoopData = $tickets; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ticket): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php if(isset($qrCodes[$ticket->passenger_id])): ?>
+                    <?php $qrPassenger = $ticket->passenger; ?>
+                    <td style="text-align:center; padding:8px;">
+                        <img src="<?php echo e($qrCodes[$ticket->passenger_id]); ?>" width="130" height="130" style="border:1px solid #111;" /><br>
+                        <span class="qr-code-label">
+                            <?php echo e($qrPassenger->passenger_firstname); ?> <?php echo e($qrPassenger->passenger_lastname); ?><br>
+                            Booking #<?php echo e($booking->booking_ref_no); ?>
+
+                        </span>
+                    </td>
+                <?php endif; ?>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        </tr>
+    </table>
+</div>
+<?php endif; ?>
 
 
-<!-- IMPORTANT REMINDERS -->
+<br><br>
 
-<div class="section-title">Important Reminders</div>
 
-<table>
 
-<tr>
-<td>
-• Arrive at the terminal at least 30 minutes before departure<br>
-• Bring a valid government-issued ID for verification<br>
-• Free hand carry allowance is 7kg per passenger<br>
-• Present this ticket and your ID at check-in<br>
-• For inquiries, call (032) 232-8864 or email lapulapulslc1964@gmail.com<br>
-• Ticket modifications must be made at least 2 hours before departure
-</td>
-</tr>
-
-</table>
 
 
 

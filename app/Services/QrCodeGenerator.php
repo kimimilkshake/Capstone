@@ -111,14 +111,19 @@ class QrCodeGenerator
                 ->first();
 
             if ($existing) {
-                // Normalize the path
-                $normalizedPath = str_replace('/', DIRECTORY_SEPARATOR, $existing->qr_code_path);
-                $normalizedPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $normalizedPath);
+                // Only reuse if the cached file is an SVG (not an old PNG from before the migration)
+                $normalizedPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $existing->qr_code_path);
 
-                if (file_exists($normalizedPath)) {
-                    \Log::info('QrCodeGenerator::generateAndStore - Using existing QR code for booking ' . $bookingRef . ', passenger ' . $passengerId);
+                if (
+                    strtolower(pathinfo($normalizedPath, PATHINFO_EXTENSION)) === 'svg'
+                    && file_exists($normalizedPath)
+                ) {
+                    \Log::info('QrCodeGenerator::generateAndStore - Using existing SVG QR code for booking ' . $bookingRef . ', passenger ' . $passengerId);
                     return $existing;
                 }
+
+                // Old PNG record (or missing file) — fall through and regenerate as SVG
+                \Log::info('QrCodeGenerator::generateAndStore - Stale/non-SVG cache for booking ' . $bookingRef . ', passenger ' . $passengerId . ' — regenerating');
             }
 
             // Generate and save to disk
