@@ -117,6 +117,22 @@ class QrCodeGenerator
     public static function generateAndStore($bookingRef, $passengerId, $qrData, ?string $filename = null): ?\App\Models\QrCode
     {
         try {
+            // First check if QR code already exists
+            $existing = \App\Models\QrCode::where('booking_ref_no', $bookingRef)
+                ->where('passenger_id', $passengerId)
+                ->first();
+
+            if ($existing) {
+                // Normalize the path
+                $normalizedPath = str_replace('/', DIRECTORY_SEPARATOR, $existing->qr_code_path);
+                $normalizedPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $normalizedPath);
+                
+                if (file_exists($normalizedPath)) {
+                    \Log::info('QrCodeGenerator::generateAndStore - Using existing QR code for booking ' . $bookingRef . ', passenger ' . $passengerId);
+                    return $existing;
+                }
+            }
+
             // Generate and save to disk
             $filepath = self::generateAndSave($qrData, $filename);
 
@@ -124,13 +140,17 @@ class QrCodeGenerator
                 throw new \Exception('Failed to generate and save QR code to disk');
             }
 
-            // Store in database
-            $qrCode = \App\Models\QrCode::create([
-                'booking_ref_no' => $bookingRef,
-                'passenger_id' => $passengerId,
-                'qr_data' => $qrData,
-                'qr_code_path' => $filepath
-            ]);
+            // Update or create in database
+            $qrCode = \App\Models\QrCode::updateOrCreate(
+                [
+                    'booking_ref_no' => $bookingRef,
+                    'passenger_id' => $passengerId
+                ],
+                [
+                    'qr_data' => $qrData,
+                    'qr_code_path' => $filepath
+                ]
+            );
 
             return $qrCode;
 
