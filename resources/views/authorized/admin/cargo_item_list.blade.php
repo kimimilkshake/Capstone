@@ -35,12 +35,23 @@
 
         <input type="text" name="search" placeholder="Search..." value="{{ request('search') }}" style="margin-right: 10px;">
         <select name="route_code_id">
-          <option value="">All Route Codes</option>
-          @foreach ($route_codes as $routeCode)
-              <option value="{{ $routeCode->route_code_id }}">
+            <option value="">All Route Codes</option>
+            @foreach ($route_codes as $routeCode)
+                <option value="{{ $routeCode->route_code_id }}" 
+                    {{ request('route_code_id') == $routeCode->route_code_id ? 'selected' : '' }}>
                     {{ $routeCode->route_code_name }}
-                  </option>
-          @endforeach
+                </option>
+            @endforeach
+        </select>
+
+        <select name="cargo_category_id">
+            <option value="">All Categories</option>
+            @foreach($cargo_categories as $category)
+                <option value="{{ $category->cargo_category_id }}" 
+                    {{ request('cargo_category_id') == $category->cargo_category_id ? 'selected' : '' }}>
+                    {{ $category->cargo_category_name }}
+                </option>
+            @endforeach
         </select>
         <button type="submit">Filter</button>
       </form>

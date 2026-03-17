@@ -63,6 +63,10 @@
     margin:auto;
 }
 
+.scannertxt{
+    margin-left: 12rem;
+}
+
 /* Mobile adjustments */
 @media (max-width: 768px){
 
@@ -72,15 +76,20 @@
 
     .scanner-page-header{
         min-height:36px;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
     }
 
     .scanner-page-title{
         width:100%;
         text-align:center;
+        margin: 0;
     }
 
     .scanner-page-header form{
-        right:56px;
+        position: static;
+        margin: 0;
     }
 
     .scannerbox{
@@ -105,7 +114,7 @@
 
     .scannertxt{
         font-size:14px;
-        text-align:center;
+        margin-left: 20px;
     }
 
     .btn{
@@ -135,24 +144,10 @@
             <div class="card-body p-4">
 
                 <p class="text-muted mb-4 scannertxt">
-                    This scans any QR code and displays the raw decoded text.
+                    Scan a QR code to open the link automatically.
                 </p>
 
                 <div id="reader"></div>
-
-                <div class="mt-4">
-                    <label class="form-label fw-bold" for="scanResult">Scanned Result</label>
-                    <textarea id="scanResult" class="form-control" rows="4" readonly
-                        placeholder="No QR code scanned yet."></textarea>
-
-                    <small id="scanMeta" class="text-muted d-block mt-2"></small>
-                </div>
-
-                <div class="d-flex flex-column flex-md-row gap-2 mt-3">
-                    <button id="clearResult" class="btn btn-outline-secondary" type="button">
-                        Clear Result
-                    </button>
-                </div>
 
             </div>
         </div>
@@ -163,10 +158,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-
-    const resultField = document.getElementById('scanResult');
-    const metaField = document.getElementById('scanMeta');
-    const clearButton = document.getElementById('clearResult');
 
     let lastText = '';
     let lastScanAt = 0;
@@ -182,8 +173,13 @@ document.addEventListener('DOMContentLoaded', function() {
         lastText = decodedText;
         lastScanAt = now;
 
-        resultField.value = decodedText;
-        metaField.textContent = 'Last scanned: ' + new Date(now).toLocaleString();
+        // Check if it's a URL
+        if (decodedText.startsWith('http://') || decodedText.startsWith('https://')) {
+            window.open(decodedText, '_blank');
+        } else {
+            // For non-URLs, maybe alert or do nothing
+            alert('Scanned: ' + decodedText);
+        }
     }
 
     function onScanFailure(){}
@@ -191,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function initScanner(){
 
         if(typeof Html5QrcodeScanner === 'undefined'){
-            metaField.textContent = 'QR scanner library failed to load.';
+            alert('QR scanner library failed to load.');
             return;
         }
 
@@ -210,13 +206,6 @@ document.addEventListener('DOMContentLoaded', function() {
         );
 
         scanner.render(onScanSuccess, onScanFailure);
-
-        clearButton.addEventListener('click',function(){
-            resultField.value='';
-            metaField.textContent='';
-            lastText='';
-            lastScanAt=0;
-        });
     }
 
     const waitForLibrary = setInterval(function(){

@@ -9,6 +9,13 @@
     </li>
 
     <li class="anav-item">
+      <a class="anav-link" href="#">
+        <i class="fa-solid fa-chart-line"></i>
+        <span class="anav-label">Generate Reports</span>
+      </a>
+    </li>
+
+    <li class="anav-item">
       <i class="fa-solid fa-map me-3"></i></i><span class="anav-label">Voyages</span>
     </li>
 
@@ -86,13 +93,6 @@
     <li class="anav-item">
       <i class="fa-solid fa-user-gear me-3"></i>
       <span class="anav-label">Staff</span>
-    </li>
-
-    <li class="anav-item">
-      <a class="anav-link" href="<?php echo e(route('admin.create_staff')); ?>">
-        <i class="fa-solid fa-user-plus me-1"></i>
-        <span class="anav-label">Create Staff</span>
-      </a>
     </li>
 
     <li class="anav-item">

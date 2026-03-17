@@ -12,6 +12,15 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         //
+        $middleware->redirectGuestsTo(function () {
+            abort(403, 'Access Restricted');
+        });
+
+        $middleware->alias([
+        'admin.only' => \App\Http\Middleware\AdminOnly::class,
+        'staff.only' => \App\Http\Middleware\StaffOnly::class,
+    ]);
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

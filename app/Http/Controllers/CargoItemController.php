@@ -29,15 +29,20 @@ class CargoItemController extends Controller
             $query->where('route_code_id', $request->route_code_id);
         }
 
-        $cargo_items = $query->orderBy('cargo_item_description')->paginate(7);
-
-        $route_codes = RouteCode::all();
-
-        if (auth()->guard('admin')->check()) {
-            return view('authorized.admin.cargo_item_list', compact('cargo_items','route_codes'));
+        if ($request->filled('cargo_category_id')) {
+            $query->where('cargo_category_id', $request->cargo_category_id);
         }
 
-        return view('authorized.staff.scargo_item_list', compact('cargo_items','route_codes'));
+        $cargo_items = $query->orderBy('cargo_item_description')->paginate(7);
+
+        $route_codes = RouteCode::orderBy('route_code_name')->get();
+        $cargo_categories = CargoCategory::orderBy('cargo_category_name')->get();
+
+        if (auth()->guard('admin')->check()) {
+            return view('authorized.admin.cargo_item_list', compact('cargo_items','route_codes', 'cargo_categories'));
+        }
+
+        return view('authorized.staff.scargo_item_list', compact('cargo_items','route_codes', 'cargo_categories'));
     }
 
     public function create()
