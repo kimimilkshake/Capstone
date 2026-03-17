@@ -34,6 +34,10 @@
                     <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
                 </select>
             </form>
+
+            <div class="add-vessel">
+                <a href="{{ route('admin.create_staff') }}"><i class="fa-solid fa-user-plus me-1"></i></i>Add Staff</a>
+            </div>
         </div>
 
 
