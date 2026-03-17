@@ -5,6 +5,7 @@ $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 use App\Models\Booking;
 use App\Models\PassengerTicket;
+use App\Models\QrCode;
 use App\Services\PassengerTicketPdf;
 use App\Services\QrCodeGenerator;
 use Illuminate\Support\Facades\Mail;
@@ -43,14 +44,20 @@ echo "🎫 Generating QR Codes for PDF...\n";
 $qrCodes = [];
 foreach ($tickets as $ticket) {
     $qrData = $booking->booking_ref_no . ':' . $ticket->passenger_id;
-    // Save to disk and get absolute path for DOMPDF
     $filename = 'qr_' . $booking->booking_ref_no . '_' . $ticket->passenger_id;
-    $filepath = QrCodeGenerator::generateAndSave($qrData, $filename);
-    
-    if ($filepath && file_exists($filepath)) {
+
+    // Generate and store (saves to both disk and database)
+    $qrCode = QrCodeGenerator::generateAndStore(
+        $booking->booking_ref_no,
+        $ticket->passenger_id,
+        $qrData,
+        $filename
+    );
+
+    if ($qrCode && file_exists($qrCode->qr_code_path)) {
         // Store absolute path for DOMPDF
-        $qrCodes[$ticket->passenger_id] = $filepath;
-        echo "   ✓ QR Code for passenger " . $ticket->passenger_id . "\n";
+        $qrCodes[$ticket->passenger_id] = $qrCode->qr_code_path;
+        echo "   ✓ QR Code for passenger " . $ticket->passenger_id . " (stored in DB)\n";
     } else {
         echo "   ❌ Failed to generate QR for passenger " . $ticket->passenger_id . "\n";
     }
@@ -141,10 +148,10 @@ try {
     // Create raw email
     Mail::raw('Please find your boarding ticket PDF attached. Each passenger has a unique QR code for quick check-in at the gate.', function ($message) use ($toEmail, $booking, $pdfContent) {
         $message->to($toEmail)
-                ->subject('Your Boarding Ticket - Booking #' . $booking->booking_ref_no)
-                ->attachData($pdfContent, 'boarding_ticket_' . $booking->booking_ref_no . '.pdf', [
-                    'mime' => 'application/pdf'
-                ]);
+            ->subject('Your Boarding Ticket - Booking #' . $booking->booking_ref_no)
+            ->attachData($pdfContent, 'boarding_ticket_' . $booking->booking_ref_no . '.pdf', [
+                'mime' => 'application/pdf'
+            ]);
     });
 
     echo "   ✅ Email sent successfully!\n";
@@ -153,6 +160,16 @@ try {
     echo "   Passengers: " . $tickets->count() . "\n";
     echo "   PDF Size: " . strlen($pdfContent) . " bytes\n";
     echo "   QR Codes Included: " . count($qrCodes) . "\n";
+    echo "\n";
+
+    // 🎫 Verify QR codes stored in database
+    echo "🔍 Verifying QR Codes in Database...\n";
+    $storedQrCodes = QrCode::where('booking_ref_no', $booking->booking_ref_no)->get();
+    echo "   ✅ QR Codes stored in database: " . $storedQrCodes->count() . "\n";
+    foreach ($storedQrCodes as $qr) {
+        echo "   - Passenger " . $qr->passenger_id . ": " . $qr->qr_data . "\n";
+        echo "     Path: " . $qr->qr_code_path . "\n";
+    }
     echo "\n✅ Test Complete!\n";
 
 } catch (\Exception $e) {

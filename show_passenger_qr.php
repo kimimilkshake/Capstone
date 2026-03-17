@@ -34,7 +34,7 @@ $html = <<<HTML
             margin: 0;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        
+
         .container {
             background: white;
             padding: 50px;
@@ -43,17 +43,17 @@ $html = <<<HTML
             text-align: center;
             max-width: 700px;
         }
-        
+
         .header {
             margin-bottom: 30px;
         }
-        
+
         h1 {
             color: #333;
             margin: 0 0 10px 0;
             font-size: 32px;
         }
-        
+
         .passenger-info {
             background: #f0f9ff;
             padding: 20px;
@@ -61,20 +61,20 @@ $html = <<<HTML
             margin-bottom: 30px;
             border-left: 5px solid #667eea;
         }
-        
+
         .passenger-info h2 {
             margin: 0 0 15px 0;
             color: #667eea;
             font-size: 18px;
         }
-        
+
         .info-row {
             display: flex;
             justify-content: space-around;
             margin: 10px 0;
             flex-wrap: wrap;
         }
-        
+
         .info-item {
             background: white;
             padding: 12px 20px;
@@ -84,7 +84,7 @@ $html = <<<HTML
             min-width: 150px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
-        
+
         .info-label {
             color: #666;
             font-size: 12px;
@@ -92,13 +92,13 @@ $html = <<<HTML
             margin-bottom: 5px;
             font-weight: bold;
         }
-        
+
         .info-value {
             color: #333;
             font-size: 16px;
             font-weight: bold;
         }
-        
+
         .qr-wrapper {
             background: #f8f8f8;
             padding: 30px;
@@ -106,13 +106,13 @@ $html = <<<HTML
             margin-bottom: 30px;
             border: 2px solid #e0e0e0;
         }
-        
+
         .qr-wrapper h3 {
             margin: 0 0 20px 0;
             color: #333;
             font-size: 18px;
         }
-        
+
         .qr-wrapper img {
             display: block;
             width: 280px;
@@ -124,7 +124,7 @@ $html = <<<HTML
             padding: 10px;
             box-sizing: border-box;
         }
-        
+
         .qr-info {
             background: #fff3cd;
             padding: 15px;
@@ -132,13 +132,13 @@ $html = <<<HTML
             margin-top: 20px;
             border-left: 4px solid #ffc107;
         }
-        
+
         .qr-info p {
             margin: 5px 0;
             color: #856404;
             font-size: 13px;
         }
-        
+
         .booking-badge {
             display: inline-block;
             background: #22c55e;
@@ -156,7 +156,7 @@ $html = <<<HTML
             <h1>✅ Passenger QR Code</h1>
             <p style="color: #666; margin: 10px 0 0 0;">For Boarding Check-in</p>
         </div>
-        
+
         <div class="passenger-info">
             <h2>Passenger Details</h2>
             <div class="info-row">
@@ -180,7 +180,7 @@ $html = <<<HTML
                 </div>
             </div>
         </div>
-        
+
         <div class="qr-wrapper">
             <h3>🎫 Scan This QR Code at Boarding Gate</h3>
             <img src="$qrDataUrl" alt="QR Code for $passenger->passenger_firstname">
@@ -190,7 +190,7 @@ $html = <<<HTML
                 <p>This unique QR code identifies this specific passenger for the voyage</p>
             </div>
         </div>
-        
+
         <div class="booking-badge">
             ✓ Ready for PDF Ticket
         </div>

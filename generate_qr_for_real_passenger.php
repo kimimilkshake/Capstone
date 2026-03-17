@@ -47,19 +47,19 @@ if ($qrBase64) {
     echo "✅ QR Code Generated Successfully!\n";
     echo "   Base64 Length: " . strlen($qrBase64) . " chars\n";
     echo "   First 60 chars: " . substr($qrBase64, 0, 60) . "...\n\n";
-    
+
     // Generate data URL
     $dataUrl = QrCodeGenerator::generateAsDataUrl($qrData, 300);
     echo "✅ Data URL Created:\n";
     echo "   Length: " . strlen($dataUrl) . " chars\n";
-    
+
     // Save to disk too
     $filepath = QrCodeGenerator::generateAndSave($qrData, "passenger_" . $passenger->passenger_id);
     if ($filepath) {
         echo "✅ QR Code saved to disk:\n";
         echo "   Path: " . $filepath . "\n";
     }
-    
+
     echo "\n✓ Ready to add to PDF!\n";
 } else {
     echo "❌ Failed to generate QR code\n";

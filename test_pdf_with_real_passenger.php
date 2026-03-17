@@ -55,11 +55,11 @@ echo "   Passengers: " . $ticketCount . "\n";
 echo "\n📝 Generating PDF...\n";
 try {
     $pdfContent = PassengerTicketPdf::generate($booking->booking_ref_no);
-    
+
     if ($pdfContent) {
         $filename = 'test_passenger_pdf_' . $passenger->passenger_id . '.pdf';
         file_put_contents($filename, $pdfContent);
-        
+
         echo "✅ PDF Generated Successfully!\n";
         echo "   File: " . $filename . "\n";
         echo "   Size: " . strlen($pdfContent) . " bytes\n";

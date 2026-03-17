@@ -6,7 +6,7 @@ class QrCodeGenerator
 {
     /**
      * Generate a QR code using the free QR Server API
-     * 
+     *
      * @param string $data The data to encode in the QR code
      * @param int $size Size of the QR code (default 300x300)
      * @return string|null Base64 encoded PNG image or null on failure
@@ -48,7 +48,7 @@ class QrCodeGenerator
 
     /**
      * Generate QR code and save to disk
-     * 
+     *
      * @param string $data The data to encode
      * @param string|null $filename Custom filename (without extension)
      * @return string|null File path if successful, null on failure
@@ -89,7 +89,7 @@ class QrCodeGenerator
 
     /**
      * Generate QR code as data URL (for use in HTML/PDF)
-     * 
+     *
      * @param string $data The data to encode
      * @param int $size Size of the QR code
      * @return string Data URL string
@@ -103,5 +103,40 @@ class QrCodeGenerator
         }
 
         return 'data:image/png;base64,' . $base64;
+    }
+
+    /**
+     * Generate QR code and store in database + disk
+     *
+     * @param string $bookingRef The booking reference
+     * @param int $passengerId The passenger ID
+     * @param string $qrData The data to encode in QR
+     * @param string|null $filename Custom filename (without extension)
+     * @return \App\Models\QrCode|null QrCode model if successful
+     */
+    public static function generateAndStore($bookingRef, $passengerId, $qrData, ?string $filename = null): ?\App\Models\QrCode
+    {
+        try {
+            // Generate and save to disk
+            $filepath = self::generateAndSave($qrData, $filename);
+
+            if (!$filepath) {
+                throw new \Exception('Failed to generate and save QR code to disk');
+            }
+
+            // Store in database
+            $qrCode = \App\Models\QrCode::create([
+                'booking_ref_no' => $bookingRef,
+                'passenger_id' => $passengerId,
+                'qr_data' => $qrData,
+                'qr_code_path' => $filepath
+            ]);
+
+            return $qrCode;
+
+        } catch (\Exception $e) {
+            \Log::error('QrCodeGenerator::generateAndStore - ' . $e->getMessage());
+            return null;
+        }
     }
 }

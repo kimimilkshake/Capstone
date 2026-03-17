@@ -27,7 +27,7 @@ $html = <<<HTML
             margin: 0;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        
+
         .container {
             background: white;
             padding: 40px;
@@ -36,20 +36,20 @@ $html = <<<HTML
             text-align: center;
             max-width: 600px;
         }
-        
+
         h1 {
             color: #333;
             margin-bottom: 10px;
             font-size: 28px;
         }
-        
+
         .status {
             color: #22c55e;
             font-size: 18px;
             margin-bottom: 30px;
             font-weight: bold;
         }
-        
+
         .qr-wrapper {
             background: #f5f5f5;
             padding: 20px;
@@ -57,7 +57,7 @@ $html = <<<HTML
             margin-bottom: 30px;
             display: inline-block;
         }
-        
+
         .qr-wrapper img {
             display: block;
             width: 300px;
@@ -65,7 +65,7 @@ $html = <<<HTML
             border: 2px solid #ddd;
             border-radius: 5px;
         }
-        
+
         .info {
             background: #f0f9ff;
             padding: 15px;
@@ -74,12 +74,12 @@ $html = <<<HTML
             margin-top: 20px;
             border-left: 4px solid #667eea;
         }
-        
+
         .info h3 {
             margin-top: 0;
             color: #667eea;
         }
-        
+
         .info code {
             background: #fff;
             padding: 2px 6px;
@@ -88,14 +88,14 @@ $html = <<<HTML
             word-break: break-all;
             color: #764ba2;
         }
-        
+
         .details {
             margin-top: 15px;
             text-align: left;
             font-size: 14px;
             color: #666;
         }
-        
+
         .details p {
             margin: 8px 0;
             line-height: 1.6;
@@ -106,15 +106,15 @@ $html = <<<HTML
     <div class="container">
         <h1>✅ QR Code Generated Successfully!</h1>
         <div class="status">Ready for Use</div>
-        
+
         <div class="qr-wrapper">
             <img src="$qrDataUrl" alt="QR Code">
         </div>
-        
+
         <div class="info">
             <h3>QR Code Data</h3>
             <p><code>$testData</code></p>
-            
+
             <div class="details">
                 <p><strong>📊 Details:</strong></p>
                 <p>• Format: PNG Image</p>
@@ -123,7 +123,7 @@ $html = <<<HTML
                 <p>• Data Length: SDK function encodes booking reference with passenger ID</p>
                 <p>• Encoding: Data URL format ready for PDF/HTML embedding</p>
             </div>
-            
+
             <div class="details" style="margin-top: 15px;">
                 <p><strong>🔧 Methods Available:</strong></p>
                 <p>• <code>generate()</code> - Returns base64 PNG</p>

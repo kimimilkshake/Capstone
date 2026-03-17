@@ -48,7 +48,7 @@ foreach ($tickets as $ticket) {
     // Note: generateAndSave handles directory creation and .png extension
     $filename = 'test_qr_' . $booking->booking_ref_no . '_' . $ticket->passenger_id;
     $filepath = QrCodeGenerator::generateAndSave($qrData, $filename);
-    
+
     if ($filepath && file_exists($filepath)) {
         $qrCodes[$ticket->passenger_id] = $filepath;
         $filesize = filesize($filepath);
@@ -115,7 +115,7 @@ foreach ($tickets as $ticket) {
         $filepath = $qrCodes[$ticket->passenger_id];
         // Convert to absolute path for DOMPDF
         $absolutePath = realpath($filepath);
-        
+
         $qrCodesHtml .= '            <div class="qr-item">' . "\n";
         $qrCodesHtml .= '                <img src="' . $absolutePath . '" alt="QR Code">' . "\n";
         $qrCodesHtml .= '                <div class="qr-label">' . "\n";
@@ -147,7 +147,7 @@ try {
 
     if ($pdfContent) {
         echo "   ✅ PDF generated: " . strlen($pdfContent) . " bytes\n\n";
-        
+
         // Save test PDF
         $filename = 'test_ticket_with_qr_codes.pdf';
         file_put_contents($filename, $pdfContent);
