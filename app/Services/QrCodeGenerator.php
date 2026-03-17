@@ -20,7 +20,7 @@ class QrCodeGenerator
                 throw new \Exception('QR code data cannot be empty');
             }
 
-            $svgContent = (string) QrCode::size($size)->generate($data);
+            $svgContent = (string) QrCode::format('svg')->size($size)->generate($data);
 
             if (!$svgContent) {
                 throw new \Exception('QR code generation returned empty result');
@@ -114,7 +114,7 @@ class QrCodeGenerator
                 // Normalize the path
                 $normalizedPath = str_replace('/', DIRECTORY_SEPARATOR, $existing->qr_code_path);
                 $normalizedPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $normalizedPath);
-                
+
                 if (file_exists($normalizedPath)) {
                     \Log::info('QrCodeGenerator::generateAndStore - Using existing QR code for booking ' . $bookingRef . ', passenger ' . $passengerId);
                     return $existing;
