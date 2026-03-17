@@ -2,14 +2,16 @@
 
 namespace App\Services;
 
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+
 class QrCodeGenerator
 {
     /**
-     * Generate a QR code using the free QR Server API
+     * Generate a QR code SVG locally using simplesoftwareio/simple-qrcode (no imagick/GD needed)
      *
      * @param string $data The data to encode in the QR code
      * @param int $size Size of the QR code (default 300x300)
-     * @return string|null Base64 encoded PNG image or null on failure
+     * @return string|null Raw SVG string or null on failure
      */
     public static function generate(string $data, int $size = 300): ?string
     {
@@ -18,27 +20,13 @@ class QrCodeGenerator
                 throw new \Exception('QR code data cannot be empty');
             }
 
-            $url = 'https://api.qrserver.com/v1/create-qr-code/';
-            $params = [
-                'size' => $size . 'x' . $size,
-                'data' => $data,
-                'format' => 'png'
-            ];
+            $svgContent = (string) QrCode::size($size)->generate($data);
 
-            $fullUrl = $url . '?' . http_build_query($params);
-
-            $context = stream_context_create([
-                'http' => ['timeout' => 5],
-                'ssl' => ['verify_peer' => false]
-            ]);
-
-            $imageData = @file_get_contents($fullUrl, false, $context);
-
-            if ($imageData === false) {
-                throw new \Exception('Failed to fetch QR code from API');
+            if (!$svgContent) {
+                throw new \Exception('QR code generation returned empty result');
             }
 
-            return base64_encode($imageData);
+            return $svgContent;
 
         } catch (\Exception $e) {
             \Log::error('QrCodeGenerator::generate - ' . $e->getMessage());
@@ -47,7 +35,7 @@ class QrCodeGenerator
     }
 
     /**
-     * Generate QR code and save to disk
+     * Generate QR code and save to disk as SVG
      *
      * @param string $data The data to encode
      * @param string|null $filename Custom filename (without extension)
@@ -56,9 +44,9 @@ class QrCodeGenerator
     public static function generateAndSave(string $data, ?string $filename = null): ?string
     {
         try {
-            $base64 = self::generate($data);
+            $svgContent = self::generate($data);
 
-            if (!$base64) {
+            if (!$svgContent) {
                 throw new \Exception('Failed to generate QR code');
             }
 
@@ -71,9 +59,8 @@ class QrCodeGenerator
                 $filename = 'qr_' . md5($data . time());
             }
 
-            $filepath = $directory . DIRECTORY_SEPARATOR . $filename . '.png';
-            $imageData = base64_decode($base64);
-            $bytes = file_put_contents($filepath, $imageData);
+            $filepath = $directory . DIRECTORY_SEPARATOR . $filename . '.svg';
+            $bytes = file_put_contents($filepath, $svgContent);
 
             if ($bytes === false) {
                 throw new \Exception('Failed to save QR code to disk');
@@ -88,7 +75,7 @@ class QrCodeGenerator
     }
 
     /**
-     * Generate QR code as data URL (for use in HTML/PDF)
+     * Generate QR code as SVG data URL (for use in HTML/PDF)
      *
      * @param string $data The data to encode
      * @param int $size Size of the QR code
@@ -96,13 +83,14 @@ class QrCodeGenerator
      */
     public static function generateAsDataUrl(string $data, int $size = 300): string
     {
-        $base64 = self::generate($data, $size);
+        $svgContent = self::generate($data, $size);
 
-        if (!$base64) {
+        if (!$svgContent) {
+            // 1x1 transparent PNG fallback
             return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
         }
 
-        return 'data:image/png;base64,' . $base64;
+        return 'data:image/svg+xml;base64,' . base64_encode($svgContent);
     }
 
     /**
