@@ -10,6 +10,13 @@
       <form method="POST" action="<?php echo e(route('staff.semaphore.send')); ?>" id="smsForm">
         <?php echo csrf_field(); ?>
         <input type="hidden" name="voyage_id" value="<?php echo e($voyage_id); ?>">
+
+        <div class="sms-template-row">
+          <span class="sms-template-label">Quick templates:</span>
+          <button type="button" class="sms-template-button" data-template="Dear Passengers and Cargo Senders,\nDue to the impending arrival of Typhoon [Name] and the corresponding safety warnings issued by local authorities, we are regrettably cancelling the voyage from <?php echo e(optional($voyage->routePort)->route_origin ?? '-'); ?> to <?php echo e(optional($voyage->routePort)->route_destination ?? '-'); ?> scheduled for <?php echo e($voyage->voyage_departure_date); ?> to ensure the safety of our guests and staff.">Typhoon</button>
+          <button type="button" class="sms-template-button" data-template="Dear Passengers and Cargo Senders,\nDue to an unexpected technical issue affecting our vessel, we are regrettably cancelling the voyage from <?php echo e(optional($voyage->routePort)->route_origin ?? '-'); ?> to <?php echo e(optional($voyage->routePort)->route_destination ?? '-'); ?> scheduled for <?php echo e($voyage->voyage_departure_date); ?> until the issue is resolved. We apologize for the inconvenience and will keep you updated.">Technical</button>
+        </div>
+
         <label for="message" class="sms-label">Message:</label>
         <textarea id="message" name="message" class="sms-textarea" rows="5" required><?php echo e(old('message')); ?></textarea>
         <button type="submit" class="sms-button">Send Message</button>
@@ -39,6 +46,19 @@ unset($__errorArgs, $__bag); ?>
   </div>
 
   <script>
+    function setTemplateMessage(text) {
+      const textarea = document.getElementById('message');
+      const normalized = text.replace(/\\n/g, '\n');
+      textarea.value = normalized;
+      textarea.focus();
+    }
+
+    document.querySelectorAll('.sms-template-button[data-template]').forEach(button => {
+      button.addEventListener('click', () => {
+        setTemplateMessage(button.dataset.template);
+      });
+    });
+
     document.getElementById('smsForm').addEventListener('submit', function(e) {
       const msg = document.getElementById('message').value.trim();
       

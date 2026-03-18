@@ -238,21 +238,37 @@ body {
     margin-bottom: 20px;
 }
 
-.sms-button {
-    display: block;
-    width: 100%;
+.sms-button,
+.sms-template-button {
     padding: 12px;
     font-size: 18px;
-    font-weight: bold;
-    background-color:#1E2541;
-    color: white;
+    background-color: #1E2541 !important;
+    color: white !important;
     border: none;
     border-radius: 6px;
     cursor: pointer;
 }
 
-.sms-button:hover {
-    background-color: #485b8c;
+.sms-button {
+    display: block;
+    width: 100%;
+    font-weight: bold;
+}
+
+.sms-template-button {
+    display: inline-block;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 400;
+    margin-right: 0;
+    margin-bottom: 10px;
+    min-width: 0;
+    text-align: center;
+}
+
+.sms-button:hover,
+.sms-template-button:hover {
+    background-color: #485b8c !important;
 }
 
 .manifest-header {
