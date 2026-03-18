@@ -7,9 +7,12 @@
             <!-- LEFT SIDE (Cot Plan Image) -->
             <div class="col-md-6 mb-4 text-center">
                 <h4 class="mb-3">Cot Plan Layout</h4>
-                <img src="<?php echo e($cotPlanUrl); ?>" alt="Cot Plan" class="img-fluid rounded shadow-sm"
-                    style="max-height: 500px; object-fit: contain;">
-                <p class="text-muted mt-2">Vessel cot plan layout</p>
+                <img id="cotPlanImage" src="" alt="Cot Plan" class="img-fluid rounded shadow-sm"
+                    style="max-height: 500px; object-fit: contain; display: none;">
+                <p id="cotPlanPlaceholder"
+                    style="color: #888; font-style: italic; min-height: 200px; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    No accommodation selected
+                </p>
             </div>
 
             <!-- RIGHT SIDE (Passenger Form) -->

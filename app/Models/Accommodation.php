@@ -18,9 +18,11 @@ class Accommodation extends Model
         'accommodation_name',
         'accommodation_regular_price',
         'accommodation_cot_range',
+        'accommodation_cot_plan_url',
     ];
 
-    public function vessel() {
+    public function vessel()
+    {
         return $this->belongsTo(Vessel::class, 'vessel_id');
     }
 }

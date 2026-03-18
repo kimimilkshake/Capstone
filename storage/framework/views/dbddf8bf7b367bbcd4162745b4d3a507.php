@@ -1,8 +1,7 @@
-@extends('layouts.app')
-@section('page-title', 'VESSEL')
-@section('content')
-    @include('components.authHeader')
-    @include('components.admin_nav')
+<?php $__env->startSection('page-title', 'VESSEL'); ?>
+<?php $__env->startSection('content'); ?>
+    <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    <?php echo $__env->make('components.admin_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <div class="admin-body">
         <div class="avl-title">
@@ -11,24 +10,25 @@
 
         <div class="acs-form_container">
 
-            @if ($errors->any())
+            <?php if($errors->any()): ?>
                 <div class="alert alert-danger" style="color: red; text-align: center;">
                     <strong>All fields are required.</strong><br>
-                    @foreach ($errors->all() as $error)
-                        {{ $error }}<br>
-                    @endforeach
+                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php echo e($error); ?><br>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
-            @endif
+            <?php endif; ?>
 
-            @if (session('success'))
+            <?php if(session('success')): ?>
                 <div class="alert alert-success" style="color: green; text-align: center; margin-bottom: 1rem;">
-                    {{ session('success') }}
-                </div>
-            @endif
+                    <?php echo e(session('success')); ?>
 
-            <form action="{{ route('admin.store_vessel') }}" method="POST" enctype="multipart/form-data"
+                </div>
+            <?php endif; ?>
+
+            <form action="<?php echo e(route('admin.store_vessel')); ?>" method="POST" enctype="multipart/form-data"
                 id="createVesselForm">
-                @csrf
+                <?php echo csrf_field(); ?>
 
                 <!-- ROW 1: CODE + NAME + CAPACITY -->
                 <div class="form-row">
@@ -159,7 +159,7 @@
                     <button type="submit" class="acs-add-btn">
                         <i class="fa-solid fa-plus me-2"></i>ADD
                     </button>
-                    <a href="{{ route('admin.vessel_list') }}" class="acs-add-btn acs-cancel-btn">
+                    <a href="<?php echo e(route('admin.vessel_list')); ?>" class="acs-add-btn acs-cancel-btn">
                         <i class="fa-solid fa-xmark me-2"></i>CANCEL
                     </a>
                 </div>
@@ -169,5 +169,7 @@
         </div>
     </div>
 
-    <script src="{{ asset('js/vessel.js') }}"></script>
-@endsection
+    <script src="<?php echo e(asset('js/vessel.js')); ?>"></script>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Shem\Desktop\Capstone\resources\views/authorized/admin/create_vessel.blade.php ENDPATH**/ ?>

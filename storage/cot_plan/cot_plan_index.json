@@ -1,22 +1,28 @@
 {
-  "vessels": [
-    {
-      "vessel_id": 1,
-      "vessel_name": "MV LAPULAPU FERRY 1",
-      "vessel_code": "F1",
-      "file": "vessel_1.json"
-    },
-    {
-      "vessel_id": 2,
-      "vessel_name": "MV LAPULAPU FERRY 8",
-      "vessel_code": "F8",
-      "file": "vessel_2.json"
-    },
-    {
-      "vessel_id": 3,
-      "vessel_name": "MV ROSALIA 3",
-      "vessel_code": "R3",
-      "file": "vessel_3.json"
-    }
-  ]
+    "vessels": [
+        {
+            "vessel_id": 1,
+            "vessel_name": "MV LAPULAPU FERRY 1",
+            "vessel_code": "F1",
+            "file": "vessel_1.json"
+        },
+        {
+            "vessel_id": 2,
+            "vessel_name": "MV LAPULAPU FERRY 8",
+            "vessel_code": "F8",
+            "file": "vessel_2.json"
+        },
+        {
+            "vessel_id": 3,
+            "vessel_name": "MV ROSALIA 3",
+            "vessel_code": "R3",
+            "file": "vessel_3.json"
+        },
+        {
+            "vessel_id": 4,
+            "vessel_name": "MV Francisco",
+            "vessel_code": "12435",
+            "file": "vessel_4.json"
+        }
+    ]
 }
