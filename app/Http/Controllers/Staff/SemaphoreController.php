@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Staff;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Jobs\SendSemaphoreSmsJob;
+use App\Models\Voyage;
 use App\Models\Passenger;
 use App\Models\Booking;
 use App\Models\CargoReceipt;
@@ -25,7 +26,12 @@ class SemaphoreController extends Controller
 
     public function show($voyage)
     {
-        return view('authorized.staff.semaphore', ['voyage_id' => $voyage]);
+        $voyageModel = Voyage::with('routePort')->findOrFail($voyage);
+
+        return view('authorized.staff.semaphore', [
+            'voyage_id' => $voyageModel->voyage_id,
+            'voyage' => $voyageModel,
+        ]);
     }
 
     public function send(Request $request)

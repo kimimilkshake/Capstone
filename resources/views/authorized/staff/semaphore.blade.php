@@ -11,6 +11,13 @@
       <form method="POST" action="{{ route('staff.semaphore.send') }}" id="smsForm">
         @csrf
         <input type="hidden" name="voyage_id" value="{{ $voyage_id }}">
+
+        <div class="sms-template-row">
+          <span class="sms-template-label">Emergency Templates:</span>
+          <button type="button" class="sms-template-button" data-template="Dear Passengers and Cargo Senders,\nDue to the impending arrival of Typhoon [Name] and the corresponding safety warnings issued by local authorities, we are regrettably cancelling the voyage from {{ optional($voyage->routePort)->route_origin ?? '-' }} to {{ optional($voyage->routePort)->route_destination ?? '-' }} scheduled for {{$voyage->voyage_departure_date}} at {{ $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('h:i A') : '-' }} to ensure the safety of our guests and staff." title="Typhoon Template"><i class="fas fa-cloud-showers-heavy"></i></button>
+          <button type="button" class="sms-template-button" data-template="Dear Passengers and Cargo Senders,\nDue to an unexpected technical issue affecting our vessel, we are regrettably cancelling the voyage from {{ optional($voyage->routePort)->route_origin ?? '-' }} to {{ optional($voyage->routePort)->route_destination ?? '-' }} scheduled for {{$voyage->voyage_departure_date}} at {{ $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('h:i A') : '-' }} until the issue is resolved. We apologize for the inconvenience and will keep you updated." title="Technical Template"><i class="fas fa-wrench"></i></button>
+        </div>
+
         <label for="message" class="sms-label">Message:</label>
         <textarea id="message" name="message" class="sms-textarea" rows="5" required>{{ old('message') }}</textarea>
         <button type="submit" class="sms-button">Send Message</button>
@@ -31,6 +38,19 @@
   </div>
 
   <script>
+    function setTemplateMessage(text) {
+      const textarea = document.getElementById('message');
+      const normalized = text.replace(/\\n/g, '\n');
+      textarea.value = normalized;
+      textarea.focus();
+    }
+
+    document.querySelectorAll('.sms-template-button[data-template]').forEach(button => {
+      button.addEventListener('click', () => {
+        setTemplateMessage(button.dataset.template);
+      });
+    });
+
     document.getElementById('smsForm').addEventListener('submit', function(e) {
       const msg = document.getElementById('message').value.trim();
       
