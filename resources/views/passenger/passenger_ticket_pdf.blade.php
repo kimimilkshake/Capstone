@@ -370,26 +370,34 @@ No passengers found.
 
 <br><br><br>
 
+<!-- QR CODE SECTION -->
+@if(!empty($qrCodes))
+<div class="qr-section">
+    <h4>BOARDING QR CODE &mdash; Present at Terminal Check-in</h4>
+    <table style="width:100%;">
+        <tr>
+            @foreach($tickets as $ticket)
+                @if(isset($qrCodes[$ticket->passenger_id]))
+                    @php $qrPassenger = $ticket->passenger; @endphp
+                    <td style="text-align:center; padding:8px;">
+                        <img src="{{ $qrCodes[$ticket->passenger_id] }}" width="130" height="130" style="border:1px solid #111;" /><br>
+                        <span class="qr-code-label">
+                            {{ $qrPassenger->passenger_firstname }} {{ $qrPassenger->passenger_lastname }}<br>
+                            Booking #{{ $booking->booking_ref_no }}
+                        </span>
+                    </td>
+                @endif
+            @endforeach
+        </tr>
+    </table>
+</div>
+@endif
 
 
-<!-- IMPORTANT REMINDERS -->
+<br><br>
 
-<div class="section-title">Important Reminders</div>
 
-<table>
 
-<tr>
-<td>
-• Arrive at the terminal at least 30 minutes before departure<br>
-• Bring a valid government-issued ID for verification<br>
-• Free hand carry allowance is 7kg per passenger<br>
-• Present this ticket and your ID at check-in<br>
-• For inquiries, call (032) 232-8864 or email lapulapulslc1964@gmail.com<br>
-• Ticket modifications must be made at least 2 hours before departure
-</td>
-</tr>
-
-</table>
 
 
 

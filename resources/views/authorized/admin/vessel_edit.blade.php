@@ -10,7 +10,7 @@
         </div>
 
         <div class="acs-form_container">
-            @if(session('success'))
+            @if (session('success'))
                 <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
             @endif
             @if ($errors->any())
@@ -171,18 +171,47 @@
                                             value="{{ $acc->accommodation_cot_range }}"
                                             placeholder="Cot Range (e.g., 1-5, 7-10)" required>
                                     </div>
+                                    <div class="form-group acc-input">
+                                        <label>Cot Plan Image <em style="color: #888; font-size: 0.8em;">jpg, jpeg, png
+                                                only</em></label>
+                                        @if ($acc->accommodation_cot_plan_url)
+                                            <img src="{{ asset('storage/' . $acc->accommodation_cot_plan_url) }}"
+                                                alt="Cot Plan"
+                                                style="max-height: 80px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 4px; display: block;">
+                                        @endif
+                                        <input type="hidden"
+                                            name="accommodations[{{ $index }}][existing_cot_plan]"
+                                            value="{{ $acc->accommodation_cot_plan_url }}">
+                                        <input type="file" name="accommodations[{{ $index }}][cot_plan]"
+                                            accept="image/jpeg,image/jpg,image/png">
+                                    </div>
                                     <button type="button" class="accommodation-btn add-accommodation">+</button>
                                 </div>
                             @endforeach
 
                             @if ($vessel->accommodations->isEmpty())
                                 <div class="accommodation-row">
-                                    <input type="text" name="accommodations[0][name]" placeholder="Accommodation Name"
-                                        required>
-                                    <input type="number" name="accommodations[0][price]" placeholder="Regular Price"
-                                        step="0.01" inputmode="decimal" required>
-                                    <input type="text" name="accommodations[0][cot_range]" placeholder="Cot Range"
-                                        required>
+                                    <div class="form-group acc-input">
+                                        <label>Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="accommodations[0][name]"
+                                            placeholder="Accommodation Name" required>
+                                    </div>
+                                    <div class="form-group acc-input">
+                                        <label>Regular Price <span class="text-danger">*</span></label>
+                                        <input type="number" name="accommodations[0][price]" placeholder="Regular Price"
+                                            step="0.01" inputmode="decimal" required>
+                                    </div>
+                                    <div class="form-group acc-input">
+                                        <label>Cot Range <span class="text-danger">*</span></label>
+                                        <input type="text" name="accommodations[0][cot_range]"
+                                            placeholder="Cot Range (e.g., 1-5, 7-10)" required>
+                                    </div>
+                                    <div class="form-group acc-input">
+                                        <label>Cot Plan Image <em style="color: #888; font-size: 0.8em;">jpg, jpeg, png
+                                                only</em></label>
+                                        <input type="file" name="accommodations[0][cot_plan]"
+                                            accept="image/jpeg,image/jpg,image/png">
+                                    </div>
                                     <button type="button" class="accommodation-btn add-accommodation">+</button>
                                 </div>
                             @endif
@@ -190,28 +219,12 @@
                     </div>
                 </div>
 
-                <!-- ROW 4: COT PLAN + STATUS -->
+                <!-- ROW 4: STATUS -->
                 <div class="form-row" style="display: flex; gap: 2rem; align-items: flex-start; width: 100%;">
                     <div class="form-col" style="flex: 1;">
-                        <div class="form-group vcot-plan"
-                            style="display: flex; flex-direction: column; align-items: flex-start; width: 100%;">
-                            <label for="vessel_cot_plan_url" style="margin-bottom: 8px;">Cot Plan</label>
-                            <span class="text-danger">Please upload jpg, jpeg, or png files only.</span>
-                            @if ($vessel->vessel_cot_plan_url)
-                                <img src="{{ asset('storage/' . $vessel->vessel_cot_plan_url) }}" alt="Cot Plan"
-                                    style="width: 100%; max-height: 250px; object-fit: contain; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px;">
-                            @else
-                                <p style="color: #888; font-style: italic; margin-bottom: 10px;">No cot plan uploaded yet.
-                                </p>
-                            @endif
-                            <input type="file" id="vessel_cot_plan_url" name="vessel_cot_plan_url" accept="image/*"
-                                style="width: 100%; margin-top: 5px;">
-                        </div>
-                    </div>
-
-                    <div class="form-col" style="flex: 1;">
                         <div class="form-group" style="width: 100%;">
-                            <label for="vessel_status" style="margin-bottom: 8px;">Status <span class="text-danger">*</span></label>
+                            <label for="vessel_status" style="margin-bottom: 8px;">Status <span
+                                    class="text-danger">*</span></label>
                             <select name="vessel_status" id="vessel_status" required
                                 style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
                                 <option value="Active" {{ $vessel->vessel_status === 'Active' ? 'selected' : '' }}>Active

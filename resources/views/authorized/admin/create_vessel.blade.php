@@ -139,22 +139,18 @@
                                         placeholder="Cot Range (e.g., 1-5, 7-10)" required>
                                 </div>
 
+                                <div class="form-group acc-input">
+                                    <label>Cot Plan Image <em style="color: #888; font-size: 0.8em;">jpg, jpeg, png
+                                            only</em></label>
+                                    <input type="file" name="accommodations[0][cot_plan]"
+                                        accept="image/jpeg,image/jpg,image/png">
+                                </div>
+
                                 <button type="button" class="accommodation-btn add-accommodation">+</button>
                             </div>
 
                         </div>
 
-                    </div>
-                </div>
-
-                <!-- ROW 4: COT PLAN -->
-                <div class="form-row" style="display: flex; gap: 2rem; align-items: flex-start; width: 100%;">
-                    <div class="form-col" style="flex: 1;">
-                        <div class="form-group vcot-plan">
-                            <label for="vessel_cot_plan_url">Cot Plan</label>
-                            <span class="text-danger">Please upload jpg, jpeg, or png files only.</span>
-                            <input type="file" id="vessel_cot_plan_url" name="vessel_cot_plan_url" accept="image/*">
-                        </div>
                     </div>
                 </div>
 

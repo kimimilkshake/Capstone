@@ -153,10 +153,20 @@ document.addEventListener("DOMContentLoaded", function () {
                 const cotSelect = passengerForm.querySelector(".cot-select");
                 const accommodationId = this.value;
 
+                const cotPlanImage = document.getElementById("cotPlanImage");
+                const cotPlanPlaceholder =
+                    document.getElementById("cotPlanPlaceholder");
+
                 if (!accommodationId) {
                     cotSelect.disabled = true;
                     cotSelect.innerHTML =
                         '<option value="">Select Accommodation First</option>';
+                    if (cotPlanImage) {
+                        cotPlanImage.style.display = "none";
+                        cotPlanPlaceholder.textContent =
+                            "No accommodation selected";
+                        cotPlanPlaceholder.style.display = "flex";
+                    }
                     return;
                 }
 
@@ -164,6 +174,21 @@ document.addEventListener("DOMContentLoaded", function () {
                 const accommodation = accommodationsWithCots.find(
                     (acc) => acc.accommodation_id == accommodationId,
                 );
+
+                // Update cot plan image
+                if (cotPlanImage) {
+                    if (accommodation && accommodation.cot_plan_url) {
+                        cotPlanImage.src = accommodation.cot_plan_url;
+                        cotPlanImage.style.display = "";
+                        cotPlanPlaceholder.style.display = "none";
+                    } else {
+                        cotPlanImage.style.display = "none";
+                        cotPlanPlaceholder.textContent = accommodation
+                            ? "No image available"
+                            : "No accommodation selected";
+                        cotPlanPlaceholder.style.display = "flex";
+                    }
+                }
 
                 if (accommodation && accommodation.available_cots) {
                     // Populate cot options with only available cots
