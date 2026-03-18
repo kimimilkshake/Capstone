@@ -238,6 +238,10 @@ body {
     margin-bottom: 20px;
 }
 
+.sms-template-label {
+    font-weight: bold;
+}
+
 .sms-button,
 .sms-template-button {
     padding: 12px;
@@ -257,13 +261,15 @@ body {
 
 .sms-template-button {
     display: inline-block;
-    padding: 8px 12px;
-    font-size: 14px;
+    padding: 6px;
+    font-size: 12px;
     font-weight: 400;
     margin-right: 0;
     margin-bottom: 10px;
-    min-width: 0;
+    width: 30px;
+    height: 30px;
     text-align: center;
+    border-radius: 4px;
 }
 
 .sms-button:hover,
