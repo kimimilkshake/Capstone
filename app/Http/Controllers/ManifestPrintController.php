@@ -24,6 +24,7 @@ class ManifestPrintController extends Controller
                 'p.*',
                 'pt.passenger_ticket_id',
                 'pt.booking_ref_no as booking_ref',
+                'pt.pt_boarded_at',
                 'pt.pt_ticket_price',
                 'pt.pt_cot_no',
                 'pt.created_at as ticket_created_at'
@@ -71,7 +72,7 @@ class ManifestPrintController extends Controller
             $rows .= '<td>' . ($p->pt_cot_no ?? '-') . '</td>';
             $rows .= '<td>' . ($voyage->voyage_departure_date ?? '-') . '</td>';
             $rows .= '<td class="text-end">' . ($p->pt_ticket_price ?? '-') . '</td>';
-            $rows .= '<td>' . (DB::table('booking')->where('booking_ref_no', $p->booking_ref)->value('booking_status') ?? '-') . '</td>';
+            $rows .= '<td>' . ($p->pt_boarded_at ? 'Boarded' : (DB::table('booking')->where('booking_ref_no', $p->booking_ref)->value('booking_status') ?? '-')) . '</td>';
             $rows .= '</tr>';
         }
         return response($rows, 200)->header('Content-Type', 'text/html');

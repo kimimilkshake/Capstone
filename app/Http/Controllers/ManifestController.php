@@ -73,6 +73,7 @@ class ManifestController extends Controller
                         'p.*',
                         'pt.passenger_ticket_id',
                         'pt.booking_ref_no as booking_ref',
+                        'pt.pt_boarded_at',
                         'pt.pt_ticket_price',
                         'pt.pt_cot_no',
                         'pt.created_at as ticket_created_at'

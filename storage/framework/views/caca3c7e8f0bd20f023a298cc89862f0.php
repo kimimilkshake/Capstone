@@ -156,7 +156,7 @@
                                     <td><?php echo e($p->pt_cot_no ?? '-'); ?></td>
                                     <td><?php echo e($voyage->voyage_departure_date ?? '-'); ?></td>
                                     <td class="text-end"><?php echo e($p->pt_ticket_price ?? '-'); ?></td>
-                                    <td><?php echo e(\Illuminate\Support\Facades\DB::table('booking')->where('booking_ref_no', $p->booking_ref)->value('booking_status') ?? '-'); ?></td>
+                                    <td><?php echo e(!empty($p->pt_boarded_at) ? 'Boarded' : (\Illuminate\Support\Facades\DB::table('booking')->where('booking_ref_no', $p->booking_ref)->value('booking_status') ?? '-')); ?></td>
                                 </tr>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         <?php endif; ?>
