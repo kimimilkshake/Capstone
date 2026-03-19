@@ -456,3 +456,8 @@ Route::get('/debug-session', function () {
         'cookies' => request()->cookie(),
     ]);
 });
+
+// Print: all passengers table (for printing all pages)
+Route::get('/manifest/{voyage}/all-passengers-table', [\App\Http\Controllers\ManifestPrintController::class, 'allPassengersTable'])->name('manifest.allPassengersTable');
+// Print: all cargos table (for printing all pages)
+Route::get('/manifest/{voyage}/all-cargos-table', [\App\Http\Controllers\ManifestPrintController::class, 'allCargosTable'])->name('manifest.allCargosTable');
