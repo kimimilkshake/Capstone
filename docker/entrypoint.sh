@@ -6,15 +6,24 @@ PORT=${PORT:-80}
 sed -i "s/__PORT__/${PORT}/" /etc/nginx/sites-available/default
 echo "==> Nginx listening on port ${PORT}"
 
-# Parse DATABASE_URL if provided (Railway MySQL plugin)
-if [ -n "$DATABASE_URL" ]; then
+# Railway MySQL plugin provides these variables directly
+if [ -n "$MYSQLHOST" ]; then
+    echo "==> Using Railway MySQL plugin variables..."
+    export DB_HOST="$MYSQLHOST"
+    export DB_PORT="$MYSQLPORT"
+    export DB_DATABASE="$MYSQLDATABASE"
+    export DB_USERNAME="$MYSQLUSER"
+    export DB_PASSWORD="$MYSQLPASSWORD"
+elif [ -n "$DATABASE_URL" ]; then
     echo "==> Parsing DATABASE_URL..."
-    # DATABASE_URL format: mysql://user:password@host:port/database
-    export DB_HOST=$(echo "$DATABASE_URL" | sed -n 's|.*@\(.*\):\([0-9]*\)/.*|\1|p')
-    export DB_PORT=$(echo "$DATABASE_URL" | sed -n 's|.*@\(.*\):\([0-9]*\)/.*|\2|p')
-    export DB_DATABASE=$(echo "$DATABASE_URL" | sed -n 's|.*/\([^?]*\).*|\1|p')
-    export DB_USERNAME=$(echo "$DATABASE_URL" | sed -n 's|.*://\(.*\):.*@.*|\1|p')
-    export DB_PASSWORD=$(echo "$DATABASE_URL" | sed -n 's|.*://[^:]*:\(.*\)@.*|\1|p')
+    eval $(php -r "
+        \$url = parse_url('$DATABASE_URL');
+        echo 'export DB_HOST=' . \$url['host'] . PHP_EOL;
+        echo 'export DB_PORT=' . (\$url['port'] ?? 3306) . PHP_EOL;
+        echo 'export DB_DATABASE=' . ltrim(\$url['path'] ?? '/railway', '/') . PHP_EOL;
+        echo 'export DB_USERNAME=' . (\$url['user'] ?? 'root') . PHP_EOL;
+        echo 'export DB_PASSWORD=' . (\$url['pass'] ?? '') . PHP_EOL;
+    ")
 fi
 
 echo "==> Waiting for MySQL at ${DB_HOST}:${DB_PORT}..."
