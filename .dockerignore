@@ -1,0 +1,13 @@
+.git
+node_modules
+vendor
+public/build
+public/storage
+public/hot
+storage/logs/*.log
+*.log
+.env
+.env.backup
+.env.production
+.docker
+docker-compose.yml

@@ -1,0 +1,55 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:80"
+    env_file:
+      - .env
+    volumes:
+      - storage:/var/www/html/storage
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  queue:
+    build: .
+    entrypoint: []
+    command: php artisan queue:listen --tries=1
+    env_file:
+      - .env
+    volumes:
+      - storage:/var/www/html/storage
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  scheduler:
+    build: .
+    entrypoint: []
+    command: php artisan schedule:work
+    env_file:
+      - .env
+    volumes:
+      - storage:/var/www/html/storage
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: lslcis
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mysql-data:
+  storage:
