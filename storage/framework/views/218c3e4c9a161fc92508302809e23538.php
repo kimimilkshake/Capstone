@@ -4,39 +4,6 @@
   <?php echo $__env->make('components.staff_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
   <div class="staff-body">
 
-    <!-- Floating Toast Container - Below navbar on the right side -->
-        <div class="toast-container position-fixed p-3" style="z-index: 9999; top: 80px; right: 20px;">
-            <?php if(session('success')): ?>
-                <div class="toast align-items-center text-white bg-success border-0 show" role="alert" aria-live="assertive"
-                    aria-atomic="true" id="successToast">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <i class="fas fa-check-circle me-2"></i><?php echo e(session('success')); ?>
-
-                        </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                            aria-label="Close"></button>
-                    </div>
-                </div>
-            <?php endif; ?>
-            <?php if($errors->any()): ?>
-                <div class="toast align-items-center text-white bg-danger border-0 show" role="alert"
-                    aria-live="assertive" aria-atomic="true" id="errorToast">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <i class="fas fa-exclamation-circle me-2"></i>
-                            <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <?php echo e($error); ?>
-
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                        </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                            aria-label="Close"></button>
-                    </div>
-                </div>
-            <?php endif; ?>
-        </div>
-
     <div class="scs-form_container">
 
       

@@ -4,19 +4,6 @@
     <?php echo $__env->make('components.admin_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <div class="admin-body">
-      
-      <?php if(session('success')): ?>
-          <div class="alert alert-success text-center mx-auto w-75" role="alert"><?php echo e(session('success')); ?></div>
-      <?php endif; ?>
-      <?php if($errors->any()): ?>
-          <div class="alert alert-danger text-center">
-              <ul>
-                  <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                      <li><?php echo e($error); ?></li>
-                  <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-              </ul>
-          </div>
-      <?php endif; ?>
 
       <div class="search-add-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
         <form class="search-bar" action="<?php echo e(route('admin.promo_list')); ?>" method="GET" style="flex: 1;">

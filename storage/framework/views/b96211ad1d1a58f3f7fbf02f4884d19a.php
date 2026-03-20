@@ -130,6 +130,8 @@
 <div class="staff-body scannerbox">
     <div class="scanner-page-shell">
         <div class="scanner-page-header">
+                <!-- CSRF Token for AJAX requests -->
+                <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
             <p class="scanner-page-title">QR SCANNER</p>
 
             <form action="<?php echo e(route('logout')); ?>" method="POST" class="m-0">
@@ -143,9 +145,9 @@
             <div class="card-body p-4">
 
                 <p class="text-muted mb-4 scannertxt">
-                    Scan a QR code to open the link automatically.
+                    Scan a QR code to board a passenger.
                 </p>
-
+                <div id="qr-message" style="margin-bottom: 1rem; color: #485B8C; font-weight: bold;"></div>
                 <div id="reader"></div>
 
             </div>
@@ -153,67 +155,137 @@
     </div>
 </div>
 
-<script src="https://unpkg.com/html5-qrcode" defer></script>
+<script src="/js/html5-qrcode.min.js" defer></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-
     let lastText = '';
     let lastScanAt = 0;
+    let isSubmitting = false;
+    let html5QrCode = null;
+    const recentScans = new Map();
+    const scanCooldownMs = 8000;
+    const resumeDelayMs = 2500;
 
-    function onScanSuccess(decodedText) {
+    function showMessage(msg, color = '#485B8C') {
+        const msgDiv = document.getElementById('qr-message');
+        msgDiv.textContent = msg;
+        msgDiv.style.color = color;
+    }
 
-        const now = Date.now();
+    function cleanupRecentScans(now) {
+        recentScans.forEach((timestamp, code) => {
+            if (now - timestamp >= scanCooldownMs) {
+                recentScans.delete(code);
+            }
+        });
+    }
 
-        if (decodedText === lastText && now - lastScanAt < 1500) {
+    function pauseAndResumeScanner() {
+        if (!html5QrCode || typeof html5QrCode.pause !== 'function' || typeof html5QrCode.resume !== 'function') {
             return;
         }
 
-        lastText = decodedText;
-        lastScanAt = now;
-
-        // Check if it's a URL
-        if (decodedText.startsWith('http://') || decodedText.startsWith('https://')) {
-            window.open(decodedText, '_blank');
-        } else {
-            // For non-URLs, maybe alert or do nothing
-            alert('Scanned: ' + decodedText);
+        try {
+            html5QrCode.pause(true);
+            setTimeout(function() {
+                try {
+                    html5QrCode.resume();
+                } catch (error) {
+                    showMessage('Scanner resumed. Point the camera at the next QR code.', '#485B8C');
+                }
+            }, resumeDelayMs);
+        } catch (error) {
+            // Ignore pause/resume support issues and keep scanner running.
         }
     }
 
-    function onScanFailure(){}
-
-    function initScanner(){
-
-        if(typeof Html5QrcodeScanner === 'undefined'){
-            alert('QR scanner library failed to load.');
+    function startCameraScanner() {
+        if (typeof Html5Qrcode === 'undefined') {
+            showMessage('QR scanner library failed to load.', 'red');
             return;
         }
-
-        // smaller scan box on mobile
         const qrSize = window.innerWidth < 768 ? 200 : 250;
-
-        const scanner = new Html5QrcodeScanner(
-            "reader",
+        html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start(
+            { facingMode: "environment" },
             {
-                fps:10,
-                qrbox:{ width: qrSize, height: qrSize },
-                rememberLastUsedCamera:true,
-                supportedScanTypes:[Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+                fps: 10,
+                qrbox: { width: qrSize, height: qrSize }
             },
-            false
-        );
+            function(decodedText, decodedResult) {
+                const now = Date.now();
+                cleanupRecentScans(now);
 
-        scanner.render(onScanSuccess, onScanFailure);
+                if (isSubmitting) {
+                    return;
+                }
+
+                if (recentScans.has(decodedText)) {
+                    return;
+                }
+
+                if (decodedText === lastText && now - lastScanAt < 1500) {
+                    return;
+                }
+
+                lastText = decodedText;
+                lastScanAt = now;
+
+                // Expecting format: 1046:44
+                const parts = decodedText.split(':');
+                if (parts.length !== 2) {
+                    showMessage('Invalid QR code format.', 'red');
+                    return;
+                }
+                const booking_ref_no = parts[0];
+                const passenger_id = parts[1];
+                isSubmitting = true;
+
+                fetch('/qr/board-passenger', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ booking_ref_no, passenger_id })
+                })
+                .then(async response => {
+                    const data = await response.json();
+                    if (!response.ok) {
+                        throw new Error(data.message || 'An error occurred while processing the QR code.');
+                    }
+                    return data;
+                })
+                .then(data => {
+                    recentScans.set(decodedText, Date.now());
+                    showMessage(data.message, data.success ? 'green' : 'red');
+                    if (data.success) {
+                        pauseAndResumeScanner();
+                    }
+                })
+                .catch(error => {
+                    showMessage(error.message || 'An error occurred while processing the QR code.', 'red');
+                })
+                .finally(() => {
+                    isSubmitting = false;
+                });
+            },
+            function(errorMessage) {
+                // Optionally show scanning errors
+            }
+        ).catch(err => {
+            showMessage('Unable to access camera: ' + err, 'red');
+        });
     }
 
+    // Wait for Html5Qrcode to be available, then start camera
     const waitForLibrary = setInterval(function(){
-        if(typeof Html5QrcodeScanner !== 'undefined'){
+        if(typeof Html5Qrcode !== 'undefined'){
             clearInterval(waitForLibrary);
-            initScanner();
+            startCameraScanner();
         }
     },100);
-
 });
 </script>
 

@@ -14,20 +14,6 @@
                                 style="height:150px">
                             <h2 class="fw-bold mb-4">VERIFY OTP</h2>
 
-                            {{-- Display success message --}}
-                            @if(session('success'))
-                                <div class="floating-alert alert-success mx-auto" style="text-align: center;">
-                                    {{ session('success') }}
-                                </div>
-                            @endif
-
-                            {{-- Display errors --}}
-                            @if ($errors->any())
-                                <div class="floating-alert alert-danger mx-auto" style="text-align: center;">
-                                    <div>{{ $errors->first() }}</div>
-                                </div>
-                            @endif
-
                             <form method="POST" action="{{ route('verify.otp') }}">
                                 @csrf
                                 <input type="hidden" name="username" value="{{ session('username') ?? '' }}">
@@ -40,8 +26,6 @@
 
                                 <!-- Countdown Timer -->
                                 <p id="otp-timer" class="text-danger fw-bold mb-4">You have 05:00 minutes left</p>
-
-
 
                                 <button type="submit" class="loginBtn btn btn-lg px-5 mt-1 mb-4">Verify OTP</button>
                             </form>

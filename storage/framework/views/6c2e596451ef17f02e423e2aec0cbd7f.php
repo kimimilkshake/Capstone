@@ -15,21 +15,6 @@
                                 <p class="mb-3">Enter your username and password</p>
 
                                 
-                                <?php if(session('success')): ?>
-                                    <div class="floating-alert alert-success mx-auto" style="text-align: center;">
-                                        <?php echo e(session('success')); ?>
-
-                                    </div>
-                                <?php endif; ?>
-
-                                
-                                <?php if($errors->any()): ?>
-                                    <div class="floating-alert alert-danger mx-auto" style="text-align: center;">
-                                        <div><?php echo e($errors->first()); ?></div>
-                                    </div>
-                                <?php endif; ?>
-
-                                
                                 <form action="<?php echo e(route('login')); ?>" method="POST">
                                     <?php echo csrf_field(); ?>
 

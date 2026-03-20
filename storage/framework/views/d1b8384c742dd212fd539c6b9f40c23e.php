@@ -6,19 +6,6 @@
 
     <div class="aci-form_container">
 
-      <?php if(session('success')): ?>
-          <div class="alert alert-success text-center mx-auto w-75" role="alert"><?php echo e(session('success')); ?></div>
-      <?php endif; ?>
-      <?php if($errors->any()): ?>
-          <div class="alert alert-danger text-center">
-              <ul>
-                  <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                      <li><?php echo e($error); ?></li>
-                  <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-              </ul>
-          </div>
-      <?php endif; ?>
-
       <form action="<?php echo e(route('staff.store_cargo_item')); ?>" method="POST" class="create-cargoitem-form">
         <?php echo csrf_field(); ?>
 
@@ -64,7 +51,7 @@
           <div class="form-col">
             <div class="form-group">
               <label>Freight <span class="text-danger">*</span></label>
-              <input type="number" name="cargo_item_freight" step="0.01" required>
+              <input type="number" name="cargo_item_freight" step="0.01" min="0" required>
             </div>
           </div>
           
@@ -101,21 +88,21 @@
             <div class="form-col">
               <div class="form-group">
                 <label>Min Length</label>
-                <input type="number" step="0.01" name="cargo_item_min_length">
+                <input type="number" step="0.01" min="0" name="cargo_item_min_length">
               </div>
             </div>
 
             <div class="form-col">
               <div class="form-group">
                 <label>Min Width</label>
-                <input type="number" step="0.01" name="cargo_item_min_width">
+                <input type="number" step="0.01" min="0" name="cargo_item_min_width">
               </div>
             </div>
 
             <div class="form-col">
               <div class="form-group">
                 <label>Min Height</label>
-                <input type="number" step="0.01" name="cargo_item_min_height">
+                <input type="number" step="0.01" min="0" name="cargo_item_min_height">
               </div>
             </div>
 
@@ -123,21 +110,21 @@
             <div class="form-col">
               <div class="form-group">
                 <label>Max Length</label>
-                <input type="number" step="0.01" name="cargo_item_max_length">
+                <input type="number" step="0.01" min="0" name="cargo_item_max_length">
               </div>
             </div>
 
             <div class="form-col">
               <div class="form-group">
                 <label>Max Width</label>
-                <input type="number" step="0.01" name="cargo_item_max_width">
+                <input type="number" step="0.01" min="0" name="cargo_item_max_width">
               </div>
             </div>
 
             <div class="form-col">
               <div class="form-group">
                 <label>Max Height</label>
-                <input type="number" step="0.01" name="cargo_item_max_height">
+                <input type="number" step="0.01" min="0" name="cargo_item_max_height">
               </div>
             </div>
 

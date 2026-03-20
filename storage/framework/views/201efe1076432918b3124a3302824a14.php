@@ -29,11 +29,6 @@
                             </div>
 
                             <div class="px-4 px-md-5 pt-4 pb-4">
-                                <?php if($errors->any()): ?>
-                                    <div class="floating-alert alert-danger mx-auto" style="text-align: center;">
-                                        <div><?php echo e($errors->first()); ?></div>
-                                    </div>
-                                <?php endif; ?>
 
                                 <div class="scanner-note mb-4">
                                     <i class="fa-solid fa-camera me-2"></i>

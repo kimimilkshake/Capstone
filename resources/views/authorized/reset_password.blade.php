@@ -18,20 +18,6 @@
                 <h2 class="fw-bold text-uppercase">CHANGE  PASSWORD</h2>
                 <span class="text-danger">Password must be at least 8 characters and must contain at least one uppercase letter, one lowercase letter, one number, and one special character.</span>
 
-                <!-- Success or error messages -->
-                @if(session('success'))
-                    <div class="alert alert-success mx-auto" style="text-align: center;">
-                        {{ session('success') }}
-                    </div>
-                @endif
-
-                {{-- Display errors --}}
-                @if ($errors->any())
-                    <div class="floating-alert alert-danger">
-                        {{ $errors->first() }}
-                    </div>
-                @endif
-
                 <!-- Reset Password Form -->
                 <form method="POST" action="{{ route('reset.password') }}">
                   @csrf
