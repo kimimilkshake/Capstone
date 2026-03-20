@@ -31,7 +31,7 @@
 
                             <div class="px-4 px-md-5 pt-4 pb-4">
                                 @if ($errors->any())
-                                    <div class="alert alert-danger mx-auto" style="text-align: center;">
+                                    <div class="floating-alert alert-danger mx-auto" style="text-align: center;">
                                         <div>{{ $errors->first() }}</div>
                                     </div>
                                 @endif

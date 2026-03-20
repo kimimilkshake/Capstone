@@ -5,7 +5,6 @@
     @include('components.admin_nav')
 
     <div class="admin-body">
-        <h3 class="text-center mb-4">SELECT VOYAGE</h3>
 
         <div class="scs-form_container">
             <div class="mb-4">

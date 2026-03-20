@@ -16,14 +16,14 @@
 
                             {{-- Display success message --}}
                             @if(session('success'))
-                                <div class="alert alert-success mx-auto" style="text-align: center;">
+                                <div class="floating-alert alert-success mx-auto" style="text-align: center;">
                                     {{ session('success') }}
                                 </div>
                             @endif
 
                             {{-- Display errors --}}
                             @if ($errors->any())
-                                <div class="alert alert-danger mx-auto" style="text-align: center;">
+                                <div class="floating-alert alert-danger mx-auto" style="text-align: center;">
                                     <div>{{ $errors->first() }}</div>
                                 </div>
                             @endif

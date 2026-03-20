@@ -1,6 +1,7 @@
 <?php $__env->startSection('content'); ?>
     <section class="vh-100 d-flex align-items-center justify-content-center login-bg"
         style="background-image: url('<?php echo e(asset('images/login-bg.png')); ?>');">
+
         <div class="container py-5 h-100">
             <div class="row d-flex justify-content-center align-items-center h-100">
                 <div class="col-12 col-md-8 col-lg-6 col-xl-5">
@@ -15,7 +16,7 @@
 
                                 
                                 <?php if(session('success')): ?>
-                                    <div class="alert alert-success mx-auto" style="text-align: center;">
+                                    <div class="floating-alert alert-success mx-auto" style="text-align: center;">
                                         <?php echo e(session('success')); ?>
 
                                     </div>
@@ -23,7 +24,7 @@
 
                                 
                                 <?php if($errors->any()): ?>
-                                    <div class="alert alert-danger mx-auto" style="text-align: center;">
+                                    <div class="floating-alert alert-danger mx-auto" style="text-align: center;">
                                         <div><?php echo e($errors->first()); ?></div>
                                     </div>
                                 <?php endif; ?>

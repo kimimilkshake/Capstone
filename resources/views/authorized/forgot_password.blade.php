@@ -16,13 +16,13 @@
 
                   {{-- Display error if username not found --}}
                   @if($errors->has('username'))
-                    <div class="alert alert-danger mx-auto" style="text-align: center;">
+                    <div class="floating-alert alert-danger mx-auto" style="text-align: center;">
                       {{ $errors->first('username') }}
                     </div>
                   @endif
                   {{-- Display success message --}}
                   @if(session('success'))
-                      <div class="alert alert-success mx-auto" style="text-align: center;">
+                      <div class="floating-alert alert-success mx-auto" style="text-align: center;">
                           {{ session('success') }}
                       </div>
                   @endif

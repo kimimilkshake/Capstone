@@ -1,33 +1,40 @@
 @extends('layouts.app')
-@section('page-title', 'CARGO')
+@section('page-title', 'CARGO ITEMS')
 @section('content')
   @include('components.authHeader')
   @include('components.admin_nav')
   <div class="admin-body">
-    <div class="avl-title">
-      <h3>VIEW RATES</h3>
-    </div>
     
-    {{-- ERROR MESSAGE --}}
-    @if ($errors->any())
-      <div class="alert-wrapper">
-        <div class="alert alert-danger">
-          <strong>All fields are required.</strong><br>
-          @foreach ($errors->all() as $error)
-            {{ $error }}<br>
-          @endforeach
+    <!-- Floating Toast Container - Below navbar on the right side -->
+        <div class="toast-container position-fixed p-3" style="z-index: 9999; top: 80px; right: 20px;">
+            @if (session('success'))
+                <div class="toast align-items-center text-white bg-success border-0 show" role="alert" aria-live="assertive"
+                    aria-atomic="true" id="successToast">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                            aria-label="Close"></button>
+                    </div>
+                </div>
+            @endif
+            @if ($errors->any())
+                <div class="toast align-items-center text-white bg-danger border-0 show" role="alert"
+                    aria-live="assertive" aria-atomic="true" id="errorToast">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            @foreach ($errors->all() as $error)
+                                {{ $error }}
+                            @endforeach
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                            aria-label="Close"></button>
+                    </div>
+                </div>
+            @endif
         </div>
-      </div>
-    @endif
-
-    {{-- SUCCESS MESSAGE --}}
-    @if (session('success'))
-      <div class="alert-wrapper">
-        <div class="alert alert-success">
-          {{ session('success') }}
-        </div>
-      </div>
-    @endif
 
     <div class="search-filter-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
 

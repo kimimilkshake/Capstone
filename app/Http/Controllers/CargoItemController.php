@@ -33,7 +33,7 @@ class CargoItemController extends Controller
             $query->where('cargo_category_id', $request->cargo_category_id);
         }
 
-        $cargo_items = $query->orderBy('cargo_item_description')->paginate(7);
+        $cargo_items = $query->orderBy('cargo_item_description')->paginate(10);
 
         $route_codes = RouteCode::orderBy('route_code_name')->get();
         $cargo_categories = CargoCategory::orderBy('cargo_category_name')->get();

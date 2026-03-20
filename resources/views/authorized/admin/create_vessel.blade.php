@@ -1,13 +1,10 @@
 @extends('layouts.app')
-@section('page-title', 'VESSEL')
+@section('page-title', 'CREATE VESSEL')
 @section('content')
     @include('components.authHeader')
     @include('components.admin_nav')
 
     <div class="admin-body">
-        <div class="avl-title">
-            <h3>CREATE VESSEL</h3>
-        </div>
 
         <div class="acs-form_container">
 

@@ -1,13 +1,10 @@
 @extends('layouts.app')
-@section('page-title', 'VOYAGES')
+@section('page-title', 'CREATE VOYAGE')
 @section('content')
   @include('components.authHeader')
   @include('components.admin_nav')
 
   <div class="admin-body">
-    <div class="avl-title">
-      <h3>CREATE VOYAGE</h3>
-    </div>
 
     @if(session('success'))
         <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>

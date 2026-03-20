@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('page-title', 'VOYAGES')
+@section('page-title', 'CANCEL VOYAGE SMS')
 @section('content')
   @include('components.authHeader')
   @include('components.staff_nav')

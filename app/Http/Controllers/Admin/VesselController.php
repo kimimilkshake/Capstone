@@ -39,7 +39,7 @@ class VesselController extends Controller
             });
         }
 
-        $vessels = $query->orderBy('vessel_code', 'asc')->paginate(7);
+        $vessels = $query->orderBy('vessel_code', 'asc')->paginate(10);
         $vessels->appends($request->all());
 
         return view('authorized.admin.vessel_list', compact('vessels'));

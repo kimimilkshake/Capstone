@@ -1,13 +1,10 @@
-<?php $__env->startSection('page-title', 'CARGO'); ?>
+<?php $__env->startSection('page-title', 'CREATE CARGO ITEM'); ?>
 <?php $__env->startSection('content'); ?>
   <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
   <?php echo $__env->make('components.admin_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
   <div class="admin-body">
-    <div class="avl-title">
-      <h3>CREATE CARGO ITEM</h3>
-    </div>
-
+    
     <div class="aci-form_container">
 
       

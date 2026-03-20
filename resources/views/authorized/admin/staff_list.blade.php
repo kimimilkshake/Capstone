@@ -1,25 +1,40 @@
 @extends('layouts.app')
-@section('page-title', 'STAFF')
+@section('page-title', 'STAFF MEMBERS')
 @section('content')
     @include('components.authHeader')
     @include('components.admin_nav')
     <div class="admin-body">
-        <div class="asl-title">
-            <h3>STAFF LIST</h3>
-        </div>
 
-        @if(session('success'))
-            <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
-        @endif
-        @if ($errors->any())
-            <div class="alert alert-danger text-center">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+        <!-- Floating Toast Container - Below navbar on the right side -->
+        <div class="toast-container position-fixed p-3" style="z-index: 9999; top: 80px; right: 20px;">
+            @if (session('success'))
+                <div class="toast align-items-center text-white bg-success border-0 show" role="alert" aria-live="assertive"
+                    aria-atomic="true" id="successToast">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                            aria-label="Close"></button>
+                    </div>
+                </div>
+            @endif
+            @if ($errors->any())
+                <div class="toast align-items-center text-white bg-danger border-0 show" role="alert"
+                    aria-live="assertive" aria-atomic="true" id="errorToast">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            @foreach ($errors->all() as $error)
+                                {{ $error }}
+                            @endforeach
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                            aria-label="Close"></button>
+                    </div>
+                </div>
+            @endif
+        </div>
     
         <div class="search-filter-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
             <form class="search-bar" action="{{ route('admin.staff_list') }}" method="GET" style="flex: 1;">
@@ -29,8 +44,8 @@
 
             <form method="GET" action="{{ route('admin.staff_list') }}">
                 <select name="status" onchange="this.form.submit()"> 
-                    <option value="">All Staff</option>
-                    <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active</option>
+                    <option value="" {{ request('status') == '' ? 'selected' : '' }}>All Staff</option>
+                    <option value="Active" {{ request('status', 'Active') == 'Active' ? 'selected' : '' }}>Active</option>
                     <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
                 </select>
             </form>
@@ -46,8 +61,6 @@
                 <tr>
                     <th>Staff No.</th>
                     <th>Name</th>
-                    <th>Date of Birth</th>
-                    <th>Age</th>
                     <th>Gender</th>
                     <th>Username</th>
                     <th>Email Address</th>
@@ -60,10 +73,6 @@
                     <tr>
                         <td>{{ $s->staff_id }}</td>
                         <td>{{ $s->staff_name }}</td>
-                        <td>{{ $s->staff_dob }}</td>
-                        <td>
-                            {{ \Carbon\Carbon::parse($s->staff_dob)->age }}
-                        </td>
                         <td>{{ $s->staff_gender }}</td>
                         <td>{{ $s->staff_user }}</td>
                         <td>{{ $s->staff_email }}</td>

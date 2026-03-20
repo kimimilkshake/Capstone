@@ -1,28 +1,42 @@
 @extends('layouts.app')
-@section('page-title', 'PROMO')
+@section('page-title', 'CREATE PROMO')
 @section('content')
     @include('components.authHeader')
     @include('components.admin_nav')
 
     <div class="admin-body">
-      <div class="apl-title">
-        <h3>CREATE PROMO</h3>
-      </div>
-      <div class="acs-form_container">
-        @if ($errors->any())
-          <div class="alert alert-danger" style="color: red; text-align: center;">
-            <strong>All fields are required.</strong><br>
-            @foreach ($errors->all() as $error)
-              {{ $error }}<br>
-            @endforeach
-          </div>
-        @endif
 
-        @if (session('success'))
-          <div class="alert alert-success" style="color: green; text-align: center; margin-bottom: 1rem;">
-            {{ session('success') }}
-          </div>
-        @endif
+      <div class="acs-form_container">
+        <!-- Floating Toast Container - Below navbar on the right side -->
+        <div class="toast-container position-fixed p-3" style="z-index: 9999; top: 80px; right: 20px;">
+            @if (session('success'))
+                <div class="toast align-items-center text-white bg-success border-0 show" role="alert" aria-live="assertive"
+                    aria-atomic="true" id="successToast">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                            aria-label="Close"></button>
+                    </div>
+                </div>
+            @endif
+            @if ($errors->any())
+                <div class="toast align-items-center text-white bg-danger border-0 show" role="alert"
+                    aria-live="assertive" aria-atomic="true" id="errorToast">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            @foreach ($errors->all() as $error)
+                                {{ $error }}
+                            @endforeach
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                            aria-label="Close"></button>
+                    </div>
+                </div>
+            @endif
+        </div>
 
         <form action="{{ route('admin.storePromo') }}" method="POST" class="create-promo-form">
           @csrf

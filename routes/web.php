@@ -211,6 +211,9 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/generate_reports', function () {
+        return view('authorized.admin.generate_reports');
+    })->name('admin.generate_reports');
 
     // Staff
     Route::get('/create_staff', [StaffController::class, 'create'])->name('admin.create_staff');

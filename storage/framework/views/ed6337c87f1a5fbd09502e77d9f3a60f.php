@@ -9,7 +9,7 @@
     </li>
 
     <li class="anav-item">
-      <a class="anav-link" href="#">
+      <a class="anav-link" href="<?php echo e(route('admin.generate_reports')); ?>">
         <i class="fa-solid fa-chart-line"></i>
         <span class="anav-label">Generate Reports</span>
       </a>
