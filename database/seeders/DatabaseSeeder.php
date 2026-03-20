@@ -113,15 +113,22 @@ class DatabaseSeeder extends Seeder
 
         //Measurement Unit Seeders
         DB::table('measurement_unit')->insert([
+            
             [
-                'measurement_unit_name' => 'inches',
-                'measurement_unit_abbreviation' => 'in',
+                'measurement_unit_name' => 'centimeters',
+                'measurement_unit_abbreviation' => 'cm',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'measurement_unit_name' => 'centimeters',
-                'measurement_unit_abbreviation' => 'cm',
+                'measurement_unit_name' => 'feet',
+                'measurement_unit_abbreviation' => 'ft',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'measurement_unit_name' => 'inches',
+                'measurement_unit_abbreviation' => 'in',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
