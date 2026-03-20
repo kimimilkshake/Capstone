@@ -1,53 +1,53 @@
-@extends('layouts.app')
-@section('page-title', 'MANIFEST')
-@section('content')
-    @include('components.authHeader')
-    @include('components.staff_nav') {{--NAVBAR--}}
+<?php $__env->startSection('page-title', 'MANIFEST'); ?>
+<?php $__env->startSection('content'); ?>
+    <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    <?php echo $__env->make('components.admin_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?> 
 
-    <div class="staff-body">
+    <div class="admin-body">
         <div class="manifest-header" style="display: flex; flex-direction: column; align-items: center;">
             <h2 class="manifest-title">
-                Voyage Number: {{ $voyage->voyage_code ?? '-' }}
+                Voyage Number: <?php echo e($voyage->voyage_code ?? '-'); ?>
+
             </h2>
 
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 1rem; justify-items: center; text-align: center; width: 100%; max-width: 1100px; margin-left: auto; margin-right: auto;">
                 <div>
-                    <p><strong>Schedule: </strong>{{ optional($voyage->voyage_departure_date) ? \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('F j, Y, D') : '-' }}</p>
+                    <p><strong>Schedule: </strong><?php echo e(optional($voyage->voyage_departure_date) ? \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('F j, Y, D') : '-'); ?></p>
                 </div>
                 <div>
-                    <p><strong>Time of Departure: </strong> {{ $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('h:i A') : '-' }}</p>
+                    <p><strong>Time of Departure: </strong> <?php echo e($voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('h:i A') : '-'); ?></p>
                 </div>
                 <div>
-                    <p><strong>Vessel: </strong> {{ optional($voyage->vessel)->vessel_name ?? '-' }}</p>
+                    <p><strong>Vessel: </strong> <?php echo e(optional($voyage->vessel)->vessel_name ?? '-'); ?></p>
                 </div>
                 <div>
-                    <p><strong>Actual Time of Departure: </strong> {{ $voyage->voyage_actual_TD ? \Carbon\Carbon::parse($voyage->voyage_actual_TD)->format('h:i A') : '-' }}</p>
+                    <p><strong>Actual Time of Departure: </strong> <?php echo e($voyage->voyage_actual_TD ? \Carbon\Carbon::parse($voyage->voyage_actual_TD)->format('h:i A') : '-'); ?></p>
                 </div>
                 <div>
-                    <p><strong>Voyage Route: </strong>{{ optional($voyage->routePort)->route_origin ?? '-' }} to {{ optional($voyage->routePort)->route_destination ?? '-' }}</p>
+                    <p><strong>Voyage Route: </strong><?php echo e(optional($voyage->routePort)->route_origin ?? '-'); ?> to <?php echo e(optional($voyage->routePort)->route_destination ?? '-'); ?></p>
                 </div>
                 <div>
-                    <p><strong>Time of Arrival: </strong>{{ $voyage->voyage_estimated_TA ? \Carbon\Carbon::parse($voyage->voyage_estimated_TA)->format('h:i A') : '-' }}</p>
+                    <p><strong>Time of Arrival: </strong><?php echo e($voyage->voyage_estimated_TA ? \Carbon\Carbon::parse($voyage->voyage_estimated_TA)->format('h:i A') : '-'); ?></p>
                 </div>
                 <div>
-                    <p><strong>Status: </strong> {{ $voyage->voyage_status ?? '-' }}</p>
+                    <p><strong>Status: </strong> <?php echo e($voyage->voyage_status ?? '-'); ?></p>
                 </div>
                 <div>
-                    <p><strong>Actual Time of Arrival: </strong>{{ $voyage->voyage_actual_TA ? \Carbon\Carbon::parse($voyage->voyage_actual_TA)->format('h:i A') : '-' }}</p>
+                    <p><strong>Actual Time of Arrival: </strong><?php echo e($voyage->voyage_actual_TA ? \Carbon\Carbon::parse($voyage->voyage_actual_TA)->format('h:i A') : '-'); ?></p>
                 </div>
             </div>
         </div>
 
-        <div class="manifest-filters text-start mt-4 ">
-            <form method="GET" action="{{ url()->current() }}" class="d-flex gap-5 align-items-center" id="manifestFilterForm">
+        <div class="manifest-filters mt-4">
+            <form method="GET" action="<?php echo e(url()->current()); ?>" class="d-flex gap-5 align-items-center" id="manifestFilterForm" onsubmit="return validateManifestFilters();">
                 <input type="hidden" name="show_passenger" value="0">
                 <div class="form-switch">
-                    <input class="form-check-input switch-toggle" type="checkbox" name="show_passenger" id="filterPassenger" value="1" {{ ($showPassenger ?? true) ? 'checked' : '' }} onchange="handleManifestCheckboxChange(event)">
+                    <input class="form-check-input switch-toggle" type="checkbox" name="show_passenger" id="filterPassenger" value="1" <?php echo e(($showPassenger ?? true) ? 'checked' : ''); ?> onchange="handleManifestCheckboxChange(event)">
                     <label class="form-check-label" for="filterPassenger">Show Passenger Manifest</label>
                 </div>
                 <input type="hidden" name="show_cargo" value="0">
                 <div class="form-switch">
-                    <input class="form-check-input switch-toggle" type="checkbox" name="show_cargo" id="filterCargo" value="1" {{ ($showCargo ?? true) ? 'checked' : '' }} onchange="handleManifestCheckboxChange(event)">
+                    <input class="form-check-input switch-toggle" type="checkbox" name="show_cargo" id="filterCargo" value="1" <?php echo e(($showCargo ?? true) ? 'checked' : ''); ?> onchange="handleManifestCheckboxChange(event)">
                     <label class="form-check-label" for="filterCargo">Show Cargo Manifest</label>
                 </div>
             </form>
@@ -103,14 +103,14 @@
             </script>
         </div>
 
-        {{-- PASSENGERS --}}
-        @if(!empty($showPassenger))
+        
+        <?php if(!empty($showPassenger)): ?>
             <div class="passenger-manifest mt-1">
-                <div class="d-flex align-items-center mb-3"><h4 class="manifest-section-title">Passenger Manifest</h4>
-                <i 
-                     class="fas fa-print print-icon-fa" 
-                      onclick="printTable('passengerTable')"
-                    ></i>
+                                <div class="d-flex align-items-center mb-3"><h4 class="manifest-section-title">Passenger Manifest</h4>
+                                <i 
+                                         class="fas fa-print print-icon-fa" 
+                                            onclick="printTable('passengerTable')"
+                                        ></i>
                 </div>
                 <table id="passengerTable" class="manifest-table table text-start align-middle">
                     <thead>
@@ -127,45 +127,50 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if($passengers->isEmpty())
+                        <?php if($passengers->isEmpty()): ?>
                             <tr><td colspan="9" class="text-center">No data available</td></tr>
-                        @else
-                            @foreach($passengers as $p)
+                        <?php else: ?>
+                            <?php $__currentLoopData = $passengers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <tr>
-                                    {{-- Try common fields in order of likelihood --}}
+                                    
                                     <td>
-                                        {{ $p->ticket_no ?? $p->booking_ref ?? ($p->booking_ref_no ?? ($p->booking_ref ?? '-')) }}
+                                        <?php echo e($p->ticket_no ?? $p->booking_ref ?? ($p->booking_ref_no ?? ($p->booking_ref ?? '-'))); ?>
+
                                     </td>
                                     <td>
-                                        {{-- If Passenger model --}}
-                                        @if(isset($p->passenger_firstname) || isset($p->passenger_lastname))
-                                            {{ trim(($p->passenger_firstname ?? '') . ' ' . ($p->passenger_midinitial ?? '') . ' ' . ($p->passenger_lastname ?? '')) }}
-                                        @elseif(isset($p->passenger_firstname))
-                                            {{ $p->passenger_firstname }}
-                                        @else
-                                            {{ $p->name ?? ($p->full_name ?? '-') }}
-                                        @endif
+                                        
+                                        <?php if(isset($p->passenger_firstname) || isset($p->passenger_lastname)): ?>
+                                            <?php echo e(trim(($p->passenger_firstname ?? '') . ' ' . ($p->passenger_midinitial ?? '') . ' ' . ($p->passenger_lastname ?? ''))); ?>
+
+                                        <?php elseif(isset($p->passenger_firstname)): ?>
+                                            <?php echo e($p->passenger_firstname); ?>
+
+                                        <?php else: ?>
+                                            <?php echo e($p->name ?? ($p->full_name ?? '-')); ?>
+
+                                        <?php endif; ?>
                                     </td>
-                                    <td>{{ $p->passenger_age ?? ($p->age ?? '-') }} / {{ $p->passenger_gender ?? ($p->gender ?? '-') }}</td>
-                                    <td>{{ $p->passenger_type ?? ($p->category ?? '-') }}</td>
-                                    <td>{{ $p->accommodation_name ?? '-' }}</td>
-                                    <td>{{ $p->pt_cot_no ?? '-' }}</td>
-                                    <td>{{ $voyage->voyage_departure_date ?? '-' }}</td>
-                                    <td class="text-end">{{ $p->pt_ticket_price ?? '-' }}</td>
-                                    <td>{{ !empty($p->pt_boarded_at) ? 'Boarded' : (\Illuminate\Support\Facades\DB::table('booking')->where('booking_ref_no', $p->booking_ref)->value('booking_status') ?? '-') }}</td>
+                                    <td><?php echo e($p->passenger_age ?? ($p->age ?? '-')); ?> / <?php echo e($p->passenger_gender ?? ($p->gender ?? '-')); ?></td>
+                                    <td><?php echo e($p->passenger_type ?? ($p->category ?? '-')); ?></td>
+                                    <td><?php echo e($p->accommodation_name ?? '-'); ?></td>
+                                    <td><?php echo e($p->pt_cot_no ?? '-'); ?></td>
+                                    <td><?php echo e($voyage->voyage_departure_date ?? '-'); ?></td>
+                                    <td class="text-end"><?php echo e($p->pt_ticket_price ?? '-'); ?></td>
+                                    <td><?php echo e(\Illuminate\Support\Facades\DB::table('booking')->where('booking_ref_no', $p->booking_ref)->value('booking_status') ?? '-'); ?></td>
                                 </tr>
-                            @endforeach
-                        @endif
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
                 <div class="pagination-container mt-3" id="passenger-pagination-container">
-                    {{ $passengers->links('pagination::bootstrap-5') }}
+                    <?php echo e($passengers->links('pagination::bootstrap-5')); ?>
+
                 </div>
             </div>
-        @endif
+        <?php endif; ?>
 
-        {{-- CARGOS --}}
-        @if(!empty($showCargo))
+        
+        <?php if(!empty($showCargo)): ?>
             <div class="cargo-manifest mt-3">
                                 <div class="d-flex align-items-center mb-3"><h4 class="manifest-section-title">Cargo Manifest</h4>
                                          <i 
@@ -192,31 +197,32 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if($cargos->isEmpty())
+                        <?php if($cargos->isEmpty()): ?>
                             <tr><td colspan="13" class="text-center">No data available</td></tr>
-                        @else
-                            @foreach($cargos as $c)
+                        <?php else: ?>
+                            <?php $__currentLoopData = $cargos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <tr>
-                                    <td>{{ $c->bl_number ?? $c->booking_ref_no ?? $c->booking_ref ?? ($c->booking_ref_no ?? '-') }}</td>
-                                    <td>{{ $c->quantity ?? $c->cargo_item_qty ?? '-' }}</td>
-                                    <td>{{ $c->cargo_classification_name ?? 'N/A' }}</td>
-                                    <td>{{ $c->cargoItem->cargo_category->cargo_category_name ?? 'N/A'  }}</td>
-                                    <td>{{ $c->cargoItem->cargo_item_description ?? 'N/A'  }}</td>
-                                    <td>{{ $c->sender->sender_name ?? 'N/A' }}</td>
-                                    <td>{{ $c->sender->sender_tin ?? '-' }}</td>
-                                    <td>{{ $c->consignee->consignee_name }}</td>
-                                    <td class="text-end">{{ $c->cargoItem->cargo_item_freight ?? '-' }}</td>
-                                    <td class="text-end">{{ ($c->cargoItem->cargo_item_freight ?? 0) * 0.12 }}</td>
+                                     <td><?php echo e($c->bl_number ?? $c->booking_ref_no ?? $c->booking_ref ?? ($c->booking_ref_no ?? '-')); ?></td>
+                                    <td><?php echo e($c->quantity ?? $c->cargo_item_qty ?? '-'); ?></td>
+                                    <td><?php echo e($c->cargo_classification_name ?? 'N/A'); ?></td>
+                                    <td><?php echo e($c->cargoItem->cargo_category->cargo_category_name ?? 'N/A'); ?></td>
+                                    <td><?php echo e($c->cargoItem->cargo_item_description ?? 'N/A'); ?></td>
+                                    <td><?php echo e($c->sender->sender_name ?? 'N/A'); ?></td>
+                                    <td><?php echo e($c->sender->sender_tin ?? '-'); ?></td>
+                                    <td><?php echo e($c->consignee->consignee_name); ?></td>
+                                    <td class="text-end"><?php echo e($c->cargoItem->cargo_item_freight ?? '-'); ?></td>
+                                    <td class="text-end"><?php echo e(($c->cargoItem->cargo_item_freight ?? 0) * 0.12); ?></td>
                                     <td>20.00</td>
-                                    <td class="text-end">{{ $c->payment->total_amount ?? 'N/A' }}</td>
-                                    <td>{{ $c->receipt_no ?? ($c->cargo_receipt_id ?? '-') }}</td>
+                                    <td class="text-end"><?php echo e($c->payment->total_amount ?? 'N/A'); ?></td>
+                                    <td><?php echo e($c->receipt_no ?? ($c->cargo_receipt_id ?? '-')); ?></td>
                                 </tr>
-                            @endforeach
-                        @endif
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
                 <div class="pagination-container mt-3" id="cargo-pagination-container">
-                    {{ $cargos->links('pagination::bootstrap-5') }}
+                    <?php echo e($cargos->links('pagination::bootstrap-5')); ?>
+
                 </div>
             </script>
             <script>
@@ -255,7 +261,7 @@
             });
             </script>
             </div>
-        @endif
+        <?php endif; ?>
     </div>
 
 <style>
@@ -269,8 +275,8 @@
 
 <script>
 function printCargoTable() {
-    // Get voyageId from URL (expects /staffmanifest/{voyage})
-    const match = window.location.pathname.match(/staffmanifest\/(\d+)/);
+    // Get voyageId from URL (expects /adminmanifest/{voyage})
+    const match = window.location.pathname.match(/adminmanifest\/(\d+)/);
     const voyageId = match ? match[1] : null;
     if (!voyageId) {
         alert('Cannot determine voyage ID for printing.');
@@ -280,7 +286,7 @@ function printCargoTable() {
     const manifestHeaderDiv = document.querySelector('.manifest-header');
     const manifestTitle = manifestHeaderDiv ? manifestHeaderDiv.querySelector('.manifest-title')?.innerHTML : '';
     const logoHtml = '<img src="/images/lslc_logo2.png" alt="Logo" style="height:60px;margin-right:18px;">';
-    const headerRowHtml = `<div style="display:flex;align-items:center;justify-content:center;margin-bottom:10px;gap:18px;">${logoHtml}<span class="manifest-title" style="font-size:14pt;font-weight:bold;"><strong>${manifestTitle}</strong></span></div>`;
+    const headerRowHtml = `<div style="display:flex;align-items:center;justify-content:center;margin-bottom:10px;gap:18px;">${logoHtml}<span class="manifest-title" style="font-size:14pt;">${manifestTitle}</span></div>`;
     // Use the rest of the manifest header (details grid)
     const detailsGrid = manifestHeaderDiv ? manifestHeaderDiv.querySelector('div[style*="grid-template-columns"]')?.outerHTML : '';
     // Get table headers from the DOM
@@ -330,8 +336,8 @@ function printCargoTable() {
 function printTable(tableId) {
     // If printing the passenger table, fetch all rows from the server (no pagination)
     if (tableId === 'passengerTable') {
-        // Get voyageId from URL (expects /staffmanifest/{voyage})
-        const match = window.location.pathname.match(/staffmanifest\/(\d+)/);
+        // Get voyageId from URL (expects /adminmanifest/{voyage})
+        const match = window.location.pathname.match(/adminmanifest\/(\d+)/);
         const voyageId = match ? match[1] : null;
         if (!voyageId) {
             alert('Cannot determine voyage ID for printing.');
@@ -341,7 +347,7 @@ function printTable(tableId) {
         const manifestHeaderDiv = document.querySelector('.manifest-header');
         const manifestTitle = manifestHeaderDiv ? manifestHeaderDiv.querySelector('.manifest-title')?.innerHTML : '';
         const logoHtml = '<img src="/images/lslc_logo2.png" alt="Logo" style="height:60px;margin-right:18px;">';
-        const headerRowHtml = `<div style="display:flex;align-items:center;justify-content:center;margin-bottom:10px;gap:18px;">${logoHtml}<span class="manifest-title" style="font-size:14pt;font-weight:bold;"><strong>${manifestTitle}</strong></span></div>`;
+        const headerRowHtml = `<div style="display:flex;align-items:center;justify-content:center;margin-bottom:10px;gap:18px;">${logoHtml}<span class="manifest-title" style="font-size:14pt;">${manifestTitle}</span></div>`;
         // Use the rest of the manifest header (details grid)
         const detailsGrid = manifestHeaderDiv ? manifestHeaderDiv.querySelector('div[style*="grid-template-columns"]')?.outerHTML : '';
         // Get table headers from the DOM, but remove 'Departure' and 'Status' columns for print
@@ -378,7 +384,7 @@ function printTable(tableId) {
                 printWindow.document.write('th { background-color: #f2f2f2; }');
                 printWindow.document.write('.manifest-header { text-align: center; margin-bottom: 16px; }');
                 printWindow.document.write('.manifest-title { font-size: 14pt; }');
-                printWindow.document.write('.system-note { position: fixed; bottom: 0px; left: 0; right: 0; text-align: center; font-style: italic; }');
+                printWindow.document.write('.system-note { position: fixed; bottom: 12px; left: 0; right: 0; text-align: center; font-style: italic; }');
                 printWindow.document.write('</style>');
                 printWindow.document.write('</head><body>');
                 printWindow.document.write(headerRowHtml);
@@ -425,7 +431,7 @@ function printTable(tableId) {
     const manifestHeaderDiv = document.querySelector('.manifest-header');
     const manifestTitle = manifestHeaderDiv ? manifestHeaderDiv.querySelector('.manifest-title')?.innerHTML : '';
     const logoHtml = '<img src="/images/lslc_logo2.png" alt="Logo" style="height:60px;margin-right:18px;">';
-    const headerRowHtml = `<div style="display:flex;align-items:center;justify-content:center;margin-bottom:10px;gap:18px;">${logoHtml}<span class="manifest-title" style="font-size:14pt;font-weight:bold;"><strong>${manifestTitle}</strong></span></div>`;
+    const headerRowHtml = `<div style="display:flex;align-items:center;justify-content:center;margin-bottom:10px;gap:18px;">${logoHtml}<span class="manifest-title" style="font-size:14pt;">${manifestTitle}</span></div>`;
     const detailsGrid = manifestHeaderDiv ? manifestHeaderDiv.querySelector('div[style*="grid-template-columns"]')?.outerHTML : '';
     const printWindow = window.open('', '_blank', 'height=700,width=1000');
     printWindow.document.write('<html><head><title>Manifest Print</title>');
@@ -457,4 +463,5 @@ function printTable(tableId) {
 }
 </script>
 
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/authorized/admin/adminmanifest.blade.php ENDPATH**/ ?>
