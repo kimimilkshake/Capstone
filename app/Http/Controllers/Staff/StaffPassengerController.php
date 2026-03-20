@@ -472,20 +472,19 @@ class StaffPassengerController extends Controller
                 ->pluck('passenger_id')
                 ->toArray();
 
-            // Delete passengers if they only belong to this booking
+            // Delete passenger_ticket records first (required before deleting passenger rows)
+            DB::table('passenger_ticket')->where('booking_ref_no', $bookingRef)->delete();
+
+            // Delete passengers that no longer belong to any booking
             foreach ($passengerIds as $passengerId) {
                 $otherBookings = DB::table('passenger_ticket')
                     ->where('passenger_id', $passengerId)
-                    ->where('booking_ref_no', '!=', $bookingRef)
                     ->count();
 
                 if ($otherBookings == 0) {
                     DB::table('passenger')->where('passenger_id', $passengerId)->delete();
                 }
             }
-
-            // Delete all passenger_ticket records when booking is canceled
-            DB::table('passenger_ticket')->where('booking_ref_no', $bookingRef)->delete();
 
             return redirect()->route('staff.passenger_booking.create')
                 ->with('success', 'Reservation cancelled successfully.');
