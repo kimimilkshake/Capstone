@@ -110,7 +110,7 @@ class VoyageController extends Controller
                     ->orWhereBetween('voyage_arrival_date', [$start_date, $end_date]);
             })
             ->orderBy('voyage_departure_date', 'desc')
-            ->paginate(7);
+            ->paginate(10);
 
         if (auth()->guard('admin')->check()) {
             return view('authorized.admin.voyage_list', compact('voyages','search'));

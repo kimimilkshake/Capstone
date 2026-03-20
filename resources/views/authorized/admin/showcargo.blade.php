@@ -6,9 +6,6 @@
 	@include('components.admin_nav')
 
 	<div class="staff-body">
-		<div class="svl-title">
-			<h3>REVIEW CARGO BOOKINGS</h3>
-		</div>
 
 		<div class="row">
 			<div class="col-lg-6">

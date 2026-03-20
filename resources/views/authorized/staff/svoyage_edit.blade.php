@@ -1,27 +1,12 @@
 @extends('layouts.app')
-@section('page-title', 'VOYAGES')
+@section('page-title', 'EDIT VOYAGE')
 @section('content')
   @include('components.authHeader')
   @include('components.staff_nav')
   <div class="staff-body">
-    <div class="svl-title">
-      <h3>EDIT VOYAGE</h3>
-    </div>
 
     <div class="acs-form_container">
-      @if(session('success'))
-          <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
-      @endif
-      @if ($errors->any())
-          <div class="alert alert-danger text-center">
-              <ul>
-                  @foreach ($errors->all() as $error)
-                      <li>{{ $error }}</li>
-                  @endforeach
-              </ul>
-          </div>
-      @endif
-
+      
       <form action="{{ route('staff.voyage_update', $voyage->voyage_id) }}" method="POST" enctype="multipart/form-data" id="editVoyageForm">
         @csrf
         @method('PUT')

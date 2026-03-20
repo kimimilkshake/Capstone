@@ -1,13 +1,10 @@
 @extends('layouts.app')
-@section('page-title', 'VOYAGES')
+@section('page-title', 'ROUTES AND PORTS')
 @section('content')
 @include('components.authHeader')
 @include('components.admin_nav')
 
 <div class="admin-body">
-  <div class="avl-title">
-    <h3>ROUTES AND PORTS</h3>
-  </div>
 
   <!--SEARCH BAR-->
   <div class="search-add-row" style="display: flex; gap: 10px; margin-bottom: 20px;">

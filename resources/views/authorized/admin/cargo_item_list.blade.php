@@ -1,33 +1,9 @@
 @extends('layouts.app')
-@section('page-title', 'CARGO')
+@section('page-title', 'CARGO ITEMS')
 @section('content')
   @include('components.authHeader')
   @include('components.admin_nav')
   <div class="admin-body">
-    <div class="avl-title">
-      <h3>VIEW RATES</h3>
-    </div>
-    
-    {{-- ERROR MESSAGE --}}
-    @if ($errors->any())
-      <div class="alert-wrapper">
-        <div class="alert alert-danger">
-          <strong>All fields are required.</strong><br>
-          @foreach ($errors->all() as $error)
-            {{ $error }}<br>
-          @endforeach
-        </div>
-      </div>
-    @endif
-
-    {{-- SUCCESS MESSAGE --}}
-    @if (session('success'))
-      <div class="alert-wrapper">
-        <div class="alert alert-success">
-          {{ session('success') }}
-        </div>
-      </div>
-    @endif
 
     <div class="search-filter-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
 

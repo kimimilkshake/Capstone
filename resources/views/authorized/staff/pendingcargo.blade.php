@@ -6,9 +6,6 @@
 @include('components.staff_nav')
 
 <div class="staff-body">
-    <div class="svl-title">
-        <h3>REVIEW CARGO BOOKINGS</h3>
-    </div>
 
 <div class="search-filter-row mb-4" style="display:flex; gap:10px;">
     <form class="search-bar d-flex gap-2 align-items-stretch" action="{{ route('cargo.bookings.pending') }}" method="GET" style="flex:1;">

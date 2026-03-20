@@ -267,7 +267,7 @@ class StaffCargoController extends Controller
                 });
             })
             ->orderBy('created_at', 'asc')
-            ->paginate(7)
+            ->paginate(10)
             ->withQueryString();
 
         $view = auth()->guard('admin')->check()

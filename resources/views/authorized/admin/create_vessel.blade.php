@@ -1,30 +1,12 @@
 @extends('layouts.app')
-@section('page-title', 'VESSEL')
+@section('page-title', 'CREATE VESSEL')
 @section('content')
     @include('components.authHeader')
     @include('components.admin_nav')
 
     <div class="admin-body">
-        <div class="avl-title">
-            <h3>CREATE VESSEL</h3>
-        </div>
 
         <div class="acs-form_container">
-
-            @if ($errors->any())
-                <div class="alert alert-danger" style="color: red; text-align: center;">
-                    <strong>All fields are required.</strong><br>
-                    @foreach ($errors->all() as $error)
-                        {{ $error }}<br>
-                    @endforeach
-                </div>
-            @endif
-
-            @if (session('success'))
-                <div class="alert alert-success" style="color: green; text-align: center; margin-bottom: 1rem;">
-                    {{ session('success') }}
-                </div>
-            @endif
 
             <form action="{{ route('admin.store_vessel') }}" method="POST" enctype="multipart/form-data"
                 id="createVesselForm">
@@ -63,25 +45,25 @@
 
                                     <div class="form-group hatch-input">
                                         <label>Hatch Label <span class="text-danger">*</span></label>
-                                        <input type="text" name="hatches[0][label]" placeholder="Hatch Label" required>
+                                        <input type="text" name="hatches[0][label]" placeholder="Hatch Label" min="1" required>
                                     </div>
 
                                     <div class="form-group hatch-input">
                                         <label>Length (m) <span class="text-danger">*</span></label>
                                         <input type="number" name="hatches[0][length]" placeholder="Length (m)"
-                                            step="0.01" inputmode="decimal" required>
+                                            step="0.01" inputmode="decimal" min="1" required>
                                     </div>
 
                                     <div class="form-group hatch-input">
                                         <label>Width (m) <span class="text-danger">*</span></label>
                                         <input type="number" name="hatches[0][width]" placeholder="Width (m)"
-                                            step="0.01" inputmode="decimal" required>
+                                            step="0.01" inputmode="decimal" min="1" required>
                                     </div>
 
                                     <div class="form-group hatch-input">
                                         <label>Height (m) <span class="text-danger">*</span></label>
                                         <input type="number" name="hatches[0][height]" placeholder="Height (m)"
-                                            step="0.01" inputmode="decimal" required>
+                                            step="0.01" inputmode="decimal" min="1" required>
                                     </div>
 
                                     <div class="form-group hatch-input">
@@ -93,13 +75,13 @@
                                     <div class="form-group hatch-input">
                                         <label>Area Capacity (m³) <span class="text-danger">*</span></label>
                                         <input type="number" name="hatches[0][area_capacity]"
-                                            placeholder="Area Capacity (  )" step="0.01" inputmode="decimal" required>
+                                            placeholder="Area Capacity (  )" step="0.01" inputmode="decimal" min="1" required>
                                     </div>
 
                                     <div class="form-group hatch-input">
                                         <label>Hold Capacity (Tons) <span class="text-danger">*</span></label>
                                         <input type="number" name="hatches[0][capacity_per_hold]"
-                                            placeholder="Capacity Per Hold (Tons)" step="0.01" inputmode="decimal"
+                                            placeholder="Capacity Per Hold (Tons)" step="0.01" inputmode="decimal" min="1"
                                             required>
                                     </div>
 
@@ -130,7 +112,7 @@
                                 <div class="form-group acc-input">
                                     <label>Regular Price <span class="text-danger">*</span></label>
                                     <input type="number" name="accommodations[0][price]" placeholder="Regular Price"
-                                        step="0.01" inputmode="decimal" required>
+                                        step="0.01" inputmode="decimal" min="1" required>
                                 </div>
 
                                 <div class="form-group acc-input">

@@ -1,27 +1,12 @@
 @extends('layouts.app')
-@section('page-title', 'VESSEL')
+@section('page-title', 'EDIT VESSEL')
 @section('content')
     @include('components.authHeader')
     @include('components.admin_nav')
 
     <div class="admin-body">
-        <div class="avl-title">
-            <h3>EDIT VESSEL</h3>
-        </div>
 
         <div class="acs-form_container">
-            @if (session('success'))
-                <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
-            @endif
-            @if ($errors->any())
-                <div class="alert alert-danger text-center">
-                    <ul>
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
 
             <form action="{{ route('admin.vessel_update', $vessel->vessel_id) }}" method="POST" enctype="multipart/form-data"
                 id="editVesselForm">

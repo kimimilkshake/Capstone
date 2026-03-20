@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('page-title', 'CARGO')
+@section('page-title', 'EDIT CARGO ITEM')
 @section('content')
   @include('components.authHeader')
   @include('components.staff_nav')
@@ -9,18 +9,7 @@
     </div>
 
     <div class="aci-form_container">
-      @if(session('success'))
-          <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
-      @endif
-      @if ($errors->any())
-          <div class="alert alert-danger text-center">
-              <ul>
-                  @foreach ($errors->all() as $error)
-                      <li>{{ $error }}</li>
-                  @endforeach
-              </ul>
-          </div>
-      @endif
+        
       <form action="{{ route('staff.cargo_item_update', $cargo_item->cargo_item_id) }}" method="POST">
         @csrf
         @method('PUT')
@@ -61,7 +50,7 @@
           <div class="form-col">
             <div class="form-group">
               <label>Freight <span class="text-danger">*</span></label>
-              <input type="number" name="cargo_item_freight" value="{{ old('cargo_item_freight', $cargo_item->cargo_item_freight) }}"  required>
+              <input type="number" name="cargo_item_freight" value="{{ old('cargo_item_freight', $cargo_item->cargo_item_freight) }}" step="0.01" min="0"  required>
             </div>
           </div>
 
@@ -99,7 +88,7 @@
             <div class="form-col">
               <div class="form-group">
                 <label>Min Length</label>
-                <input type="number" step="0.01" name="cargo_item_min_length" 
+                <input type="number" step="0.01" min="0" name="cargo_item_min_length" 
                        value="{{ old('cargo_item_min_length', $cargo_item->cargo_item_min_length) }}">
               </div>
             </div>
@@ -107,7 +96,7 @@
             <div class="form-col">
               <div class="form-group">
                 <label>Min Width</label>
-                <input type="number" step="0.01" name="cargo_item_min_width" 
+                <input type="number" step="0.01" min="0" name="cargo_item_min_width" 
                        value="{{ old('cargo_item_min_width', $cargo_item->cargo_item_min_width) }}">
               </div>
             </div>
@@ -115,7 +104,7 @@
             <div class="form-col">
               <div class="form-group">
                 <label>Min Height</label>
-                <input type="number" step="0.01" name="cargo_item_min_height" 
+                <input type="number" step="0.01" min="0" name="cargo_item_min_height" 
                        value="{{ old('cargo_item_min_height', $cargo_item->cargo_item_min_height) }}">
               </div>
             </div>
@@ -123,7 +112,7 @@
             <div class="form-col">
               <div class="form-group">
                 <label>Max Length</label>
-                <input type="number" step="0.01" name="cargo_item_max_length" 
+                <input type="number" step="0.01" min="0" name="cargo_item_max_length" 
                        value="{{ old('cargo_item_max_length', $cargo_item->cargo_item_max_length) }}">
               </div>
             </div>
@@ -131,7 +120,7 @@
             <div class="form-col">
               <div class="form-group">
                 <label>Max Width</label>
-                <input type="number" step="0.01" name="cargo_item_max_width" 
+                <input type="number" step="0.01" min="0" name="cargo_item_max_width" 
                        value="{{ old('cargo_item_max_width', $cargo_item->cargo_item_max_width) }}">
               </div>
             </div>
@@ -139,7 +128,7 @@
             <div class="form-col">
               <div class="form-group">
                 <label>Max Height</label>
-                <input type="number" step="0.01" name="cargo_item_max_height" 
+                <input type="number" step="0.01" min="0" name="cargo_item_max_height" 
                        value="{{ old('cargo_item_max_height', $cargo_item->cargo_item_max_height) }}">
               </div>
             </div>

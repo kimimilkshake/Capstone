@@ -5,9 +5,6 @@
     @include('components.staff_nav')
 
     <div class="staff-body">
-        <div class="svl-title text-center">
-            <h3>PASSENGER BOOKING</h3>
-        </div>
 
         <!-- Floating Toast Container - Below navbar on the right side -->
         <div class="toast-container position-fixed p-3" style="z-index: 9999; top: 80px; right: 20px;">

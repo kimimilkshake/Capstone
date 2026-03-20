@@ -211,6 +211,9 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/generate_reports', function () {
+        return view('authorized.admin.generate_reports');
+    })->name('admin.generate_reports');
 
     // Staff
     Route::get('/create_staff', [StaffController::class, 'create'])->name('admin.create_staff');
@@ -456,3 +459,11 @@ Route::get('/debug-session', function () {
         'cookies' => request()->cookie(),
     ]);
 });
+
+// Print: all passengers table (for printing all pages)
+Route::get('/manifest/{voyage}/all-passengers-table', [\App\Http\Controllers\ManifestPrintController::class, 'allPassengersTable'])->name('manifest.allPassengersTable');
+// Print: all cargos table (for printing all pages)
+Route::get('/manifest/{voyage}/all-cargos-table', [\App\Http\Controllers\ManifestPrintController::class, 'allCargosTable'])->name('manifest.allCargosTable');
+
+// QR Boarding API (moved to QrScannerController)
+Route::post('/qr/board-passenger', [QrScannerController::class, 'boardPassenger'])->name('qr.board_passenger');

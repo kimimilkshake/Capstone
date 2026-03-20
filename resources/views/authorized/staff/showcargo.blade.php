@@ -6,9 +6,6 @@
     @include('components.staff_nav')
 
     <div class="staff-body">
-        <div class="svl-title">
-            <h3>REVIEW CARGO BOOKINGS</h3>
-        </div>
 
         <div class="row">
             {{-- LEFT COLUMN: BOOKING INFO --}}

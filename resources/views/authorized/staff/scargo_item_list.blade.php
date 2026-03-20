@@ -1,25 +1,9 @@
 @extends('layouts.app')
-@section('page-title', 'CARGO')
+@section('page-title', 'CARGO ITEMS')
 @section('content')
   @include('components.authHeader')
   @include('components.staff_nav')
   <div class="staff-body">
-    <div class="svl-title">
-      <h3>VIEW RATES</h3>
-    </div>
-
-    @if(session('success'))
-        <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
-    @endif
-    @if ($errors->any())
-        <div class="alert alert-danger text-center">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
 
     <div class="search-filter-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
 
@@ -116,6 +100,7 @@
   </div>
 
   <script>
+
     document.addEventListener('DOMContentLoaded', function () {
 
         const openBtn = document.getElementById('saddCargoCategoryBtn');

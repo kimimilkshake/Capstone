@@ -1,27 +1,12 @@
 @extends('layouts.app')
-@section('page-title', 'VOYAGES')
+@section('page-title', 'EDIT VOYAGE')
 @section('content')
   @include('components.authHeader')
   @include('components.admin_nav')
 
   <div class="admin-body">
-    <div class="avl-title">
-      <h3>EDIT VOYAGE</h3>
-    </div>
 
     <div class="acs-form_container">
-      @if(session('success'))
-          <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
-      @endif
-      @if ($errors->any())
-          <div class="alert alert-danger text-center">
-              <ul>
-                  @foreach ($errors->all() as $error)
-                      <li>{{ $error }}</li>
-                  @endforeach
-              </ul>
-          </div>
-      @endif
 
       <form action="{{ route('admin.voyage_update', $voyage->voyage_id) }}" method="POST" enctype="multipart/form-data" id="editVoyageForm">
         @csrf
@@ -39,7 +24,7 @@
               <select name="route_port_id" id="route_port_id" required @if($isCompleted) disabled @endif>
                 @foreach($route_port as $rp)
                   <option value="{{ $rp->route_port_id }}" 
-                    {{ $voyage->route_port_id == $rp->route_id ? 'selected' : '' }}>
+                    {{ $voyage->route_port_id == $rp->route_port_id ? 'selected' : '' }}>
                     {{ $rp->route_origin }} → {{ $rp->route_destination }}
                   </option>
                 @endforeach

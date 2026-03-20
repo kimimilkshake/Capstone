@@ -5,7 +5,6 @@
     @include('components.staff_nav')
 
     <div class="staff-body">
-        <h3 class="text-center mb-4">CARGO AUTO PLACEMENT</h3>
 
         <div class="scs-form_container">
 
@@ -212,7 +211,7 @@
                                 <div style="display: flex; align-items: center; gap: 6px;">
                                     <span
                                         style="display: inline-block; width: 14px; height: 14px; background-color: #77a1ff; border-radius: 2px;"></span>
-                                    <span>Light (<300kg)< /span>
+                                    <span>Light (&lt;300kg)</span>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 6px;">
                                     <span

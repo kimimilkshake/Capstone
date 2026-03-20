@@ -39,7 +39,7 @@ class RoutePortController extends Controller
                     ->orWhere('port_destination_name', 'like', "%{$search}%");
             })
             ->orderBy('route_code.route_code_name', 'asc') // sort by route code name
-            ->paginate(7)
+            ->paginate(10)
             ->withQueryString(); // keeps search query when paginating
 
         $route_codes = RouteCode::orderBy('route_code_name', 'asc')->get();

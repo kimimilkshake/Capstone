@@ -1,26 +1,10 @@
 @extends('layouts.app')
-@section('page-title', 'VESSEL')
+@section('page-title', 'VESSELS')
 @section('content')
   @include('components.authHeader')
   @include('components.admin_nav')
   <div class="admin-body">
-    <div class="avl-title">
-      <h3>VESSEL LIST</h3>
-    </div>
-
-    @if(session('success'))
-        <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
-    @endif
-    @if ($errors->any())
-        <div class="alert alert-danger text-center">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
+        
     <div class="search-add-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
       <form class="search-bar" action="{{ route('admin.vessel_list') }}" method="GET" style="flex: 1;">
           <input type="text" name="search" placeholder="Search by name..." value="{{ request('search') }}">
