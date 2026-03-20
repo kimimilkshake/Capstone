@@ -26,6 +26,12 @@ elif [ -n "$DATABASE_URL" ]; then
     ")
 fi
 
+# Create .env file if it doesn't exist (Railway provides env vars directly, not via file)
+if [ ! -f /var/www/html/.env ]; then
+    echo "==> Creating .env file from environment variables..."
+    touch /var/www/html/.env
+fi
+
 echo "==> Waiting for MySQL at ${DB_HOST}:${DB_PORT}..."
 until php -r "try { new PDO('mysql:host='.getenv('DB_HOST').';port='.getenv('DB_PORT'), getenv('DB_USERNAME'), getenv('DB_PASSWORD') ?: ''); echo 'ok'; } catch(Exception \$e) { exit(1); }" 2>/dev/null; do
     sleep 2
