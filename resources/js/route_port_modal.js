@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = await response.json().catch(() => ({}));
 
             if (response.ok && data.status === 'success') {
-                alert('Route Code added successfully!');
+                showToast('Route Code added successfully!', 'success'); // NEW
                 addRouteCodeModal.style.display = 'none';
                 addRouteCodeForm.reset();
 
@@ -63,11 +63,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
             } else {
-                alert(data.message || 'Error adding route code');
+                showToast(data.message || 'Error adding route code', 'danger'); // NEW
             }
 
         } catch (err) {
-            alert('Server error');
+            showToast('Server error', 'danger'); // NEW
             console.error(err);
         }
     });
@@ -88,6 +88,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const addForm = document.getElementById("addRoutePortForm");
     const editForm = document.getElementById("editRoutePortForm");
+
+    const saveEditBtn = document.getElementById("saveEditBtn");
+    let originalFormData = {};
 
     // --- OPEN MODALS ---
     addBtn.addEventListener("click", () => addModal.style.display = "flex");
@@ -115,13 +118,13 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = await response.json().catch(() => ({}));
 
             if (response.ok && data.status === "success") {
-                alert(data.message);
-                location.reload();
+                showToast(data.message, 'success'); // NEW
+                setTimeout(() => location.reload(), 1500);
             } else {
-                alert(data.message || "Failed to add Route & Port.");
+                showToast(data.message || "Failed to add Route & Port.", 'danger'); // NEW
             }
         } catch (err) {
-            alert("Unexpected error: " + err.message);
+            showToast("Unexpected error: " + err.message, 'danger'); // NEW
         }
     });
 
@@ -147,7 +150,35 @@ document.addEventListener("DOMContentLoaded", function () {
             if (routeCodeSelect) {
                 routeCodeSelect.value = btn.dataset.route_code_id || "";
             }
+
+            // STORE ORIGINAL VALUES
+            originalFormData = {
+                route_code_id: document.getElementById("editRouteCodeId").value,
+                route_origin: document.getElementById("editRouteOrigin").value,
+                route_destination: document.getElementById("editRouteDestination").value,
+                port_origin_name: document.getElementById("editPortOriginName").value,
+                port_origin_city: document.getElementById("editPortOriginCity").value,
+                port_origin_province: document.getElementById("editPortOriginProvince").value,
+                port_destination_name: document.getElementById("editPortDestinationName").value,
+                port_destination_city: document.getElementById("editPortDestinationCity").value,
+                port_destination_province: document.getElementById("editPortDestinationProvince").value
+            };
+
+            // disable button initially
+            saveEditBtn.disabled = true;
+            saveEditBtn.style.backgroundColor = "#ccc";
+            saveEditBtn.style.cursor = "not-allowed";
         });
+    });
+
+    // ✅ DETECT CHANGES (STEP 4)
+    const editInputs = document.querySelectorAll(
+        "#editRoutePortForm input, #editRoutePortForm select"
+    );
+
+    editInputs.forEach(input => {
+        input.addEventListener("input", checkIfChanged);
+        input.addEventListener("change", checkIfChanged);
     });
 
     // --- UPDATE ROUTE & PORT ---
@@ -168,13 +199,44 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = await response.json().catch(() => ({}));
 
             if (response.ok && data.status === "success") {
-                alert(data.message);
-                location.reload();
+                showToast(data.message, 'success'); // NEW
+                setTimeout(() => location.reload(), 1500); // optional delay
             } else {
-                alert(data.message || "Failed to update Route & Port.");
+                showToast(data.message || "Failed to update Route & Port.", 'danger'); // NEW       
             }
         } catch (err) {
-            alert("Unexpected error: " + err.message);
+            showToast("Unexpected error: " + err.message, 'danger'); // NEW
         }
     });
+
+     // ✅ STEP 5 FUNCTION GOES HERE
+    function checkIfChanged() {
+        const currentData = {
+            route_code_id: document.getElementById("editRouteCodeId").value,
+            route_origin: document.getElementById("editRouteOrigin").value,
+            route_destination: document.getElementById("editRouteDestination").value,
+            port_origin_name: document.getElementById("editPortOriginName").value,
+            port_origin_city: document.getElementById("editPortOriginCity").value,
+            port_origin_province: document.getElementById("editPortOriginProvince").value,
+            port_destination_name: document.getElementById("editPortDestinationName").value,
+            port_destination_city: document.getElementById("editPortDestinationCity").value,
+            port_destination_province: document.getElementById("editPortDestinationProvince").value
+        };
+
+        const isChanged = Object.keys(originalFormData).some(key => {
+            return originalFormData[key] !== currentData[key];
+        });
+
+        if (isChanged) {
+            // ✅ ENABLE BUTTON
+            saveEditBtn.disabled = false;
+            saveEditBtn.style.backgroundColor = "#485B8C";
+            saveEditBtn.style.cursor = "pointer";
+        } else {
+            // ❌ DISABLE BUTTON
+            saveEditBtn.disabled = true;
+            saveEditBtn.style.backgroundColor = "#ccc";
+            saveEditBtn.style.cursor = "not-allowed";
+        }
+    }
 });

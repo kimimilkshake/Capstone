@@ -160,7 +160,7 @@
           </div>
 
           <div class="form-actions" style="display: flex; gap: 1rem;">
-            <button type="submit" class="acs-add-btn">
+            <button type="submit" class="acs-add-btn" id="saveEditBtn">
               <i class="fa-solid fa-save me-2"></i>Save Changes
             </button>
             <a href="{{ route('admin.voyage_list') }}" class="acs-add-btn acs-cancel-btn">

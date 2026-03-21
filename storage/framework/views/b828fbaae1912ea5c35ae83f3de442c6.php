@@ -5,7 +5,6 @@
 
 <div class="staff-body">   
 
-
     <?php if(session('success')): ?>
         <div class="alert alert-success text-center mx-auto w-75" role="alert"><?php echo e(session('success')); ?></div>
     <?php endif; ?>

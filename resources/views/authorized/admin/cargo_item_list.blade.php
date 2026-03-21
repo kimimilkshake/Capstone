@@ -60,7 +60,7 @@
             <td>{{ $c->cargo_item_freight }}</td>
             <td>{{ $c->cargo_item_measure_required }}</td>
             <td>
-              <a href="{{ route('admin.cargo_item_edit', $c->cargo_item_id) }}" class="edit-icon">
+              <a href="{{ route('admin.cargo_item_edit', $c->cargo_item_id) }}" class="edit-icon link-btn">
                 <i class="fa fa-pencil" aria-hidden="true"></i>
               </a>
             </td>

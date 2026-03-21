@@ -241,7 +241,9 @@
           <input type="text" name="port_destination_province" id="editPortDestinationProvince" required>
         </div>
       </div>
-      <button type="submit">Save Changes</button>
+      <button type="submit" id="saveEditBtn" disabled style="background-color: #ccc; cursor: not-allowed;">
+        Save Changes
+      </button>
     </form>
   </div>
 </div>

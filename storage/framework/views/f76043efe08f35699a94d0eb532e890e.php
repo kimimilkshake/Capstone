@@ -5,23 +5,6 @@
 
     <div class="admin-body">
 
-      <div class="acs-form_container">
-        <?php if($errors->any()): ?>
-          <div class="alert alert-danger" style="color: red; text-align: center;">
-            <strong>All fields are required.</strong><br>
-            <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-              <?php echo e($error); ?><br>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-          </div>
-        <?php endif; ?>
-
-        <?php if(session('success')): ?>
-          <div class="alert alert-success" style="color: green; text-align: center; margin-bottom: 1rem;">
-            <?php echo e(session('success')); ?>
-
-          </div>
-        <?php endif; ?>
-
         <form action="<?php echo e(route('admin.storePromo')); ?>" method="POST" class="create-promo-form">
           <?php echo csrf_field(); ?>
           <div class="form-row">

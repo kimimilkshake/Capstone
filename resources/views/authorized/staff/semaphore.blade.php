@@ -24,17 +24,6 @@
       </form>
     </div>
 
-    @if(session('status'))
-      <div class="alert alert-success alert-autodismiss">
-        {{ session('status') }}
-      </div>
-    @endif
-
-    @error('recipients')
-      <div class="alert alert-danger alert-autodismiss">
-        {{ $message }}
-      </div>
-    @enderror
   </div>
 
   <script>

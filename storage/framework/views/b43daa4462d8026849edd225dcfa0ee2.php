@@ -66,8 +66,16 @@
             <td><?php echo e($voyage->vessel->vessel_name); ?></td>
             <td><?php echo e($voyage->voyage_status); ?></td>
             <td>
-              <a href="<?php echo e(route('admin.voyage_edit', $voyage->voyage_id)); ?>" title="Edit Voyage" class="editRouteBtn link-btn"><i class="fa fa-pencil me-1" ></i></a>
-              <a href="<?php echo e(route('admin.manifest', $voyage->voyage_id)); ?>" title="View Manifest" class="editRouteBtn link-btn"><i class="fa-solid fa-file me-1"></i></a>
+              <?php if($voyage->voyage_status === 'At Sea'): ?>
+                  <a href="#" class="link-btn disabled-voyage" style="opacity: 0.5; cursor: not-allowed;" title="Cannot edit while At Sea">
+                      <i class="fa fa-pencil me-1"></i>
+                  </a>
+              <?php else: ?>
+                  <a href="<?php echo e(route('admin.voyage_edit', $voyage->voyage_id)); ?>" class="link-btn">
+                      <i class="fa fa-pencil me-1"></i>
+                  </a>
+              <?php endif; ?>
+              <a href="<?php echo e(route('admin.manifest', $voyage->voyage_id)); ?>" title="View Manifest" class="editRouteBtn link-btn" style="text-decoration: none"><i class="fa-solid fa-file me-1"></i></a>
               
             </td> 
           </tr>
@@ -84,6 +92,8 @@
 
     </div>
   </div>
+
+
 
 <?php $__env->stopSection(); ?>
 

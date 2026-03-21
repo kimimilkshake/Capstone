@@ -8,18 +8,7 @@
     </div>
 
     <div class="aci-form_container">
-      <?php if(session('success')): ?>
-          <div class="alert alert-success text-center mx-auto w-75" role="alert"><?php echo e(session('success')); ?></div>
-      <?php endif; ?>
-      <?php if($errors->any()): ?>
-          <div class="alert alert-danger text-center">
-              <ul>
-                  <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                      <li><?php echo e($error); ?></li>
-                  <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-              </ul>
-          </div>
-      <?php endif; ?>
+        
       <form action="<?php echo e(route('staff.cargo_item_update', $cargo_item->cargo_item_id)); ?>" method="POST">
         <?php echo csrf_field(); ?>
         <?php echo method_field('PUT'); ?>
@@ -100,7 +89,7 @@
             <div class="form-col">
               <div class="form-group">
                 <label>Min Length</label>
-                <input type="number" step="0.01" name="cargo_item_min_length" 
+                <input type="number" step="0.01" min="0" name="cargo_item_min_length" 
                        value="<?php echo e(old('cargo_item_min_length', $cargo_item->cargo_item_min_length)); ?>">
               </div>
             </div>
@@ -108,7 +97,7 @@
             <div class="form-col">
               <div class="form-group">
                 <label>Min Width</label>
-                <input type="number" step="0.01" name="cargo_item_min_width" 
+                <input type="number" step="0.01" min="0" name="cargo_item_min_width" 
                        value="<?php echo e(old('cargo_item_min_width', $cargo_item->cargo_item_min_width)); ?>">
               </div>
             </div>
@@ -116,7 +105,7 @@
             <div class="form-col">
               <div class="form-group">
                 <label>Min Height</label>
-                <input type="number" step="0.01" name="cargo_item_min_height" 
+                <input type="number" step="0.01" min="0" name="cargo_item_min_height" 
                        value="<?php echo e(old('cargo_item_min_height', $cargo_item->cargo_item_min_height)); ?>">
               </div>
             </div>
@@ -124,7 +113,7 @@
             <div class="form-col">
               <div class="form-group">
                 <label>Max Length</label>
-                <input type="number" step="0.01" name="cargo_item_max_length" 
+                <input type="number" step="0.01" min="0" name="cargo_item_max_length" 
                        value="<?php echo e(old('cargo_item_max_length', $cargo_item->cargo_item_max_length)); ?>">
               </div>
             </div>
@@ -132,7 +121,7 @@
             <div class="form-col">
               <div class="form-group">
                 <label>Max Width</label>
-                <input type="number" step="0.01" name="cargo_item_max_width" 
+                <input type="number" step="0.01" min="0" name="cargo_item_max_width" 
                        value="<?php echo e(old('cargo_item_max_width', $cargo_item->cargo_item_max_width)); ?>">
               </div>
             </div>
@@ -140,7 +129,7 @@
             <div class="form-col">
               <div class="form-group">
                 <label>Max Height</label>
-                <input type="number" step="0.01" name="cargo_item_max_height" 
+                <input type="number" step="0.01" min="0" name="cargo_item_max_height" 
                        value="<?php echo e(old('cargo_item_max_height', $cargo_item->cargo_item_max_height)); ?>">
               </div>
             </div>
@@ -164,11 +153,10 @@
           </div>
 
         </div>
-        </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Update Cargo Item</button>
-            <a href="<?php echo e(route('staff.cargo_item_list')); ?>" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary update-btn" id="saveEditBtn">Update Cargo Item</button>
+            <a href="<?php echo e(route('staff.cargo_item_list')); ?>" class="btn btn-secondary cancel-btn">Cancel</a>
         </div>
       </form>
     </div>

@@ -1,33 +1,32 @@
-@extends('layouts.app')
-@section('page-title', 'EDIT PROMO')
-@section('content')
-    @include('components.authHeader')
-    @include('components.admin_nav')
+<?php $__env->startSection('page-title', 'EDIT PROMO'); ?>
+<?php $__env->startSection('content'); ?>
+    <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    <?php echo $__env->make('components.admin_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <div class="admin-body">
       
       <div class="acs-form_container">
 
-        <form action="{{ route('admin.promo_update', $promo->promo_id) }}" method="POST" class="create-promo-form">
-          @csrf
-          @method('PUT')
+        <form action="<?php echo e(route('admin.promo_update', $promo->promo_id)); ?>" method="POST" class="create-promo-form">
+          <?php echo csrf_field(); ?>
+          <?php echo method_field('PUT'); ?>
 
           <div class="form-row">
             <!-- Column 1 -->
             <div class="form-col">
               <div class="form-group">
                 <label for="promo_name">Promo Name <span class="text-danger">*</span></label>
-                <input type="text" id="promo_name" name="promo_name" value="{{ $promo->promo_name }}" required>
+                <input type="text" id="promo_name" name="promo_name" value="<?php echo e($promo->promo_name); ?>" required>
               </div>
 
               <div class="form-group">
                 <label for="promo_code">Promo Code <span class="text-danger">*</span></label>
-                <input type="text" id="promo_code" name="promo_code" value="{{ $promo->promo_code }}" required>
+                <input type="text" id="promo_code" name="promo_code" value="<?php echo e($promo->promo_code); ?>" required>
               </div>
 
               <div class="form-group">
                 <label for="promo_discount_rate">Discount Rate</label>
-                <input type="number" id="promo_discount_rate" name="promo_discount_rate" value="{{ $promo->promo_discount_rate }}" required>
+                <input type="number" id="promo_discount_rate" name="promo_discount_rate" value="<?php echo e($promo->promo_discount_rate); ?>" required>
               </div>
             </div>
 
@@ -35,19 +34,19 @@
             <div class="form-col">
               <div class="form-group">
                 <label for="promo_start_date">Date Start <span class="text-danger">*</span></label>
-                <input type="date" id="promo_start_date" name="promo_start_date" value="{{ $promo->promo_start_date }}" required>
+                <input type="date" id="promo_start_date" name="promo_start_date" value="<?php echo e($promo->promo_start_date); ?>" required>
               </div>
 
               <div class="form-group">
                 <label for="promo_end_date">Date End <span class="text-danger">*</span></label>
-                <input type="date" id="promo_end_date" name="promo_end_date" value="{{ $promo->promo_end_date }}" required>
+                <input type="date" id="promo_end_date" name="promo_end_date" value="<?php echo e($promo->promo_end_date); ?>" required>
               </div>
 
                 <div class="form-group" style="flex: 1;">
                   <label for="promo_status">Status <span class="text-danger">*</span></label>
                   <select id="promo_status" name="promo_status" required>
-                    <option value="Active" {{ $promo->promo_status == 'Active' ? 'selected' : '' }}>Active</option>
-                    <option value="Inactive" {{ $promo->promo_status == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                    <option value="Active" <?php echo e($promo->promo_status == 'Active' ? 'selected' : ''); ?>>Active</option>
+                    <option value="Inactive" <?php echo e($promo->promo_status == 'Inactive' ? 'selected' : ''); ?>>Inactive</option>
                   </select>
               </div>
             </div>
@@ -57,7 +56,7 @@
           <div class="form-row" style="display: flex; gap: 1rem;">
             <div class="form-group" style="flex: 1;">
               <label for="promo_description">Promo Description <span class="text-danger">*</span></label>
-              <textarea id="promo_description" name="promo_description" required>{{ $promo->promo_description }}</textarea>
+              <textarea id="promo_description" name="promo_description" required><?php echo e($promo->promo_description); ?></textarea>
             </div>
 
             
@@ -67,11 +66,13 @@
             <button type="submit" class="acs-add-btn" id="saveEditBtn">
               <i class="fa-solid fa-floppy-disk me-2"></i>Save Changes
             </button>
-            <a href="{{ route('admin.promo_list') }}" class="acs-add-btn acs-cancel-btn">
+            <a href="<?php echo e(route('admin.promo_list')); ?>" class="acs-add-btn acs-cancel-btn">
               <i class="fa-solid fa-xmark me-2"></i>Cancel
             </a>
           </div>
         </form>
       </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/authorized/admin/promo_edit.blade.php ENDPATH**/ ?>

@@ -5,19 +5,7 @@
   <div class="staff-body">
 
     <div class="acs-form_container">
-      <?php if(session('success')): ?>
-          <div class="alert alert-success text-center mx-auto w-75" role="alert"><?php echo e(session('success')); ?></div>
-      <?php endif; ?>
-      <?php if($errors->any()): ?>
-          <div class="alert alert-danger text-center">
-              <ul>
-                  <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                      <li><?php echo e($error); ?></li>
-                  <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-              </ul>
-          </div>
-      <?php endif; ?>
-
+      
       <form action="<?php echo e(route('staff.voyage_update', $voyage->voyage_id)); ?>" method="POST" enctype="multipart/form-data" id="editVoyageForm">
         <?php echo csrf_field(); ?>
         <?php echo method_field('PUT'); ?>
@@ -34,7 +22,7 @@
               <select name="route_port_id" id="route_port_id" required <?php if($isCompleted): ?> disabled <?php endif; ?>>
                 <?php $__currentLoopData = $route_port; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                   <option value="<?php echo e($rp->route_port_id); ?>" 
-                    <?php echo e($voyage->route_port_id == $rp->route_id ? 'selected' : ''); ?>>
+                    <?php echo e($voyage->route_port_id == $rp->route_port_id ? 'selected' : ''); ?>>
                     <?php echo e($rp->route_origin); ?> → <?php echo e($rp->route_destination); ?>
 
                   </option>
@@ -165,7 +153,7 @@
           </div>
 
           <div class="form-actions" style="display: flex; gap: 1rem;">
-            <button type="submit" class="acs-add-btn">
+            <button type="submit" class="acs-add-btn update-btn" id="saveEditBtn">
               <i class="fa-solid fa-save me-2"></i>Save Changes
             </button>
             <a href="<?php echo e(route('staff.voyage_list')); ?>" class="acs-add-btn acs-cancel-btn">

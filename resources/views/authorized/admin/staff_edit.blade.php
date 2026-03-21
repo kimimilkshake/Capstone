@@ -68,10 +68,13 @@
                             @enderror
                         </div>
                     </div>
-                    </div>
+                </div>
+
+                <br>
+
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Update Staff</button>
-                    <a href="{{ route('admin.staff_list') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary update-btn" id="saveEditBtn">Update Staff</button>
+                    <a href="{{ route('admin.staff_list') }}" class="btn btn-secondary cancel-btn">Cancel</a>
                 </div>
             </form>
 

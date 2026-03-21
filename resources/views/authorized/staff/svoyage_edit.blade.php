@@ -23,7 +23,7 @@
               <select name="route_port_id" id="route_port_id" required @if($isCompleted) disabled @endif>
                 @foreach($route_port as $rp)
                   <option value="{{ $rp->route_port_id }}" 
-                    {{ $voyage->route_port_id == $rp->route_id ? 'selected' : '' }}>
+                    {{ $voyage->route_port_id == $rp->route_port_id ? 'selected' : '' }}>
                     {{ $rp->route_origin }} → {{ $rp->route_destination }}
                   </option>
                 @endforeach
@@ -152,7 +152,7 @@
           </div>
 
           <div class="form-actions" style="display: flex; gap: 1rem;">
-            <button type="submit" class="acs-add-btn">
+            <button type="submit" class="acs-add-btn update-btn" id="saveEditBtn">
               <i class="fa-solid fa-save me-2"></i>Save Changes
             </button>
             <a href="{{ route('staff.voyage_list') }}" class="acs-add-btn acs-cancel-btn">

@@ -151,11 +151,10 @@
           </div>
 
         </div>
-        </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Update Cargo Item</button>
-            <a href="{{ route('staff.cargo_item_list') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary update-btn" id="saveEditBtn">Update Cargo Item</button>
+            <a href="{{ route('staff.cargo_item_list') }}" class="btn btn-secondary cancel-btn">Cancel</a>
         </div>
       </form>
     </div>

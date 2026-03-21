@@ -5,39 +5,6 @@
   <div class="admin-body">
 
     <div class="aci-form_container">
-      <!-- Floating Toast Container - Below navbar on the right side -->
-        <div class="toast-container position-fixed p-3" style="z-index: 9999; top: 80px; right: 20px;">
-            <?php if(session('success')): ?>
-                <div class="toast align-items-center text-white bg-success border-0 show" role="alert" aria-live="assertive"
-                    aria-atomic="true" id="successToast">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <i class="fas fa-check-circle me-2"></i><?php echo e(session('success')); ?>
-
-                        </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                            aria-label="Close"></button>
-                    </div>
-                </div>
-            <?php endif; ?>
-            <?php if($errors->any()): ?>
-                <div class="toast align-items-center text-white bg-danger border-0 show" role="alert"
-                    aria-live="assertive" aria-atomic="true" id="errorToast">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <i class="fas fa-exclamation-circle me-2"></i>
-                            <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <?php echo e($error); ?>
-
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                        </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                            aria-label="Close"></button>
-                    </div>
-                </div>
-            <?php endif; ?>
-        </div>
-
         
       <form action="<?php echo e(route('admin.cargo_item_update', $cargo_item->cargo_item_id)); ?>" method="POST">
         <?php echo csrf_field(); ?>
@@ -186,8 +153,8 @@
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Update Cargo Item</button>
-            <a href="<?php echo e(route('admin.cargo_item_list')); ?>" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary update-btn" id="saveEditBtn">Update Cargo Item</button>
+            <a href="<?php echo e(route('admin.cargo_item_list')); ?>" class="btn btn-secondary cancel-btn" >Cancel</a>
         </div>
       </form>
     </div>
