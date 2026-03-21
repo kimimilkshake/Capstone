@@ -4,22 +4,6 @@
   <?php echo $__env->make('components.admin_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
   <div class="admin-body">
-    <div class="avl-title">
-      <h3>VOYAGE LIST</h3>
-    </div>
-
-    <?php if(session('success')): ?>
-        <div class="alert alert-success text-center mx-auto w-75" role="alert"><?php echo e(session('success')); ?></div>
-    <?php endif; ?>
-    <?php if($errors->any()): ?>
-        <div class="alert alert-danger text-center">
-            <ul>
-                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <li><?php echo e($error); ?></li>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-            </ul>
-        </div>
-    <?php endif; ?>
 
     <div class="search-add-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
       <form class="search-bar" action="<?php echo e(route('admin.voyage_list')); ?>" method="GET" style="flex: 1;">
@@ -82,8 +66,16 @@
             <td><?php echo e($voyage->vessel->vessel_name); ?></td>
             <td><?php echo e($voyage->voyage_status); ?></td>
             <td>
-              <a href="<?php echo e(route('admin.voyage_edit', $voyage->voyage_id)); ?>" title="Edit Voyage" class="editRouteBtn link-btn"><i class="fa fa-pencil me-1" ></i></a>
-              <a href="<?php echo e(route('admin.manifest', $voyage->voyage_id)); ?>" title="View Manifest" class="editRouteBtn link-btn"><i class="fa-solid fa-file me-1"></i></a>
+              <?php if($voyage->voyage_status === 'At Sea'): ?>
+                  <a href="#" class="link-btn disabled-voyage" style="opacity: 0.5; cursor: not-allowed;" title="Cannot edit while At Sea">
+                      <i class="fa fa-pencil me-1"></i>
+                  </a>
+              <?php else: ?>
+                  <a href="<?php echo e(route('admin.voyage_edit', $voyage->voyage_id)); ?>" class="link-btn">
+                      <i class="fa fa-pencil me-1"></i>
+                  </a>
+              <?php endif; ?>
+              <a href="<?php echo e(route('admin.manifest', $voyage->voyage_id)); ?>" title="View Manifest" class="editRouteBtn link-btn" style="text-decoration: none"><i class="fa-solid fa-file me-1"></i></a>
               
             </td> 
           </tr>
@@ -100,6 +92,9 @@
 
     </div>
   </div>
+
+
+
 <?php $__env->stopSection(); ?>
 
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/authorized/admin/voyage_list.blade.php ENDPATH**/ ?>

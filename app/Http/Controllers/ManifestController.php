@@ -73,42 +73,40 @@ class ManifestController extends Controller
                         'p.*',
                         'pt.passenger_ticket_id',
                         'pt.booking_ref_no as booking_ref',
+                        'pt.pt_boarded_at',
                         'pt.pt_ticket_price',
                         'pt.pt_cot_no',
                         'pt.created_at as ticket_created_at'
                     )
-                    ->get()
-                    ->map(function ($passenger) use ($accommodations) {
-                        // Match cot number with accommodation cot range
-                        $matchedAccommodation = null;
-                        
-                        if ($passenger->pt_cot_no) {
-                            foreach ($accommodations as $accom) {
-                                if ($accom->accommodation_cot_range) {
-                                    $ranges = array_map('trim', explode(',', $accom->accommodation_cot_range));
-                                    foreach ($ranges as $range) {
-                                        if (strpos($range, '-') !== false) {
-                                            // Handle range like "1-10"
-                                            [$start, $end] = array_map('trim', explode('-', $range));
-                                            if ($passenger->pt_cot_no >= (int)$start && $passenger->pt_cot_no <= (int)$end) {
-                                                $matchedAccommodation = $accom;
-                                                break 2;
-                                            }
-                                        } else {
-                                            // Handle single cot like "15"
-                                            if ((int)$range === $passenger->pt_cot_no) {
-                                                $matchedAccommodation = $accom;
-                                                break 2;
-                                            }
+                    ->paginate(5, ['*'], 'passenger_page');
+
+                // Add accommodation_name to each passenger (using paginator's getCollection)
+                $passengers->getCollection()->transform(function ($passenger) use ($accommodations) {
+                    $matchedAccommodation = null;
+                    if ($passenger->pt_cot_no) {
+                        foreach ($accommodations as $accom) {
+                            if ($accom->accommodation_cot_range) {
+                                $ranges = array_map('trim', explode(',', $accom->accommodation_cot_range));
+                                foreach ($ranges as $range) {
+                                    if (strpos($range, '-') !== false) {
+                                        [$start, $end] = array_map('trim', explode('-', $range));
+                                        if ($passenger->pt_cot_no >= (int)$start && $passenger->pt_cot_no <= (int)$end) {
+                                            $matchedAccommodation = $accom;
+                                            break 2;
+                                        }
+                                    } else {
+                                        if ((int)$range === $passenger->pt_cot_no) {
+                                            $matchedAccommodation = $accom;
+                                            break 2;
                                         }
                                     }
                                 }
                             }
                         }
-                        
-                        $passenger->accommodation_name = $matchedAccommodation?->accommodation_name;
-                        return $passenger;
-                    });
+                    }
+                    $passenger->accommodation_name = $matchedAccommodation?->accommodation_name;
+                    return $passenger;
+                });
             } else {
                 // Fallback: try to find passenger data on booking rows or bookings that link to passenger model
                 $bookingTable = (new Booking)->getTable();
@@ -160,30 +158,41 @@ class ManifestController extends Controller
         // CARGOS
         // --------------------
         if ($showCargo) {
-    $cargos = CargoReceipt::where('voyage_id', $voyage->voyage_id)
-        ->with([
-            'booking',
-            'cargoBooking.cargoClassification', // nested relation path
-            'cargoItem',
-            'sender',
-            'consignee',
-            'payment'
-        ])
-        ->select('cargo_receipt.*')
-        ->distinct()
-        ->get()
-        ->unique('cargo_receipt_id')
-        ->values()
-        ->map(function ($c) {
-            $c->cargo_classification_name = optional(optional($c->cargoBooking)->cargoClassification)->cargo_classification_name;
-            return $c;
-        });
-}
+            $cargos = CargoReceipt::where('voyage_id', $voyage->voyage_id)
+                ->with([
+                    'booking',
+                    'cargoBooking.cargoClassification',
+                    'cargoItem',
+                    'sender',
+                    'consignee',
+                    'payment'
+                ])
+                ->select('cargo_receipt.*')
+                ->distinct()
+                ->paginate(5, ['*'], 'cargo_page');
+
+            // Add cargo_classification_name to each cargo (using paginator's getCollection)
+            $cargos->getCollection()->transform(function ($c) {
+                $c->cargo_classification_name = optional(optional($c->cargoBooking)->cargoClassification)->cargo_classification_name;
+                return $c;
+            });
+        }
 
         // Render the view
-        return auth()->guard('staff')->check()
-            ? view('authorized.staff.staffmanifest', compact('voyage', 'showPassenger', 'showCargo', 'passengers', 'cargos'))
-            : view('authorized.admin.adminmanifest', compact('voyage', 'showPassenger', 'showCargo', 'passengers', 'cargos'));
+        $isAjax = request()->ajax();
+        if ($isAjax) {
+            // Render only the manifest tables and pagination for AJAX
+            $view = auth()->guard('staff')->check()
+                ? view('authorized.staff.staffmanifest', compact('voyage', 'showPassenger', 'showCargo', 'passengers', 'cargos'))
+                : view('authorized.admin.adminmanifest', compact('voyage', 'showPassenger', 'showCargo', 'passengers', 'cargos'));
+            // Return only the manifest section (body) for AJAX
+            // This works because the JS extracts the relevant table and pagination by ID
+            return $view;
+        } else {
+            return auth()->guard('staff')->check()
+                ? view('authorized.staff.staffmanifest', compact('voyage', 'showPassenger', 'showCargo', 'passengers', 'cargos'))
+                : view('authorized.admin.adminmanifest', compact('voyage', 'showPassenger', 'showCargo', 'passengers', 'cargos'));
+        }
     }
 }
 

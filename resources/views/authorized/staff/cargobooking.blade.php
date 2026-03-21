@@ -5,9 +5,6 @@
 @include('components.staff_nav')
 
 <div class="staff-body">   {{-- FIXED: Same wrapper as pending cargo --}}
-    <div class="svl-title text-center">
-        <h3>CARGO BOOKING</h3>
-    </div>
 
     @if(session('success'))
         <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>

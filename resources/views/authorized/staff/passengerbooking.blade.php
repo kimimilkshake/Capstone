@@ -5,40 +5,6 @@
     @include('components.staff_nav')
 
     <div class="staff-body">
-        <div class="svl-title text-center">
-            <h3>PASSENGER BOOKING</h3>
-        </div>
-
-        <!-- Floating Toast Container - Below navbar on the right side -->
-        <div class="toast-container position-fixed p-3" style="z-index: 9999; top: 80px; right: 20px;">
-            @if (session('success'))
-                <div class="toast align-items-center text-white bg-success border-0 show" role="alert" aria-live="assertive"
-                    aria-atomic="true" id="successToast">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                        </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                            aria-label="Close"></button>
-                    </div>
-                </div>
-            @endif
-            @if ($errors->any())
-                <div class="toast align-items-center text-white bg-danger border-0 show" role="alert"
-                    aria-live="assertive" aria-atomic="true" id="errorToast">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <i class="fas fa-exclamation-circle me-2"></i>
-                            @foreach ($errors->all() as $error)
-                                {{ $error }}
-                            @endforeach
-                        </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                            aria-label="Close"></button>
-                    </div>
-                </div>
-            @endif
-        </div>
 
         <form action="{{ route('staff.passenger_booking.store') }}" method="POST" id="passengerBookingForm">
             @csrf
@@ -76,9 +42,12 @@
                 <!-- LEFT: Cot Plan Image -->
                 <div class="col-lg-6 mb-4 text-center">
                     <h5 class="fw-bold mb-3">Cot Plan Layout</h5>
-                    <img id="cotPlanImage" src="{{ $cotPlanUrl }}" alt="Cot Plan" class="img-fluid rounded shadow-sm"
-                        style="max-height: 500px; object-fit: contain;">
-                    <p class="text-muted mt-2">Vessel cot plan layout</p>
+                    <img id="cotPlanImage" src="" alt="Cot Plan" class="img-fluid rounded shadow-sm"
+                        style="max-height: 500px; object-fit: contain; display: none;">
+                    <p id="cotPlanPlaceholder"
+                        style="color: #888; font-style: italic; min-height: 200px; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                        No accommodation selected
+                    </p>
                 </div>
 
                 <!-- RIGHT: Passenger Details Container -->
@@ -362,6 +331,26 @@
                 cotSelect.innerHTML = '<option value="">Select Cot</option>';
                 cotSelect.disabled = true;
 
+                // Update cot plan image
+                const cotPlanImage = document.getElementById('cotPlanImage');
+                const cotPlanPlaceholder = document.getElementById('cotPlanPlaceholder');
+                if (accommodationId) {
+                    const acc = accommodationsData.find(a => a.accommodation_id == accommodationId);
+                    if (acc && acc.cot_plan_url) {
+                        cotPlanImage.src = acc.cot_plan_url;
+                        cotPlanImage.style.display = '';
+                        cotPlanPlaceholder.style.display = 'none';
+                    } else {
+                        cotPlanImage.style.display = 'none';
+                        cotPlanPlaceholder.textContent = 'No image available';
+                        cotPlanPlaceholder.style.display = 'flex';
+                    }
+                } else {
+                    cotPlanImage.style.display = 'none';
+                    cotPlanPlaceholder.textContent = 'No accommodation selected';
+                    cotPlanPlaceholder.style.display = 'flex';
+                }
+
                 if (accommodationId) {
                     const accommodation = accommodationsData.find(a => a.accommodation_id == accommodationId);
                     if (accommodation && accommodation.available_cots) {
@@ -473,12 +462,12 @@
 
         // Event Listeners
         voyageSelect.addEventListener('change', async function() {
-            // Update cot plan image
-            const selectedOption = this.options[this.selectedIndex];
-            const cotPlanUrl = selectedOption.dataset.cotPlan;
-            if (cotPlanUrl) {
-                document.getElementById('cotPlanImage').src = cotPlanUrl;
-            }
+            // Reset cot plan display when voyage changes
+            const cotPlanImage = document.getElementById('cotPlanImage');
+            const cotPlanPlaceholder = document.getElementById('cotPlanPlaceholder');
+            cotPlanImage.style.display = 'none';
+            cotPlanPlaceholder.textContent = 'No accommodation selected';
+            cotPlanPlaceholder.style.display = 'flex';
 
             await loadAccommodations(this.value);
 

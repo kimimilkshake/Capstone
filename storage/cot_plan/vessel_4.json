@@ -1,0 +1,16 @@
+{
+    "vessel_id": 4,
+    "vessel_name": "MV Francisco",
+    "vessel_code": "12435",
+    "accommodations": [
+        {
+            "accommodation_id": 1,
+            "accommodation_name": "Tourist",
+            "price": 23,
+            "cot_range": "1-10",
+            "description": "",
+            "lower_bunks": [],
+            "upper_bunks": []
+        }
+    ]
+}

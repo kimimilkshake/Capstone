@@ -1,25 +1,9 @@
-<?php $__env->startSection('page-title', 'VESSEL'); ?>
+<?php $__env->startSection('page-title', 'VESSELS'); ?>
 <?php $__env->startSection('content'); ?>
   <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
   <?php echo $__env->make('components.admin_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
   <div class="admin-body">
-    <div class="avl-title">
-      <h3>VESSEL LIST</h3>
-    </div>
-
-    <?php if(session('success')): ?>
-        <div class="alert alert-success text-center mx-auto w-75" role="alert"><?php echo e(session('success')); ?></div>
-    <?php endif; ?>
-    <?php if($errors->any()): ?>
-        <div class="alert alert-danger text-center">
-            <ul>
-                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <li><?php echo e($error); ?></li>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-            </ul>
-        </div>
-    <?php endif; ?>
-
+        
     <div class="search-add-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
       <form class="search-bar" action="<?php echo e(route('admin.vessel_list')); ?>" method="GET" style="flex: 1;">
           <input type="text" name="search" placeholder="Search by name..." value="<?php echo e(request('search')); ?>">

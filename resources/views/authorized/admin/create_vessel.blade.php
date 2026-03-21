@@ -1,30 +1,12 @@
 @extends('layouts.app')
-@section('page-title', 'VESSEL')
+@section('page-title', 'CREATE VESSEL')
 @section('content')
     @include('components.authHeader')
     @include('components.admin_nav')
 
     <div class="admin-body">
-        <div class="avl-title">
-            <h3>CREATE VESSEL</h3>
-        </div>
 
         <div class="acs-form_container">
-
-            @if ($errors->any())
-                <div class="alert alert-danger" style="color: red; text-align: center;">
-                    <strong>All fields are required.</strong><br>
-                    @foreach ($errors->all() as $error)
-                        {{ $error }}<br>
-                    @endforeach
-                </div>
-            @endif
-
-            @if (session('success'))
-                <div class="alert alert-success" style="color: green; text-align: center; margin-bottom: 1rem;">
-                    {{ session('success') }}
-                </div>
-            @endif
 
             <form action="{{ route('admin.store_vessel') }}" method="POST" enctype="multipart/form-data"
                 id="createVesselForm">
@@ -63,25 +45,25 @@
 
                                     <div class="form-group hatch-input">
                                         <label>Hatch Label <span class="text-danger">*</span></label>
-                                        <input type="text" name="hatches[0][label]" placeholder="Hatch Label" required>
+                                        <input type="text" name="hatches[0][label]" placeholder="Hatch Label" min="1" required>
                                     </div>
 
                                     <div class="form-group hatch-input">
                                         <label>Length (m) <span class="text-danger">*</span></label>
                                         <input type="number" name="hatches[0][length]" placeholder="Length (m)"
-                                            step="0.01" inputmode="decimal" required>
+                                            step="0.01" inputmode="decimal" min="1" required>
                                     </div>
 
                                     <div class="form-group hatch-input">
                                         <label>Width (m) <span class="text-danger">*</span></label>
                                         <input type="number" name="hatches[0][width]" placeholder="Width (m)"
-                                            step="0.01" inputmode="decimal" required>
+                                            step="0.01" inputmode="decimal" min="1" required>
                                     </div>
 
                                     <div class="form-group hatch-input">
                                         <label>Height (m) <span class="text-danger">*</span></label>
                                         <input type="number" name="hatches[0][height]" placeholder="Height (m)"
-                                            step="0.01" inputmode="decimal" required>
+                                            step="0.01" inputmode="decimal" min="1" required>
                                     </div>
 
                                     <div class="form-group hatch-input">
@@ -93,13 +75,13 @@
                                     <div class="form-group hatch-input">
                                         <label>Area Capacity (m³) <span class="text-danger">*</span></label>
                                         <input type="number" name="hatches[0][area_capacity]"
-                                            placeholder="Area Capacity (  )" step="0.01" inputmode="decimal" required>
+                                            placeholder="Area Capacity (  )" step="0.01" inputmode="decimal" min="1" required>
                                     </div>
 
                                     <div class="form-group hatch-input">
                                         <label>Hold Capacity (Tons) <span class="text-danger">*</span></label>
                                         <input type="number" name="hatches[0][capacity_per_hold]"
-                                            placeholder="Capacity Per Hold (Tons)" step="0.01" inputmode="decimal"
+                                            placeholder="Capacity Per Hold (Tons)" step="0.01" inputmode="decimal" min="1"
                                             required>
                                     </div>
 
@@ -130,7 +112,7 @@
                                 <div class="form-group acc-input">
                                     <label>Regular Price <span class="text-danger">*</span></label>
                                     <input type="number" name="accommodations[0][price]" placeholder="Regular Price"
-                                        step="0.01" inputmode="decimal" required>
+                                        step="0.01" inputmode="decimal" min="1" required>
                                 </div>
 
                                 <div class="form-group acc-input">
@@ -139,22 +121,18 @@
                                         placeholder="Cot Range (e.g., 1-5, 7-10)" required>
                                 </div>
 
+                                <div class="form-group acc-input">
+                                    <label>Cot Plan Image <em style="color: #888; font-size: 0.8em;">jpg, jpeg, png
+                                            only</em></label>
+                                    <input type="file" name="accommodations[0][cot_plan]"
+                                        accept="image/jpeg,image/jpg,image/png">
+                                </div>
+
                                 <button type="button" class="accommodation-btn add-accommodation">+</button>
                             </div>
 
                         </div>
 
-                    </div>
-                </div>
-
-                <!-- ROW 4: COT PLAN -->
-                <div class="form-row" style="display: flex; gap: 2rem; align-items: flex-start; width: 100%;">
-                    <div class="form-col" style="flex: 1;">
-                        <div class="form-group vcot-plan">
-                            <label for="vessel_cot_plan_url">Cot Plan</label>
-                            <span class="text-danger">Please upload jpg, jpeg, or png files only.</span>
-                            <input type="file" id="vessel_cot_plan_url" name="vessel_cot_plan_url" accept="image/*">
-                        </div>
                     </div>
                 </div>
 

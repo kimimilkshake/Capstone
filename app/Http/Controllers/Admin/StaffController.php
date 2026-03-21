@@ -40,13 +40,13 @@ class StaffController extends Controller
         }
 
         // Filter by status
-        if ($request->has('status') && $request->status != '') {
+        if ($request->has('status') && $request->status ?? 'Active') {
             $query->where('staff_status', $request->status);
         }
 
         $staff = $query
             ->orderBy('staff_name', 'asc')
-            ->paginate(7);
+            ->paginate(10);
 
 
         return view('authorized.admin.staff_list', compact('staff'));

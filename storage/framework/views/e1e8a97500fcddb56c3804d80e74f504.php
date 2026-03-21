@@ -1,25 +1,9 @@
-<?php $__env->startSection('page-title', 'STAFF'); ?>
+<?php $__env->startSection('page-title', 'STAFF MEMBERS'); ?>
 <?php $__env->startSection('content'); ?>
     <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <?php echo $__env->make('components.admin_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <div class="admin-body">
-        <div class="asl-title">
-            <h3>STAFF LIST</h3>
-        </div>
 
-        <?php if(session('success')): ?>
-            <div class="alert alert-success text-center mx-auto w-75" role="alert"><?php echo e(session('success')); ?></div>
-        <?php endif; ?>
-        <?php if($errors->any()): ?>
-            <div class="alert alert-danger text-center">
-                <ul>
-                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        <li><?php echo e($error); ?></li>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                </ul>
-            </div>
-        <?php endif; ?>
-    
         <div class="search-filter-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
             <form class="search-bar" action="<?php echo e(route('admin.staff_list')); ?>" method="GET" style="flex: 1;">
                 <input type="text" name="search" placeholder="Search by name..." value="<?php echo e(request('search')); ?>">
@@ -28,8 +12,8 @@
 
             <form method="GET" action="<?php echo e(route('admin.staff_list')); ?>">
                 <select name="status" onchange="this.form.submit()"> 
-                    <option value="">All Staff</option>
-                    <option value="Active" <?php echo e(request('status') == 'Active' ? 'selected' : ''); ?>>Active</option>
+                    <option value="" <?php echo e(request('status') == '' ? 'selected' : ''); ?>>All Staff</option>
+                    <option value="Active" <?php echo e(request('status', 'Active') == 'Active' ? 'selected' : ''); ?>>Active</option>
                     <option value="Inactive" <?php echo e(request('status') == 'Inactive' ? 'selected' : ''); ?>>Inactive</option>
                 </select>
             </form>
@@ -45,8 +29,6 @@
                 <tr>
                     <th>Staff No.</th>
                     <th>Name</th>
-                    <th>Date of Birth</th>
-                    <th>Age</th>
                     <th>Gender</th>
                     <th>Username</th>
                     <th>Email Address</th>
@@ -59,11 +41,6 @@
                     <tr>
                         <td><?php echo e($s->staff_id); ?></td>
                         <td><?php echo e($s->staff_name); ?></td>
-                        <td><?php echo e($s->staff_dob); ?></td>
-                        <td>
-                            <?php echo e(\Carbon\Carbon::parse($s->staff_dob)->age); ?>
-
-                        </td>
                         <td><?php echo e($s->staff_gender); ?></td>
                         <td><?php echo e($s->staff_user); ?></td>
                         <td><?php echo e($s->staff_email); ?></td>

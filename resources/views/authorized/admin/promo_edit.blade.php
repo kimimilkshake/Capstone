@@ -1,27 +1,12 @@
 @extends('layouts.app')
-@section('page-title', 'PROMO')
+@section('page-title', 'EDIT PROMO')
 @section('content')
     @include('components.authHeader')
     @include('components.admin_nav')
 
     <div class="admin-body">
-      <div class="apl-title">
-        <h3>EDIT PROMO</h3>
-      </div>
-
+      
       <div class="acs-form_container">
-        @if(session('success'))
-            <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
-        @endif
-        @if ($errors->any())
-            <div class="alert alert-danger text-center">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
 
         <form action="{{ route('admin.promo_update', $promo->promo_id) }}" method="POST" class="create-promo-form">
           @csrf
@@ -79,7 +64,7 @@
           </div>
 
           <div class="form-actions" style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
-            <button type="submit" class="acs-add-btn">
+            <button type="submit" class="acs-add-btn" id="saveEditBtn">
               <i class="fa-solid fa-floppy-disk me-2"></i>Save Changes
             </button>
             <a href="{{ route('admin.promo_list') }}" class="acs-add-btn acs-cancel-btn">

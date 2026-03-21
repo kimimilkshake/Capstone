@@ -370,7 +370,7 @@ class BookingController extends Controller
                         for ($i = $start; $i <= $end; $i++) {
                             if (!in_array($i, $bookedCots)) {
                                 // Determine bunk type
-                                $bunkType = $this->determineBunkType($vesselPlan, $accommodation->accommodation_id, $i);
+                                $bunkType = $this->determineBunkType($vesselPlan, $accommodation->accommodation_id, $i, $accommodation->accommodation_name);
                                 $availableCots[] = [
                                     'number' => $i,
                                     'bunk_type' => $bunkType
@@ -391,6 +391,9 @@ class BookingController extends Controller
                 'accommodation_name' => $accommodation->accommodation_name,
                 'accommodation_price' => $accommodation->accommodation_regular_price,
                 'cot_range' => $cotRange,
+                'cot_plan_url' => !empty($accommodation->accommodation_cot_plan_url)
+                    ? asset('storage/' . $accommodation->accommodation_cot_plan_url)
+                    : null,
                 'available_cots' => $availableCots
             ];
         }
@@ -401,14 +404,19 @@ class BookingController extends Controller
     /**
      * Determine if a COT number is a lower or upper bunk
      */
-    private function determineBunkType($vesselPlan, $accommodationId, $cotNumber)
+    private function determineBunkType($vesselPlan, $accommodationId, $cotNumber, $accommodationName = null)
     {
         if (!$vesselPlan || !isset($vesselPlan['accommodations'])) {
             return null;
         }
 
         foreach ($vesselPlan['accommodations'] as $acc) {
-            if ($acc['accommodation_id'] == $accommodationId) {
+            // Match by name first (DB IDs may differ from JSON IDs after seeding)
+            $matchesName = $accommodationName && isset($acc['accommodation_name'])
+                && strtolower(trim($acc['accommodation_name'])) === strtolower(trim($accommodationName));
+            $matchesId = $acc['accommodation_id'] == $accommodationId;
+
+            if ($matchesName || $matchesId) {
                 // Expand "all" keyword to actual COT numbers
                 $lowerBunks = $this->expandBunkArray($acc['lower_bunks'] ?? [], $acc['cot_range'] ?? '');
                 $upperBunks = $this->expandBunkArray($acc['upper_bunks'] ?? [], $acc['cot_range'] ?? '');
@@ -600,20 +608,19 @@ class BookingController extends Controller
                     ->pluck('passenger_id')
                     ->toArray();
 
-                // Delete passengers if they only belong to this booking
+                // Delete passenger_ticket records first (required before deleting passenger rows)
+                DB::table('passenger_ticket')->where('booking_ref_no', $bookingRef)->delete();
+
+                // Delete passengers that no longer belong to any booking
                 foreach ($passengerIds as $passengerId) {
                     $otherBookings = DB::table('passenger_ticket')
                         ->where('passenger_id', $passengerId)
-                        ->where('booking_ref_no', '!=', $bookingRef)
                         ->count();
 
                     if ($otherBookings == 0) {
                         DB::table('passenger')->where('passenger_id', $passengerId)->delete();
                     }
                 }
-
-                // Delete all passenger_ticket records for this booking
-                DB::table('passenger_ticket')->where('booking_ref_no', $bookingRef)->delete();
             });
 
             return response()->json([

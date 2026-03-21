@@ -1,12 +1,9 @@
-<?php $__env->startSection('page-title', 'VOYAGES'); ?>
+<?php $__env->startSection('page-title', 'ROUTES AND PORTS'); ?>
 <?php $__env->startSection('content'); ?>
 <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <?php echo $__env->make('components.admin_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
 <div class="admin-body">
-  <div class="avl-title">
-    <h3>ROUTES AND PORTS</h3>
-  </div>
 
   <!--SEARCH BAR-->
   <div class="search-add-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
@@ -244,7 +241,9 @@
           <input type="text" name="port_destination_province" id="editPortDestinationProvince" required>
         </div>
       </div>
-      <button type="submit">Save Changes</button>
+      <button type="submit" id="saveEditBtn" disabled style="background-color: #ccc; cursor: not-allowed;">
+        Save Changes
+      </button>
     </form>
   </div>
 </div>

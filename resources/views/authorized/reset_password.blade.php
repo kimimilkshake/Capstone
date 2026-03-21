@@ -2,6 +2,9 @@
 @section('content')
   <section class="vh-100 d-flex align-items-center justify-content-center login-bg"
     style="background-image: url('{{ asset('images/login-bg.png') }}');">
+
+
+
     <div class="container py-5 h-100">
       <div class="row d-flex justify-content-center align-items-center h-100">
         <div class="col-12 col-md-8 col-lg-6 col-xl-5">
@@ -14,20 +17,6 @@
                 <img src="{{ asset('images/lslc_logo_name2.png') }}" alt="App Logo" class="img-fluid mb-1" style="height:150px">
                 <h2 class="fw-bold text-uppercase">CHANGE  PASSWORD</h2>
                 <span class="text-danger">Password must be at least 8 characters and must contain at least one uppercase letter, one lowercase letter, one number, and one special character.</span>
-
-                <!-- Success or error messages -->
-                @if(session('success'))
-                    <div class="alert alert-success mx-auto" style="text-align: center;">
-                        {{ session('success') }}
-                    </div>
-                @endif
-
-                {{-- Display errors --}}
-                @if ($errors->any())
-                    <div class="alert alert-danger mx-auto" style="text-align: center;">
-                        <div>{{ $errors->first() }}</div>
-                    </div>
-                @endif
 
                 <!-- Reset Password Form -->
                 <form method="POST" action="{{ route('reset.password') }}">

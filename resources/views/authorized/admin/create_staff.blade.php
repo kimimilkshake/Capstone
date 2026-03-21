@@ -1,29 +1,13 @@
 @extends('layouts.app')
-@section('page-title', 'STAFF')
+@section('page-title', 'CREATE STAFF MEMBER')
 @section('content')
     @include('components.authHeader') {{-- HEADER --}}
     @include('components.admin_nav') {{-- NAVBAR --}}
 
 <div class="admin-body">
-  <div class="acs-title">
-    <h3>CREATE STAFF</h3>
-  </div>
+
   <div class="acs-form_container">
-    @if ($errors->any())
-      <div class="alert alert-danger" style="color: red; text-align: center;">
-        <strong>All fields are required.</strong><br>
-        @foreach ($errors->all() as $error)
-          {{ $error }}<br>
-        @endforeach
-      </div>
-    @endif
-
-    @if (session('success'))
-      <div class="alert alert-success" style="color: green; text-align: center; margin-bottom: 1rem;">
-        {{ session('success') }}
-      </div>
-    @endif
-
+  
     <form action="{{ route('admin.storeStaff') }}" method="POST" class="create-staff-form">
       @csrf
       <div class="form-row">

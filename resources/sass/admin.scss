@@ -622,6 +622,7 @@ body {
   cursor: pointer;
   font: inherit;
   padding: 0;
+  text-decoration: none;
 }
 
 .modal-overlay {
@@ -876,6 +877,27 @@ body {
     border-radius: 6px;
     border: 1px solid #ccc;
     box-sizing: border-box;
+}
+
+.cancel-btn{
+  background-color: #b03a48;
+  border: none;
+  text-decoration: none;
+}
+
+.cancel-btn:hover {
+  background-color: #8b2635;
+  border: none;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.update-btn{
+  background-color: #485b8c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 @media (max-width: 900px) {

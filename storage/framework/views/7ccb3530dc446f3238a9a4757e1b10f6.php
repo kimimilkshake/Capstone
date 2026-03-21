@@ -1,33 +1,8 @@
-<?php $__env->startSection('page-title', 'CARGO'); ?>
+<?php $__env->startSection('page-title', 'CARGO ITEMS'); ?>
 <?php $__env->startSection('content'); ?>
   <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
   <?php echo $__env->make('components.admin_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
   <div class="admin-body">
-    <div class="avl-title">
-      <h3>VIEW RATES</h3>
-    </div>
-    
-    
-    <?php if($errors->any()): ?>
-      <div class="alert-wrapper">
-        <div class="alert alert-danger">
-          <strong>All fields are required.</strong><br>
-          <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-            <?php echo e($error); ?><br>
-          <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-        </div>
-      </div>
-    <?php endif; ?>
-
-    
-    <?php if(session('success')): ?>
-      <div class="alert-wrapper">
-        <div class="alert alert-success">
-          <?php echo e(session('success')); ?>
-
-        </div>
-      </div>
-    <?php endif; ?>
 
     <div class="search-filter-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
 
@@ -86,7 +61,7 @@
             <td><?php echo e($c->cargo_item_freight); ?></td>
             <td><?php echo e($c->cargo_item_measure_required); ?></td>
             <td>
-              <a href="<?php echo e(route('admin.cargo_item_edit', $c->cargo_item_id)); ?>" class="edit-icon">
+              <a href="<?php echo e(route('admin.cargo_item_edit', $c->cargo_item_id)); ?>" class="edit-icon link-btn">
                 <i class="fa fa-pencil" aria-hidden="true"></i>
               </a>
             </td>

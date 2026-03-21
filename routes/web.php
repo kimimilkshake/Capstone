@@ -104,9 +104,7 @@ Route::post('/booking/submit', [BookingController::class, 'store'])->name('booki
 Route::post('/booking/cancel/{booking_ref_no}', [BookingController::class, 'cancel'])->name('booking.cancel');
 // Request ticket copy
 Route::post('/ticket/request-copy', [BookingController::class, 'requestTicketCopy'])->name('ticket.request-copy');
-// Validate promo code
-Route::post('/api/validate-promo', [BookingController::class, 'validatePromo'])->name('api.validate_promo');
-// API: return unavailable cot numbers for a voyage (by route/date or voyage_id)
+// Get unavailable cot numbers for a voyage (by route/date or voyage_id)
 Route::get('/voyage/unavailable-cots', [BookingController::class, 'unavailableCots'])->name('voyage.unavailable_cots');
 // API: return available cots per accommodation for a voyage
 Route::get('/voyage/available-cots-by-accommodation', [BookingController::class, 'getAvailableCotsByAccommodation'])->name('voyage.available_cots_by_accommodation');
@@ -213,6 +211,9 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/generate_reports', function () {
+        return view('authorized.admin.generate_reports');
+    })->name('admin.generate_reports');
 
     // Staff
     Route::get('/create_staff', [StaffController::class, 'create'])->name('admin.create_staff');
@@ -442,6 +443,10 @@ Route::prefix('authorized/staff')->group(function () {
 });
 */
 
+// Test redirect with session
+Route::get('/test-redirect', function () {
+    return redirect()->route('homepage')->with('success', 'TEST MESSAGE - If you see this, redirect worked!');
+});
 
 // Debug: Check if session data persists
 Route::get('/debug-session', function () {
@@ -454,3 +459,11 @@ Route::get('/debug-session', function () {
         'cookies' => request()->cookie(),
     ]);
 });
+
+// Print: all passengers table (for printing all pages)
+Route::get('/manifest/{voyage}/all-passengers-table', [\App\Http\Controllers\ManifestPrintController::class, 'allPassengersTable'])->name('manifest.allPassengersTable');
+// Print: all cargos table (for printing all pages)
+Route::get('/manifest/{voyage}/all-cargos-table', [\App\Http\Controllers\ManifestPrintController::class, 'allCargosTable'])->name('manifest.allCargosTable');
+
+// QR Boarding API (moved to QrScannerController)
+Route::post('/qr/board-passenger', [QrScannerController::class, 'boardPassenger'])->name('qr.board_passenger');

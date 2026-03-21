@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Booking;
+use App\Services\QrCodeGenerator;
 use Throwable;
 
 class PassengerTicketPdf
@@ -27,8 +28,47 @@ class PassengerTicketPdf
 
             \Log::info('PassengerTicketPdf::generate - Generating PDF for booking ' . $bookingRef);
 
+            // Get tickets (filtered by passenger email if provided)
+            $allTickets = $booking->passengerTickets;
+            if ($passengerEmail) {
+                $tickets = $allTickets->filter(function ($ticket) use ($passengerEmail) {
+                    return $ticket->passenger->passenger_email === $passengerEmail;
+                });
+            } else {
+                $tickets = $allTickets;
+            }
+
+            // Generate QR codes as base64 data URLs (avoids dompdf chroot restrictions)
+            $qrCodes = [];
+            foreach ($tickets as $ticket) {
+                $qrData = $bookingRef . ':' . $ticket->passenger_id;
+                $filename = 'pdf_qr_' . $bookingRef . '_' . $ticket->passenger_id;
+
+                $qrCode = QrCodeGenerator::generateAndStore(
+                    $bookingRef,
+                    $ticket->passenger_id,
+                    $qrData,
+                    $filename
+                );
+
+                if ($qrCode && file_exists($qrCode->qr_code_path)) {
+                    $imageData = base64_encode(file_get_contents($qrCode->qr_code_path));
+                    $qrCodes[$ticket->passenger_id] = 'data:image/png;base64,' . $imageData;
+                    \Log::info('PassengerTicketPdf: QR embedded for passenger ' . $ticket->passenger_id);
+                } else {
+                    \Log::warning('PassengerTicketPdf: QR missing for passenger ' . $ticket->passenger_id);
+                }
+            }
+
+            \Log::info('PassengerTicketPdf: qrCodes count=' . count($qrCodes));
+
             // Use a PDF-specific Blade template for passenger tickets
-            $html = view('passenger.passenger_ticket_pdf', ['booking' => $booking, 'passengerEmail' => $passengerEmail])->render();
+            $html = view('passenger.passenger_ticket_pdf', [
+                'booking'        => $booking,
+                'passengerEmail' => $passengerEmail,
+                'tickets'        => $tickets,
+                'qrCodes'        => $qrCodes,
+            ])->render();
 
             // Generate PDF from HTML using dompdf
             $pdf = app('dompdf.wrapper');
@@ -48,9 +88,6 @@ class PassengerTicketPdf
         }
     }
 
-    /**
-     * Find accommodation by COT number
-     */
     private static function findAccommodationByCot($cotNo, $accommodations)
     {
         if (!$cotNo || !$accommodations) {

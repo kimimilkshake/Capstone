@@ -5,22 +5,6 @@
   @include('components.admin_nav')
 
   <div class="admin-body">
-    <div class="avl-title">
-      <h3>VOYAGE LIST</h3>
-    </div>
-
-    @if(session('success'))
-        <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
-    @endif
-    @if ($errors->any())
-        <div class="alert alert-danger text-center">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
 
     <div class="search-add-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
       <form class="search-bar" action="{{ route('admin.voyage_list') }}" method="GET" style="flex: 1;">
@@ -82,8 +66,16 @@
             <td>{{ $voyage->vessel->vessel_name}}</td>
             <td>{{ $voyage->voyage_status }}</td>
             <td>
-              <a href="{{ route('admin.voyage_edit', $voyage->voyage_id) }}" title="Edit Voyage" class="editRouteBtn link-btn"><i class="fa fa-pencil me-1" ></i></a>
-              <a href="{{ route('admin.manifest', $voyage->voyage_id) }}" title="View Manifest" class="editRouteBtn link-btn"><i class="fa-solid fa-file me-1"></i></a>
+              @if($voyage->voyage_status === 'At Sea')
+                  <a href="#" class="link-btn disabled-voyage" style="opacity: 0.5; cursor: not-allowed;" title="Cannot edit while At Sea">
+                      <i class="fa fa-pencil me-1"></i>
+                  </a>
+              @else
+                  <a href="{{ route('admin.voyage_edit', $voyage->voyage_id) }}" class="link-btn">
+                      <i class="fa fa-pencil me-1"></i>
+                  </a>
+              @endif
+              <a href="{{ route('admin.manifest', $voyage->voyage_id) }}" title="View Manifest" class="editRouteBtn link-btn" style="text-decoration: none"><i class="fa-solid fa-file me-1"></i></a>
               
             </td> 
           </tr>
@@ -99,4 +91,7 @@
       {{ $voyages->appends(['search' => request('search')])->links('pagination::bootstrap-5') }}
     </div>
   </div>
+
+
+
 @endsection

@@ -1,13 +1,10 @@
 @extends('layouts.app')
-@section('page-title', 'EDIT CARGO BOOKING')
+@section('page-title', 'EDIT CARGO BOOKING DETAILS')
 @section('content')
 @include('components.authHeader')
 @include('components.staff_nav')
 
 <div class="staff-body">
-    <div class="svl-title">
-        <h3>EDIT CARGO ITEMS</h3>
-    </div>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>

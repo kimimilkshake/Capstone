@@ -1,26 +1,10 @@
 @extends('layouts.app')
-@section('page-title', 'STAFF')
+@section('page-title', 'STAFF MEMBERS')
 @section('content')
     @include('components.authHeader')
     @include('components.admin_nav')
     <div class="admin-body">
-        <div class="asl-title">
-            <h3>STAFF LIST</h3>
-        </div>
 
-        @if(session('success'))
-            <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
-        @endif
-        @if ($errors->any())
-            <div class="alert alert-danger text-center">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-    
         <div class="search-filter-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
             <form class="search-bar" action="{{ route('admin.staff_list') }}" method="GET" style="flex: 1;">
                 <input type="text" name="search" placeholder="Search by name..." value="{{ request('search') }}">
@@ -29,8 +13,8 @@
 
             <form method="GET" action="{{ route('admin.staff_list') }}">
                 <select name="status" onchange="this.form.submit()"> 
-                    <option value="">All Staff</option>
-                    <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active</option>
+                    <option value="" {{ request('status') == '' ? 'selected' : '' }}>All Staff</option>
+                    <option value="Active" {{ request('status', 'Active') == 'Active' ? 'selected' : '' }}>Active</option>
                     <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
                 </select>
             </form>
@@ -46,8 +30,6 @@
                 <tr>
                     <th>Staff No.</th>
                     <th>Name</th>
-                    <th>Date of Birth</th>
-                    <th>Age</th>
                     <th>Gender</th>
                     <th>Username</th>
                     <th>Email Address</th>
@@ -60,10 +42,6 @@
                     <tr>
                         <td>{{ $s->staff_id }}</td>
                         <td>{{ $s->staff_name }}</td>
-                        <td>{{ $s->staff_dob }}</td>
-                        <td>
-                            {{ \Carbon\Carbon::parse($s->staff_dob)->age }}
-                        </td>
                         <td>{{ $s->staff_gender }}</td>
                         <td>{{ $s->staff_user }}</td>
                         <td>{{ $s->staff_email }}</td>

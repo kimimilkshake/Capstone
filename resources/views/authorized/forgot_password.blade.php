@@ -14,19 +14,6 @@
                 <img src="{{ asset('images/lslc_logo_name2.png') }}" alt="App Logo" class="img-fluid mb-1" style="height:150px">
                   <h2 class="fw-bold text-uppercase">FORGOT PASSWORD</h2>
 
-                  {{-- Display error if username not found --}}
-                  @if($errors->has('username'))
-                    <div class="alert alert-danger mx-auto" style="text-align: center;">
-                      {{ $errors->first('username') }}
-                    </div>
-                  @endif
-                  {{-- Display success message --}}
-                  @if(session('success'))
-                      <div class="alert alert-success mx-auto" style="text-align: center;">
-                          {{ session('success') }}
-                      </div>
-                  @endif
-
                   <div class="form-floating mt-5 mb-4">
                     <form method="POST" action="{{ route('send.otp') }}">
                         @csrf

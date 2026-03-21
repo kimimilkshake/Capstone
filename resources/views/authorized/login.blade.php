@@ -2,6 +2,7 @@
 @section('content')
     <section class="vh-100 d-flex align-items-center justify-content-center login-bg"
         style="background-image: url('{{ asset('images/login-bg.png') }}');">
+
         <div class="container py-5 h-100">
             <div class="row d-flex justify-content-center align-items-center h-100">
                 <div class="col-12 col-md-8 col-lg-6 col-xl-5">
@@ -13,20 +14,6 @@
                                     style="height:150px">
                                 <h2 class="fw-bold text-uppercase">WELCOME</h2>
                                 <p class="mb-3">Enter your username and password</p>
-
-                                {{-- Display success message --}}
-                                @if(session('success'))
-                                    <div class="alert alert-success mx-auto" style="text-align: center;">
-                                        {{ session('success') }}
-                                    </div>
-                                @endif
-
-                                {{-- Display errors --}}
-                                @if ($errors->any())
-                                    <div class="alert alert-danger mx-auto" style="text-align: center;">
-                                        <div>{{ $errors->first() }}</div>
-                                    </div>
-                                @endif
 
                                 {{-- Login Form --}}
                                 <form action="{{ route('login') }}" method="POST">

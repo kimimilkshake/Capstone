@@ -54,4 +54,40 @@ h2, p{
   color: #485B8C;
 }
 
+.floating-alert {
+    position: fixed;
+    top: 50%; /* vertically center */
+    left: 50%; /* horizontally center */
+    transform: translate(-50%, -50%);
+    z-index: 9999; /* make sure it floats above everything */
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    font-weight: bold;
+    text-align: center;
+    min-width: 300px;
+    max-width: 90%;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    opacity: 0;
+    animation: fadeInOut 3s forwards; /* automatically disappears */
+}
 
+/* Colors */
+.alert-success.floating-alert {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-danger.floating-alert {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Animation */
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translate(-50%, -60%); }
+    10% { opacity: 1; transform: translate(-50%, -50%); }
+    90% { opacity: 1; transform: translate(-50%, -50%); }
+    100% { opacity: 0; transform: translate(-50%, -40%); }
+}

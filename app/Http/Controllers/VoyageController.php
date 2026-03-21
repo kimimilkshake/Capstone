@@ -110,7 +110,7 @@ class VoyageController extends Controller
                     ->orWhereBetween('voyage_arrival_date', [$start_date, $end_date]);
             })
             ->orderBy('voyage_departure_date', 'desc')
-            ->paginate(7);
+            ->paginate(10);
 
         if (auth()->guard('admin')->check()) {
             return view('authorized.admin.voyage_list', compact('voyages','search'));
@@ -226,9 +226,9 @@ class VoyageController extends Controller
         $isCompleted = $voyage->voyage_status === 'Completed';
 
         // Only allow editing if scheduled OR completed
-        if (!$isCompleted && $voyage->voyage_status !== 'Scheduled') {
+        if (!in_array($voyage->voyage_status, ['Scheduled', 'Completed', 'Cancelled'])) {
             return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
-                             ->with('error', 'Only scheduled voyages can be edited.');
+                            ->with('error', 'Voyages that are "At Sea" cannot be edited at the moment.');
         }
 
         if (auth()->guard('admin')->check()) {
@@ -242,9 +242,9 @@ class VoyageController extends Controller
         $voyage = Voyage::findOrFail($id);
 
         // Completely locked statuses
-        if (in_array($voyage->voyage_status, ['At Sea', 'Cancelled', 'Archived'])) {
+        if (in_array($voyage->voyage_status, ['At Sea', 'Archived'])) {
             return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
-                             ->with('error', 'This voyage can no longer be updated.');
+                             ->with('error', 'Voyages that are "At Sea" cannot be edited at the moment.');
         }
 
         // Validation rules
@@ -252,8 +252,8 @@ class VoyageController extends Controller
             'voyage_description' => 'nullable|string',
         ];
 
-        if ($voyage->voyage_status !== 'Completed') {
-            // Full edit allowed only if NOT completed
+        if (!in_array($voyage->voyage_status, ['Completed', 'Cancelled'])) {
+            // Full edit allowed only if NOT completed or cancelled
             $rules = array_merge($rules, [
                 'vessel_id' => 'required|exists:vessel,vessel_id',
                 'route_port_id' => 'required|exists:route_port,route_port_id',
@@ -329,8 +329,8 @@ class VoyageController extends Controller
             'voyage_description' => $request->voyage_description,
         ];
 
-        if ($voyage->voyage_status === 'Completed') {
-            // Only actual times editable
+        if (in_array($voyage->voyage_status, ['Completed', 'Cancelled'])) {
+            // Only actual times and status are editable
             $updateData['voyage_actual_TD'] = $request->voyage_actual_TD;
             $updateData['voyage_actual_TA'] = $request->voyage_actual_TA;
             $updateData['voyage_status'] = $request->voyage_status;
