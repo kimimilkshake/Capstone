@@ -10,7 +10,7 @@
 
             <div class="card-body">
                 <h6>Booking Reference:
-                    <strong>{{ 'CBBK-' . str_pad($booking->booking_ref_no, 6, '0', STR_PAD_LEFT) }}</strong></h6>
+                    <strong>{{ $booking->booking_code }}</strong></h6>
                 <p>Status: <strong>{{ $booking->booking_status }}</strong></p>
 
                 <hr>
