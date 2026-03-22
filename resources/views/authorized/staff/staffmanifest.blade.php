@@ -95,7 +95,7 @@
                 if (!passenger.checked && !cargo.checked) {
                     // Revert the change
                     e.target.checked = true;
-                    alert('At least one manifest must be shown.');
+                    showManifestError('At least one manifest must be shown.');
                     return false;
                 }
                 form.submit();
@@ -268,12 +268,21 @@
 </style>
 
 <script>
+function showManifestError(message) {
+    if (typeof showToast === 'function') {
+        showToast(message, 'danger');
+        return;
+    }
+
+    alert(message);
+}
+
 function printCargoTable() {
     // Get voyageId from URL (expects /staffmanifest/{voyage})
     const match = window.location.pathname.match(/staffmanifest\/(\d+)/);
     const voyageId = match ? match[1] : null;
     if (!voyageId) {
-        alert('Cannot determine voyage ID for printing.');
+        showManifestError('Cannot determine voyage ID for printing.');
         return;
     }
     // Compose a flex row with logo and manifest title side by side
@@ -290,7 +299,7 @@ function printCargoTable() {
         .then(response => response.text())
         .then(allRowsHtml => {
             if (!allRowsHtml.trim()) {
-                alert('No data available to print for this table.');
+                showManifestError('No data available to print for this table.');
                 return;
             }
             const printWindow = window.open('', '_blank', 'height=700,width=1000');
@@ -324,7 +333,7 @@ function printCargoTable() {
                 printWindow.close();
             };
         })
-        .catch(() => alert('Failed to fetch all cargo data for printing.'));
+        .catch(() => showManifestError('Failed to fetch all cargo data for printing.'));
 }
 
 function printTable(tableId) {
@@ -334,7 +343,7 @@ function printTable(tableId) {
         const match = window.location.pathname.match(/staffmanifest\/(\d+)/);
         const voyageId = match ? match[1] : null;
         if (!voyageId) {
-            alert('Cannot determine voyage ID for printing.');
+            showManifestError('Cannot determine voyage ID for printing.');
             return;
         }
         // Compose a flex row with logo and manifest title side by side
@@ -363,7 +372,7 @@ function printTable(tableId) {
             .then(allRowsHtml => {
                 // Check if there is any data
                 if (!allRowsHtml.trim()) {
-                    alert('No data available to print for this table.');
+                    showManifestError('No data available to print for this table.');
                     return;
                 }
                 const printWindow = window.open('', '_blank', 'height=700,width=1000');
@@ -403,7 +412,7 @@ function printTable(tableId) {
                     printWindow.close();
                 };
             })
-            .catch(() => alert('Failed to fetch all passenger data for printing.'));
+            .catch(() => showManifestError('Failed to fetch all passenger data for printing.'));
         return;
     }
     // Otherwise, print the current table as before
@@ -418,7 +427,7 @@ function printTable(tableId) {
         return !noDataRow && text.length > 0;
     });
     if (!hasRealData) {
-        alert('No data available to print for this table.');
+        showManifestError('No data available to print for this table.');
         return;
     }
 

@@ -95,7 +95,7 @@
                 if (!passenger.checked && !cargo.checked) {
                     // Revert the change
                     e.target.checked = true;
-                    alert('At least one manifest must be shown.');
+                    showManifestError('At least one manifest must be shown.');
                     return false;
                 }
                 form.submit();
@@ -156,7 +156,7 @@
                                     <td><?php echo e($p->pt_cot_no ?? '-'); ?></td>
                                     <td><?php echo e($voyage->voyage_departure_date ?? '-'); ?></td>
                                     <td class="text-end"><?php echo e($p->pt_ticket_price ?? '-'); ?></td>
-                                    <td><?php echo e(\Illuminate\Support\Facades\DB::table('booking')->where('booking_ref_no', $p->booking_ref)->value('booking_status') ?? '-'); ?></td>
+                                    <td><?php echo e(!empty($p->pt_boarded_at) ? 'Boarded' : (\Illuminate\Support\Facades\DB::table('booking')->where('booking_ref_no', $p->booking_ref)->value('booking_status') ?? '-')); ?></td>
                                 </tr>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         <?php endif; ?>
@@ -274,19 +274,28 @@
 </style>
 
 <script>
+function showManifestError(message) {
+    if (typeof showToast === 'function') {
+        showToast(message, 'danger');
+        return;
+    }
+
+    alert(message);
+}
+
 function printCargoTable() {
     // Get voyageId from URL (expects /adminmanifest/{voyage})
     const match = window.location.pathname.match(/adminmanifest\/(\d+)/);
     const voyageId = match ? match[1] : null;
     if (!voyageId) {
-        alert('Cannot determine voyage ID for printing.');
+        showManifestError('Cannot determine voyage ID for printing.');
         return;
     }
     // Compose a flex row with logo and manifest title side by side
     const manifestHeaderDiv = document.querySelector('.manifest-header');
     const manifestTitle = manifestHeaderDiv ? manifestHeaderDiv.querySelector('.manifest-title')?.innerHTML : '';
     const logoHtml = '<img src="/images/lslc_logo2.png" alt="Logo" style="height:60px;margin-right:18px;">';
-    const headerRowHtml = `<div style="display:flex;align-items:center;justify-content:center;margin-bottom:10px;gap:18px;">${logoHtml}<span class="manifest-title" style="font-size:14pt;">${manifestTitle}</span></div>`;
+    const headerRowHtml = `<div style="display:flex;align-items:center;justify-content:center;margin-bottom:10px;gap:18px;">${logoHtml}<span class="manifest-title" style="font-size:14pt;font-weight:bold;"><strong>${manifestTitle}</strong></span></div>`;
     // Use the rest of the manifest header (details grid)
     const detailsGrid = manifestHeaderDiv ? manifestHeaderDiv.querySelector('div[style*="grid-template-columns"]')?.outerHTML : '';
     // Get table headers from the DOM
@@ -296,7 +305,7 @@ function printCargoTable() {
         .then(response => response.text())
         .then(allRowsHtml => {
             if (!allRowsHtml.trim()) {
-                alert('No data available to print for this table.');
+                showManifestError('No data available to print for this table.');
                 return;
             }
             const printWindow = window.open('', '_blank', 'height=700,width=1000');
@@ -330,7 +339,7 @@ function printCargoTable() {
                 printWindow.close();
             };
         })
-        .catch(() => alert('Failed to fetch all cargo data for printing.'));
+        .catch(() => showManifestError('Failed to fetch all cargo data for printing.'));
 }
 
 function printTable(tableId) {
@@ -340,14 +349,14 @@ function printTable(tableId) {
         const match = window.location.pathname.match(/adminmanifest\/(\d+)/);
         const voyageId = match ? match[1] : null;
         if (!voyageId) {
-            alert('Cannot determine voyage ID for printing.');
+            showManifestError('Cannot determine voyage ID for printing.');
             return;
         }
         // Compose a flex row with logo and manifest title side by side
         const manifestHeaderDiv = document.querySelector('.manifest-header');
         const manifestTitle = manifestHeaderDiv ? manifestHeaderDiv.querySelector('.manifest-title')?.innerHTML : '';
         const logoHtml = '<img src="/images/lslc_logo2.png" alt="Logo" style="height:60px;margin-right:18px;">';
-        const headerRowHtml = `<div style="display:flex;align-items:center;justify-content:center;margin-bottom:10px;gap:18px;">${logoHtml}<span class="manifest-title" style="font-size:14pt;">${manifestTitle}</span></div>`;
+        const headerRowHtml = `<div style="display:flex;align-items:center;justify-content:center;margin-bottom:10px;gap:18px;">${logoHtml}<span class="manifest-title" style="font-size:14pt;font-weight:bold;"><strong>${manifestTitle}</strong></span></div>`;
         // Use the rest of the manifest header (details grid)
         const detailsGrid = manifestHeaderDiv ? manifestHeaderDiv.querySelector('div[style*="grid-template-columns"]')?.outerHTML : '';
         // Get table headers from the DOM, but remove 'Departure' and 'Status' columns for print
@@ -369,7 +378,7 @@ function printTable(tableId) {
             .then(allRowsHtml => {
                 // Check if there is any data
                 if (!allRowsHtml.trim()) {
-                    alert('No data available to print for this table.');
+                    showManifestError('No data available to print for this table.');
                     return;
                 }
                 const printWindow = window.open('', '_blank', 'height=700,width=1000');
@@ -409,7 +418,7 @@ function printTable(tableId) {
                     printWindow.close();
                 };
             })
-            .catch(() => alert('Failed to fetch all passenger data for printing.'));
+            .catch(() => showManifestError('Failed to fetch all passenger data for printing.'));
         return;
     }
     // Otherwise, print the current table as before
@@ -424,14 +433,14 @@ function printTable(tableId) {
         return !noDataRow && text.length > 0;
     });
     if (!hasRealData) {
-        alert('No data available to print for this table.');
+        showManifestError('No data available to print for this table.');
         return;
     }
 
     const manifestHeaderDiv = document.querySelector('.manifest-header');
     const manifestTitle = manifestHeaderDiv ? manifestHeaderDiv.querySelector('.manifest-title')?.innerHTML : '';
     const logoHtml = '<img src="/images/lslc_logo2.png" alt="Logo" style="height:60px;margin-right:18px;">';
-    const headerRowHtml = `<div style="display:flex;align-items:center;justify-content:center;margin-bottom:10px;gap:18px;">${logoHtml}<span class="manifest-title" style="font-size:14pt;">${manifestTitle}</span></div>`;
+    const headerRowHtml = `<div style="display:flex;align-items:center;justify-content:center;margin-bottom:10px;gap:18px;">${logoHtml}<span class="manifest-title" style="font-size:14pt;font-weight:bold;"><strong>${manifestTitle}</strong></span></div>`;
     const detailsGrid = manifestHeaderDiv ? manifestHeaderDiv.querySelector('div[style*="grid-template-columns"]')?.outerHTML : '';
     const printWindow = window.open('', '_blank', 'height=700,width=1000');
     printWindow.document.write('<html><head><title>Manifest Print</title>');

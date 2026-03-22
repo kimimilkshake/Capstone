@@ -145,10 +145,10 @@
         <div class="card shadow-sm border-0 scanner-wrapper" style="border-radius:12px;">
             <div class="card-body p-4">
 
-                <p class="text-muted mb-4 scannertxt">
+                <p class="text-muted mb-4 scannertxt" style="padding-left:1.5rem;">
                     Scan a QR code to board a passenger.
                 </p>
-                <div id="qr-message" style="margin-bottom: 1rem; color: #485B8C; font-weight: bold;"></div>
+                <div id="qr-message" style="margin-bottom: 1rem; color: #485B8C; font-weight: bold; text-align: center;"></div>
                 <div id="reader"></div>
 
             </div>
@@ -172,6 +172,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const msgDiv = document.getElementById('qr-message');
         msgDiv.textContent = msg;
         msgDiv.style.color = color;
+    }
+
+    function showScannerError(message) {
+        showMessage(message, 'red');
+
+        if (typeof showToast === 'function') {
+            showToast(message, 'danger');
+        }
     }
 
     function cleanupRecentScans(now) {
@@ -203,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function startCameraScanner() {
         if (typeof Html5Qrcode === 'undefined') {
-            showMessage('QR scanner library failed to load.', 'red');
+            showScannerError('QR scanner library failed to load.');
             return;
         }
         const qrSize = window.innerWidth < 768 ? 200 : 250;
@@ -236,7 +244,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Expecting format: 1046:44
                 const parts = decodedText.split(':');
                 if (parts.length !== 2) {
-                    showMessage('Invalid QR code format.', 'red');
+                    showScannerError('Invalid QR code format.');
                     return;
                 }
                 const booking_ref_no = parts[0];
@@ -266,7 +274,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 })
                 .catch(error => {
-                    showMessage(error.message || 'An error occurred while processing the QR code.', 'red');
+                    showScannerError(error.message || 'An error occurred while processing the QR code.');
                 })
                 .finally(() => {
                     isSubmitting = false;
@@ -276,7 +284,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Optionally show scanning errors
             }
         ).catch(err => {
-            showMessage('Unable to access camera: ' + err, 'red');
+            showScannerError('Unable to access camera: ' + err);
         });
     }
 

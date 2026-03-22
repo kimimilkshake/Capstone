@@ -216,6 +216,7 @@ function normalizeUnitValue(unitValue){
     if (['cm', 'centimeter', 'centimeters'].includes(normalized)) return 'cm';
     if (['mm', 'millimeter', 'millimeters'].includes(normalized)) return 'mm';
     if (['m', 'meter', 'meters'].includes(normalized)) return 'm';
+    if (['ft', 'foot', 'feet'].includes(normalized)) return 'ft';
 
     return normalized || 'cm';
 }
@@ -227,6 +228,7 @@ function toCentimeters(value, unitValue){
     if (unit === 'in') return numericValue * 2.54;
     if (unit === 'mm') return numericValue * 0.1;
     if (unit === 'm') return numericValue * 100;
+    if (unit === 'ft') return numericValue * 30.48;
 
     return numericValue;
 }

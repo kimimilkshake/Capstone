@@ -56,7 +56,7 @@
     {{-- ========================= --}}
     {{-- EDIT CARGO ITEMS FORM --}}
     {{-- ========================= --}}
-    <form action="{{ route('cargo.bookings.update', $booking->booking_ref_no) }}" method="POST">
+    <form action="{{ route('cargo.bookings.update', $booking->booking_ref_no) }}" method="POST" id="editCargoForm">
         @csrf
         @method('PUT')
 
@@ -181,13 +181,39 @@
         </div>
 
         <div class="form-actions mb-4">
-            <button type="submit" class="btn btn-primary">Update Cargo Items</button>
+            <button type="submit" class="btn btn-primary" id="updateCargoItemsBtn" disabled>Update Cargo Items</button>
             <a href="{{ route('cargo.bookings.show', $booking->booking_ref_no) }}" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
 </div>
 
 <script>
+    function getEditableFormState() {
+        const fields = document.querySelectorAll(
+            'select[name="classification[]"], ' +
+            'select[name="description[]"], ' +
+            'input[name="quantity[]"], ' +
+            'input[name="length[]"], ' +
+            'input[name="width[]"], ' +
+            'input[name="height[]"], ' +
+            'select[name="measurement_unit[]"], ' +
+            'input[name="weight[]"]'
+        );
+
+        return Array.from(fields).map(field => String(field.value ?? '').trim());
+    }
+
+    function syncUpdateButtonState(initialState) {
+        const updateButton = document.getElementById('updateCargoItemsBtn');
+        if (!updateButton) return;
+
+        const currentState = getEditableFormState();
+        const hasChanges = currentState.length === initialState.length
+            && currentState.some((value, index) => value !== initialState[index]);
+
+        updateButton.disabled = !hasChanges;
+    }
+
     function setDimensionConstraint(input, minValue, maxValue, label) {
         if (!input) return;
 
@@ -296,6 +322,10 @@
             length *= 100;
             width *= 100;
             height *= 100;
+        } else if (unit === 'ft') {
+            length *= 30.48;
+            width *= 30.48;
+            height *= 30.48;
         }
 
         const cbm = (length * width * height) / 1000000;
@@ -327,6 +357,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        const editCargoForm = document.getElementById('editCargoForm');
+
         calculateValues();
         document.querySelectorAll('select[name="description[]"]').forEach((input, index) => {
             applyMeasurementRange(index);
@@ -350,6 +382,19 @@
             input.addEventListener('change', calculateValues);
             input.addEventListener('input', calculateValues);
         });
+
+        const initialState = getEditableFormState();
+        syncUpdateButtonState(initialState);
+
+        if (editCargoForm) {
+            editCargoForm.addEventListener('input', function() {
+                syncUpdateButtonState(initialState);
+            });
+
+            editCargoForm.addEventListener('change', function() {
+                syncUpdateButtonState(initialState);
+            });
+        }
     });
 
 </script>

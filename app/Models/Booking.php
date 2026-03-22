@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class Booking extends Model
 {
@@ -33,11 +35,21 @@ class Booking extends Model
         return $this->hasMany(CargoBooking::class, 'booking_ref_no', 'booking_ref_no');
     }
 
-    // Human-friendly booking code (e.g., CBBK-000123 for cargo, just number for passenger)
+    // Human-friendly booking code (e.g., CBBK26001 for first cargo booking in 2026)
     public function getBookingCodeAttribute()
     {
-        if ($this->booking_type === 'cargo') {
-            return 'CBBK-' . str_pad($this->booking_ref_no, 6, '0', STR_PAD_LEFT);
+        if (strcasecmp((string) $this->booking_type, 'cargo') === 0) {
+            $bookingDate = $this->booking_date ?? $this->created_at ?? now();
+            $bookingYear = Carbon::parse($bookingDate)->year;
+            $yearSuffix = Carbon::parse($bookingDate)->format('y');
+
+            $yearlySequence = static::query()
+                ->whereRaw('LOWER(booking_type) = ?', ['cargo'])
+                ->whereYear(DB::raw('COALESCE(booking_date, created_at)'), $bookingYear)
+                ->where('booking_ref_no', '<=', $this->booking_ref_no)
+                ->count();
+
+            return 'CBBK' . $yearSuffix . str_pad((string) $yearlySequence, 3, '0', STR_PAD_LEFT);
         }
         // Passenger bookings use just the raw number
         return $this->booking_ref_no;

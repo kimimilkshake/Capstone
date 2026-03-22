@@ -9,6 +9,7 @@ use App\Models\CargoItem; // ✅ Add this
 use App\Models\CargoClassification;
 use App\Models\MeasurementUnit;
 use App\Models\Voyage;
+use App\Models\Booking;
 use App\Models\Notification;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
@@ -278,7 +279,7 @@ class PassengerController extends Controller
             ->where('booking_ref_no', $bookingRef)
             ->get();
 
-        $booking = \DB::table('booking')->where('booking_ref_no', $bookingRef)->first();
+        $booking = Booking::where('booking_ref_no', $bookingRef)->first();
         $sender = \DB::table('sender')->where('sender_id', $booking->sender_id)->first();
         $consignee = \DB::table('consignee')->where('consignee_id', $booking->consignee_id)->first();
 

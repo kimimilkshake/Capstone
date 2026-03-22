@@ -238,8 +238,8 @@
                         onclick="validateAndAccept(event)">Accept</button>
                 </form>
 
-                <button class="btn btn-danger btn-lg px-4" data-bs-toggle="modal" data-bs-target="#rejectModal"
-                    style="width: 200px;">Reject</button>
+                <button type="button" class="btn btn-danger btn-lg px-4" id="rejectBtn"
+                    onclick="showRejectModal(event)" style="width: 200px;">Reject</button>
             </div>
         @endif
 
@@ -259,7 +259,8 @@
         <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <form action="{{ route('cargo.bookings.reject', $booking->booking_ref_no) }}" method="POST">
+                    <form action="{{ route('cargo.bookings.reject', $booking->booking_ref_no) }}" method="POST"
+                        onsubmit="showLoadingModal(event)">
                         @csrf
                         <div class="modal-header">
                             <h5 class="modal-title">Reason for Rejection</h5>
@@ -301,7 +302,45 @@
         </div>
     </div>
 
+    {{-- Loading Modal --}}
+    <div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0">
+                <div class="modal-body text-center p-5">
+                    <div class="spinner-border text-primary mb-3" role="status" style="width: 60px; height: 60px;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5 class="mt-3">Loading... Please Wait</h5>
+                    <p class="text-muted mt-2">Processing your request</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        /**
+         * Show reject modal
+         */
+        function showRejectModal(event) {
+            event.preventDefault();
+            const modal = new bootstrap.Modal(document.getElementById('rejectModal'));
+            modal.show();
+        }
+
+        /**
+         * Show loading modal when form is submitted
+         */
+        function showLoadingModal(event) {
+            event.preventDefault();
+            const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+            modal.show();
+            
+            // Submit the form after showing the modal
+            setTimeout(() => {
+                event.target.submit();
+            }, 500);
+        }
+
         /**
          * Validate cargo placement before accepting booking
          */
@@ -316,8 +355,8 @@
             ];
 
             if (cargoBookingIds.length === 0) {
-                // If no cargo items, just submit
-                document.getElementById('acceptForm').submit();
+                // If no cargo items, just show loading and submit
+                showLoadingAndSubmit();
                 return;
             }
 
@@ -347,7 +386,7 @@
 
                     if (data.success || data.skipValidation) {
                         // Cargo can fit, proceed with acceptance
-                        proceedWithAcceptance();
+                        showLoadingAndSubmit();
                     } else {
                         // Show warning modal
                         showPlacementWarning(data);
@@ -359,8 +398,20 @@
                     btn.disabled = false;
 
                     // If error, still allow to proceed (fail-open policy)
-                    proceedWithAcceptance();
+                    showLoadingAndSubmit();
                 });
+        }
+
+        /**
+         * Show loading modal and submit form
+         */
+        function showLoadingAndSubmit() {
+            const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+            modal.show();
+            
+            setTimeout(() => {
+                document.getElementById('acceptForm').submit();
+            }, 500);
         }
 
         /**
@@ -376,7 +427,12 @@
         function proceedWithAcceptance() {
             const form = document.getElementById('acceptForm');
             if (form) {
-                form.submit();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('placementValidationModal'));
+                if (modal) {
+                    modal.hide();
+                }
+                
+                showLoadingAndSubmit();
             }
         }
     </script>

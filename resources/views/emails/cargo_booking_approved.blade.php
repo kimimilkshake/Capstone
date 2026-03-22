@@ -57,6 +57,7 @@
             <tbody>
                 @php
                     $total = 0;
+                    $stampFee = 20;
                 @endphp
                 @foreach($cargoItems as $cargo)
                     @php
@@ -81,8 +82,13 @@
                 @endforeach
                 <tr style="background-color: #f9f9f9; font-weight: bold;">
                     <td colspan="4"></td>
+                    <td>Stamp</td>
+                    <td>₱{{ number_format($stampFee, 2) }}</td>
+                </tr>
+                <tr style="background-color: #f9f9f9; font-weight: bold;">
+                    <td colspan="4"></td>
                     <td>Total</td>
-                    <td>₱{{ number_format($total, 2) }}</td>
+                    <td>₱{{ number_format($total + $stampFee, 2) }}</td>
                 </tr>
             </tbody>
         </table>
