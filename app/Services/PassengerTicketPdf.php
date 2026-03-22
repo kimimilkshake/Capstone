@@ -90,6 +90,7 @@ class PassengerTicketPdf
             $dompdf->set_option('defaultFont', 'DejaVu Sans');
             $dompdf->set_option('isHtml5ParserEnabled', true);
             $dompdf->set_option('isRemoteEnabled', false); // Disabled: prevents HTTP timeout in containerised environments
+            $dompdf->set_option('isFontSubsettingEnabled', false); // Disabled: font subsetting is CPU-intensive, causes timeouts
             $dompdf->set_option('dpi', 96);
 
             $pdf->loadHTML($html)->setPaper('A4', 'portrait');

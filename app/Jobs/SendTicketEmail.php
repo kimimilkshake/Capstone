@@ -41,6 +41,9 @@ class SendTicketEmail implements ShouldQueue
      */
     public function handle(): void
     {
+        // Remove any PHP time limit — pdf generation is slow on cloud containers
+        set_time_limit(0);
+
         try {
             // Verify booking is confirmed and paid first
             $booking = DB::table('booking')->where('booking_ref_no', $this->bookingRef)->first();
