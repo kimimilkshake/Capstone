@@ -2,7 +2,7 @@
 .hero {
     position: relative;
     height: 225px;
-    background: url('/public/images/nav_background.png') center/cover no-repeat;
+    background: url('../images/nav_background.svg') center/cover no-repeat;
 
     @media (max-width: 768px) {
         height: 80px;

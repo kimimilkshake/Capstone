@@ -549,6 +549,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                 method: "POST",
                                 headers: {
                                     "Content-Type": "application/json",
+                                    Accept: "application/json",
                                     "X-CSRF-TOKEN": bookingForm.dataset.csrf,
                                 },
                                 body: JSON.stringify({
@@ -556,6 +557,18 @@ document.addEventListener("DOMContentLoaded", function () {
                                 }),
                             },
                         );
+
+                        if (
+                            !promoResponse.ok &&
+                            promoResponse.headers.get("content-type") &&
+                            !promoResponse.headers
+                                .get("content-type")
+                                .includes("application/json")
+                        ) {
+                            throw new Error(
+                                `Promo validation failed with status ${promoResponse.status}. Please try again.`,
+                            );
+                        }
 
                         const promoData = await promoResponse.json();
 
@@ -635,10 +648,23 @@ document.addEventListener("DOMContentLoaded", function () {
                 const response = await fetch("/ocr/parse", {
                     method: "POST",
                     headers: {
+                        Accept: "application/json",
                         "X-CSRF-TOKEN": bookingForm.dataset.csrf,
                     },
                     body: formData,
                 });
+
+                if (
+                    !response.ok &&
+                    response.headers.get("content-type") &&
+                    !response.headers
+                        .get("content-type")
+                        .includes("application/json")
+                ) {
+                    throw new Error(
+                        `OCR service returned ${response.status}. Please try again.`,
+                    );
+                }
 
                 const data = await response.json();
                 if (!data.text)
@@ -787,10 +813,21 @@ document.addEventListener("DOMContentLoaded", function () {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    Accept: "application/json",
                     "X-CSRF-TOKEN": bookingForm.dataset.csrf,
                 },
                 body: JSON.stringify(payload),
             });
+
+            if (
+                !res.ok &&
+                res.headers.get("content-type") &&
+                !res.headers.get("content-type").includes("application/json")
+            ) {
+                throw new Error(
+                    `Server returned ${res.status} ${res.statusText}. Please try again.`,
+                );
+            }
 
             const result = await res.json();
             console.log("Booking submission result:", result);

@@ -105,6 +105,7 @@ class StaffPassengerController extends Controller
                 'voyage_id' => $voyage->voyage_id,
                 'booking_type' => 'passenger',
                 'booking_status' => $paymentMode === 'Physical' ? 'Confirmed' : 'Pending',
+                'booking_date' => now(),
             ]);
 
             $totalAmount = 0;
