@@ -10,19 +10,26 @@
   <div class="auheader-user d-flex align-items-center gap-3 position-relative">
     <!-- Notification Bell -->
     <div class="notification-wrapper position-relative">
-      <i class="fa-regular fa-bell notification-bell" id="notificationToggle"></i>
+      <button type="button" class="notification-bell-button" id="notificationToggle" aria-label="Open notifications">
+        <i class="fa-regular fa-bell notification-bell"></i>
+      </button>
       <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
       
       <!-- Notification Dropdown -->
       <div class="notification-dropdown" id="notificationDropdown">
         <div class="notification-header">
           <h6 class="m-0">Notifications</h6>
-          <button class="btn-mark-all-read" id="markAllReadBtn">Mark all as read</button>
+          <button class="btn-mark-all-read" id="markAllReadBtn">
+            Mark all as read
+          </button>
         </div>
         <div class="notification-list" id="notificationList">
           <div class="notification-empty">
-            <i class="fa-regular fa-bell-slash"></i>
+            <div class="notification-empty-icon">
+              <i class="fa-regular fa-bell-slash"></i>
+            </div>
             <p>No notifications</p>
+            <span>New updates will appear here.</span>
           </div>
         </div>
       </div>
@@ -105,7 +112,15 @@
         })
         .catch(error => {
           console.error('Error loading notifications:', error);
-          notificationList.innerHTML = '<div class="notification-error">Failed to load notifications</div>';
+          notificationList.innerHTML = `
+            <div class="notification-error">
+              <div class="notification-empty-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </div>
+              <p>Failed to load notifications</p>
+              <span>Please try again in a moment.</span>
+            </div>
+          `;
         });
     }
 
@@ -114,8 +129,11 @@
       if (notifications.length === 0) {
         notificationList.innerHTML = `
           <div class="notification-empty">
-            <i class="fa-regular fa-bell-slash"></i>
+            <div class="notification-empty-icon">
+              <i class="fa-regular fa-bell-slash"></i>
+            </div>
             <p>No notifications</p>
+            <span>New updates will appear here.</span>
           </div>
         `;
         return;
@@ -123,9 +141,25 @@
 
       notificationList.innerHTML = notifications.map(notification => {
         const isUnread = !['read', 'archived'].includes(notification.notification_status);
-        const typeIcon = notification.notification_type === 'payment received' 
-          ? 'fa-money-bill-wave' 
-          : 'fa-box';
+        const notificationType = (notification.notification_type || '').toLowerCase();
+        const isPaymentNotification = notificationType.includes('payment');
+        const isCargoNotification = notificationType.includes('cargo');
+        const isPassengerNotification = notificationType.includes('passenger');
+        const typeIcon = isPaymentNotification
+          ? 'fa-money-bill-wave'
+          : isCargoNotification
+            ? 'fa-box-archive'
+            : isPassengerNotification
+              ? 'fa-user-check'
+              : 'fa-bell';
+        const typeClass = isPaymentNotification
+          ? 'payment'
+          : isCargoNotification
+            ? 'cargo'
+            : isPassengerNotification
+              ? 'passenger'
+              : 'general';
+        const typeLabel = notification.notification_type || 'Update';
         const timeAgo = formatTimeAgo(notification.notification_created);
         
         // Get booking reference from the field
@@ -134,22 +168,25 @@
         
         // Make cargo notifications clickable if they have a booking reference
         // Check case-insensitively for cargo booking approval
-        const isCargoNotification = notification.notification_type && 
-          notification.notification_type.toLowerCase().includes('cargo');
         const clickHandler = bookingRef && isCargoNotification
           ? `onclick="navigateToCargo(${bookingRef})"` 
           : '';
         const cursorStyle = bookingRef ? 'cursor: pointer;' : '';
+        const unreadMarker = isUnread ? '<span class="notification-unread-dot"></span>' : '';
 
         return `
           <div class="notification-item ${isUnread ? 'unread' : ''}" data-id="${notification.notification_id}" ${clickHandler} style="${cursorStyle}">
-            <div class="notification-icon">
+            <div class="notification-icon ${typeClass}">
               <i class="fa-solid ${typeIcon}"></i>
             </div>
             <div class="notification-content">
+              <div class="notification-meta-row">
+                <span class="notification-type-pill ${typeClass}">${typeLabel}</span>
+                <span class="notification-time">${timeAgo}</span>
+              </div>
               <p class="notification-message">${notification.notification_message}</p>
-              <span class="notification-time">${timeAgo}</span>
             </div>
+            ${unreadMarker}
           </div>
         `;
       }).join('');
