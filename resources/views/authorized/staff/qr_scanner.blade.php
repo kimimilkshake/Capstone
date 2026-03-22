@@ -3,19 +3,26 @@
 @section('content')
 
 <style>
+.staff-body.scannerbox{
+    margin-right:0;
+    padding:28px 20px 32px;
+}
+
 .scanner-page-shell{
+    width:100%;
     max-width: 980px;
     margin: 0 auto;
-    padding: 28px 16px 0;
+    padding: 0 16px;
 }
 
 .scanner-page-header{
     position:relative;
     display:flex;
     justify-content:center;
-    align-items:flex-start;
+    align-items:center;
     margin-bottom:20px;
     min-height:42px;
+    padding-right:120px;
 }
 
 .scanner-page-title{
@@ -29,11 +36,15 @@
 
 .scanner-page-header form{
     position:absolute;
-    top:0;
-    right:104px;
+    top:50%;
+    right:0;
+    transform:translateY(-50%);
 }
 
 .scanner-header-logout{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
     border:1px solid rgba(72, 91, 140, 0.22);
     background:#fff;
     color:#485B8C;
@@ -52,79 +63,176 @@
 
 /* Scanner container */
 .scanner-wrapper{
+    width:100%;
     max-width: 760px;
     margin:auto;
 }
 
-/* Camera box */
+.scanner-card-body{
+    padding:32px !important;
+}
+
 #reader{
     width:100%;
     max-width:520px;
-    margin:auto;
+    margin:0 auto;
+    overflow:hidden;
 }
 
-.scannertxt{
-    margin-left: 12rem;
+.scanner-intro{
+    max-width:420px;
+    margin:0 auto 1.5rem;
+    padding:0;
+    text-align:center;
+    font-size:0.98rem;
+    line-height:1.6;
 }
 
-/* Mobile adjustments */
-@media (max-width: 768px){
+#reader > div,
+#reader video,
+#reader canvas,
+#reader img,
+#reader table {
+    max-width:100% !important;
+}
+
+#reader video,
+#reader canvas,
+#reader img {
+    width:100% !important;
+    height:auto !important;
+    object-fit:cover;
+    border-radius:12px;
+}
+
+#reader__scan_region,
+#reader__dashboard,
+#reader__dashboard_section,
+#reader__dashboard_section_csr {
+    width:100% !important;
+}
+
+#reader__dashboard {
+    margin-top:16px;
+}
+
+#reader__dashboard button,
+#reader__dashboard select,
+#reader__dashboard input {
+    max-width:100%;
+}
+
+.scanner-actions{
+    display:flex;
+    justify-content:center;
+    margin-bottom:1rem;
+}
+
+.scanner-message{
+    margin-bottom:1rem;
+    color:#485B8C;
+    font-weight:700;
+    text-align:center;
+    line-height:1.5;
+    word-break:break-word;
+}
+
+@media (max-width: 991.98px){
+    .staff-body.scannerbox{
+        margin-right:0;
+        padding-right:16px;
+        padding-left:16px;
+    }
 
     .scanner-page-shell{
-        padding:20px 10px 0;
+        padding:0;
+    }
+}
+
+@media (max-width: 768px){
+    .staff-body.scannerbox{
+        margin-left:0;
+        min-height:auto;
+        padding:92px 12px 20px;
+    }
+
+    .scanner-page-shell{
+        padding:0;
     }
 
     .scanner-page-header{
-        min-height:36px;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .scanner-page-title{
-        width:100%;
-        text-align:center;
-        margin: 0;
+        min-height:auto;
+        flex-direction:column;
+        align-items:center;
+        gap:12px;
+        padding-right:0;
     }
 
     .scanner-page-header form{
-        position: static;
-        margin: 0;
-    }
-
-    .scannerbox{
-        padding:10px;
+        position:static;
+        transform:none;
+        width:100%;
+        display:flex;
+        justify-content:center;
     }
 
     .scanner-wrapper{
-        margin:10px;
+        max-width:100%;
     }
 
-    .card-body{
-        padding:20px !important;
+    .scanner-card-body{
+        padding:20px 16px !important;
+    }
+
+    .scanner-page-title{
+        font-size:0.82rem;
+        letter-spacing:0.22rem;
+        line-height:1.5;
+    }
+
+    .scanner-header-logout{
+        width:100%;
+    }
+
+    .scanner-intro{
+        margin-bottom:1.25rem;
+        font-size:0.92rem;
+    }
+
+    .scanner-actions{
+        width:100%;
     }
 
     #reader{
         max-width:100%;
     }
+}
 
-    textarea{
-        font-size:14px;
+@media (max-width: 480px){
+    .staff-body.scannerbox{
+        padding-top:88px;
+        padding-left:10px;
+        padding-right:10px;
     }
 
-    .scannertxt{
-        font-size:14px;
-        margin-left: 20px;
+    .scanner-card-body{
+        padding:18px 12px !important;
     }
 
-    .btn{
-        width:100%;
+    .scanner-page-title{
+        font-size:0.76rem;
+        letter-spacing:0.16rem;
     }
 
-      .scanner-header-logout{
-          width:auto;
+    .scanner-header-logout{
+        padding:0.7rem 1rem;
+        font-size:0.88rem;
     }
 
+    .scanner-intro,
+    .scanner-message{
+        font-size:0.9rem;
+    }
 }
 </style>
 
@@ -143,12 +251,17 @@
         </div>
 
         <div class="card shadow-sm border-0 scanner-wrapper" style="border-radius:12px;">
-            <div class="card-body p-4">
+            <div class="card-body scanner-card-body">
 
-                <p class="text-muted mb-4 scannertxt" style="padding-left:1.5rem;">
+                <p class="text-muted scanner-intro">
                     Scan a QR code to board a passenger.
                 </p>
-                <div id="qr-message" style="margin-bottom: 1rem; color: #485B8C; font-weight: bold; text-align: center;"></div>
+                <div id="qr-message" class="scanner-message"></div>
+                <div class="scanner-actions">
+                    <button type="button" id="retry-camera" class="scanner-header-logout" style="display:none;">
+                        Retry Camera
+                    </button>
+                </div>
                 <div id="reader"></div>
 
             </div>
@@ -164,9 +277,18 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastScanAt = 0;
     let isSubmitting = false;
     let html5QrCode = null;
+    let isStartingCamera = false;
     const recentScans = new Map();
     const scanCooldownMs = 8000;
     const resumeDelayMs = 2500;
+    const readerElementId = 'reader';
+    const retryButton = document.getElementById('retry-camera');
+
+    if (retryButton) {
+        retryButton.addEventListener('click', function() {
+            startCameraScanner();
+        });
+    }
 
     function showMessage(msg, color = '#485B8C') {
         const msgDiv = document.getElementById('qr-message');
@@ -177,9 +299,76 @@ document.addEventListener('DOMContentLoaded', function() {
     function showScannerError(message) {
         showMessage(message, 'red');
 
+        if (retryButton) {
+            retryButton.style.display = 'inline-flex';
+        }
+
         if (typeof showToast === 'function') {
             showToast(message, 'danger');
         }
+    }
+
+    function hideRetryButton() {
+        if (retryButton) {
+            retryButton.style.display = 'none';
+        }
+    }
+
+    function getQrSize() {
+        if (window.innerWidth <= 480) {
+            return 180;
+        }
+
+        if (window.innerWidth <= 768) {
+            return 220;
+        }
+
+        return 250;
+    }
+
+    function getScannerConfig() {
+        const qrSize = getQrSize();
+
+        return {
+            fps: 10,
+            qrbox: { width: qrSize, height: qrSize },
+            aspectRatio: window.innerWidth <= 768 ? 1 : 1.333334
+        };
+    }
+
+    function isCameraSecureContext() {
+        return window.isSecureContext || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    }
+
+    function normalizeCameraError(error) {
+        const message = String(error || 'Unknown camera error.');
+
+        if (!isCameraSecureContext()) {
+            return 'Camera access on phones requires HTTPS or localhost. Open this page over HTTPS to use the scanner.';
+        }
+
+        if (message.includes('NotAllowedError') || message.includes('Permission denied')) {
+            return 'Camera permission was blocked. Allow camera access in the browser and try again.';
+        }
+
+        if (message.includes('NotFoundError') || message.includes('OverconstrainedError')) {
+            return 'No compatible rear camera was found. Try again or use a different browser on the device.';
+        }
+
+        return 'Unable to access the camera. ' + message;
+    }
+
+    function selectPreferredCamera(cameras) {
+        if (!Array.isArray(cameras) || cameras.length === 0) {
+            return null;
+        }
+
+        const rearCamera = cameras.find(function(camera) {
+            const label = (camera.label || '').toLowerCase();
+            return label.includes('back') || label.includes('rear') || label.includes('environment');
+        });
+
+        return rearCamera || cameras[0];
     }
 
     function cleanupRecentScans(now) {
@@ -209,19 +398,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function startCameraScanner() {
-        if (typeof Html5Qrcode === 'undefined') {
-            showScannerError('QR scanner library failed to load.');
-            return;
-        }
-        const qrSize = window.innerWidth < 768 ? 200 : 250;
-        html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start(
-            { facingMode: "environment" },
-            {
-                fps: 10,
-                qrbox: { width: qrSize, height: qrSize }
-            },
+    async function startScannerWithSource(cameraSource) {
+        return html5QrCode.start(
+            cameraSource,
+            getScannerConfig(),
             function(decodedText, decodedResult) {
                 const now = Date.now();
                 cleanupRecentScans(now);
@@ -241,12 +421,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 lastText = decodedText;
                 lastScanAt = now;
 
-                // Expecting format: 1046:44
                 const parts = decodedText.split(':');
                 if (parts.length !== 2) {
                     showScannerError('Invalid QR code format.');
                     return;
                 }
+
                 const booking_ref_no = parts[0];
                 const passenger_id = parts[1];
                 isSubmitting = true;
@@ -281,11 +461,57 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             },
             function(errorMessage) {
-                // Optionally show scanning errors
+                // Ignore frame-level decode misses.
             }
-        ).catch(err => {
-            showScannerError('Unable to access camera: ' + err);
-        });
+        );
+    }
+
+    async function startCameraScanner() {
+        if (isStartingCamera) {
+            return;
+        }
+
+        if (typeof Html5Qrcode === 'undefined') {
+            showScannerError('QR scanner library failed to load.');
+            return;
+        }
+
+        isStartingCamera = true;
+        hideRetryButton();
+        showMessage('Requesting camera access...', '#485B8C');
+
+        if (!html5QrCode) {
+            html5QrCode = new Html5Qrcode(readerElementId);
+        }
+
+        try {
+            await startScannerWithSource({ facingMode: { exact: 'environment' } });
+            showMessage('Camera ready. Point it at a QR code.', '#485B8C');
+            return;
+        } catch (preferredError) {
+            try {
+                await startScannerWithSource({ facingMode: 'environment' });
+                showMessage('Camera ready. Point it at a QR code.', '#485B8C');
+                return;
+            } catch (fallbackFacingModeError) {
+                try {
+                    const cameras = await Html5Qrcode.getCameras();
+                    const selectedCamera = selectPreferredCamera(cameras);
+
+                    if (!selectedCamera) {
+                        throw fallbackFacingModeError;
+                    }
+
+                    await startScannerWithSource(selectedCamera.id);
+                    showMessage('Camera ready. Point it at a QR code.', '#485B8C');
+                    return;
+                } catch (cameraListError) {
+                    showScannerError(normalizeCameraError(cameraListError || fallbackFacingModeError || preferredError));
+                }
+            }
+        } finally {
+            isStartingCamera = false;
+        }
     }
 
     // Wait for Html5Qrcode to be available, then start camera
