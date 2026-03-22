@@ -63,35 +63,37 @@ class BookingController extends Controller
         // Simple pricing: attempt to use accommodation price; fallback to flat price
         $flatPrice = 500.00;
 
-        // Server-side validation: ensure cot numbers selected are unique within this booking
-        $selectedCots = array_map(function ($p) {
-            return isset($p['cot_number']) ? (int) $p['cot_number'] : null;
-        }, $passengers);
-        $cotCounts = array_count_values($selectedCots);
-        foreach ($cotCounts as $cot => $count) {
-            if ($cot !== null && $count > 1) {
-                return response()->json(['success' => false, 'message' => "Duplicate cot selection detected: cot {$cot} selected {$count} times."], 422);
-            }
-        }
-
-        // Server-side validation: ensure selected cots are not already booked for this voyage
-        foreach ($selectedCots as $cot) {
-            if ($cot === null)
-                continue;
-            // Check passenger_ticket entries for this voyage and cot where booking is not canceled
-            $exists = DB::table('passenger_ticket')
-                ->join('booking', 'passenger_ticket.booking_ref_no', '=', 'booking.booking_ref_no')
-                ->where('passenger_ticket.voyage_id', $voyage->voyage_id)
-                ->where('passenger_ticket.pt_cot_no', $cot)
-                ->whereRaw("LOWER(booking.booking_status) <> ?", ['canceled'])
-                ->exists();
-            if ($exists) {
-                return response()->json(['success' => false, 'message' => "Cot {$cot} is already booked for this voyage. Please select another cot."], 422);
-            }
-        }
-
         DB::beginTransaction();
         try {
+            // Server-side validation: ensure cot numbers selected are unique within this booking
+            $selectedCots = array_map(function ($p) {
+                return isset($p['cot_number']) && $p['cot_number'] !== '' ? (int) $p['cot_number'] : null;
+            }, $passengers);
+            // Filter nulls before array_count_values (PHP 8+ throws ValueError on null values)
+            $nonNullCots = array_filter($selectedCots, fn($c) => $c !== null);
+            $cotCounts = array_count_values($nonNullCots);
+            foreach ($cotCounts as $cot => $count) {
+                if ($count > 1) {
+                    DB::rollBack();
+                    return response()->json(['success' => false, 'message' => "Duplicate cot selection detected: cot {$cot} selected {$count} times."], 422);
+                }
+            }
+
+            // Server-side validation: ensure selected cots are not already booked for this voyage
+            foreach ($selectedCots as $cot) {
+                if ($cot === null)
+                    continue;
+                $exists = DB::table('passenger_ticket')
+                    ->join('booking', 'passenger_ticket.booking_ref_no', '=', 'booking.booking_ref_no')
+                    ->where('passenger_ticket.voyage_id', $voyage->voyage_id)
+                    ->where('passenger_ticket.pt_cot_no', $cot)
+                    ->whereRaw("LOWER(booking.booking_status) <> ?", ['canceled'])
+                    ->exists();
+                if ($exists) {
+                    DB::rollBack();
+                    return response()->json(['success' => false, 'message' => "Cot {$cot} is already booked for this voyage. Please select another cot."], 422);
+                }
+            }
             // Create booking (auto-increment id booking_ref_no)
             $bookingId = DB::table('booking')->insertGetId([
                 'voyage_id' => $voyage->voyage_id,
@@ -201,7 +203,12 @@ class BookingController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Booking store failed: ' . $e->getMessage());
+            \Log::error('Booking store failed: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json(['success' => false, 'message' => 'Server error while creating booking.'], 500);
         }
     }
