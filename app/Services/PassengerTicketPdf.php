@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Booking;
-use App\Services\QrCodeGenerator;
 use Throwable;
 
 class PassengerTicketPdf
@@ -27,11 +26,9 @@ class PassengerTicketPdf
             }
 
             \Log::info('PassengerTicketPdf::generate - Generating PDF for booking ' . $bookingRef);
-            echo "[DEBUG] After Generating PDF log\n";
 
             // Get tickets (filtered by passenger email if provided)
             $allTickets = $booking->passengerTickets;
-            echo "[DEBUG] allTickets count: " . count($allTickets) . "\n";
             if ($passengerEmail) {
                 $tickets = $allTickets->filter(function ($ticket) use ($passengerEmail) {
                     return $ticket->passenger->passenger_email === $passengerEmail;
@@ -40,32 +37,23 @@ class PassengerTicketPdf
                 $tickets = $allTickets;
             }
 
-            // Generate QR codes for tickets
+            // Generate QR codes as PNG base64 data URLs (dompdf cannot render SVG)
             $qrCodes = [];
             \Log::info('PassengerTicketPdf: Starting QR generation for ' . count($tickets) . ' tickets');
 
             foreach ($tickets as $ticket) {
-                \Log::info('  Processing ticket for passenger ' . $ticket->passenger_id);
                 $qrData = $bookingRef . ':' . $ticket->passenger_id;
-                $filename = 'pdf_qr_' . $bookingRef . '_' . $ticket->passenger_id;
-
-                // Generate and store QR code (saves to disk and database)
-                $qrCode = QrCodeGenerator::generateAndStore(
-                    $bookingRef,
-                    $ticket->passenger_id,
-                    $qrData,
-                    $filename
-                );
-
-                \Log::info('    QrCode result: ' . ($qrCode ? 'SUCCESS' : 'NULL'));
-
-                if ($qrCode && file_exists($qrCode->qr_code_path)) {
-                    // Store raw SVG content — dompdf requires inline <svg> tags, not img src data URLs
-                    $svgContent = file_get_contents($qrCode->qr_code_path);
-                    $qrCodes[$ticket->passenger_id] = $svgContent;
-                    \Log::info('    Added inline SVG QR for passenger ' . $ticket->passenger_id);
-                } else {
-                    \Log::warning('    File does not exist or qrCode null: ' . ($qrCode ? $qrCode->qr_code_path : 'qrCode is NULL'));
+                try {
+                    $options = new \chillerlan\QRCode\QROptions([
+                        'outputInterface' => \chillerlan\QRCode\Output\QRGdImagePNG::class,
+                        'scale' => 5,
+                        'outputBase64' => false,
+                    ]);
+                    $pngBlob = (new \chillerlan\QRCode\QRCode($options))->render($qrData);
+                    $qrCodes[$ticket->passenger_id] = 'data:image/png;base64,' . base64_encode($pngBlob);
+                    \Log::info('  PNG QR generated for passenger ' . $ticket->passenger_id);
+                } catch (\Exception $e) {
+                    \Log::warning('  QR generation failed for passenger ' . $ticket->passenger_id . ': ' . $e->getMessage());
                 }
             }
 
