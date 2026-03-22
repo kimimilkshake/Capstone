@@ -5,27 +5,15 @@
     <div class="container my-5">
         <div class="row justify-content-center align-items-start">
 
-            <!-- LEFT SIDE (Cot Plan Image) -->
-            <div class="col-md-6 mb-4 text-center">
-                <h4 class="mb-3">Cot Plan Layout</h4>
-                <img id="cotPlanImage" src="" alt="Cot Plan" class="img-fluid rounded shadow-sm"
-                    style="max-height: 500px; object-fit: contain; display: none;">
-                <p id="cotPlanPlaceholder"
-                    style="color: #888; font-style: italic; min-height: 200px; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
-                    No accommodation selected
-                </p>
-            </div>
-
-            <!-- RIGHT SIDE (Passenger Form) -->
-            <div class="col-md-6">
+            <!-- PASSENGER FORM (appears first on mobile, right side on desktop) -->
+            <div class="col-md-6 order-1 order-md-2">
                 <div class="card shadow-sm">
                     <div class="card-header bg-dark text-white text-center">
                         <h5 class="mb-0">PASSENGER FORM</h5>
                     </div>
                     <div class="card-body bg-light">
 
-                        <form id="bookingForm" data-submit-url="{{ route('booking.submit') }}"
-                            data-csrf="{{ csrf_token() }}">
+                        <form id="bookingForm" data-submit-url="{{ route('booking.submit') }}" data-csrf="{{ csrf_token() }}">
                             <!-- Hidden voyage fields used by JS to submit booking -->
                             <input type="hidden" id="routeFrom" name="route_from" value="{{ $routeFrom }}">
                             <input type="hidden" id="routeTo" name="route_to" value="{{ $routeTo }}">
@@ -70,6 +58,17 @@
 
                     </div>
                 </div>
+            </div>
+
+            <!-- COT PLAN IMAGE (appears second on mobile, left side on desktop) -->
+            <div class="col-md-6 mb-4 mt-5 mt-md-0 text-center order-2 order-md-1">
+                <h4 class="mb-3">Cot Plan Layout</h4>
+                <img id="cotPlanImage" src="" alt="Cot Plan" class="img-fluid rounded shadow-sm"
+                    style="max-height: 500px; object-fit: contain; display: none;">
+                <p id="cotPlanPlaceholder"
+                    style="color: #888; font-style: italic; min-height: 200px; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    No accommodation selected
+                </p>
             </div>
         </div>
     </div>
