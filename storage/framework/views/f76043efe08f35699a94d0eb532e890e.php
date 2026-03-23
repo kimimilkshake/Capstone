@@ -1,13 +1,12 @@
-@extends('layouts.app')
-@section('page-title', 'CREATE PROMO')
-@section('content')
-    @include('components.authHeader')
-    @include('components.admin_nav')
+<?php $__env->startSection('page-title', 'CREATE PROMO'); ?>
+<?php $__env->startSection('content'); ?>
+    <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    <?php echo $__env->make('components.admin_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <div class="admin-body">
 
-        <form action="{{ route('admin.storePromo') }}" method="POST" class="create-promo-form promo-form">
-          @csrf
+        <form action="<?php echo e(route('admin.storePromo')); ?>" method="POST" class="create-promo-form promo-form">
+          <?php echo csrf_field(); ?>
           <div class="form-row">
             <div class="form-col">
               <div class="form-group">
@@ -32,7 +31,7 @@
 
               <div class="form-group">
                 <label for="promo_start_date">Date Start <span class="text-danger">*</span></label>
-                <input type="date" id="promo_start_date" name="promo_start_date" required min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}">
+                <input type="date" id="promo_start_date" name="promo_start_date" required min="<?php echo e(\Carbon\Carbon::today()->format('Y-m-d')); ?>">
               </div>
 
               <div class="form-group">
@@ -62,7 +61,7 @@
             <button type="submit" class="acs-add-btn">
               <i class="fa-solid fa-plus me-2"></i>Add Promo
             </button>
-            <a href="{{ route('admin.promo_list') }}" class="acs-add-btn acs-cancel-btn">
+            <a href="<?php echo e(route('admin.promo_list')); ?>" class="acs-add-btn acs-cancel-btn">
               <i class="fa-solid fa-xmark me-2"></i>Cancel
             </a>
           </div>
@@ -160,4 +159,5 @@
           }
       });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/authorized/admin/create_promo.blade.php ENDPATH**/ ?>

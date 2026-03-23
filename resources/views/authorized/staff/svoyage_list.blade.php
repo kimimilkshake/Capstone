@@ -80,7 +80,7 @@
       </tbody>
     </table>
 
-    {{-- ✅ Pagination links --}}
+    {{-- Pagination links --}}
     <div class="mt-3">
       {{ $voyages->appends(['search' => request('search')])->links('pagination::bootstrap-5') }}
     </div>

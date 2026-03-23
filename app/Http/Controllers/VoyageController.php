@@ -243,61 +243,78 @@ class VoyageController extends Controller
 
         // Completely locked statuses
         if (in_array($voyage->voyage_status, ['At Sea', 'Archived'])) {
-            return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
-                             ->with('error', 'Voyages that are "At Sea" cannot be edited at the moment.');
+            return redirect()->route(
+                auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list'
+            )->with('error', 'Voyages that are "At Sea" cannot be edited at the moment.');
         }
 
-        // Validation rules
+        // Base validation rules
         $rules = [
             'voyage_description' => 'nullable|string',
         ];
 
-        if (!in_array($voyage->voyage_status, ['Completed', 'Cancelled'])) {
-            // Full edit allowed only if NOT completed or cancelled
-            $rules = array_merge($rules, [
-                'vessel_id' => 'required|exists:vessel,vessel_id',
-                'route_port_id' => 'required|exists:route_port,route_port_id',
-                'voyage_departure_date' => 'required|date',
-                'voyage_arrival_date' => 'required|date|after_or_equal:voyage_departure_date',
-                'voyage_estimated_TD' => 'required',
-                'voyage_estimated_TA' => 'required',
-                'voyage_status' => 'required|in:Scheduled,At Sea,Completed,Cancelled,Archived',
-            ]);
-        } else {
-            // Completed → only actual times are editable
-            $rules = array_merge($rules, [
-                'voyage_actual_TD' => 'nullable',
-                'voyage_actual_TA' => 'nullable',
-                'voyage_status' => 'required|in:Completed,Cancelled',
-            ]);
+        // Additional rules per status
+        switch ($voyage->voyage_status) {
+            case 'Scheduled':
+                $rules = array_merge($rules, [
+                    'vessel_id' => 'required|exists:vessel,vessel_id',
+                    'route_port_id' => 'required|exists:route_port,route_port_id',
+                    'voyage_departure_date' => 'required|date',
+                    'voyage_arrival_date' => 'required|date|after_or_equal:voyage_departure_date',
+                    'voyage_estimated_TD' => 'required',
+                    'voyage_estimated_TA' => 'required',
+                    'voyage_status' => 'required|in:Scheduled,At Sea,Completed,Cancelled,Archived',
+                ]);
+                break;
+
+            case 'Completed':
+                $rules = array_merge($rules, [
+                    'voyage_actual_TD' => 'nullable',
+                    'voyage_actual_TA' => 'nullable',
+                    'voyage_status' => 'required|in:Completed,Archived',
+                ]);
+                break;
+
+            case 'Cancelled':
+                $rules = array_merge($rules, [
+                    'voyage_actual_TD' => 'nullable',
+                    'voyage_actual_TA' => 'nullable',
+                    // status is locked
+                ]);
+                break;
         }
 
         $request->validate($rules);
 
-        $departure = Carbon::parse($request->voyage_departure_date . ' ' . $request->voyage_estimated_TD);
-        $arrival   = Carbon::parse($request->voyage_arrival_date . ' ' . $request->voyage_estimated_TA);
+        $updateData = [
+            'voyage_description' => $request->voyage_description,
+        ];
 
-        if ($arrival->lessThanOrEqualTo($departure)) {
-            return back()->withErrors([
-                'time_error' => 'Arrival date and time must be AFTER departure date and time.'
-            ])->withInput();
-        }
+        // Scheduled → full edit, including schedule validation
+        if ($voyage->voyage_status === 'Scheduled') {
+            $departure = Carbon::parse($request->voyage_departure_date . ' ' . $request->voyage_estimated_TD);
+            $arrival   = Carbon::parse($request->voyage_arrival_date . ' ' . $request->voyage_estimated_TA);
 
-        if ($this->hasConflict(
-            $request->vessel_id,
-            $request->voyage_departure_date,
-            $request->voyage_estimated_TD,
-            $request->voyage_arrival_date,
-            $request->voyage_estimated_TA,
-            $voyage->voyage_id // ignore current voyage
-        )) {
-            return back()->withErrors([
-                'voyage_conflict' => 'This vessel already has a voyage scheduled during this time.'
-            ])->withInput();
-        }
+            if ($arrival->lessThanOrEqualTo($departure)) {
+                return back()->withErrors([
+                    'time_error' => 'Arrival date and time must be AFTER departure date and time.'
+                ])->withInput();
+            }
 
-        // If vessel or route changed, update voyage code
-        if ($voyage->voyage_status !== 'Completed') {
+            if ($this->hasConflict(
+                $request->vessel_id,
+                $request->voyage_departure_date,
+                $request->voyage_estimated_TD,
+                $request->voyage_arrival_date,
+                $request->voyage_estimated_TA,
+                $voyage->voyage_id
+            )) {
+                return back()->withErrors([
+                    'voyage_conflict' => 'This vessel already has a voyage scheduled during this time.'
+                ])->withInput();
+            }
+
+            // Update voyage code if vessel or route changed
             $vesselChanged = $voyage->vessel_id != $request->vessel_id;
             $routeChanged = $voyage->route_port_id != $request->route_port_id;
 
@@ -320,22 +337,10 @@ class VoyageController extends Controller
                     ? str_pad(intval(substr($latestVoyage->voyage_code, -3)) + 1, 3, '0', STR_PAD_LEFT)
                     : '001';
 
-                $voyage->voyage_code = "{$baseCode}-{$nextCounter}";
+                $updateData['voyage_code'] = "{$baseCode}-{$nextCounter}";
             }
-        }
 
-        // Update fields based on status
-        $updateData = [
-            'voyage_description' => $request->voyage_description,
-        ];
-
-        if (in_array($voyage->voyage_status, ['Completed', 'Cancelled'])) {
-            // Only actual times and status are editable
-            $updateData['voyage_actual_TD'] = $request->voyage_actual_TD;
-            $updateData['voyage_actual_TA'] = $request->voyage_actual_TA;
-            $updateData['voyage_status'] = $request->voyage_status;
-        } else {
-            // Full edit
+            // Merge schedule fields
             $updateData = array_merge($updateData, [
                 'vessel_id' => $request->vessel_id,
                 'route_port_id' => $request->route_port_id,
@@ -346,11 +351,24 @@ class VoyageController extends Controller
                 'voyage_status' => $request->voyage_status,
             ]);
         }
+        // Completed → only actual times & status
+        elseif ($voyage->voyage_status === 'Completed') {
+            $updateData['voyage_actual_TD'] = $request->voyage_actual_TD;
+            $updateData['voyage_actual_TA'] = $request->voyage_actual_TA;
+            $updateData['voyage_status'] = $request->voyage_status;
+        }
+        // Cancelled → only actual times
+        elseif ($voyage->voyage_status === 'Cancelled') {
+            $updateData['voyage_actual_TD'] = $request->voyage_actual_TD;
+            $updateData['voyage_actual_TA'] = $request->voyage_actual_TA;
+            // status remains locked
+        }
 
         $voyage->update($updateData);
 
-        return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
-                        ->with('success', 'Voyage updated successfully.');
+        return redirect()->route(
+            auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list'
+        )->with('success', 'Voyage updated successfully.');
     }
 
 

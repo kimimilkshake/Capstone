@@ -160,5 +160,64 @@
             }
         }
     }
+
+    const depDateInput = document.getElementById('voyage_departure_date');
+    const arrDateInput = document.getElementById('voyage_arrival_date');
+    const etdInput = document.getElementById('voyage_estimated_TD');
+    const etaInput = document.getElementById('voyage_estimated_TA');
+
+    // normalize date
+    function normalizeDate(d) {
+        const date = new Date(d);
+        date.setHours(0,0,0,0);
+        return date;
+    }
+
+    // DATE VALIDATION (instant)
+    function validateDatesInstant() {
+        if (!depDateInput.value || !arrDateInput.value) return;
+
+        const depDate = normalizeDate(depDateInput.value);
+        const arrDate = normalizeDate(arrDateInput.value);
+
+        if (arrDate < depDate) {
+            showToast('Arrival date cannot be earlier than departure date.', 'danger');
+            arrDateInput.value = depDateInput.value;
+            return;
+        }
+    }
+
+    // TIME VALIDATION (only if same day)
+    function validateTimeInstant() {
+        if (!depDateInput.value || !arrDateInput.value) return;
+        if (!etdInput.value || !etaInput.value) return;
+
+        const depDate = normalizeDate(depDateInput.value);
+        const arrDate = normalizeDate(arrDateInput.value);
+
+        // only check time if same day
+        if (depDate.getTime() === arrDate.getTime()) {
+            if (etaInput.value <= etdInput.value) {
+                showToast('ETA must be later than ETD if same day.', 'danger');
+                etaInput.value = '';
+            }
+        }
+    }
+
+    // EVENT LISTENERS (instant trigger)
+    depDateInput.addEventListener('change', () => {
+      validateDatesInstant();
+      validateTimeInstant();
+    });
+
+    arrDateInput.addEventListener('change', () => {
+        validateDatesInstant();
+        validateTimeInstant();
+    });
+
+    etdInput.addEventListener('change', validateTimeInstant);
+    etaInput.addEventListener('change', validateTimeInstant);
+
   </script>
+  
 @endsection

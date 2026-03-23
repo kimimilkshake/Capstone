@@ -2,34 +2,36 @@
      class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" 
      style="z-index: 9999; margin-top: 20px;">
 
-    {{-- SESSION SUCCESS --}}
-    @if (session('success'))
+    
+    <?php if(session('success')): ?>
         <div class="toast align-items-center text-white bg-success border-0 fade" role="alert"
              aria-live="assertive" aria-atomic="true">
             <div class="d-flex">
                 <div class="toast-body">
-                    <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                    <i class="fas fa-check-circle me-2"></i><?php echo e(session('success')); ?>
+
                 </div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         </div>
-    @endif
+    <?php endif; ?>
 
-    {{-- SESSION ERRORS --}}
-    @if ($errors->any())
+    
+    <?php if($errors->any()): ?>
         <div class="toast align-items-center text-white bg-danger border-0 fade" role="alert"
              aria-live="assertive" aria-atomic="true">
             <div class="d-flex">
                 <div class="toast-body">
                     <i class="fas fa-exclamation-circle me-2"></i>
-                    @foreach ($errors->all() as $error)
-                        {{ $error }}
-                    @endforeach
+                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php echo e($error); ?>
+
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         </div>
-    @endif
+    <?php endif; ?>
 
 </div>
 
@@ -73,4 +75,4 @@
             toastEl.remove();
         });
     }
-</script>
+</script><?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/components/toast.blade.php ENDPATH**/ ?>

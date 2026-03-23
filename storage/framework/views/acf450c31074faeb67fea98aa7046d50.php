@@ -1,44 +1,44 @@
-@extends('layouts.app')
-@section('page-title', 'EDIT VOYAGE')
-@section('content')
-  @include('components.authHeader')
-  @include('components.staff_nav')
+<?php $__env->startSection('page-title', 'EDIT VOYAGE'); ?>
+<?php $__env->startSection('content'); ?>
+  <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+  <?php echo $__env->make('components.staff_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
   <div class="staff-body">
 
     <div class="acs-form_container">
       
-      <form action="{{ route('staff.voyage_update', $voyage->voyage_id) }}" method="POST" enctype="multipart/form-data" id="editVoyageForm">
-        @csrf
-        @method('PUT')
+      <form action="<?php echo e(route('staff.voyage_update', $voyage->voyage_id)); ?>" method="POST" enctype="multipart/form-data" id="editVoyageForm">
+        <?php echo csrf_field(); ?>
+        <?php echo method_field('PUT'); ?>
 
-        @php
+        <?php
           $isLocked = in_array($voyage->voyage_status, ['Completed', 'Cancelled']);
           $isCancelled = $voyage->voyage_status === 'Cancelled';
-        @endphp
+        ?>
 
         <div class="voyage_code">
-          <h3>VOYAGE CODE: {{ $voyage->voyage_code }}</h3>
+          <h3>VOYAGE CODE: <?php echo e($voyage->voyage_code); ?></h3>
         </div>
 
-        @if($isCancelled)
+        <?php if($isCancelled): ?>
           <p style="color:red; font-weight:600;">
             This voyage is cancelled. Only actual times can be edited.
           </p>
-        @endif
+        <?php endif; ?>
 
         <!-- ROW 1: ROUTE, PORT, VESSEL -->
         <div class="form-row">
           <div class="form-col">
             <div class="form-group">
               <label for="route_port_id">Route <span class="text-danger">*</span></label>
-              <select name="route_port_id" id="route_port_id" required @if($isLocked) disabled @endif>
-                @foreach($route_port as $rp)
-                  <option value="{{ $rp->route_port_id }}" 
-                    {{ $voyage->route_port_id == $rp->route_port_id ? 'selected' : '' }}>
-                    {{ $rp->route_origin }} → {{ $rp->route_destination }}
+              <select name="route_port_id" id="route_port_id" required <?php if($isLocked): ?> disabled <?php endif; ?>>
+                <?php $__currentLoopData = $route_port; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                  <option value="<?php echo e($rp->route_port_id); ?>" 
+                    <?php echo e($voyage->route_port_id == $rp->route_port_id ? 'selected' : ''); ?>>
+                    <?php echo e($rp->route_origin); ?> → <?php echo e($rp->route_destination); ?>
+
                   </option>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
               </select>
             </div>
           </div>
@@ -46,13 +46,14 @@
           <div class="form-col">
             <div class="form-group">
               <label for="vessel_id">Vessel <span class="text-danger">*</span></label>
-              <select name="vessel_id" id="vessel_id" required @if($isLocked) disabled @endif>
-                @foreach($vessels as $vessel)
-                  <option value="{{ $vessel->vessel_id }}" 
-                    {{ $voyage->vessel_id == $vessel->vessel_id ? 'selected' : '' }}>
-                    {{ $vessel->vessel_name }}
+              <select name="vessel_id" id="vessel_id" required <?php if($isLocked): ?> disabled <?php endif; ?>>
+                <?php $__currentLoopData = $vessels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vessel): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                  <option value="<?php echo e($vessel->vessel_id); ?>" 
+                    <?php echo e($voyage->vessel_id == $vessel->vessel_id ? 'selected' : ''); ?>>
+                    <?php echo e($vessel->vessel_name); ?>
+
                   </option>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
               </select>
             </div>
           </div>
@@ -84,10 +85,10 @@
                 type="date" 
                 id="voyage_departure_date" 
                 name="voyage_departure_date" 
-                value="{{ $voyage->voyage_departure_date }}" 
-                @if($isLocked) disabled @endif
-                min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}"
-                max="{{ \Carbon\Carbon::today()->addDays(8)->format('Y-m-d') }}"
+                value="<?php echo e($voyage->voyage_departure_date); ?>" 
+                <?php if($isLocked): ?> disabled <?php endif; ?>
+                min="<?php echo e(\Carbon\Carbon::today()->format('Y-m-d')); ?>"
+                max="<?php echo e(\Carbon\Carbon::today()->addDays(8)->format('Y-m-d')); ?>"
                 onchange="setArrivalMin(this.value)"
                 required>
             </div>
@@ -97,8 +98,8 @@
             <div class="form-group">
               <label for="voyage_estimated_TD">Estimated Time of Departure (ETD) <span class="text-danger">*</span></label>
               <input type="time" id="voyage_estimated_TD" name="voyage_estimated_TD" 
-                value="{{ $voyage->voyage_estimated_TD }}" 
-                @if($isLocked) disabled @endif
+                value="<?php echo e($voyage->voyage_estimated_TD); ?>" 
+                <?php if($isLocked): ?> disabled <?php endif; ?>
                 required>
             </div>
           </div>
@@ -107,7 +108,7 @@
             <div class="form-group">
               <label for="voyage_actual_TD">Actual Time of Departure (ATD)</label>
               <input type="time" id="voyage_actual_TD" name="voyage_actual_TD" 
-                value="{{ $voyage->voyage_actual_TD }}">
+                value="<?php echo e($voyage->voyage_actual_TD); ?>">
             </div>
           </div>
         </div>
@@ -121,10 +122,10 @@
                 type="date" 
                 id="voyage_arrival_date" 
                 name="voyage_arrival_date" 
-                value="{{ $voyage->voyage_arrival_date }}" 
-                @if($isLocked) disabled @endif
-                min="{{ $voyage->voyage_departure_date }}" 
-                max="{{ \Carbon\Carbon::today()->addDays(14)->format('Y-m-d') }}"
+                value="<?php echo e($voyage->voyage_arrival_date); ?>" 
+                <?php if($isLocked): ?> disabled <?php endif; ?>
+                min="<?php echo e($voyage->voyage_departure_date); ?>" 
+                max="<?php echo e(\Carbon\Carbon::today()->addDays(14)->format('Y-m-d')); ?>"
                 required>
             </div>
           </div>
@@ -136,8 +137,8 @@
                 type="time" 
                 id="voyage_estimated_TA" 
                 name="voyage_estimated_TA" 
-                value="{{ $voyage->voyage_estimated_TA }}" 
-                @if($isLocked) disabled @endif
+                value="<?php echo e($voyage->voyage_estimated_TA); ?>" 
+                <?php if($isLocked): ?> disabled <?php endif; ?>
                 required>
             </div>
           </div>
@@ -149,7 +150,7 @@
                 type="time" 
                 id="voyage_actual_TA" 
                 name="voyage_actual_TA" 
-                value="{{ $voyage->voyage_actual_TA }}">
+                value="<?php echo e($voyage->voyage_actual_TA); ?>">
             </div>
           </div>
         </div>
@@ -158,7 +159,7 @@
         <div class="form-row">
           <div class="form-group" style="width: 100%;">
             <label for="voyage_description">Voyage Description <span class="text-danger">*</span></label>
-            <textarea id="voyage_description" name="voyage_description" placeholder="Enter voyage description here">{{ $voyage->voyage_description }}</textarea>
+            <textarea id="voyage_description" name="voyage_description" placeholder="Enter voyage description here"><?php echo e($voyage->voyage_description); ?></textarea>
           </div>
         </div>
 
@@ -166,24 +167,24 @@
         <div class="form-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
           <div class="form-group" style="flex: 0 0 250px;">
             <label for="voyage_status">Status</label>
-            <select id="voyage_status" name="voyage_status" required @if($isCancelled) disabled @endif>
-              <option value="Scheduled" {{ $voyage->voyage_status == 'Scheduled' ? 'selected' : '' }}>Scheduled</option>
-              <option value="At Sea" {{ $voyage->voyage_status == 'At Sea' ? 'selected' : '' }}>At Sea</option>
-              <option value="Completed" {{ $voyage->voyage_status == 'Completed' ? 'selected' : '' }}>Completed</option>
-              <option value="Cancelled" {{ $voyage->voyage_status == 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
-              <option value="Archived" {{ $voyage->voyage_status == 'Archived' ? 'selected' : '' }}>Archived</option>
+            <select id="voyage_status" name="voyage_status" required <?php if($isCancelled): ?> disabled <?php endif; ?>>
+              <option value="Scheduled" <?php echo e($voyage->voyage_status == 'Scheduled' ? 'selected' : ''); ?>>Scheduled</option>
+              <option value="At Sea" <?php echo e($voyage->voyage_status == 'At Sea' ? 'selected' : ''); ?>>At Sea</option>
+              <option value="Completed" <?php echo e($voyage->voyage_status == 'Completed' ? 'selected' : ''); ?>>Completed</option>
+              <option value="Cancelled" <?php echo e($voyage->voyage_status == 'Cancelled' ? 'selected' : ''); ?>>Cancelled</option>
+              <option value="Archived" <?php echo e($voyage->voyage_status == 'Archived' ? 'selected' : ''); ?>>Archived</option>
             </select>
 
-            @if($isCancelled)
+            <?php if($isCancelled): ?>
                 <input type="hidden" name="voyage_status" value="Cancelled">
-            @endif
+            <?php endif; ?>
           </div>
 
           <div class="form-actions" style="display: flex; gap: 1rem;">
             <button type="submit" class="acs-add-btn update-btn" id="saveEditBtn">
               <i class="fa-solid fa-save me-2"></i>Save Changes
             </button>
-            <a href="{{ route('staff.voyage_list') }}" class="acs-add-btn acs-cancel-btn">
+            <a href="<?php echo e(route('staff.voyage_list')); ?>" class="acs-add-btn acs-cancel-btn">
               <i class="fa-solid fa-xmark me-2"></i>Cancel
             </a>
           </div>
@@ -263,4 +264,5 @@
     etdInput.addEventListener('change', validateTimeInstant);
     etaInput.addEventListener('change', validateTimeInstant);
   </script>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/authorized/staff/svoyage_edit.blade.php ENDPATH**/ ?>
