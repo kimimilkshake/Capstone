@@ -20,6 +20,12 @@ class SendTicketEmail implements ShouldQueue
     public $recipientEmail;
     public $passengerId; // Optional: for sending only a specific passenger's ticket
 
+    /** Timeout in seconds — PDF generation can be slow */
+    public $timeout = 180;
+
+    /** Retry after 60 seconds on failure */
+    public $backoff = 60;
+
     /**
      * Create a new job instance.
      */
@@ -35,6 +41,9 @@ class SendTicketEmail implements ShouldQueue
      */
     public function handle(): void
     {
+        // Remove any PHP time limit — pdf generation is slow on cloud containers
+        set_time_limit(0);
+
         try {
             // Verify booking is confirmed and paid first
             $booking = DB::table('booking')->where('booking_ref_no', $this->bookingRef)->first();

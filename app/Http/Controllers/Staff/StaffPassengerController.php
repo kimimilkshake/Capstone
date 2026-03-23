@@ -116,7 +116,7 @@ class StaffPassengerController extends Controller
             $payment = Payment::create([
                 'booking_ref_no' => $booking->booking_ref_no,
                 'mode_of_payment' => $paymentMode === 'Pending' ? 'Cash' : ($paymentMode === 'Physical' ? 'Cash' : 'Gcash'),
-                'payment_date' => $paymentMode === 'Physical' ? now() : null,
+                'payment_date' => now(),
                 'total_amount' => 0, // Will update after calculating
                 'payment_status' => $paymentMode === 'Physical' ? 'Completed' : 'Pending',
             ]);

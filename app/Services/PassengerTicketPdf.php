@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Booking;
-use App\Services\QrCodeGenerator;
 use Throwable;
 
 class PassengerTicketPdf
@@ -38,44 +37,48 @@ class PassengerTicketPdf
                 $tickets = $allTickets;
             }
 
-            // Generate QR codes as base64 data URLs (avoids dompdf chroot restrictions)
+            // Generate QR codes as PNG base64 data URLs (dompdf cannot render SVG)
             $qrCodes = [];
+            \Log::info('PassengerTicketPdf: Starting QR generation for ' . count($tickets) . ' tickets');
+
             foreach ($tickets as $ticket) {
                 $qrData = $bookingRef . ':' . $ticket->passenger_id;
-                $filename = 'pdf_qr_' . $bookingRef . '_' . $ticket->passenger_id;
-
-                $qrCode = QrCodeGenerator::generateAndStore(
-                    $bookingRef,
-                    $ticket->passenger_id,
-                    $qrData,
-                    $filename
-                );
-
-                if ($qrCode && file_exists($qrCode->qr_code_path)) {
-                    $imageData = base64_encode(file_get_contents($qrCode->qr_code_path));
-                    $qrCodes[$ticket->passenger_id] = 'data:image/png;base64,' . $imageData;
-                    \Log::info('PassengerTicketPdf: QR embedded for passenger ' . $ticket->passenger_id);
-                } else {
-                    \Log::warning('PassengerTicketPdf: QR missing for passenger ' . $ticket->passenger_id);
+                try {
+                    $options = new \chillerlan\QRCode\QROptions([
+                        'outputInterface' => \chillerlan\QRCode\Output\QRGdImagePNG::class,
+                        'scale' => 5,
+                        'outputBase64' => false,
+                    ]);
+                    $pngBlob = (new \chillerlan\QRCode\QRCode($options))->render($qrData);
+                    $qrCodes[$ticket->passenger_id] = 'data:image/png;base64,' . base64_encode($pngBlob);
+                    \Log::info('  PNG QR generated for passenger ' . $ticket->passenger_id);
+                } catch (\Exception $e) {
+                    \Log::warning('  QR generation failed for passenger ' . $ticket->passenger_id . ': ' . $e->getMessage());
                 }
             }
 
-            \Log::info('PassengerTicketPdf: qrCodes count=' . count($qrCodes));
+            \Log::info('PassengerTicketPdf: Final QR count: ' . count($qrCodes));
 
             // Use a PDF-specific Blade template for passenger tickets
             $html = view('passenger.passenger_ticket_pdf', [
-                'booking'        => $booking,
+                'booking' => $booking,
                 'passengerEmail' => $passengerEmail,
-                'tickets'        => $tickets,
-                'qrCodes'        => $qrCodes,
+                'tickets' => $tickets,
+                'qrCodes' => $qrCodes
             ])->render();
+
+            \Log::info('PassengerTicketPdf - Template data: tickets=' . count($tickets) . ', qrCodes=' . count($qrCodes));
+            foreach ($qrCodes as $passId => $url) {
+                \Log::info('  QR Code for passenger ' . $passId . ': ' . substr($url, 0, 100));
+            }
 
             // Generate PDF from HTML using dompdf
             $pdf = app('dompdf.wrapper');
             $dompdf = $pdf->getDomPDF();
             $dompdf->set_option('defaultFont', 'DejaVu Sans');
             $dompdf->set_option('isHtml5ParserEnabled', true);
-            $dompdf->set_option('isRemoteEnabled', true);
+            $dompdf->set_option('isRemoteEnabled', false); // Disabled: prevents HTTP timeout in containerised environments
+            $dompdf->set_option('isFontSubsettingEnabled', false); // Disabled: font subsetting is CPU-intensive, causes timeouts
             $dompdf->set_option('dpi', 96);
 
             $pdf->loadHTML($html)->setPaper('A4', 'portrait');
@@ -88,6 +91,9 @@ class PassengerTicketPdf
         }
     }
 
+    /**
+     * Find accommodation by COT number
+     */
     private static function findAccommodationByCot($cotNo, $accommodations)
     {
         if (!$cotNo || !$accommodations) {
@@ -100,11 +106,11 @@ class PassengerTicketPdf
                 $range = trim($range);
                 if (strpos($range, '-') !== false) {
                     list($start, $end) = explode('-', $range);
-                    if ($cotNo >= (int)trim($start) && $cotNo <= (int)trim($end)) {
+                    if ($cotNo >= (int) trim($start) && $cotNo <= (int) trim($end)) {
                         return $accommodation;
                     }
                 } else {
-                    if ($cotNo == (int)trim($range)) {
+                    if ($cotNo == (int) trim($range)) {
                         return $accommodation;
                     }
                 }
