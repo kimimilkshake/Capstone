@@ -18,27 +18,26 @@
 .scanner-page-header{
     position:relative;
     display:flex;
-    justify-content:center;
+    justify-content:space-between;
     align-items:center;
     margin-bottom:20px;
     min-height:42px;
-    padding-right:120px;
+    gap:16px;
 }
 
 .scanner-page-title{
     margin:0;
     font-size:0.9rem;
     font-weight:800;
-    letter-spacing:0.34rem;
+    letter-spacing:0.24rem;
     color:#485B8C;
     text-align:center;
+    flex:1 1 auto;
+    min-width:0;
 }
 
 .scanner-page-header form{
-    position:absolute;
-    top:50%;
-    right:0;
-    transform:translateY(-50%);
+    flex:0 0 auto;
 }
 
 .scanner-header-logout{
@@ -164,13 +163,11 @@
         min-height:auto;
         flex-direction:column;
         align-items:center;
-        gap:12px;
-        padding-right:0;
+        justify-content:center;
+        gap:10px;
     }
 
     .scanner-page-header form{
-        position:static;
-        transform:none;
         width:100%;
         display:flex;
         justify-content:center;
@@ -185,13 +182,15 @@
     }
 
     .scanner-page-title{
-        font-size:0.82rem;
-        letter-spacing:0.22rem;
-        line-height:1.5;
+        font-size:0.9rem;
+        letter-spacing:0.08rem;
+        line-height:1.35;
+        width:100%;
     }
 
     .scanner-header-logout{
         width:100%;
+        max-width:280px;
     }
 
     .scanner-intro{
@@ -220,8 +219,8 @@
     }
 
     .scanner-page-title{
-        font-size:0.76rem;
-        letter-spacing:0.16rem;
+        font-size:0.84rem;
+        letter-spacing:0.04rem;
     }
 
     .scanner-header-logout{
