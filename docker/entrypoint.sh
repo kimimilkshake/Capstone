@@ -54,6 +54,9 @@ if [ ! -f /var/www/html/storage/cot_plan/cot_plan_index.json ]; then
     cp -r /cot_plan_seed/* /var/www/html/storage/cot_plan/
 fi
 
+# Ensure storage directories exist (Railway volume may start empty)
+mkdir -p /var/www/html/storage/app/public/cargo_pictures
+
 # Ensure correct permissions on storage
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
