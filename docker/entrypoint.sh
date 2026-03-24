@@ -80,5 +80,8 @@ php artisan route:clear
 php artisan route:cache || echo "Warning: route:cache failed (closure routes present), running without cache"
 php artisan view:cache
 
+# Fix permissions after artisan commands (they run as root and may create log files)
+chown -R www-data:www-data /var/www/html/storage/logs
+
 echo "==> Application ready. Starting services..."
 exec "$@"
