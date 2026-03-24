@@ -9,9 +9,10 @@
             <div class="col-lg-6">
                 <div class="table-container">
                     <h4 class="text-center text-primary">Available Voyages (Next 7 Days)</h4>
+                    <p class="text-center text-muted small fst-italic mb-2">Click a voyage to auto-fill the form</p>
 
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped">
+                        <table class="table table-hover voyage-table">
                             <thead class="table-dark text-center">
                                 <tr>
                                     <th>Date</th>
@@ -22,7 +23,12 @@
                             </thead>
                             <tbody class="text-center">
                                 @forelse ($voyages as $voyage)
-                                    <tr>
+                                    <tr class="voyage-row" style="cursor: pointer;"
+                                        data-voyage-id="{{ data_get($voyage, 'voyage_id') }}"
+                                        data-route-from="{{ data_get($voyage, 'route_from') }}"
+                                        data-route-to="{{ data_get($voyage, 'route_to') }}"
+                                        data-departure-date="{{ data_get($voyage, 'departure_date') }}"
+                                        data-departure-time="{{ data_get($voyage, 'departure_time') }}">
                                         @php
                                             $depDate = data_get($voyage, 'departure_date');
                                             $depTime = data_get($voyage, 'departure_time');
@@ -165,8 +171,8 @@
                             <div class="mb-3">
                                 <label for="departureDateMobile" class="form-label">Departure Date <span
                                         class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="departureDateMobile" name="departure_date"
-                                    required>
+                                <input type="date" class="form-control" id="departureDateMobile"
+                                    name="departure_date" required>
                             </div>
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
