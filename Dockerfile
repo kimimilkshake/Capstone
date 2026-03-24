@@ -45,6 +45,9 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 # Copy application source
 COPY . .
 
+# Ensure bootstrap/cache exists (excluded by .dockerignore)
+RUN mkdir -p /var/www/html/bootstrap/cache
+
 # Complete composer setup (autoload, package discovery)
 RUN composer dump-autoload --optimize \
     && php artisan package:discover --ansi

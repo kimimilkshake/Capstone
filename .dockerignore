@@ -4,6 +4,7 @@ vendor
 public/build
 public/storage
 public/hot
+bootstrap/cache
 storage/logs/*.log
 *.log
 .env
