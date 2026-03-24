@@ -40,7 +40,7 @@ class PassengerController extends Controller
 
         // Get cot plan image URL
         $cotPlanUrl = $voyage->vessel && $voyage->vessel->vessel_cot_plan_url
-            ? asset('storage/' . $voyage->vessel->vessel_cot_plan_url)
+            ? asset('files/' . $voyage->vessel->vessel_cot_plan_url)
             : asset('images/sample-cot-plan.jpg');
 
         if ($departureTime) {

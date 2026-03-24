@@ -56,6 +56,7 @@ fi
 
 # Ensure storage directories exist (Railway volume may start empty)
 mkdir -p /var/www/html/storage/app/public/cargo_pictures
+mkdir -p /var/www/html/storage/app/public/cot_plans
 
 # Ensure correct permissions on storage
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache

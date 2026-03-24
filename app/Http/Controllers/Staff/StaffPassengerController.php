@@ -51,7 +51,7 @@ class StaffPassengerController extends Controller
         // Get vessel cot plan for first voyage if available
         $selectedVoyage = $voyages->first();
         $cotPlanUrl = $selectedVoyage && $selectedVoyage->vessel && $selectedVoyage->vessel->vessel_cot_plan_url
-            ? asset('storage/' . $selectedVoyage->vessel->vessel_cot_plan_url)
+            ? asset('files/' . $selectedVoyage->vessel->vessel_cot_plan_url)
             : asset('images/sample-cot-plan.jpg');
 
         return view('authorized.staff.passengerbooking', compact('voyages', 'cotPlanUrl'));
@@ -374,7 +374,7 @@ class StaffPassengerController extends Controller
                 'accommodation_price' => $accommodation->accommodation_regular_price,
                 'cot_range' => $cotRange,
                 'cot_plan_url' => !empty($accommodation->accommodation_cot_plan_url)
-                    ? asset('storage/' . $accommodation->accommodation_cot_plan_url)
+                    ? asset('files/' . $accommodation->accommodation_cot_plan_url)
                     : null,
                 'available_cots' => $availableCots
             ];

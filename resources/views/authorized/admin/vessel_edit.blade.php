@@ -160,7 +160,7 @@
                                         <label>Cot Plan Image <em style="color: #888; font-size: 0.8em;">jpg, jpeg, png
                                                 only</em></label>
                                         @if ($acc->accommodation_cot_plan_url)
-                                            <img src="{{ asset('storage/' . $acc->accommodation_cot_plan_url) }}"
+                                            <img src="{{ asset('files/' . $acc->accommodation_cot_plan_url) }}"
                                                 alt="Cot Plan"
                                                 style="max-height: 80px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 4px; display: block;">
                                         @endif
