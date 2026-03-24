@@ -469,8 +469,8 @@ Route::get('/manifest/{voyage}/all-passengers-table', [\App\Http\Controllers\Man
 // Print: all cargos table (for printing all pages)
 Route::get('/manifest/{voyage}/all-cargos-table', [\App\Http\Controllers\ManifestPrintController::class, 'allCargosTable'])->name('manifest.allCargosTable');
 
-// Serve storage files through PHP (Railway blocks direct symlink/nginx access)
-Route::get('/storage/{path}', [\App\Http\Controllers\StorageFileController::class, 'serve'])
+// Serve storage files through PHP (avoids nginx /storage/ conflicts on Railway)
+Route::get('/files/{path}', [\App\Http\Controllers\StorageFileController::class, 'serve'])
     ->where('path', '.*')
     ->name('storage.serve');
 

@@ -85,7 +85,7 @@
 					<div class="carousel-inner">
 						@foreach ($cargoWithPhotos as $index => $cargo)
 							@php
-								$imgPath = asset('storage/' . $cargo->cargo_picture);
+								$imgPath = asset('files/' . $cargo->cargo_picture);
 								$cargoDescription = $cargo->cargoItem->cargo_item_description ?? 'Unknown Cargo';
 								$cargoClassification = $cargo->cargoClassification->cargo_classification_name ?? '';
 							@endphp
