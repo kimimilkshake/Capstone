@@ -469,5 +469,10 @@ Route::get('/manifest/{voyage}/all-passengers-table', [\App\Http\Controllers\Man
 // Print: all cargos table (for printing all pages)
 Route::get('/manifest/{voyage}/all-cargos-table', [\App\Http\Controllers\ManifestPrintController::class, 'allCargosTable'])->name('manifest.allCargosTable');
 
+// Serve storage files through PHP (avoids nginx /storage/ conflicts on Railway)
+Route::get('/files/{path}', [\App\Http\Controllers\StorageFileController::class, 'serve'])
+    ->where('path', '.*')
+    ->name('storage.serve');
+
 // QR Boarding API (moved to QrScannerController)
 Route::post('/qr/board-passenger', [QrScannerController::class, 'boardPassenger'])->name('qr.board_passenger');

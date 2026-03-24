@@ -17,7 +17,7 @@
                         <option value="">-- Choose Voyage --</option>
                         @foreach ($voyages as $voyage)
                             <option value="{{ $voyage->voyage_id }}" data-vessel-id="{{ $voyage->vessel_id }}"
-                                data-cot-plan="{{ $voyage->vessel && $voyage->vessel->vessel_cot_plan_url ? asset('storage/' . $voyage->vessel->vessel_cot_plan_url) : asset('images/sample-cot-plan.jpg') }}">
+                                data-cot-plan="{{ $voyage->vessel && $voyage->vessel->vessel_cot_plan_url ? asset('files/' . $voyage->vessel->vessel_cot_plan_url) : asset('images/sample-cot-plan.jpg') }}">
                                 {{ $voyage->voyage_code }} |
                                 {{ $voyage->routePort->route_origin ?? 'N/A' }} →
                                 {{ $voyage->routePort->route_destination ?? 'N/A' }} |

@@ -399,7 +399,7 @@ class BookingController extends Controller
                 'accommodation_price' => $accommodation->accommodation_regular_price,
                 'cot_range' => $cotRange,
                 'cot_plan_url' => !empty($accommodation->accommodation_cot_plan_url)
-                    ? asset('storage/' . $accommodation->accommodation_cot_plan_url)
+                    ? asset('files/' . $accommodation->accommodation_cot_plan_url)
                     : null,
                 'available_cots' => $availableCots
             ];

@@ -44,8 +44,8 @@ if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "" ]; then
     php artisan key:generate --force
 fi
 
-# Create storage link
-php artisan storage:link --force 2>/dev/null || true
+# Remove storage symlink/directory so nginx falls through to PHP route for file serving
+rm -rf /var/www/html/public/storage
 
 # Restore COT plan files into storage volume if missing
 if [ ! -f /var/www/html/storage/cot_plan/cot_plan_index.json ]; then
@@ -53,6 +53,10 @@ if [ ! -f /var/www/html/storage/cot_plan/cot_plan_index.json ]; then
     mkdir -p /var/www/html/storage/cot_plan
     cp -r /cot_plan_seed/* /var/www/html/storage/cot_plan/
 fi
+
+# Ensure storage directories exist (Railway volume may start empty)
+mkdir -p /var/www/html/storage/app/public/cargo_pictures
+mkdir -p /var/www/html/storage/app/public/cot_plans
 
 # Ensure correct permissions on storage
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
@@ -71,7 +75,8 @@ fi
 
 # Cache configuration for performance
 php artisan config:cache
-php artisan route:cache || echo "Warning: route:cache failed (duplicate route names), skipping"
+php artisan route:clear
+php artisan route:cache || echo "Warning: route:cache failed (closure routes present), running without cache"
 php artisan view:cache
 
 echo "==> Application ready. Starting services..."
