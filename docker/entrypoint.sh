@@ -74,7 +74,8 @@ fi
 
 # Cache configuration for performance
 php artisan config:cache
-php artisan route:cache || echo "Warning: route:cache failed (duplicate route names), skipping"
+php artisan route:clear
+php artisan route:cache || echo "Warning: route:cache failed (closure routes present), running without cache"
 php artisan view:cache
 
 echo "==> Application ready. Starting services..."
