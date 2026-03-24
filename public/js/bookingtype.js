@@ -237,6 +237,49 @@ function resetSelection() {
     checkProceedButton();
 }
 
+// --- Voyage table row click-to-select ---
+document.querySelectorAll(".voyage-row").forEach((row) => {
+    row.addEventListener("click", function () {
+        selectVoyageFromTable(this);
+    });
+});
+
+function selectVoyageFromTable(row) {
+    // If clicking the already-selected row, deselect and reset
+    if (row.classList.contains("table-primary")) {
+        row.classList.remove("table-primary");
+        resetSelection();
+        return;
+    }
+
+    const routeFrom = row.dataset.routeFrom;
+    const routeTo = row.dataset.routeTo;
+    const departureDate = row.dataset.departureDate;
+    const voyageId = row.dataset.voyageId;
+
+    // Highlight selected row
+    document
+        .querySelectorAll(".voyage-row")
+        .forEach((r) => r.classList.remove("table-primary"));
+    row.classList.add("table-primary");
+
+    // 1. Set origin and trigger destination population
+    routeFromSelect.value = routeFrom;
+    updateDestinations();
+
+    // 2. Set destination and trigger date population
+    routeToSelect.value = routeTo;
+    updateAvailableDates();
+
+    // 3. Set date and trigger time population
+    tripDateInput.value = departureDate;
+    updateAvailableTimes();
+
+    // 4. Set the departure time (option values are voyage IDs)
+    departureTimeSelect.value = voyageId;
+    checkProceedButton();
+}
+
 // Proceed button
 proceedBtn.addEventListener("click", function () {
     if (proceedBtn.disabled) {
