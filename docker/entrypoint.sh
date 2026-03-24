@@ -44,8 +44,8 @@ if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "" ]; then
     php artisan key:generate --force
 fi
 
-# Remove storage symlink so nginx falls through to PHP route for file serving
-rm -f /var/www/html/public/storage
+# Remove storage symlink/directory so nginx falls through to PHP route for file serving
+rm -rf /var/www/html/public/storage
 
 # Restore COT plan files into storage volume if missing
 if [ ! -f /var/www/html/storage/cot_plan/cot_plan_index.json ]; then
