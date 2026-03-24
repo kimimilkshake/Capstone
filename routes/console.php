@@ -29,3 +29,9 @@ Schedule::call(function () {
             ->update(['payment_status' => 'Canceled']);
     }
 })->everyFiveMinutes();
+
+// Prune completed queue batches daily
+Schedule::command('queue:prune-batches')->dailyAt('02:00');
+
+// Flush failed jobs daily
+Schedule::command('queue:flush')->dailyAt('02:05');
