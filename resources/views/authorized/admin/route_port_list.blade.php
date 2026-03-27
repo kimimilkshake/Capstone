@@ -16,8 +16,8 @@
     </form>
 
     <div class="add-vessel">
-      <button type="button" id="addRouteCodeBtn" class="add-link-btn">
-        <i class="fa-solid fa-plus me-2"></i>Add Route Code
+      <button type="button" id="addRouteCategoryBtn" class="add-link-btn">
+        <i class="fa-solid fa-plus me-2"></i>Add Route Category
       </button>
     </div>
 
@@ -40,7 +40,7 @@
     <tbody>
       @forelse($route_port as $rp)
         <tr>
-          <td>{{ $rp->routeCode->route_code_name ?? 'N/A' }}</td>
+          <td>{{ $rp->route_code }}</td>
           <td>{{ $rp->route_origin }}</td>
           <td>{{ $rp->route_destination }}</td>
           <td>
@@ -67,7 +67,7 @@
                 data-port_destination_name="{{ $rp->port_destination_name }}"
                 data-port_destination_city="{{ $rp->port_destination_city }}"
                 data-port_destination_province="{{ $rp->port_destination_province }}"
-                data-route_code_id="{{ $rp->route_code_id }}"
+                data-route_category_id="{{ $rp->route_category_id }}"
             >
                 <i class="fa fa-pencil"></i>
             </button>
@@ -88,22 +88,22 @@
   </div>
 </div>
 
-<!-- Add Route Code Modal -->
-<div id="addRouteCodeModal" class="modal-overlay" style="display:none;">
+<!-- Add Route Category Modal -->
+<div id="addRouteCategoryModal" class="modal-overlay" style="display:none;">
   <div class="modal-content">
-    <span class="close-btn" id="closeAddRouteCodeModal">&times;</span>
-    <h3>Add Route Code</h3>
+    <span class="close-btn" id="closeAddRouteCategoryModal">&times;</span>
+    <h3>Add Route Category</h3>
 
-    <form id="addRouteCodeForm">
+    <form id="addRouteCategoryForm">
       @csrf
       <div class="rpmodal-row one-col">
         <div class="rpmodal-col">
-          <label>Route Code Name <span class="text-danger">*</span></label>
-          <input type="text" name="route_code_name" required>
+          <label>Route Category Name <span class="text-danger">*</span></label>
+          <input type="text" name="route_category_name" required>
         </div>
       </div>
 
-      <button type="submit">Add Route Code</button>
+      <button type="submit">Add Route Category</button>
     </form>
   </div>
 </div>
@@ -122,11 +122,11 @@
       <!-- 2 columns for route -->
       <div class="rpmodal-row three-col">
         <div class="rpmodal-col">
-          <label>Route Code <span class="text-danger">*</span></label>
-          <select name="route_code_id" id="route_code_id">
-            <option value="">Select Route Code</option>
-            @foreach($route_codes as $code)
-                <option value="{{ $code->route_code_id }}">{{ $code->route_code_name }}</option>
+          <label>Route Category <span class="text-danger">*</span></label>
+          <select name="route_category_id" id="route_category_id">
+            <option value="">Select Route Category</option>
+            @foreach($route_categories as $category)
+                <option value="{{ $category->route_category_id }}">{{ $category->route_category_name }}</option>
             @endforeach
           </select>
         </div>
@@ -193,11 +193,11 @@
 
       <div class="rpmodal-row three-col">
         <div class="rpmodal-col">
-          <label>Route Code <span class="text-danger">*</span></label>
-          <select name="route_code_id" id="editRouteCodeId">
-            <option value="">Select Route Code</option>
-            @foreach($route_codes as $routeCode)
-                <option value="{{ $routeCode->route_code_id }}">{{ $routeCode->route_code_name }}</option>
+          <label>Route Category <span class="text-danger">*</span></label>
+          <select name="route_category_id" id="editRouteCategoryId">
+            <option value="">Select Route Category</option>
+            @foreach($route_categories as $category)
+                <option value="{{ $category->route_category_id }}">{{ $category->route_category_name }}</option>
             @endforeach
           </select>
         </div>

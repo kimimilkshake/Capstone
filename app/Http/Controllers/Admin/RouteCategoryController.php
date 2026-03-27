@@ -4,16 +4,21 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\RouteCode;
+use App\Models\RouteCategory;
 use App\Http\Controllers\Traits\AdminGuard;
 
-class RouteCodeController extends Controller
+class RouteCategoryController extends Controller
 {
     use AdminGuard;
 
     public function __construct()
     {
         $this->ensureAdmin();
+    }
+
+    private function isAdmin()
+    {
+        return auth()->guard('admin')->check();
     }
 
     /*
@@ -24,32 +29,28 @@ class RouteCodeController extends Controller
             'admin_user' => auth()->guard('admin')->user(),
         ]);
     */
-    private function isAdmin()
-    {
-        return auth()->guard('admin')->check();
-    }
 
     public function index()
     {
-        $routeCodes = RouteCode::all();
+        $routeCategories = RouteCategory::all();
 
-        return view('authorized.admin.route_port_list', compact('routeCodes'));
+        return view('authorized.admin.route_port_list', compact('routeCategories'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'route_code_name' => 'required|string|max:255|unique:route_code,route_code_name',
+            'route_category_name' => 'required|string|max:255|unique:route_category,route_category_name',
         ]);
 
-        $routeCode = RouteCode::create([
-            'route_code_name' => $validated['route_code_name'],
+        $routeCategory = RouteCategory::create([
+            'route_category_name' => $validated['route_category_name'],
         ]);
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Route Code added successfully!',
-            'routeCode' => $routeCode
+            'message' => 'Route Category added successfully!',
+            'routeCategory' => $routeCategory
         ]);
     }
 }

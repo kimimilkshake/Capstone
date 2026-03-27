@@ -17,7 +17,8 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\PromoController;
 use App\Http\Controllers\Admin\VesselController;
-use App\Http\Controllers\Admin\RouteCodeController;
+use App\Http\Controllers\Admin\RouteCategoryController;
+//use App\Http\Controllers\Admin\RouteCodeController;
 use App\Http\Controllers\Admin\RoutePortController;
 use App\Http\Controllers\NotificationController;
 
@@ -243,11 +244,11 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
     Route::get('/voyages/{id}/edit', [VoyageController::class, 'edit'])->name('admin.voyage_edit');
     Route::put('/voyages/{id}/update', [VoyageController::class, 'update'])->name('admin.voyage_update');
 
-    // Route Code
-    Route::get('/route_codes', [RouteCodeController::class, 'index'])->name('admin.routecodes_list');
-    Route::post('/route_codes', [RouteCodeController::class, 'store'])->name('admin.routecodes.store');
-    Route::put('/route_codes/{id}', [RouteCodeController::class, 'update'])->name('admin.routecodes.update');
-    Route::delete('/route_codes/{id}', [RouteCodeController::class, 'destroy'])->name('admin.routecodes.destroy');
+    // Route Category
+    Route::get('/route_categories', [RouteCategoryController::class, 'index'])->name('admin.routecategories_list');
+    Route::post('/route_categories', [RouteCategoryController::class, 'store'])->name('admin.routecategories.store');
+    Route::put('/route_categories/{id}', [RouteCategoryController::class, 'update'])->name('admin.routecategories.update');
+    Route::delete('/route_categories/{id}', [RouteCategoryController::class, 'destroy'])->name('admin.routecategories.destroy');
 
     //Route and Port
     Route::get('/route_port', [RoutePortController::class, 'index'])->name('admin.route_port_list');

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CargoItem;
-use App\Models\RouteCode;
+use App\Models\RouteCategory;
 use App\Models\MeasurementUnit;
 use App\Models\CargoCategory;
 use Illuminate\Http\Request;
@@ -19,14 +19,14 @@ class CargoItemController extends Controller
 
     public function index(Request $request)
     {
-        $query = CargoItem::with(['routeCode', 'measurementUnit']);
+        $query = CargoItem::with(['routeCategory', 'measurementUnit']);
 
         if ($request->filled('search')) {
             $query->where('cargo_item_description', 'like', "%{$request->search}%");
         }
 
-        if ($request->filled('route_code_id')) {
-            $query->where('route_code_id', $request->route_code_id);
+        if ($request->filled('route_category_id')) {
+            $query->where('route_category_id', $request->route_category_id);
         }
 
         if ($request->filled('cargo_category_id')) {
@@ -35,27 +35,27 @@ class CargoItemController extends Controller
 
         $cargo_items = $query->orderBy('cargo_item_description')->paginate(10);
 
-        $route_codes = RouteCode::orderBy('route_code_name')->get();
+        $route_categories = RouteCategory::orderBy('route_category_name')->get();
         $cargo_categories = CargoCategory::orderBy('cargo_category_name')->get();
 
         if (auth()->guard('admin')->check()) {
-            return view('authorized.admin.cargo_item_list', compact('cargo_items','route_codes', 'cargo_categories'));
+            return view('authorized.admin.cargo_item_list', compact('cargo_items','route_categories', 'cargo_categories'));
         }
 
-        return view('authorized.staff.scargo_item_list', compact('cargo_items','route_codes', 'cargo_categories'));
+        return view('authorized.staff.scargo_item_list', compact('cargo_items','route_categories', 'cargo_categories'));
     }
 
     public function create()
     {
-        $route_codes = RouteCode::orderBy('route_code_name')->get();
+        $route_categories = RouteCategory::orderBy('route_category_name')->get();
         $measurement_units = MeasurementUnit::orderBy('measurement_unit_name')->get();
         $cargo_categories = CargoCategory::orderBy('cargo_category_name')->get();
 
         if (auth()->guard('admin')->check()) {
-            return view('authorized.admin.create_cargo_item', compact('route_codes','measurement_units','cargo_categories'));
+            return view('authorized.admin.create_cargo_item', compact('route_categories','measurement_units','cargo_categories'));
         }
 
-        return view('authorized.staff.screate_cargo_item', compact('route_codes','measurement_units','cargo_categories'));
+        return view('authorized.staff.screate_cargo_item', compact('route_categories','measurement_units','cargo_categories'));
     }
 
     public function store(Request $request)
@@ -63,7 +63,7 @@ class CargoItemController extends Controller
         $validated = $request->validate([
             'measurement_unit_id' => 'nullable|exists:measurement_unit,measurement_unit_id',
             'cargo_category_id' => 'required|exists:cargo_category,cargo_category_id',
-            'route_code_id'       => 'required|exists:route_code,route_code_id',
+            'route_category_id'   => 'required|exists:route_category,route_category_id',
             'cargo_item_description' => 'required|string',
             'cargo_item_freight'  => 'required|numeric',
             'cargo_item_measure_required' => 'required|in:Yes,No',
@@ -90,15 +90,15 @@ class CargoItemController extends Controller
     public function edit($id)
     {
         $cargo_item = CargoItem::findOrFail($id);
-        $route_codes = RouteCode::orderBy('route_code_name')->get();
+        $route_categories = RouteCategory::orderBy('route_category_name')->get();
         $measurement_units = MeasurementUnit::orderBy('measurement_unit_name')->get();
         $cargo_categories = CargoCategory::orderBy('cargo_category_name')->get();
 
         if (auth()->guard('admin')->check()) {
-            return view('authorized.admin.cargo_item_edit', compact('cargo_item','route_codes', 'measurement_units', 'cargo_categories'));
+            return view('authorized.admin.cargo_item_edit', compact('cargo_item','route_categories', 'measurement_units', 'cargo_categories'));
         }
 
-        return view('authorized.staff.scargo_item_edit', compact('cargo_item','route_codes', 'measurement_units', 'cargo_categories'));
+        return view('authorized.staff.scargo_item_edit', compact('cargo_item','route_categories', 'measurement_units', 'cargo_categories'));
         
     }
 
@@ -110,7 +110,7 @@ class CargoItemController extends Controller
         $validated = $request->validate([
             'measurement_unit_id' => 'nullable|exists:measurement_unit,measurement_unit_id',
             'cargo_category_id' => 'required|exists:cargo_category,cargo_category_id',
-            'route_code_id'       => 'required|exists:route_code,route_code_id',
+            'route_category_id'   => 'required|exists:route_category,route_category_id',
             'cargo_item_description' => 'required|string',
             'cargo_item_freight'  => 'required|numeric',
             'cargo_item_measure_required' => 'required|in:Yes,No',

@@ -8,12 +8,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('cargo_booking', function (Blueprint $table) {
-            $table->unsignedBigInteger('route_code_id')->nullable()->after('cargo_classification_id');
+            $table->unsignedBigInteger('route_category_id')->nullable()->after('cargo_classification_id');
 
             // Foreign key
-            $table->foreign('route_code_id')
-                ->references('route_code_id')
-                ->on('route_code')
+            $table->foreign('route_category_id')
+                ->references('route_category_id')
+                ->on('route_category')
                 ->onDelete('restrict');
         });
     }
@@ -21,8 +21,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('cargo_booking', function (Blueprint $table) {
-            $table->dropForeign(['route_code_id']);
-            $table->dropColumn(['route_code_id']);
+            $table->dropForeign(['route_category_id']);
+            $table->dropColumn(['route_category_id']);
         });
     }
 };

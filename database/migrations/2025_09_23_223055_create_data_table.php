@@ -148,15 +148,16 @@ return new class extends Migration {
         // VOYAGES & TICKETS
         // ==========================
 
-        Schema::create('route_code', function (Blueprint $table) {
-            $table->id('route_code_id');
-            $table->string('route_code_name');
+        Schema::create('route_category', function (Blueprint $table) {
+            $table->id('route_category_id');
+            $table->string('route_category_name');
             $table->timestamps();
         });
 
         Schema::create('route_port', function (Blueprint $table) {
             $table->id('route_port_id');
-            $table->foreignId('route_code_id')->constrained('route_code', 'route_code_id');
+            $table->foreignId('route_category_id')->constrained('route_category', 'route_category_id');
+            $table->string('route_code')->unique();
             $table->string('route_origin');
             $table->string('route_destination');
             $table->string('port_origin_name');
@@ -226,7 +227,7 @@ return new class extends Migration {
                     ->nullable()
                     ->constrained('measurement_unit', 'measurement_unit_id');
             $table->foreignId('cargo_category_id')->constrained('cargo_category', 'cargo_category_id');
-            $table->foreignId('route_code_id')->constrained('route_code', 'route_code_id');
+            $table->foreignId('route_category_id')->constrained('route_category', 'route_category_id');
             $table->string('cargo_item_description');
             $table->decimal('cargo_item_freight', 10, 2);
             $table->enum('cargo_item_measure_required', ['Yes', 'No']);

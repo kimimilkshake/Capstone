@@ -278,28 +278,29 @@ class DatabaseSeeder extends Seeder
             ],
         ]);
 
-        // Route Code seeders
-        DB::table('route_code')->insert([
+        // Route Category seeders
+        DB::table('route_category')->insert([
             [
-                'route_code_name' => 'BAYBAY',
+                'route_category_name' => 'BAYBAY',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'route_code_name' => 'TALIBON',
+                'route_category_name' => 'TALIBON',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
         ]);
 
-        // Get inserted Route Code IDs
-        $baybayId = DB::table('route_code')->where('route_code_name', 'BAYBAY')->value('route_code_id');
-        $talibonId = DB::table('route_code')->where('route_code_name', 'TALIBON')->value('route_code_id');
+        // Get inserted Route Category IDs
+        $baybayId = DB::table('route_category')->where('route_category_name', 'BAYBAY')->value('route_category_id');
+        $talibonId = DB::table('route_category')->where('route_category_name', 'TALIBON')->value('route_category_id');
 
         // Route and Port seeders
         DB::table('route_port')->insert([
             [
-                'route_code_id' => $baybayId,
+                'route_category_id' => $baybayId,
+                'route_code' => 'CEBBAY',
                 'route_origin' => 'Cebu',
                 'route_destination' => 'Baybay',
                 'port_origin_name' => 'Port of Cebu',
@@ -312,7 +313,8 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'route_code_id' => $talibonId,
+                'route_category_id' => $talibonId,
+                'route_code' => 'CEBTAL',
                 'route_origin' => 'Cebu',
                 'route_destination' => 'Talibon',
                 'port_origin_name' => 'Port of Cebu',
@@ -325,7 +327,8 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'route_code_id' => $baybayId,
+                'route_category_id' => $baybayId,
+                'route_code' => 'BAYCEB',
                 'route_origin' => 'Baybay',
                 'route_destination' => 'Cebu',
                 'port_origin_name' => 'Port of Baybay',
@@ -338,7 +341,8 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'route_code_id' => $talibonId,
+                'route_category_id' => $talibonId,
+                'route_code' => 'TALCEB',
                 'route_origin' => 'Talibon',
                 'route_destination' => 'Cebu',
                 'port_origin_name' => 'Port of Talibon',

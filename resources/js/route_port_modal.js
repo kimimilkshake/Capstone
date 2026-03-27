@@ -1,36 +1,36 @@
-// ===== Route Code Modal =====
-const addRouteCodeBtn = document.getElementById('addRouteCodeBtn');
-const addRouteCodeModal = document.getElementById('addRouteCodeModal');
-const closeAddRouteCodeModal = document.getElementById('closeAddRouteCodeModal');
-const addRouteCodeForm = document.getElementById('addRouteCodeForm');
+// ===== Route Category Modal =====
+const addRouteCategoryBtn = document.getElementById('addRouteCategoryBtn');
+const addRouteCategoryModal = document.getElementById('addRouteCategoryModal');
+const closeAddRouteCategoryModal = document.getElementById('closeAddRouteCategoryModal');
+const addRouteCategoryForm = document.getElementById('addRouteCategoryForm');
 
 document.addEventListener("DOMContentLoaded", function () {
 
     // --- OPEN MODAL ---
-    addRouteCodeBtn.addEventListener('click', () => {
-        addRouteCodeModal.style.display = 'flex';
+    addRouteCategoryBtn.addEventListener('click', () => {
+        addRouteCategoryModal.style.display = 'flex';
     });
 
     // --- CLOSE MODAL ---
-    closeAddRouteCodeModal.addEventListener('click', () => {
-        addRouteCodeModal.style.display = 'none';
+    closeAddRouteCategoryModal.addEventListener('click', () => {
+        addRouteCategoryModal.style.display = 'none';
     });
 
     // Close modal when clicking outside
     window.addEventListener('click', (e) => {
-        if (e.target === addRouteCodeModal) {
-            addRouteCodeModal.style.display = 'none';
+        if (e.target === addRouteCategoryModal) {
+            addRouteCategoryModal.style.display = 'none';
         }
     });
 
-    // --- ADD ROUTE CODE ---
-    addRouteCodeForm.addEventListener('submit', async (e) => {
+    // --- ADD ROUTE CATEGORY ---
+    addRouteCategoryForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const formData = new FormData(addRouteCodeForm);
+        const formData = new FormData(addRouteCategoryForm);
 
         try {
-            const response = await fetch("/authorized/admin/route_codes", { // use actual route URL
+            const response = await fetch("/authorized/admin/route_categories", { // use actual route URL
                 method: 'POST',
                 headers: {
                     "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
@@ -42,28 +42,28 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = await response.json().catch(() => ({}));
 
             if (response.ok && data.status === 'success') {
-                showToast('Route Code added successfully!', 'success'); // NEW
-                addRouteCodeModal.style.display = 'none';
-                addRouteCodeForm.reset();
+                showToast('Route Category added successfully!', 'success'); // NEW
+                addRouteCategoryModal.style.display = 'none';
+                addRouteCategoryForm.reset();
 
-                // append new route code to dropdown in Add Route & Port modal
-                const routeCodeSelect = document.querySelector('#addRoutePortForm select[name="route_code_id"]');
-                if (routeCodeSelect && data.routeCode) {
+                // append new route category to dropdown in Add Route & Port modal
+                const routeCategorySelect = document.querySelector('#addRoutePortForm select[name="route_category_id"]');
+                if (routeCategorySelect && data.routeCategory) {
                     const option = document.createElement('option');
-                    option.value = data.routeCode.route_code_id;
-                    option.text = data.routeCode.route_code_name;
-                    routeCodeSelect.appendChild(option);
+                    option.value = data.routeCategory.route_category_id;
+                    option.text = data.routeCategory.route_category_name;
+                    routeCategorySelect.appendChild(option);
 
-                    const options = Array.from(routeCodeSelect.options)
-                        .slice(1) // skip "Select Route Code"
+                    const options = Array.from(routeCategorySelect.options)
+                        .slice(1) // skip "Select Route Category"
                         .sort((a, b) => a.text.localeCompare(b.text));
 
-                    routeCodeSelect.innerHTML = '<option value="">Select Route Code</option>';
-                    options.forEach(o => routeCodeSelect.appendChild(o));
+                    routeCategorySelect.innerHTML = '<option value="">Select Route Category</option>';
+                    options.forEach(o => routeCategorySelect.appendChild(o));
                 }
 
             } else {
-                showToast(data.message || 'Error adding route code', 'danger'); // NEW
+                showToast(data.message || 'Error adding route category', 'danger'); // NEW
             }
 
         } catch (err) {
@@ -146,14 +146,14 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("editPortDestinationCity").value = btn.dataset.port_destination_city;
             document.getElementById("editPortDestinationProvince").value = btn.dataset.port_destination_province;
 
-            const routeCodeSelect = document.getElementById("editRouteCodeId");
-            if (routeCodeSelect) {
-                routeCodeSelect.value = btn.dataset.route_code_id || "";
+            const routeCategorySelect = document.getElementById("editRouteCategoryId");
+            if (routeCategorySelect) {
+                routeCategorySelect.value = btn.dataset.route_category_id || "";
             }
 
             // STORE ORIGINAL VALUES
             originalFormData = {
-                route_code_id: document.getElementById("editRouteCodeId").value,
+                route_category_id: document.getElementById("editRouteCategoryId").value,
                 route_origin: document.getElementById("editRouteOrigin").value,
                 route_destination: document.getElementById("editRouteDestination").value,
                 port_origin_name: document.getElementById("editPortOriginName").value,
@@ -212,7 +212,7 @@ document.addEventListener("DOMContentLoaded", function () {
      // ✅ STEP 5 FUNCTION GOES HERE
     function checkIfChanged() {
         const currentData = {
-            route_code_id: document.getElementById("editRouteCodeId").value,
+            route_category_id: document.getElementById("editRouteCategoryId").value,
             route_origin: document.getElementById("editRouteOrigin").value,
             route_destination: document.getElementById("editRouteDestination").value,
             port_origin_name: document.getElementById("editPortOriginName").value,
