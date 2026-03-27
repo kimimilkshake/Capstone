@@ -7,7 +7,7 @@
                     <img src="<?php echo e(asset('images/logo_w_name.svg')); ?>" alt="Lapulapu Shipping Lines" class="footer-logo">
                 </div>
                 <p class="footer-description mt-3">
-                    Providing safe, reliable, and comfortable sea travel across the Visayas and Mindanao regions.
+                    Providing safe, reliable, and comfortable sea travel across the Visayas regions.
                 </p>
                 <div class="footer-socials mt-3">
                     <a href="https://www.facebook.com/profile.php?id=100064063478567" class="footer-social-link" aria-label="Facebook"><i class="fab fa-facebook-f"></i> <span class="footer-social-text">Facebook</span></a>
@@ -40,15 +40,15 @@
                 <ul class="footer-contact">
                     <li>
                         <i class="fas fa-map-marker-alt"></i>
-                        <span>Cebu City, Cebu, Philippines</span>
+                        <span>872 M.J. Cuenco Ave., Cebu City, Philippines</span>
                     </li>
                     <li>
                         <i class="fas fa-phone"></i>
-                        <span>+63 (32) 123-4567</span>
+                        <span>0909 189 7083</span>
                     </li>
                     <li>
                         <i class="fas fa-envelope"></i>
-                        <span>info@lapulapushipping.com</span>
+                        <span>lapulapushippinglinescorp@gmail.com</span>
                     </li>
                 </ul>
             </div>
