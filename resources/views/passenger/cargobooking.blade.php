@@ -769,6 +769,7 @@ container.addEventListener('change', e => {
         }
     </script>
 
+    @include('components.footer')
 @endsection
 
 <style>
