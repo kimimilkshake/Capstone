@@ -85,4 +85,6 @@
     <!-- JS Data -->
     <script type="application/json" id="accommodations-data">{!! json_encode($accommodations) !!}</script>
     <script src="{{ asset('js/passengerform.js') }}"></script>
+
+    @include('components.footer')
 @endsection

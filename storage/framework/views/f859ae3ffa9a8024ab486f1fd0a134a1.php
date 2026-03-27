@@ -1,6 +1,5 @@
-@extends('layouts.app')
-@section('content')
-    @include('components.hero'){{-- Head Nav --}}
+<?php $__env->startSection('content'); ?>
+    <?php echo $__env->make('components.hero', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <div class="faqs-container my-5">
         <h2 class="faqs-title">Frequently Asked Questions</h2>
 
@@ -358,5 +357,7 @@
 
     </div>
 
-    @include('components.footer')
-@endsection
+    <?php echo $__env->make('components.footer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/passenger/faqs.blade.php ENDPATH**/ ?>

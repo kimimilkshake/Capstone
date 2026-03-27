@@ -1,14 +1,13 @@
-@extends('layouts.app')
-@section('content')
-    @include('components.hero'){{-- Head Nav --}}
+<?php $__env->startSection('content'); ?>
+    <?php echo $__env->make('components.hero', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <div class="contact-container my-2">
         <div class="contact-row">
             <div class="contact-col">
                 <div class="contact-card">
                     <h3 class="contact-title">MAIN OFFICE</h3>
                     <div class="main-office-pics">
-                        <img src="{{ asset('images/office1.png') }}" alt="office picture 1" class="main-office-pic">
-                        <img src="{{ asset('images/office2.png') }}" alt="office picture 2" class="main-office-pic">
+                        <img src="<?php echo e(asset('images/office1.png')); ?>" alt="office picture 1" class="main-office-pic">
+                        <img src="<?php echo e(asset('images/office2.png')); ?>" alt="office picture 2" class="main-office-pic">
                     </div>
                     <div class="main-office-details">
                         <p><i class="fa-solid fa-building me-3"></i>872 M.J. CUENCO AVENUE, BARANGAY LOREGA,  6000 CEBU CITY, PHILIPPINES</p>
@@ -25,8 +24,8 @@
             <div class="contact-col">
                 <div class="contact-card">
                     <h3 class="contact-title">SEND US A MESSAGE!</h3>
-                    <form action="{{ route('contact.send') }}" method="POST">
-                        @csrf
+                    <form action="<?php echo e(route('contact.send')); ?>" method="POST">
+                        <?php echo csrf_field(); ?>
                         <label for="contact_name">Name:</label>
                         <input type="text" name="name" id="contact_name" required>
 
@@ -55,7 +54,7 @@
         <div class="contact-row">
             <div class="contact-col">
                 <div class="contact-card">
-                    <img src="{{ asset('images/LSLCCebuBooth.jpg') }}" alt="Cebu Ticketing Booth Map" class="ticketbooth-pic1">
+                    <img src="<?php echo e(asset('images/LSLCCebuBooth.jpg')); ?>" alt="Cebu Ticketing Booth Map" class="ticketbooth-pic1">
                     <h4 class="ticketbooth-title">Cebu</h4>
                     <div class="ticketbooth-details">
                         <p>Pier 3 Ticket Office, V. Sotto St., Cebu City. </p>
@@ -66,7 +65,7 @@
             </div>
             <div class="contact-col">
                 <div class="contact-card">
-                    <img src="{{ asset('images/LSLCBaybayBooth.jpg') }}" alt="Baybay Ticketing Booth" class="ticketbooth-pic1">
+                    <img src="<?php echo e(asset('images/LSLCBaybayBooth.jpg')); ?>" alt="Baybay Ticketing Booth" class="ticketbooth-pic1">
                     <h4 class="ticketbooth-title">Baybay</h4>
                     <div class="ticketbooth-details">
                         <p>Andres Bonifacio St., Baybay City, near Baybay Port</p>
@@ -77,7 +76,7 @@
             </div>
             <div class="contact-col">
                 <div class="contact-card">
-                    <img src="{{ asset('images/LSLCTalibonBooth.jpg') }}" alt="Talibon Ticketing Booth" class="ticketbooth-pic1">
+                    <img src="<?php echo e(asset('images/LSLCTalibonBooth.jpg')); ?>" alt="Talibon Ticketing Booth" class="ticketbooth-pic1">
                     <h4 class="ticketbooth-title">Talibon</h4>
                     <div class="ticketbooth-details">
                         <p>Carlos P. Garcia Ave., near Talibon Port</p>
@@ -89,5 +88,6 @@
         </div>
     </div>
 
-    @include('components.footer')
-@endsection
+    <?php echo $__env->make('components.footer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/passenger/contact.blade.php ENDPATH**/ ?>
