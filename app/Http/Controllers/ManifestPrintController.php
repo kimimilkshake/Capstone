@@ -87,6 +87,7 @@ class ManifestPrintController extends Controller
             ->leftJoin('cargo_booking as cb', 'cb.booking_ref_no', '=', 'cr.booking_ref_no')
             ->leftJoin('cargo_classification as cc', 'cc.cargo_classification_id', '=', 'cb.cargo_classification_id')
             ->leftJoin('cargo_item as ci', 'ci.cargo_item_id', '=', 'cr.cargo_item_id')
+            ->leftJoin('cargo_category as cg', 'cg.cargo_category_id', '=', 'ci.cargo_category_id')
             ->leftJoin('sender as s', 's.sender_id', '=', 'cr.sender_id')
             ->leftJoin('consignee as co', 'co.consignee_id', '=', 'cr.consignee_id')
             ->leftJoin('payment as p', 'p.payment_id', '=', 'cr.payment_id')
@@ -95,6 +96,7 @@ class ManifestPrintController extends Controller
                 'cb.quantity',
                 'cc.cargo_classification_name',
                 'ci.cargo_category_id',
+                'cg.cargo_category_name',
                 'ci.cargo_item_description',
                 'ci.cargo_item_freight',
                 's.sender_name',
@@ -110,7 +112,7 @@ class ManifestPrintController extends Controller
             $rows .= '<td>' . ($c->bl_number ?? $c->booking_ref_no ?? $c->booking_ref ?? ($c->booking_ref_no ?? '-')) . '</td>';
             $rows .= '<td>' . ($c->quantity ?? $c->cargo_item_qty ?? '-') . '</td>';
             $rows .= '<td>' . ($c->cargo_classification_name ?? 'N/A') . '</td>';
-            $rows .= '<td>' . ($c->cargo_category_id ?? 'N/A') . '</td>';
+            $rows .= '<td>' . ($c->cargo_category_name ?? 'N/A') . '</td>';
             $rows .= '<td>' . ($c->cargo_item_description ?? 'N/A') . '</td>';
             $rows .= '<td>' . ($c->sender_name ?? 'N/A') . '</td>';
             $rows .= '<td>' . ($c->sender_tin ?? '-') . '</td>';
