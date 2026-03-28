@@ -11,7 +11,7 @@
             <div class="col-lg-6">
                 <div class="card shadow-sm p-4 mb-4">
                     <h5 class="mb-2">Booking Information</h5>
-
+                    
                     <?php
                         // ✅ CENTRALIZED CALCULATION FUNCTION (ADDED ONLY)
                         function computeSubtotal($cargo) {
@@ -77,7 +77,7 @@
                             $calculatedTotal += $stamp;
                         ?>
 
-                        <p><strong>Amount Paid:</strong> ₱<?php echo e(number_format($calculatedTotal, 2)); ?></p>
+                        <p><strong>Amount Paid:</strong> ₱<?php echo e(number_format($payment->total_amount, 2)); ?></p>
                     <?php endif; ?>
                 </div>
             </div>
@@ -101,7 +101,86 @@
         
         
         
+        <?php
+            $cargoBookings = $booking->cargoBookings;
+            $cargoWithPhotos = $cargoBookings->filter(fn($c) => $c->cargo_picture)->values();
+            $hasPhotos = $cargoWithPhotos->count() > 0;
+        ?>
+
+        <div class="card shadow-sm p-4 mb-4">
+            <h5 class="fw-bold mb-3">Cargo Photos</h5>
+
+            <?php if(!$hasPhotos): ?>
+                <p class="text-muted text-center fst-italic">
+                    No photos were included since the booking was made by the staff
+                </p>
+            <?php else: ?>
+                <div id="cargoCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
+                    <div class="carousel-indicators">
+                        <?php $__currentLoopData = $cargoWithPhotos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $cargo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <button type="button" data-bs-target="#cargoCarousel" data-bs-slide-to="<?php echo e($index); ?>"
+                                class="<?php echo e($index === 0 ? 'active' : ''); ?>"
+                                aria-label="Slide <?php echo e($index + 1); ?>"></button>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    </div>
+
+                    <div class="carousel-inner">
+                        <?php $__currentLoopData = $cargoWithPhotos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $cargo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php
+                                $imgPath = asset('files/' . $cargo->cargo_picture);
+                                $cargoDescription = $cargo->cargoItem->cargo_item_description ?? 'Unknown Cargo';
+                                $cargoClassification = $cargo->cargoClassification->cargo_classification_name ?? '';
+                            ?>
+
+                            <div class="carousel-item <?php echo e($index === 0 ? 'active' : ''); ?>">
+                                <div class="carousel-image-container">
+                                    <img src="<?php echo e($imgPath); ?>" class="d-block w-100 carousel-img"
+                                        alt="<?php echo e($cargoDescription); ?>" style="cursor: default;"
+                                        onerror="this.onerror=null;this.src='<?php echo e(asset('images/passenger.svg')); ?>';">
+
+                                    <div class="carousel-caption-overlay">
+                                        <h5 class="carousel-cargo-title"><?php echo e($cargoDescription); ?></h5>
+                                        <p class="carousel-cargo-classification"><?php echo e($cargoClassification); ?></p>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    </div>
+
+                    <?php if($cargoWithPhotos->count() > 1): ?>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#cargoCarousel"
+                            data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#cargoCarousel"
+                            data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
         <div class="card shadow-sm p-3 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Cargo Items</h5>
+                <?php
+                    $units = $cargoBookings->pluck('measurementUnit.measurement_unit_abbreviation')->unique();
+                    $unitLabel = $units->count() === 1 ? $units->first() : 'Mixed Units';
+                ?>
+                <?php if($unitLabel === 'm' || $unitLabel === 'M'): ?>
+                    <span class="badge bg-info">Measurements in Meters</span>
+                <?php elseif($unitLabel === 'cm'): ?>
+                    <span class="badge bg-secondary">Measurements in Centimeters</span>
+                <?php elseif($unitLabel === 'in' || $unitLabel === 'inch'): ?>
+                    <span class="badge bg-secondary">Measurements in Inches</span>
+                <?php elseif($unitLabel !== 'Mixed Units'): ?>
+                    <span class="badge bg-secondary">Measurements: <?php echo e($unitLabel); ?></span>
+                <?php endif; ?>
+            </div>
+
             <div class="table-responsive">
                 <table class="table table-bordered table-striped mt-3 align-middle cargo-items-table">
                     <thead class="table-dark">
@@ -109,9 +188,18 @@
                             <th>Qty</th>
                             <th>Classification</th>
                             <th>Description</th>
-                            <th>Length</th>
-                            <th>Width</th>
-                            <th>Height</th>
+                            <th>Length <?php if($unitLabel !== 'Mixed Units'): ?>
+                                    (<?php echo e($unitLabel); ?>)
+                                <?php endif; ?>
+                            </th>
+                            <th>Width <?php if($unitLabel !== 'Mixed Units'): ?>
+                                    (<?php echo e($unitLabel); ?>)
+                                <?php endif; ?>
+                            </th>
+                            <th>Height <?php if($unitLabel !== 'Mixed Units'): ?>
+                                    (<?php echo e($unitLabel); ?>)
+                                <?php endif; ?>
+                            </th>
                             <th>CBM</th>
                             <th>Total Weight (kg)</th>
                             <th>Freight</th>
@@ -120,7 +208,7 @@
                     </thead>
 
                     <tbody>
-                        <?php $total = 0; ?>
+                       <?php $total = 0; ?>
 
                         <?php $__currentLoopData = $booking->cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <?php
@@ -740,5 +828,4 @@
         });
     </script>
 <?php $__env->stopSection(); ?>
-
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/authorized/staff/showcargo.blade.php ENDPATH**/ ?>

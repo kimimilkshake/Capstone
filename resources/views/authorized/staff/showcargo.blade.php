@@ -12,7 +12,7 @@
             <div class="col-lg-6">
                 <div class="card shadow-sm p-4 mb-4">
                     <h5 class="mb-2">Booking Information</h5>
-
+                    
                     @php
                         // ✅ CENTRALIZED CALCULATION FUNCTION (ADDED ONLY)
                         function computeSubtotal($cargo) {
@@ -78,12 +78,12 @@
                             $calculatedTotal += $stamp;
                         @endphp
 
-                        <p><strong>Amount Paid:</strong> ₱{{ number_format($calculatedTotal, 2) }}</p>
+                        <p><strong>Amount Paid:</strong> ₱{{ number_format($payment->total_amount, 2) }}</p>
                     @endif
                 </div>
             </div>
 
-            {{-- RIGHT COLUMN --}}
+            {{-- RIGHT COLUMN: SENDER & CONSIGNEE --}}
             <div class="col-lg-6">
                 <div class="card shadow-sm p-4 mb-4">
 
@@ -99,10 +99,89 @@
             </div>
         </div>
 
-        {{-- ================= --}}
-        {{-- CARGO TABLE --}}
-        {{-- ================= --}}
+        {{-- =============== --}}
+        {{-- CARGO PHOTOS --}}
+        {{-- =============== --}}
+        @php
+            $cargoBookings = $booking->cargoBookings;
+            $cargoWithPhotos = $cargoBookings->filter(fn($c) => $c->cargo_picture)->values();
+            $hasPhotos = $cargoWithPhotos->count() > 0;
+        @endphp
+
+        <div class="card shadow-sm p-4 mb-4">
+            <h5 class="fw-bold mb-3">Cargo Photos</h5>
+
+            @if (!$hasPhotos)
+                <p class="text-muted text-center fst-italic">
+                    No photos were included since the booking was made by the staff
+                </p>
+            @else
+                <div id="cargoCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
+                    <div class="carousel-indicators">
+                        @foreach ($cargoWithPhotos as $index => $cargo)
+                            <button type="button" data-bs-target="#cargoCarousel" data-bs-slide-to="{{ $index }}"
+                                class="{{ $index === 0 ? 'active' : '' }}"
+                                aria-label="Slide {{ $index + 1 }}"></button>
+                        @endforeach
+                    </div>
+
+                    <div class="carousel-inner">
+                        @foreach ($cargoWithPhotos as $index => $cargo)
+                            @php
+                                $imgPath = asset('files/' . $cargo->cargo_picture);
+                                $cargoDescription = $cargo->cargoItem->cargo_item_description ?? 'Unknown Cargo';
+                                $cargoClassification = $cargo->cargoClassification->cargo_classification_name ?? '';
+                            @endphp
+
+                            <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
+                                <div class="carousel-image-container">
+                                    <img src="{{ $imgPath }}" class="d-block w-100 carousel-img"
+                                        alt="{{ $cargoDescription }}" style="cursor: default;"
+                                        onerror="this.onerror=null;this.src='{{ asset('images/passenger.svg') }}';">
+
+                                    <div class="carousel-caption-overlay">
+                                        <h5 class="carousel-cargo-title">{{ $cargoDescription }}</h5>
+                                        <p class="carousel-cargo-classification">{{ $cargoClassification }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    @if ($cargoWithPhotos->count() > 1)
+                        <button class="carousel-control-prev" type="button" data-bs-target="#cargoCarousel"
+                            data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#cargoCarousel"
+                            data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    @endif
+                </div>
+            @endif
+        </div>
+
         <div class="card shadow-sm p-3 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Cargo Items</h5>
+                @php
+                    $units = $cargoBookings->pluck('measurementUnit.measurement_unit_abbreviation')->unique();
+                    $unitLabel = $units->count() === 1 ? $units->first() : 'Mixed Units';
+                @endphp
+                @if ($unitLabel === 'm' || $unitLabel === 'M')
+                    <span class="badge bg-info">Measurements in Meters</span>
+                @elseif ($unitLabel === 'cm')
+                    <span class="badge bg-secondary">Measurements in Centimeters</span>
+                @elseif ($unitLabel === 'in' || $unitLabel === 'inch')
+                    <span class="badge bg-secondary">Measurements in Inches</span>
+                @elseif ($unitLabel !== 'Mixed Units')
+                    <span class="badge bg-secondary">Measurements: {{ $unitLabel }}</span>
+                @endif
+            </div>
+
             <div class="table-responsive">
                 <table class="table table-bordered table-striped mt-3 align-middle cargo-items-table">
                     <thead class="table-dark">
@@ -110,9 +189,18 @@
                             <th>Qty</th>
                             <th>Classification</th>
                             <th>Description</th>
-                            <th>Length</th>
-                            <th>Width</th>
-                            <th>Height</th>
+                            <th>Length @if ($unitLabel !== 'Mixed Units')
+                                    ({{ $unitLabel }})
+                                @endif
+                            </th>
+                            <th>Width @if ($unitLabel !== 'Mixed Units')
+                                    ({{ $unitLabel }})
+                                @endif
+                            </th>
+                            <th>Height @if ($unitLabel !== 'Mixed Units')
+                                    ({{ $unitLabel }})
+                                @endif
+                            </th>
                             <th>CBM</th>
                             <th>Total Weight (kg)</th>
                             <th>Freight</th>
@@ -121,7 +209,7 @@
                     </thead>
 
                     <tbody>
-                        @php $total = 0; @endphp
+                       @php $total = 0; @endphp
 
                         @foreach ($booking->cargoBookings as $c)
                             @php

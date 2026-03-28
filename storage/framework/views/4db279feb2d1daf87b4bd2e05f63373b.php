@@ -9,19 +9,19 @@
       <form class="search-bar" action="<?php echo e(route('staff.cargo_item_list')); ?>"  method="GET" style="flex: 1;">
 
         <input type="text" name="search" placeholder="Search..." value="<?php echo e(request('search')); ?>" style="margin-right: 10px;">
-        <select name="route_code_id">
-            <option value="">All Route Codes</option>
-            <?php $__currentLoopData = $route_codes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $routeCode): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <option value="<?php echo e($routeCode->route_code_id); ?>" 
-                    <?php echo e(request('route_code_id') == $routeCode->route_code_id ? 'selected' : ''); ?>>
-                    <?php echo e($routeCode->route_code_name); ?>
+        <select name="route_category_id">
+            <option value="">All Route Categories</option>
+            <?php $__currentLoopData = $route_categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $routeCategory): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <option value="<?php echo e($routeCategory->route_category_id); ?>" 
+                    <?php echo e(request('route_category_id') == $routeCategory->route_category_id ? 'selected' : ''); ?>>
+                    <?php echo e($routeCategory->route_category_name); ?>
 
                 </option>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </select>
 
         <select name="cargo_category_id">
-            <option value="">All Categories</option>
+            <option value="">All Cargo Categories</option>
             <?php $__currentLoopData = $cargo_categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <option value="<?php echo e($category->cargo_category_id); ?>" 
                     <?php echo e(request('cargo_category_id') == $category->cargo_category_id ? 'selected' : ''); ?>>
@@ -44,7 +44,7 @@
     <table class="cargo-item-table">
       <thead>
         <tr>
-          <th>Route Code</th>
+          <th>Route Category</th>
           <th>Category</th>
           <th>Description</th>
           <th>Freight</th>
@@ -55,7 +55,7 @@
       <tbody>
         <?php $__empty_1 = true; $__currentLoopData = $cargo_items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
           <tr>
-            <td><?php echo e($c->routeCode->route_code_name ?? 'N/A'); ?></td>
+            <td><?php echo e($c->routeCategory->route_category_name ?? 'N/A'); ?></td>
             <td><?php echo e($c->cargo_category->cargo_category_name ?? 'N/A'); ?></td>
             <td><?php echo e($c->cargo_item_description); ?></td>
             <td><?php echo e($c->cargo_item_freight); ?></td>
