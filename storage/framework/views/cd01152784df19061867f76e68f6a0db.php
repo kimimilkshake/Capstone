@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cargo Booking Rejected - #{{ $booking->booking_code }}</title>
+    <title>Cargo Booking Rejected - #<?php echo e($booking->booking_code); ?></title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
         .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; padding: 20px; }
@@ -20,24 +20,24 @@
 <body>
     <div class="container">
         <h2>❌ Cargo Booking Rejected</h2>
-        <p>Booking Reference: <strong>#{{ $booking->booking_code }}</strong></p>
+        <p>Booking Reference: <strong>#<?php echo e($booking->booking_code); ?></strong></p>
          <div class="section" style="background:#fff1f2;">
             <div class="section-title">Reason for Rejection</div>
-            <p style="color:#7b0b0b; font-weight:600;">{{ $reason ?? 'No reason provided' }}</p>
+            <p style="color:#7b0b0b; font-weight:600;"><?php echo e($reason ?? 'No reason provided'); ?></p>
         </div>
 
 
         <div class="section">
             <div class="section-title">Sender Information</div>
-            <p>Name: {{ $sender->sender_name }}</p>
-            <p>Contact: {{ $sender->sender_contactno }}</p>
-            <p>Email: {{ $sender->sender_email ?? 'N/A' }}</p>
+            <p>Name: <?php echo e($sender->sender_name); ?></p>
+            <p>Contact: <?php echo e($sender->sender_contactno); ?></p>
+            <p>Email: <?php echo e($sender->sender_email ?? 'N/A'); ?></p>
         </div>
 
         <div class="section">
             <div class="section-title">Consignee Information</div>
-            <p>Name: {{ $consignee->consignee_name }}</p>
-            <p>Contact: {{ $consignee->consignee_contactno }}</p>
+            <p>Name: <?php echo e($consignee->consignee_name); ?></p>
+            <p>Contact: <?php echo e($consignee->consignee_contactno); ?></p>
         </div>
 
         <div class="section">
@@ -54,11 +54,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                @php
+                <?php
                     $total = 0;
-                @endphp
-                @foreach($cargoItems as $cargo)
-                    @php
+                ?>
+                <?php $__currentLoopData = $cargoItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cargo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php
                         $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
 
                         // ✅ match measure_required logic
@@ -84,20 +84,20 @@
                         $displayLength = (float) $cargo->length;
                         $displayWidth = (float) $cargo->width;
                         $displayHeight = (float) $cargo->height;
-                    @endphp
+                    ?>
                     <tr>
-                        <td>{{ $cargo->quantity }}</td>
-                        <td>{{ $cargo->cargoClassification->cargo_classification_name ?? 'N/A' }}</td>
-                        <td>{{ $cargo->cargoItem->cargo_item_description }}</td>
-                        <td>{{ number_format($displayLength, 2) }} x {{ number_format($displayWidth, 2) }} x {{ number_format($displayHeight, 2) }} {{ $unitDisplay }}</td>
-                        <td>{{ $cargo->weight }} kg</td>
-                        <td>₱{{ number_format($subtotal,2) }}</td>
+                        <td><?php echo e($cargo->quantity); ?></td>
+                        <td><?php echo e($cargo->cargoClassification->cargo_classification_name ?? 'N/A'); ?></td>
+                        <td><?php echo e($cargo->cargoItem->cargo_item_description); ?></td>
+                        <td><?php echo e(number_format($displayLength, 2)); ?> x <?php echo e(number_format($displayWidth, 2)); ?> x <?php echo e(number_format($displayHeight, 2)); ?> <?php echo e($unitDisplay); ?></td>
+                        <td><?php echo e($cargo->weight); ?> kg</td>
+                        <td>₱<?php echo e(number_format($subtotal,2)); ?></td>
                     </tr>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 <tr style="background-color: #f9f9f9; font-weight: bold;">
                     <td colspan="4"></td>
                     <td>Total</td>
-                    <td>₱{{ number_format($total,2) }}</td>
+                    <td>₱<?php echo e(number_format($total,2)); ?></td>
                 </tr>
                 </tbody>
             </table>
@@ -110,3 +110,4 @@
 </body>
 
 </html>
+<?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/emails/cargo_booking_rejected.blade.php ENDPATH**/ ?>

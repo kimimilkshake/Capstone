@@ -50,13 +50,27 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @php $totalExpense = 0; @endphp
-                        @foreach ($cargoItems as $item)
-                            @php
-                                $cbm = (float) ($item->cbm ?? 0);
-                                $subtotal = $cbm * $item->freight * $item->quantity;
-                                $totalExpense += $subtotal;
-                            @endphp
+                    @php 
+                    $totalExpense = 0; @endphp
+
+                    @foreach ($cargoItems as $item)
+                        @php
+                        
+                            $withMeasurement = strtolower(trim($item->with_measurement ?? 'yes'));
+                            $freight = (float) ($item->freight ?? 0);
+                            $quantity = (int) ($item->quantity ?? 0);
+                            $cbm = (float) ($item->cbm ?? 0);
+
+                            if ($withMeasurement === 'no') {
+                                $subtotal = $freight * $cbm * $quantity;
+                                $rateDisplay = '₱' . number_format($freight, 2) . ' / CBM';
+                            } else {
+                                $subtotal = $freight * $quantity;
+                                $rateDisplay = '₱' . number_format($freight, 2) . ' / qty';
+                            }
+
+                            $totalExpense += $subtotal;
+                        @endphp
                             <tr>
                                 <td>{{ $item->quantity }}</td>
                                 <td>{{ $item->cargo_classification_name ?? 'N/A' }}</td>
