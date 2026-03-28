@@ -43,7 +43,6 @@
     <table class="cargo-item-table">
       <thead>
         <tr>
-          <th>Route Category</th>
           <th>Category</th>
           <th>Description</th>
           <th>Freight</th>
@@ -54,7 +53,6 @@
       <tbody>
         @forelse ($cargo_items as $index => $c)
           <tr>
-            <td>{{ $c->routeCategory->route_category_name ?? 'N/A' }}</td>
             <td>{{ $c->cargo_category->cargo_category_name ?? 'N/A' }}</td>
             <td>{{ $c->cargo_item_description }}</td>
             <td>{{ $c->cargo_item_freight }}</td>
