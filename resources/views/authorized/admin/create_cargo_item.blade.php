@@ -29,7 +29,7 @@
 
           <div class="form-col">
             <div class="form-group">
-              <label>Category <span class="text-danger">*</span></label>
+              <label>Cargo Category <span class="text-danger">*</span></label>
               <select name="cargo_category_id" required>
                 <option value="">Select Category</option>
                 @foreach ($cargo_categories as $category)

@@ -10,18 +10,18 @@
       <form class="search-bar" action="{{ route('staff.cargo_item_list') }}"  method="GET" style="flex: 1;">
 
         <input type="text" name="search" placeholder="Search..." value="{{ request('search') }}" style="margin-right: 10px;">
-        <select name="route_code_id">
-            <option value="">All Route Codes</option>
-            @foreach ($route_codes as $routeCode)
-                <option value="{{ $routeCode->route_code_id }}" 
-                    {{ request('route_code_id') == $routeCode->route_code_id ? 'selected' : '' }}>
-                    {{ $routeCode->route_code_name }}
+        <select name="route_category_id">
+            <option value="">All Route Categories</option>
+            @foreach ($route_categories as $routeCategory)
+                <option value="{{ $routeCategory->route_category_id }}" 
+                    {{ request('route_category_id') == $routeCategory->route_category_id ? 'selected' : '' }}>
+                    {{ $routeCategory->route_category_name }}
                 </option>
             @endforeach
         </select>
 
         <select name="cargo_category_id">
-            <option value="">All Categories</option>
+            <option value="">All Cargo Categories</option>
             @foreach($cargo_categories as $category)
                 <option value="{{ $category->cargo_category_id }}" 
                     {{ request('cargo_category_id') == $category->cargo_category_id ? 'selected' : '' }}>
@@ -43,7 +43,7 @@
     <table class="cargo-item-table">
       <thead>
         <tr>
-          <th>Route Code</th>
+          <th>Route Category</th>
           <th>Category</th>
           <th>Description</th>
           <th>Freight</th>
@@ -54,7 +54,7 @@
       <tbody>
         @forelse ($cargo_items as $index => $c)
           <tr>
-            <td>{{ $c->routeCode->route_code_name ?? 'N/A' }}</td>
+            <td>{{ $c->routeCategory->route_category_name ?? 'N/A' }}</td>
             <td>{{ $c->cargo_category->cargo_category_name ?? 'N/A' }}</td>
             <td>{{ $c->cargo_item_description }}</td>
             <td>{{ $c->cargo_item_freight }}</td>
