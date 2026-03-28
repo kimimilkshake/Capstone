@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Bill of Lading - {{ $booking->booking_ref_no }}</title>
+<title>Bill of Lading - <?php echo e($booking->booking_ref_no); ?></title>
 
 <style>
 @page { margin:25px; }
@@ -74,7 +74,7 @@ td,th{
 
 <body>
 
-@php
+<?php
 $stamp = 20.00;
 $freight = 0.0;
 $totalPieces = 0;
@@ -117,7 +117,7 @@ $total = $freight + $stamp;
 $printedBy = optional(auth()->guard('staff')->user())->staff_name
     ?? optional(auth()->guard('admin')->user())->admin_name
     ?? 'System';
-@endphp
+?>
 
 <!-- HEADER -->
 <table class="header-table">
@@ -144,25 +144,31 @@ TIN: 200-308-788-000-VAT
 <td style="width:50%" class="border">
 <strong>Booking Information:</strong><br><br>
 Voyage No:
-{{ $booking->voyage->voyage_code ?? 'N/A' }}
+<?php echo e($booking->voyage->voyage_code ?? 'N/A'); ?>
+
 <br>
 Sailing Date:
-{{ $booking->voyage ? \Carbon\Carbon::parse($booking->voyage->voyage_departure_date)->format('F d, Y') : 'N/A' }}
+<?php echo e($booking->voyage ? \Carbon\Carbon::parse($booking->voyage->voyage_departure_date)->format('F d, Y') : 'N/A'); ?>
+
 <br>
 Vessel:
-{{ $booking->voyage->vessel->vessel_name ?? 'N/A' }}
+<?php echo e($booking->voyage->vessel->vessel_name ?? 'N/A'); ?>
+
 </td>
 
 <td class="border">
 <br>
 Booking Reference No:
-{{ $booking->booking_code ?? $booking->booking_ref_no}}
+<?php echo e($booking->booking_code ?? $booking->booking_ref_no); ?>
+
 <br>
 Confirmed On:
-{{ now()->format('F d, Y') }}
+<?php echo e(now()->format('F d, Y')); ?>
+
 <br>
 Confirmed By:
-{{ $printedBy }}
+<?php echo e($printedBy); ?>
+
 </td>
 </tr>
 </table>
@@ -173,10 +179,10 @@ Confirmed By:
 <div class="section-title">Sender Information</div>
 <table>
 <tr>
-<td>Name: {{ $booking->sender->sender_name ?? 'N/A' }}</td>
+<td>Name: <?php echo e($booking->sender->sender_name ?? 'N/A'); ?></td>
 </tr>
 <tr>
-<td>Contact No: {{ $booking->sender->sender_contactno ?? 'N/A' }}</td>
+<td>Contact No: <?php echo e($booking->sender->sender_contactno ?? 'N/A'); ?></td>
 </tr>
 </table>
 
@@ -186,10 +192,10 @@ Confirmed By:
 <div class="section-title">Consignee Information</div>
 <table>
 <tr>
-<td>Name: {{ $booking->consignee->consignee_name ?? 'N/A' }}</td>
+<td>Name: <?php echo e($booking->consignee->consignee_name ?? 'N/A'); ?></td>
 </tr>
 <tr>
-<td>Contact No: {{ $booking->consignee->consignee_contactno ?? 'N/A' }}</td>
+<td>Contact No: <?php echo e($booking->consignee->consignee_contactno ?? 'N/A'); ?></td>
 </tr>
 </table>
 
@@ -207,10 +213,12 @@ Confirmed By:
 </tr>
 <tr>
 <td class="border left">
-{{ $booking->voyage->routePort->port_origin_name ?? 'N/A' }}
+<?php echo e($booking->voyage->routePort->port_origin_name ?? 'N/A'); ?>
+
 </td>
 <td class="border left">
-{{ $booking->voyage->routePort->port_destination_name ?? 'N/A' }}
+<?php echo e($booking->voyage->routePort->port_destination_name ?? 'N/A'); ?>
+
 </td>
 </tr>
 </table>
@@ -236,35 +244,37 @@ Cargo Items Description
 <th style="width:12%">Subtotal</th>
 </tr>
 
-@forelse($cargoRows as $row)
-@php
+<?php $__empty_1 = true; $__currentLoopData = $cargoRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+<?php
 $cargo = $row['cargo'];
 $subtotal = $row['subtotal'];
 $unit = $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm';
-@endphp
+?>
 
 <tr class="cargo-row">
-<td class="center">{{ $cargo->quantity }}</td>
+<td class="center"><?php echo e($cargo->quantity); ?></td>
 <td>
-{{ $cargo->cargoClassification->cargo_classification_name ?? 'General Cargo' }}
+<?php echo e($cargo->cargoClassification->cargo_classification_name ?? 'General Cargo'); ?>
+
 </td>
 <td>
-{{ $cargo->cargoItem->cargo_item_description ?? 'N/A' }}
+<?php echo e($cargo->cargoItem->cargo_item_description ?? 'N/A'); ?>
+
 </td>
-<td class="center">{{ $cargo->length }}{{ $unit }}</td>
-<td class="center">{{ $cargo->width }}{{ $unit }}</td>
-<td class="center">{{ $cargo->height }}{{ $unit }}</td>
-<td class="center">{{ $cargo->weight }}kg</td>
-<td class="right">₱{{ number_format($subtotal, 2) }}</td>
+<td class="center"><?php echo e($cargo->length); ?><?php echo e($unit); ?></td>
+<td class="center"><?php echo e($cargo->width); ?><?php echo e($unit); ?></td>
+<td class="center"><?php echo e($cargo->height); ?><?php echo e($unit); ?></td>
+<td class="center"><?php echo e($cargo->weight); ?>kg</td>
+<td class="right">₱<?php echo e(number_format($subtotal, 2)); ?></td>
 </tr>
 
-@empty
+<?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
 <tr class="cargo-row">
 <td colspan="8" class="center">
 No cargo items found.
 </td>
 </tr>
-@endforelse
+<?php endif; ?>
 </table>
 
 <br>
@@ -273,15 +283,15 @@ No cargo items found.
 <table class="charges-table">
 <tr>
 <td style="width:80%">Freight Charges</td>
-<td class="right">₱ {{ number_format($freight,2) }}</td>
+<td class="right">₱ <?php echo e(number_format($freight,2)); ?></td>
 </tr>
 <tr>
 <td>Stamp</td>
-<td class="right">₱ {{ number_format($stamp,2) }}</td>
+<td class="right">₱ <?php echo e(number_format($stamp,2)); ?></td>
 </tr>
 <tr>
 <td><strong>Total Transaction</strong></td>
-<td class="right"><strong>₱ {{ number_format($total,2) }}</strong></td>
+<td class="right"><strong>₱ <?php echo e(number_format($total,2)); ?></strong></td>
 </tr>
 </table>
 
@@ -314,4 +324,4 @@ Page 1 of 1
 </div>
 
 </body>
-</html>
+</html><?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/authorized/staff/bill_of_lading_pdf.blade.php ENDPATH**/ ?>

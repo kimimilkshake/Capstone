@@ -1,19 +1,18 @@
-@extends('layouts.app')
-@section('page-title', 'CARGO BOOKING DETAILS')
+<?php $__env->startSection('page-title', 'CARGO BOOKING DETAILS'); ?>
 
-@section('content')
-    @include('components.authHeader')
-    @include('components.staff_nav')
+<?php $__env->startSection('content'); ?>
+    <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    <?php echo $__env->make('components.staff_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <div class="staff-body">
 
         <div class="row">
-            {{-- LEFT COLUMN: BOOKING INFO --}}
+            
             <div class="col-lg-6">
                 <div class="card shadow-sm p-4 mb-4">
                     <h5 class="mb-2">Booking Information</h5>
 
-                    @php
+                    <?php
                         // ✅ CENTRALIZED CALCULATION FUNCTION (ADDED ONLY)
                         function computeSubtotal($cargo) {
                             $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
@@ -47,27 +46,27 @@
                                 $processedLabel = $processedBy;
                             }
                         }
-                    @endphp
+                    ?>
 
-                    <p><strong>Booking Ref #:</strong> {{ $booking->booking_code }}</p>
-                    <p><strong>Status:</strong> {{ $booking->booking_status }}</p>
-                    <p><strong>Created:</strong> {{ $booking->created_at->format('M d, Y') }}</p>
-                    <p><strong>Approved By:</strong> {{ $processedLabel }}</p>
+                    <p><strong>Booking Ref #:</strong> <?php echo e($booking->booking_code); ?></p>
+                    <p><strong>Status:</strong> <?php echo e($booking->booking_status); ?></p>
+                    <p><strong>Created:</strong> <?php echo e($booking->created_at->format('M d, Y')); ?></p>
+                    <p><strong>Approved By:</strong> <?php echo e($processedLabel); ?></p>
 
-                    @if ($booking->voyage)
-                        <p><strong>Voyage Code:</strong> {{ $booking->voyage->voyage_code }}</p>
-                        <p><strong>Departure:</strong> {{ $booking->voyage->voyage_departure_date }}</p>
-                        <p><strong>Arrival:</strong> {{ $booking->voyage->voyage_arrival_date }}</p>
-                    @else
+                    <?php if($booking->voyage): ?>
+                        <p><strong>Voyage Code:</strong> <?php echo e($booking->voyage->voyage_code); ?></p>
+                        <p><strong>Departure:</strong> <?php echo e($booking->voyage->voyage_departure_date); ?></p>
+                        <p><strong>Arrival:</strong> <?php echo e($booking->voyage->voyage_arrival_date); ?></p>
+                    <?php else: ?>
                         <p><strong>Voyage:</strong> N/A</p>
-                    @endif
+                    <?php endif; ?>
 
-                    @if ($payment)
-                        <p><strong>Mode of Payment:</strong> {{ $payment->mode_of_payment }}</p>
-                        <p><strong>Payment Status:</strong> {{ $payment->payment_status }}</p>
+                    <?php if($payment): ?>
+                        <p><strong>Mode of Payment:</strong> <?php echo e($payment->mode_of_payment); ?></p>
+                        <p><strong>Payment Status:</strong> <?php echo e($payment->payment_status); ?></p>
 
-                        {{-- ✅ UPDATED CALCULATION --}}
-                        @php
+                        
+                        <?php
                             $calculatedTotal = 0;
 
                             foreach ($booking->cargoBookings as $c) {
@@ -76,32 +75,32 @@
 
                             $stamp = 20.00;
                             $calculatedTotal += $stamp;
-                        @endphp
+                        ?>
 
-                        <p><strong>Amount Paid:</strong> ₱{{ number_format($calculatedTotal, 2) }}</p>
-                    @endif
+                        <p><strong>Amount Paid:</strong> ₱<?php echo e(number_format($calculatedTotal, 2)); ?></p>
+                    <?php endif; ?>
                 </div>
             </div>
 
-            {{-- RIGHT COLUMN --}}
+            
             <div class="col-lg-6">
                 <div class="card shadow-sm p-4 mb-4">
 
                     <h6 class="fw-bold">Sender Information</h6>
-                    <p><strong>Name:</strong> {{ $booking->sender->sender_name }}</p>
-                    <p><strong>Contact:</strong> {{ $booking->sender->sender_contactno }}</p>
-                    <p><strong>Email:</strong> {{ $booking->sender->sender_email }}</p>
+                    <p><strong>Name:</strong> <?php echo e($booking->sender->sender_name); ?></p>
+                    <p><strong>Contact:</strong> <?php echo e($booking->sender->sender_contactno); ?></p>
+                    <p><strong>Email:</strong> <?php echo e($booking->sender->sender_email); ?></p>
 
                     <h6 class="fw-bold mt-3">Consignee Information</h6>
-                    <p><strong>Name:</strong> {{ $booking->consignee->consignee_name }}</p>
-                    <p><strong>Contact:</strong> {{ $booking->consignee->consignee_contactno }}</p>
+                    <p><strong>Name:</strong> <?php echo e($booking->consignee->consignee_name); ?></p>
+                    <p><strong>Contact:</strong> <?php echo e($booking->consignee->consignee_contactno); ?></p>
                 </div>
             </div>
         </div>
 
-        {{-- ================= --}}
-        {{-- CARGO TABLE --}}
-        {{-- ================= --}}
+        
+        
+        
         <div class="card shadow-sm p-3 mb-4">
             <div class="table-responsive">
                 <table class="table table-bordered table-striped mt-3 align-middle cargo-items-table">
@@ -121,10 +120,10 @@
                     </thead>
 
                     <tbody>
-                        @php $total = 0; @endphp
+                        <?php $total = 0; ?>
 
-                        @foreach ($booking->cargoBookings as $c)
-                            @php
+                        <?php $__currentLoopData = $booking->cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php
                                 // ✅ FIXED CBM CALCULATION (CONSISTENT)
                                 $cbm = (float)(
                                     ($c->length * $c->width * $c->height) / 1000000
@@ -135,28 +134,28 @@
                                 // ✅ USE CENTRALIZED FUNCTION
                                 $subtotal = computeSubtotal($c);
                                 $total += $subtotal;
-                            @endphp
+                            ?>
 
                             <tr>
-                                <td class="text-center">{{ $c->quantity }}</td>
-                                <td>{{ $c->cargoClassification->cargo_classification_name ?? 'N/A' }}</td>
-                                <td>{{ $c->cargoItem->cargo_item_description }}</td>
-                                <td class="text-end">{{ number_format($c->length, 2) }}</td>
-                                <td class="text-end">{{ number_format($c->width, 2) }}</td>
-                                <td class="text-end">{{ number_format($c->height, 2) }}</td>
-                                <td class="text-end">{{ number_format($cbm, 4) }}</td>
-                                <td class="text-end">{{ number_format($c->weight, 2) }}</td>
-                                <td class="text-end">₱{{ number_format($freight, 2) }}</td>
-                                <td class="text-end">₱{{ number_format($subtotal, 2) }}</td>
+                                <td class="text-center"><?php echo e($c->quantity); ?></td>
+                                <td><?php echo e($c->cargoClassification->cargo_classification_name ?? 'N/A'); ?></td>
+                                <td><?php echo e($c->cargoItem->cargo_item_description); ?></td>
+                                <td class="text-end"><?php echo e(number_format($c->length, 2)); ?></td>
+                                <td class="text-end"><?php echo e(number_format($c->width, 2)); ?></td>
+                                <td class="text-end"><?php echo e(number_format($c->height, 2)); ?></td>
+                                <td class="text-end"><?php echo e(number_format($cbm, 4)); ?></td>
+                                <td class="text-end"><?php echo e(number_format($c->weight, 2)); ?></td>
+                                <td class="text-end">₱<?php echo e(number_format($freight, 2)); ?></td>
+                                <td class="text-end">₱<?php echo e(number_format($subtotal, 2)); ?></td>
                             </tr>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </tbody>
 
                     <tfoot>
                         <tr>
                             <th colspan="9" class="text-end">TOTAL:</th>
                             <th class="text-end">
-                                @php
+                                <?php
                                     // ✅ FINAL TOTAL RECALCULATION (NO TRUSTING OLD VALUES)
                                     $total = 0;
 
@@ -166,9 +165,10 @@
 
                                     $stamp = 20.00;
                                     $totalTransaction = $total + $stamp;
-                                @endphp
+                                ?>
 
-                                ₱{{ number_format($totalTransaction, 2) }}
+                                ₱<?php echo e(number_format($totalTransaction, 2)); ?>
+
                             </th>
                         </tr>
                     </tfoot>
@@ -176,11 +176,11 @@
             </div>
         </div>
 
-        @if ($booking->booking_status === 'Pending')
+        <?php if($booking->booking_status === 'Pending'): ?>
             <div class="d-flex justify-content-center gap-3 mt-4">
-                <form action="{{ route('cargo.bookings.approve', $booking->booking_ref_no) }}" method="POST"
+                <form action="<?php echo e(route('cargo.bookings.approve', $booking->booking_ref_no)); ?>" method="POST"
                     class="w-100" style="max-width: 200px;" id="acceptForm">
-                    @csrf
+                    <?php echo csrf_field(); ?>
                     <button type="button" class="btn btn-success btn-lg px-4 w-100" id="acceptBtn"
                         onclick="validateAndAccept(event)">Accept</button>
                 </form>
@@ -188,27 +188,27 @@
                 <button type="button" class="btn btn-danger btn-lg px-4" id="rejectBtn"
                     onclick="showRejectModal(event)" style="width: 200px;">Reject</button>
             </div>
-        @endif
+        <?php endif; ?>
 
         <div class="text-center mt-4">
-            <a href="{{ route('cargo.bookings.pending') }}" class="btn btn-outline-primary btn-lg px-4">
+            <a href="<?php echo e(route('cargo.bookings.pending')); ?>" class="btn btn-outline-primary btn-lg px-4">
                 Back to Pending Bookings
             </a>
 
-            <a href="{{ route('cargo.bookings.bol', $booking->booking_ref_no) }}" target="_blank"
+            <a href="<?php echo e(route('cargo.bookings.bol', $booking->booking_ref_no)); ?>" target="_blank"
                 class="btn btn-secondary btn-lg px-4 ms-3">
                 Bill of Lading
             </a>
         </div>
     </div>
 
-    @if ($booking->booking_status === 'Pending')
+    <?php if($booking->booking_status === 'Pending'): ?>
         <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <form action="{{ route('cargo.bookings.reject', $booking->booking_ref_no) }}" method="POST"
+                    <form action="<?php echo e(route('cargo.bookings.reject', $booking->booking_ref_no)); ?>" method="POST"
                         onsubmit="showLoadingModal(event)">
-                        @csrf
+                        <?php echo csrf_field(); ?>
                         <div class="modal-header">
                             <h5 class="modal-title">Reason for Rejection</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -226,9 +226,9 @@
                 </div>
             </div>
         </div>
-    @endif
+    <?php endif; ?>
 
-    {{-- Placement Validation Modal --}}
+    
     <div class="modal fade" id="placementValidationModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -249,7 +249,7 @@
         </div>
     </div>
 
-    {{-- Loading Modal --}}
+    
     <div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0">
@@ -294,11 +294,11 @@
         function validateAndAccept(event) {
             event.preventDefault();
 
-            const voyageId = {{ $booking->voyage_id }};
+            const voyageId = <?php echo e($booking->voyage_id); ?>;
             const cargoBookingIds = [
-                @foreach ($booking->cargoBookings as $cargo)
-                    {{ $cargo->cargo_booking_id }},
-                @endforeach
+                <?php $__currentLoopData = $booking->cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cargo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php echo e($cargo->cargo_booking_id); ?>,
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             ];
 
             if (cargoBookingIds.length === 0) {
@@ -314,7 +314,7 @@
             btn.disabled = true;
 
             // Call API to validate placement
-            fetch('{{ route('cargo.placement.validate') }}', {
+            fetch('<?php echo e(route('cargo.placement.validate')); ?>', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -383,9 +383,9 @@
             }
         }
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('styles')
+<?php $__env->startSection('styles'); ?>
     <style>
         /* Bootstrap Carousel Customization */
         #cargoCarousel {
@@ -705,9 +705,9 @@
             vertical-align: middle;
         }
     </style>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('scripts')
+<?php $__env->startSection('scripts'); ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             document.addEventListener('click', function(event) {
@@ -739,4 +739,6 @@
             }
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/authorized/staff/showcargo.blade.php ENDPATH**/ ?>
