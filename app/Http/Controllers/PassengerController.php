@@ -224,7 +224,7 @@ class PassengerController extends Controller
                     'booking_ref_no' => $bookingId,
                     'cargo_item_id' => $itemId,
                     'cargo_classification_id' => $request->cargo_classification[$index] ?? null,
-                    'route_code_id' => $cargoItem ? $cargoItem->route_code_id : null,
+                    'route_category_id' => $cargoItem ? $cargoItem->route_category_id : null,
                     'measurement_unit_id' => $measurementUnitId,
                     'with_measurement' => $cargoItem ? $cargoItem->cargo_item_measure_required : null,
                     'quantity' => $request->cargo_quantity[$index],
