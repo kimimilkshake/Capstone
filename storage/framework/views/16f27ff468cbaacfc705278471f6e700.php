@@ -5,19 +5,6 @@
 
 <div class="staff-body">   
 
-    <?php if(session('success')): ?>
-        <div class="alert alert-success text-center mx-auto w-75" role="alert"><?php echo e(session('success')); ?></div>
-    <?php endif; ?>
-    <?php if($errors->any()): ?>
-        <div class="alert alert-danger text-center">
-            <ul>
-                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <li><?php echo e($error); ?></li>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-            </ul>
-        </div>
-    <?php endif; ?>
-
     <form id="staffCargoForm" action="<?php echo e(route('cargo.bookings.store')); ?>" method="POST" enctype="multipart/form-data">
         <?php echo csrf_field(); ?>
 
@@ -39,9 +26,9 @@
                         <?php
                             $depDate = \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('M j, Y');
                             $depTime = $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:i A') : '';
-                            $routeCodeId = $voyage->routePort->route_code_id ?? '';
+                            $routeCategoryId = $voyage->routePort->route_category_id ?? '';
                         ?>
-                        <option value="<?php echo e($voyage->voyage_id); ?>" data-route_port="<?php echo e($voyage->route_port_id ?? $voyage->routePort->route_port_id ?? ''); ?>" data-route_code="<?php echo e($routeCodeId); ?>" data-departure-date="<?php echo e($voyage->voyage_departure_date ?? ''); ?>" data-departure-time="<?php echo e($voyage->voyage_estimated_TD ?? ''); ?>">
+                        <option value="<?php echo e($voyage->voyage_id); ?>" data-route_port="<?php echo e($voyage->route_port_id ?? $voyage->routePort->route_port_id ?? ''); ?>" data-route_category="<?php echo e($routeCategoryId); ?>" data-departure-date="<?php echo e($voyage->voyage_departure_date ?? ''); ?>" data-departure-time="<?php echo e($voyage->voyage_estimated_TD ?? ''); ?>">
                             <?php echo e($voyage->voyage_code); ?> - <?php echo e($voyage->routePort->route_origin ?? 'N/A'); ?> → <?php echo e($voyage->routePort->route_destination ?? 'N/A'); ?> - Departure: <?php echo e($depDate); ?> <?php echo e($depTime ? '(' . $depTime . ')' : ''); ?>
 
                         </option>
@@ -123,7 +110,7 @@
                                         <option value="">-- Select Description --</option>
                                         <?php $__currentLoopData = $cargoItems->sortBy('cargo_item_description'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                             <option value="<?php echo e($item->cargo_item_id); ?>" 
-                                                data-route-code="<?php echo e($item->route_code_id ?? ''); ?>"
+                                                data-route-category="<?php echo e($item->route_category_id ?? ''); ?>"
                                                 data-measure-required="<?php echo e($item->cargo_item_measure_required ?? 'No'); ?>"
                                                 data-measurement-unit="<?php echo e($item->measurementUnit->measurement_unit_abbreviation ?? 'cm'); ?>"
                                                 data-min-length="<?php echo e($item->cargo_item_min_length ?? ''); ?>"
@@ -511,20 +498,20 @@ container.addEventListener('change', e => {
     applyMeasurementRules(item, selectedOption);
 });
 
-// Handle voyage selection and filter cargo descriptions by route_code
+// Handle voyage selection and filter cargo descriptions by route_category
 const voyageSelect = document.querySelector('select[name="voyage_id"]');
 if(voyageSelect) {
     refreshVoyageAvailabilityByCutoff();
 
     voyageSelect.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
-        const routeCodeId = selectedOption.dataset.route_code;
+        const routeCategoryId = selectedOption.dataset.route_category;
         
-        // Filter all cargo descriptions by route_code
+        // Filter all cargo descriptions by route_category
         Array.from(container.querySelectorAll('.cargo-description')).forEach(descSelect => {
             Array.from(descSelect.options).forEach(opt => {
                 if(opt.value === '') return;
-                opt.style.display = (opt.dataset.routeCode === routeCodeId) ? 'block' : 'none';
+                opt.style.display = (opt.dataset.routeCategory === routeCategoryId) ? 'block' : 'none';
             });
             descSelect.value = '';
         });

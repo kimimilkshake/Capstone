@@ -89,13 +89,7 @@
                                 <?php $__currentLoopData = $cargoItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <option value="<?php echo e($item->cargo_item_id); ?>"
                                         data-freight="<?php echo e($item->cargo_item_freight); ?>"
-                                        data-measure-required="<?php echo e(strtolower($item->cargo_item_measure_required ?? 'no')); ?>"
-                                        data-min-length="<?php echo e($item->cargo_item_min_length ?? ''); ?>"
-                                        data-max-length="<?php echo e($item->cargo_item_max_length ?? ''); ?>"
-                                        data-min-width="<?php echo e($item->cargo_item_min_width ?? ''); ?>"
-                                        data-max-width="<?php echo e($item->cargo_item_max_width ?? ''); ?>"
-                                        data-min-height="<?php echo e($item->cargo_item_min_height ?? ''); ?>"
-                                        data-max-height="<?php echo e($item->cargo_item_max_height ?? ''); ?>"
+                                        data-with-measurement="<?php echo e(strtolower($item->cargo_item_measure_required ?? 'no')); ?>"
                                         <?php echo e($cargo->cargo_item_id == $item->cargo_item_id ? 'selected' : ''); ?>>
                                         <?php echo e($item->cargo_item_description); ?>
 
@@ -164,7 +158,7 @@
                     <div class="form-col">
                         <div class="form-group">
                             <label>CBM</label>
-                            <input type="number" step="0.0001" name="cbm[]" value="<?php echo e(old('cbm.'.$index, $cargo->cbm ?? 0)); ?>" placeholder="0.0000" class="cargo-cbm" data-index="<?php echo e($index); ?>" readonly>
+                            <input type="number" step="0.0001" name="cbm[]" value="<?php echo e(old('cbm.'.$index, $cargo->cbm ?? 0)); ?>" class="cargo-cbm" readonly>
                         </div>
                     </div>
                 </div>
@@ -191,191 +185,90 @@
 </div>
 
 <script>
-    function getEditableFormState() {
-        const fields = document.querySelectorAll(
-            'select[name="classification[]"], ' +
-            'select[name="description[]"], ' +
-            'input[name="quantity[]"], ' +
-            'input[name="length[]"], ' +
-            'input[name="width[]"], ' +
-            'input[name="height[]"], ' +
-            'select[name="measurement_unit[]"], ' +
-            'input[name="weight[]"]'
-        );
+function getEditableFormState() {
+    const fields = document.querySelectorAll(
+        'select[name="classification[]"], ' +
+        'select[name="description[]"], ' +
+        'input[name="quantity[]"], ' +
+        'input[name="length[]"], ' +
+        'input[name="width[]"], ' +
+        'input[name="height[]"], ' +
+        'select[name="measurement_unit[]"], ' +
+        'input[name="weight[]"]'
+    );
 
-        return Array.from(fields).map(field => String(field.value ?? '').trim());
-    }
+    return Array.from(fields).map(field => String(field.value ?? '').trim());
+}
 
-    function syncUpdateButtonState(initialState) {
-        const updateButton = document.getElementById('updateCargoItemsBtn');
-        if (!updateButton) return;
+function syncUpdateButtonState(initialState) {
+    const updateButton = document.getElementById('updateCargoItemsBtn');
+    if (!updateButton) return;
 
-        const currentState = getEditableFormState();
-        const hasChanges = currentState.length === initialState.length
-            && currentState.some((value, index) => value !== initialState[index]);
+    const currentState = getEditableFormState();
 
-        updateButton.disabled = !hasChanges;
-    }
+    let hasChanges = false;
 
-    function setDimensionConstraint(input, minValue, maxValue, label) {
-        if (!input) return;
-
-        const hasMin = minValue !== null && minValue !== '' && !Number.isNaN(Number(minValue));
-        const hasMax = maxValue !== null && maxValue !== '' && !Number.isNaN(Number(maxValue));
-
-        if (hasMin) {
-            input.min = Number(minValue);
-        } else {
-            input.removeAttribute('min');
-        }
-
-        if (hasMax) {
-            input.max = Number(maxValue);
-        } else {
-            input.removeAttribute('max');
-        }
-
-        input.oninput = function() {
-            const value = parseFloat(input.value);
-            if (input.value === '' || Number.isNaN(value)) {
-                input.setCustomValidity('');
-                return;
+    if (currentState.length !== initialState.length) {
+        hasChanges = true;
+    } else {
+        for (let i = 0; i < currentState.length; i++) {
+            if (currentState[i] !== initialState[i]) {
+                hasChanges = true;
+                break;
             }
-
-            if (hasMin && value < Number(minValue)) {
-                input.setCustomValidity(`${label} must be at least ${Number(minValue).toFixed(2)}.`);
-                return;
-            }
-
-            if (hasMax && value > Number(maxValue)) {
-                input.setCustomValidity(`${label} must not exceed ${Number(maxValue).toFixed(2)}.`);
-                return;
-            }
-
-            input.setCustomValidity('');
-        };
-
-        input.dispatchEvent(new Event('input'));
+        }
     }
 
-    function applyMeasurementRange(index) {
-        const descriptionSelects = document.querySelectorAll('select[name="description[]"]');
-        const lengthInputs = document.querySelectorAll('input[name="length[]"]');
-        const widthInputs = document.querySelectorAll('input[name="width[]"]');
-        const heightInputs = document.querySelectorAll('input[name="height[]"]');
+    updateButton.disabled = !hasChanges;
+}
 
-        const descriptionSelect = descriptionSelects[index];
-        if (!descriptionSelect) return;
+function calculateCBM(index) {
+    const lengthInputs = document.querySelectorAll('input[name="length[]"]');
+    const widthInputs = document.querySelectorAll('input[name="width[]"]');
+    const heightInputs = document.querySelectorAll('input[name="height[]"]');
+    const unitSelects = document.querySelectorAll('select[name="measurement_unit[]"]');
+    const cbmInputs = document.querySelectorAll('input[name="cbm[]"]');
 
-        const selectedOption = descriptionSelect.options[descriptionSelect.selectedIndex];
-        if (!selectedOption || !selectedOption.value) {
-            setDimensionConstraint(lengthInputs[index], null, null, 'Length');
-            setDimensionConstraint(widthInputs[index], null, null, 'Width');
-            setDimensionConstraint(heightInputs[index], null, null, 'Height');
-            return;
-        }
+    let length = parseFloat(lengthInputs[index]?.value) || 0;
+    let width = parseFloat(widthInputs[index]?.value) || 0;
+    let height = parseFloat(heightInputs[index]?.value) || 0;
 
-        setDimensionConstraint(
-            lengthInputs[index],
-            selectedOption.dataset.minLength,
-            selectedOption.dataset.maxLength || selectedOption.dataset.minLength,
-            'Length'
-        );
-        setDimensionConstraint(
-            widthInputs[index],
-            selectedOption.dataset.minWidth,
-            selectedOption.dataset.maxWidth || selectedOption.dataset.minWidth,
-            'Width'
-        );
-        setDimensionConstraint(
-            heightInputs[index],
-            selectedOption.dataset.minHeight,
-            selectedOption.dataset.maxHeight || selectedOption.dataset.minHeight,
-            'Height'
-        );
+    const unitOption = unitSelects[index]?.options[unitSelects[index].selectedIndex];
+    const unit = unitOption ? (unitOption.dataset.unitAbbrev || 'cm').toLowerCase() : 'cm';
+
+    if (unit === 'in') {
+        length *= 2.54; width *= 2.54; height *= 2.54;
+    } else if (unit === 'mm') {
+        length *= 0.1; width *= 0.1; height *= 0.1;
+    } else if (unit === 'm') {
+        length *= 100; width *= 100; height *= 100;
+    } else if (unit === 'ft') {
+        length *= 30.48; width *= 30.48; height *= 30.48;
     }
 
-    function calculateCBM(index) {
-        const lengthInputs = document.querySelectorAll('input[name="length[]"]');
-        const widthInputs = document.querySelectorAll('input[name="width[]"]');
-        const heightInputs = document.querySelectorAll('input[name="height[]"]');
-        const unitSelects = document.querySelectorAll('select[name="measurement_unit[]"]');
-        const cbmInputs = document.querySelectorAll('input[name="cbm[]"]');
+    const cbm = (length * width * height) / 1000000;
 
-        let length = parseFloat(lengthInputs[index]?.value) || 0;
-        let width = parseFloat(widthInputs[index]?.value) || 0;
-        let height = parseFloat(heightInputs[index]?.value) || 0;
+    if (cbmInputs[index]) cbmInputs[index].value = cbm.toFixed(4);
 
-        const selectedUnitOption = unitSelects[index]
-            ? unitSelects[index].options[unitSelects[index].selectedIndex]
-            : null;
-
-        const unit = selectedUnitOption
-            ? (selectedUnitOption.dataset.unitAbbrev || 'cm').toLowerCase()
-            : 'cm';
-
-        if (unit === 'in') {
-            length *= 2.54;
-            width *= 2.54;
-            height *= 2.54;
-        } else if (unit === 'mm') {
-            length *= 0.1;
-            width *= 0.1;
-            height *= 0.1;
-        } else if (unit === 'm') {
-            length *= 100;
-            width *= 100;
-            height *= 100;
-        } else if (unit === 'ft') {
-            length *= 30.48;
-            width *= 30.48;
-            height *= 30.48;
-        }
-
-        const cbm = (length * width * height) / 1000000;
-
-        if (cbmInputs[index]) {
-            cbmInputs[index].value = cbm.toFixed(4);
-        }
-
-        return cbm;
-    }
+    return cbm;
+}
 
 function calculateValues() {
     let totalValue = 0;
 
     const descriptionSelects = document.querySelectorAll('select[name="description[]"]');
     const quantityInputs = document.querySelectorAll('input[name="quantity[]"]');
-    const cbmInputs = document.querySelectorAll('input[name="cbm[]"]');
-    const lengthInputs = document.querySelectorAll('input[name="length[]"]');
-    const widthInputs = document.querySelectorAll('input[name="width[]"]');
-    const heightInputs = document.querySelectorAll('input[name="height[]"]');
 
-    descriptionSelects.forEach((descriptionSelect, index) => {
-        const selectedOption = descriptionSelect.options[descriptionSelect.selectedIndex];
-
-        const freight = selectedOption ? (parseFloat(selectedOption.dataset.freight) || 0) : 0;
-
-        // ✅ FIXED: ensure same key as backend (cargo_item_measure_required)
-        const measureRequired = selectedOption
-            ? (selectedOption.dataset.measureRequired || 'no').toLowerCase()
-            : 'no';
-
+    descriptionSelects.forEach((select, index) => {
+        const option = select.options[select.selectedIndex];
+        const freight = option ? (parseFloat(option.dataset.freight) || 0) : 0;
+        const measureRequired = option ? (option.dataset.withMeasurement || 'no').toLowerCase() : 'no';
         const quantity = parseFloat(quantityInputs[index]?.value) || 0;
 
-        // CBM (same fallback as PHP)
-        let cbm = parseFloat(cbmInputs[index]?.value);
-
-        if (!cbm || isNaN(cbm)) {
-            const length = parseFloat(lengthInputs[index]?.value) || 0;
-            const width = parseFloat(widthInputs[index]?.value) || 0;
-            const height = parseFloat(heightInputs[index]?.value) || 0;
-            cbm = (length * width * height) / 1000000;
-        }
+        const cbm = calculateCBM(index);
 
         let subtotal = 0;
 
-        // ✅ EXACT MATCH TO PHP FORMULA
         if (measureRequired === 'yes') {
             subtotal = freight * quantity;
         } else {
@@ -385,57 +278,27 @@ function calculateValues() {
         totalValue += subtotal;
     });
 
-    const totalDisplay = document.getElementById('totalValueDisplay');
-    const totalInput = document.getElementById('totalValueInput');
-
-    if (totalDisplay) totalDisplay.textContent = '₱' + totalValue.toFixed(2);
-    if (totalInput) totalInput.value = totalValue.toFixed(2);
+    document.getElementById('totalValueDisplay').textContent = '₱' + totalValue.toFixed(2);
+    document.getElementById('totalValueInput').value = totalValue.toFixed(2);
 }
-    document.addEventListener('DOMContentLoaded', function() {
-        const editCargoForm = document.getElementById('editCargoForm');
 
-        // Initial calculation
-        calculateValues();
+document.addEventListener('DOMContentLoaded', function() {
+    calculateValues();
 
-        document.querySelectorAll('select[name="description[]"]').forEach((input, index) => {
-            applyMeasurementRange(index);
+    const initialState = getEditableFormState();
+    syncUpdateButtonState(initialState);
 
-            input.addEventListener('change', function() {
-                applyMeasurementRange(index);
-                calculateValues();
-            });
+    document.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('input', () => {
+            calculateValues();
+            syncUpdateButtonState(initialState);
         });
-
-        document.querySelectorAll('select[name="measurement_unit[]"]').forEach(input => {
-            input.addEventListener('change', calculateValues);
+        el.addEventListener('change', () => {
+            calculateValues();
+            syncUpdateButtonState(initialState);
         });
-
-        document.querySelectorAll('input[name="length[]"], input[name="width[]"], input[name="height[]"]').forEach(input => {
-            input.addEventListener('change', calculateValues);
-            input.addEventListener('input', calculateValues);
-        });
-
-        document.querySelectorAll('input[name="quantity[]"]').forEach(input => {
-            input.addEventListener('change', calculateValues);
-            input.addEventListener('input', calculateValues);
-        });
-
-        const initialState = getEditableFormState();
-        syncUpdateButtonState(initialState);
-
-        if (editCargoForm) {
-            editCargoForm.addEventListener('input', function() {
-                syncUpdateButtonState(initialState);
-                calculateValues(); // ensure total updates on any input
-            });
-
-            editCargoForm.addEventListener('change', function() {
-                syncUpdateButtonState(initialState);
-                calculateValues(); // ensure total updates on any change
-            });
-        }
     });
+});
 </script>
 <?php $__env->stopSection(); ?>
-
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/authorized/staff/editcargo.blade.php ENDPATH**/ ?>

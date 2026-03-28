@@ -441,7 +441,7 @@
 @endphp
     <table class="charges-table">
         <tr>
-            <td class="label">FREIGHT CHARGES</td>
+            <td class="label">SUBTOTAL</td>
             <td class="amount">₱{{ number_format($freight, 2) }}</td>
         </tr>
         <tr>

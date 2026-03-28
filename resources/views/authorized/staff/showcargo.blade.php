@@ -14,15 +14,33 @@
                     <h5 class="mb-2">Booking Information</h5>
                     
                     @php
-                        // ✅ CENTRALIZED CALCULATION FUNCTION (ADDED ONLY)
+                        // ✅ UNIT CONVERSION TO METERS
+                        function toMeters($value, $unit) {
+                            $unit = strtolower($unit);
+
+                            return match ($unit) {
+                                'm'   => $value,
+                                'cm'  => $value / 100,
+                                'in'  => $value * 0.0254,
+                                'ft'  => $value * 0.3048,
+                                default => $value
+                            };
+                        }
+
+                        // ✅ CBM CALCULATION (NOW UNIT-CONSISTENT)
+                        function computeCBM($cargo) {
+                            $unit = $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm';
+
+                            $length = toMeters((float)$cargo->length, $unit);
+                            $width  = toMeters((float)$cargo->width, $unit);
+                            $height = toMeters((float)$cargo->height, $unit);
+
+                            return $length * $width * $height;
+                        }
+
+                        // ✅ CENTRALIZED SUBTOTAL CALCULATION
                         function computeSubtotal($cargo) {
                             $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
-
-                            // Always compute CBM consistently (do not rely on stored cbm)
-                            $cbm = (float)(
-                                ($cargo->length * $cargo->width * $cargo->height) / 1000000
-                            );
-
                             $qty = (float) ($cargo->quantity ?? 0);
 
                             $measureRequired = strtolower($cargo->cargoItem->cargo_item_measure_required ?? 'no');
@@ -30,6 +48,8 @@
                             if ($measureRequired === 'yes') {
                                 return $freight * $qty;
                             }
+
+                            $cbm = computeCBM($cargo);
 
                             return $freight * $cbm * $qty;
                         }
@@ -213,14 +233,11 @@
 
                         @foreach ($booking->cargoBookings as $c)
                             @php
-                                // ✅ FIXED CBM CALCULATION (CONSISTENT)
-                                $cbm = (float)(
-                                    ($c->length * $c->width * $c->height) / 1000000
-                                );
+                                // ✅ FIXED: Use consistent CBM calculation
+                                $cbm = computeCBM($c);
 
                                 $freight = $c->cargoItem->cargo_item_freight ?? 0;
 
-                                // ✅ USE CENTRALIZED FUNCTION
                                 $subtotal = computeSubtotal($c);
                                 $total += $subtotal;
                             @endphp
