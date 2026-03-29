@@ -237,6 +237,7 @@ return new class extends Migration {
             $table->decimal('cargo_item_max_width', 8, 2)->nullable();
             $table->decimal('cargo_item_min_height', 8, 2)->nullable();
             $table->decimal('cargo_item_max_height', 8, 2)->nullable();
+            $table->decimal('cargo_item_base_cbm', 8, 2)->nullable();
             $table->timestamps();
         });
 

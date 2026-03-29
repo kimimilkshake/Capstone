@@ -81,11 +81,12 @@
         {{-- Measurement Range Section --}}
         <div id="measurement-section" style="{{ $cargo_item->cargo_item_measure_required == 'Yes' ? 'display:block;' : 'display:none;' }}">
           <div class="form-row">
+
             <div class="form-col">
               <div class="form-group">
                 <label>Min Length</label>
                 <input type="number" step="0.01" min="0" name="cargo_item_min_length" 
-                       value="{{ old('cargo_item_min_length', $cargo_item->cargo_item_min_length) }}">
+                       value="{{ old('cargo_item_min_length', $cargo_item->cargo_item_min_length) }}" required>
               </div>
             </div>
 
@@ -93,7 +94,7 @@
               <div class="form-group">
                 <label>Min Width</label>
                 <input type="number" step="0.01" min="0" name="cargo_item_min_width" 
-                       value="{{ old('cargo_item_min_width', $cargo_item->cargo_item_min_width) }}">
+                       value="{{ old('cargo_item_min_width', $cargo_item->cargo_item_min_width) }}" required>
               </div>
             </div>
 
@@ -101,19 +102,16 @@
               <div class="form-group">
                 <label>Min Height</label>
                 <input type="number" step="0.01" min="0" name="cargo_item_min_height" 
-                       value="{{ old('cargo_item_min_height', $cargo_item->cargo_item_min_height) }}">
+                       value="{{ old('cargo_item_min_height', $cargo_item->cargo_item_min_height) }}" required>
               </div>
             </div>
 
-          </div>
-
           {{-- Max LWH --}}
-          <div class="form-row">
             <div class="form-col">
               <div class="form-group">
                 <label>Max Length</label>
                 <input type="number" step="0.01" min="0" name="cargo_item_max_length" 
-                       value="{{ old('cargo_item_max_length', $cargo_item->cargo_item_max_length) }}">
+                       value="{{ old('cargo_item_max_length', $cargo_item->cargo_item_max_length) }}" required>
               </div>
             </div>
 
@@ -121,7 +119,7 @@
               <div class="form-group">
                 <label>Max Width</label>
                 <input type="number" step="0.01" min="0" name="cargo_item_max_width" 
-                       value="{{ old('cargo_item_max_width', $cargo_item->cargo_item_max_width) }}">
+                       value="{{ old('cargo_item_max_width', $cargo_item->cargo_item_max_width) }}" required>
               </div>
             </div>
 
@@ -129,7 +127,7 @@
               <div class="form-group">
                 <label>Max Height</label>
                 <input type="number" step="0.01" min="0" name="cargo_item_max_height" 
-                       value="{{ old('cargo_item_max_height', $cargo_item->cargo_item_max_height) }}">
+                       value="{{ old('cargo_item_max_height', $cargo_item->cargo_item_max_height) }}" required>
               </div>
             </div>
 
@@ -150,6 +148,21 @@
           </div>
         </div>
 
+        {{-- BASE CBM SECTION --}}
+        <div id="base-cbm-section" 
+        style="{{ $cargo_item->cargo_item_measure_required == 'No' ? 'display:block;' : 'display:none;' }}">
+          <div class="form-row">
+            <div class="form-col">
+              <div class="form-group">
+                <label>Base CBM </label>
+                <input type="number" step="0.01" min="0" name="cargo_item_base_cbm" style="width: 150px" 
+                value="{{ old('cargo_item_base_cbm', $cargo_item->cargo_item_base_cbm) }}"
+                required>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="form-actions">
             <button type="submit" class="btn btn-primary update-btn" id="saveEditBtn">Update Cargo Item</button>
             <a href="{{ route('admin.cargo_item_list') }}" class="btn btn-secondary cancel-btn" >Cancel</a>
@@ -163,23 +176,48 @@
 @endsection
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  const radios = document.querySelectorAll('input[name="cargo_item_measure_required"]');
-  const section = document.getElementById('measurement-section');
+  document.addEventListener('DOMContentLoaded', function () {
+      const radios = document.querySelectorAll('input[name="cargo_item_measure_required"]');
+      const measurementSection = document.getElementById('measurement-section');
+      const baseCbmSection = document.getElementById('base-cbm-section');
 
-  radios.forEach(radio => {
-    radio.addEventListener('change', function () {
-      if (this.value === 'Yes') {
-        section.style.display = 'block';
-        section.querySelectorAll('input, select').forEach(el => el.required = true);
-      } else {
-        section.style.display = 'none';
-        section.querySelectorAll('input, select').forEach(el => {
-          el.required = false;
-          el.value = '';
+      radios.forEach(radio => {
+        radio.addEventListener('change', function () {
+
+          if (this.value === 'Yes') {
+            // SHOW measurement
+            measurementSection.style.display = 'block';
+            baseCbmSection.style.display = 'none';
+
+            // make measurement required
+            measurementSection.querySelectorAll('input, select').forEach(el => {
+              el.required = true;
+            });
+
+            // remove required + clear base cbm
+            baseCbmSection.querySelectorAll('input').forEach(el => {
+              el.required = false;
+              el.value = '';
+            });
+
+          } else {
+            // SHOW base CBM
+            measurementSection.style.display = 'none';
+            baseCbmSection.style.display = 'block';
+
+            // remove required + clear measurement
+            measurementSection.querySelectorAll('input, select').forEach(el => {
+              el.required = false;
+              el.value = '';
+            });
+
+            // make base cbm required
+            baseCbmSection.querySelectorAll('input').forEach(el => {
+              el.required = true;
+            });
+          }
+
         });
-      }
+      });
     });
-  });
-});
 </script>

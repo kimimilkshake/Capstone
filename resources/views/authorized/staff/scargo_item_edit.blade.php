@@ -152,6 +152,21 @@
 
         </div>
 
+        {{-- BASE CBM SECTION --}}
+        <div id="base-cbm-section" 
+        style="{{ $cargo_item->cargo_item_measure_required == 'No' ? 'display:block;' : 'display:none;' }}">
+          <div class="form-row">
+            <div class="form-col">
+              <div class="form-group">
+                <label>Base CBM </label>
+                <input type="number" step="0.01" min="0" name="cargo_item_base_cbm" style="width: 150px" 
+                value="{{ old('cargo_item_base_cbm', $cargo_item->cargo_item_base_cbm) }}"
+                required>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="form-actions">
             <button type="submit" class="btn btn-primary update-btn" id="saveEditBtn">Update Cargo Item</button>
             <a href="{{ route('staff.cargo_item_list') }}" class="btn btn-secondary cancel-btn">Cancel</a>
@@ -163,22 +178,47 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  const radios = document.querySelectorAll('input[name="cargo_item_measure_required"]');
-  const section = document.getElementById('measurement-section');
+      const radios = document.querySelectorAll('input[name="cargo_item_measure_required"]');
+      const measurementSection = document.getElementById('measurement-section');
+      const baseCbmSection = document.getElementById('base-cbm-section');
 
-  radios.forEach(radio => {
-    radio.addEventListener('change', function () {
-      if (this.value === 'Yes') {
-        section.style.display = 'block';
-        section.querySelectorAll('input, select').forEach(el => el.required = true);
-      } else {
-        section.style.display = 'none';
-        section.querySelectorAll('input, select').forEach(el => {
-          el.required = false;
-          el.value = '';
+      radios.forEach(radio => {
+        radio.addEventListener('change', function () {
+
+          if (this.value === 'Yes') {
+            // SHOW measurement
+            measurementSection.style.display = 'block';
+            baseCbmSection.style.display = 'none';
+
+            // make measurement required
+            measurementSection.querySelectorAll('input, select').forEach(el => {
+              el.required = true;
+            });
+
+            // remove required + clear base cbm
+            baseCbmSection.querySelectorAll('input').forEach(el => {
+              el.required = false;
+              el.value = '';
+            });
+
+          } else {
+            // SHOW base CBM
+            measurementSection.style.display = 'none';
+            baseCbmSection.style.display = 'block';
+
+            // remove required + clear measurement
+            measurementSection.querySelectorAll('input, select').forEach(el => {
+              el.required = false;
+              el.value = '';
+            });
+
+            // make base cbm required
+            baseCbmSection.querySelectorAll('input').forEach(el => {
+              el.required = true;
+            });
+          }
+
         });
-      }
+      });
     });
-  });
-});
 </script>

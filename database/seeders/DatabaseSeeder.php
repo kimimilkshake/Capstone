@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Database\Seeders\CargoItemSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -168,12 +169,22 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'cargo_classification_name' => 'case',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
                 'cargo_classification_name' => 'drum',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
                 'cargo_classification_name' => 'length',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_classification_name' => 'pail',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -201,6 +212,11 @@ class DatabaseSeeder extends Seeder
 
         //Cargo Category Seeders
         DB::table('cargo_category')->insert([
+            [
+                'cargo_category_name' => 'Agriculture',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
             [
                 'cargo_category_name' => 'Animals/Livestock',
                 'created_at' => now(),
@@ -237,7 +253,17 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'cargo_category_name' => 'Hardware',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
                 'cargo_category_name' => 'Hazardous/Dangerous Goods',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cargo_category_name' => 'Human Remains',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -476,5 +502,7 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         }
+
+        $this->call(CargoItemSeeder::class);
     }
 }
