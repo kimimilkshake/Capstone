@@ -799,6 +799,21 @@ body {
     flex: 1;
 }
 
+.aci-form_container .form-group.inline-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.aci-form_container .form-group.inline-input label {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.aci-form_container .form-group.inline-input input {
+  width: 150px;
+}
+
 .aci-form_container .form-group input,
 .aci-form_container .form-group select {
     width: 100%;
@@ -842,6 +857,8 @@ body {
 .inline-radio .radio-option input {
   margin: 0;
 }
+
+
 
 #aaddCargoClassificationModal .rpmodal-row.one-col {
     display: flex;

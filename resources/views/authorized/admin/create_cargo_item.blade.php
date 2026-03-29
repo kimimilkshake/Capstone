@@ -87,21 +87,21 @@
             <div class="form-col">
               <div class="form-group">
                 <label>Min Length</label>
-                <input type="number" step="0.01" min="0" name="cargo_item_min_length">
+                <input type="number" step="0.01" min="0" name="cargo_item_min_length" required>
               </div>
             </div>
 
             <div class="form-col">
               <div class="form-group">
                 <label>Min Width</label>
-                <input type="number" step="0.01" min="0" name="cargo_item_min_width">
+                <input type="number" step="0.01" min="0" name="cargo_item_min_width" requried>
               </div>
             </div>
 
             <div class="form-col">
               <div class="form-group">
                 <label>Min Height</label>
-                <input type="number" step="0.01" min="0" name="cargo_item_min_height">
+                <input type="number" step="0.01" min="0" name="cargo_item_min_height" required>
               </div>
             </div>
 
@@ -109,21 +109,21 @@
               <div class="form-col">
                 <div class="form-group">
                   <label>Max Length</label>
-                  <input type="number" step="0.01" min="0" name="cargo_item_max_length">
+                  <input type="number" step="0.01" min="0" name="cargo_item_max_length" required>
                 </div>
               </div>
 
               <div class="form-col">
                 <div class="form-group">
                   <label>Max Width</label>
-                  <input type="number" step="0.01" min="0" name="cargo_item_max_width">
+                  <input type="number" step="0.01" min="0" name="cargo_item_max_width" required>
                 </div>
               </div>
 
               <div class="form-col">
                 <div class="form-group">
                   <label>Max Height</label>
-                  <input type="number" step="0.01" min="0" name="cargo_item_max_height">
+                  <input type="number" step="0.01" min="0" name="cargo_item_max_height" required>
                 </div>
               </div>
 
@@ -145,8 +145,17 @@
           
         </div>
 
+        {{-- BASE CBM SECTION --}}
+        <div id="base-cbm-section" style="display: none;">
+          <div class="form-row">
+            <div class="form-col">
+              <div class="form-group">
+                <label>Base CBM </label>
+                <input type="number" step="0.01" min="0" name="cargo_item_base_cbm" style="width: 150px" required>
+              </div>
+            </div>
+          </div>
         </div>
-
 
         <div class="form-actions">
           <button type="submit" class="acs-add-btn">
@@ -160,29 +169,48 @@
 @endsection
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  const radios = document.querySelectorAll('input[name="cargo_item_measure_required"]');
-  const section = document.getElementById('measurement-section');
+  document.addEventListener('DOMContentLoaded', function () {
+    const radios = document.querySelectorAll('input[name="cargo_item_measure_required"]');
+    const measurementSection = document.getElementById('measurement-section');
+    const baseCbmSection = document.getElementById('base-cbm-section');
 
-  radios.forEach(radio => {
-    radio.addEventListener('change', function () {
-      if (this.value === 'Yes') {
-        section.style.display = 'block';
+    radios.forEach(radio => {
+      radio.addEventListener('change', function () {
 
-        // make inputs required
-        section.querySelectorAll('input, select').forEach(el => {
-          el.required = true;
-        });
-      } else {
-        section.style.display = 'none';
+        if (this.value === 'Yes') {
+          // SHOW measurement
+          measurementSection.style.display = 'block';
+          baseCbmSection.style.display = 'none';
 
-        // remove required + clear values
-        section.querySelectorAll('input, select').forEach(el => {
-          el.required = false;
-          el.value = '';
-        });
-      }
+          // make measurement required
+          measurementSection.querySelectorAll('input, select').forEach(el => {
+            el.required = true;
+          });
+
+          // remove required + clear base cbm
+          baseCbmSection.querySelectorAll('input').forEach(el => {
+            el.required = false;
+            el.value = '';
+          });
+
+        } else {
+          // SHOW base CBM
+          measurementSection.style.display = 'none';
+          baseCbmSection.style.display = 'block';
+
+          // remove required + clear measurement
+          measurementSection.querySelectorAll('input, select').forEach(el => {
+            el.required = false;
+            el.value = '';
+          });
+
+          // make base cbm required
+          baseCbmSection.querySelectorAll('input').forEach(el => {
+            el.required = true;
+          });
+        }
+
+      });
     });
   });
-});
 </script>

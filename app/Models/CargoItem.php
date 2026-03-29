@@ -25,6 +25,7 @@ class CargoItem extends Model
         'cargo_item_max_width',
         'cargo_item_min_height',
         'cargo_item_max_height',
+        'cargo_item_base_cbm',
     ];
 
     public function measurementUnit()

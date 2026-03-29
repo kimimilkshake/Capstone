@@ -73,6 +73,7 @@ class CargoItemController extends Controller
             'cargo_item_max_width'  => 'nullable|numeric',
             'cargo_item_min_height' => 'nullable|numeric',
             'cargo_item_max_height' => 'nullable|numeric',
+            'cargo_item_base_cbm' => 'nullable|numeric',
         ]);
 
         CargoItem::create($validated);
@@ -120,6 +121,7 @@ class CargoItemController extends Controller
             'cargo_item_max_width'  => 'nullable|numeric',
             'cargo_item_min_height' => 'nullable|numeric',
             'cargo_item_max_height' => 'nullable|numeric',
+            'cargo_item_base_cbm' => 'nullable|numeric',
         ]);
 
         $cargo_item->update($validated);
