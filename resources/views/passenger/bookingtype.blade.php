@@ -174,7 +174,7 @@
                                 <input type="date" class="form-control" id="departureDateMobile"
                                     name="departure_date" required>
                             </div>
-                            <div class="row g-2 mb-3">
+                            <div class="row g-2 mb-5">
                                 <div class="col-6">
                                     <label for="requestRouteFromMobile" class="form-label">From <span
                                             class="text-danger">*</span></label>
@@ -374,14 +374,14 @@
                 if (response.ok && data.success) {
                     // Direct send - system automatically sends to most recent passenger
                     closeModal();
-                    alert('Ticket sent to your email!');
+                    showToast('Ticket sent to your email!', 'success');
                     this.reset();
                 } else {
-                    alert(data.message || 'No ticket found.');
+                    showToast(data.message || 'No ticket found.', 'danger');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                showToast('An error occurred. Please try again.', 'danger');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalText;
@@ -414,15 +414,15 @@
                     const data = await response.json();
 
                     if (response.ok && data.success) {
-                        alert('Ticket sent to your email!');
+                        showToast('Ticket sent to your email!', 'success');
                         closeModal();
                         this.reset();
                     } else {
-                        alert(data.message || 'No ticket found.');
+                        showToast(data.message || 'No ticket found.', 'danger');
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    alert('An error occurred. Please try again.');
+                    showToast('An error occurred. Please try again.', 'danger');
                 } finally {
                     btn.disabled = false;
                     btn.innerHTML = originalText;

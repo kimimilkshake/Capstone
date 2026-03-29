@@ -65,8 +65,8 @@
                             <hr>
 
                             <div class="d-flex justify-content-between mt-4">
-                                <a href="{{ route('bookingtype') }}"
-                                    class="btn btn-outline-danger fw-bold w-50 py-3 me-2">CANCEL</a>
+                                <button type="button" id="cancelBookingBtn"
+                                    class="btn btn-outline-danger fw-bold w-50 py-3 me-2">CANCEL</button>
                                 <button type="submit" class="btn btn-primary fw-bold w-50 py-3">BOOK NOW</button>
                             </div>
                         </form>
@@ -148,6 +148,37 @@
                     input.value = clamp(input.value);
                     input.dispatchEvent(new Event('change'));
                     updateMinusState();
+                }
+            });
+            // Cancel booking confirmation
+            document.getElementById('cancelBookingBtn').addEventListener('click', function() {
+                showToast('Are you sure you want to cancel? All entered data will be lost.', 'warning', true);
+
+                // Replace the toast close button with confirm/stay buttons
+                const container = document.getElementById('globalToastContainer');
+                const toast = container.querySelector('.toast:last-child');
+                if (toast) {
+                    const body = toast.querySelector('.toast-body');
+                    // Remove the default close button
+                    const closeBtn = toast.querySelector('.btn-close');
+                    if (closeBtn) closeBtn.remove();
+
+                    body.innerHTML = `
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Are you sure you want to cancel? All entered data will be lost.
+                        <div class="mt-2 d-flex gap-2 justify-content-end">
+                            <button class="btn btn-sm btn-light" id="confirmCancel">Yes, cancel</button>
+                            <button class="btn btn-sm btn-outline-light" id="stayBooking">No, stay</button>
+                        </div>
+                    `;
+
+                    document.getElementById('confirmCancel').addEventListener('click', function() {
+                        window.location.href = "{{ route('bookingtype') }}";
+                    });
+
+                    document.getElementById('stayBooking').addEventListener('click', function() {
+                        bootstrap.Toast.getInstance(toast).hide();
+                    });
                 }
             });
         });

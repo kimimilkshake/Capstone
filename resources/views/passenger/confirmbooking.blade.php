@@ -90,16 +90,6 @@
                         <h5 class="mb-0">Confirm Booking</h5>
                     </div>
                     <div class="card-body">
-                        @if (
-                            $payment &&
-                                strtolower($payment->payment_status) === 'completed' &&
-                                strtolower($booking->booking_status) === 'confirmed')
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                <strong>✓ Payment Successful!</strong> Your booking has been confirmed. Check your email for
-                                your ticket details.
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        @endif
 
                         <h6>Booking Reference: #{{ $booking->booking_ref_no }}</h6>
                         <p>Status: <strong>{{ $booking->booking_status }}</strong></p>
@@ -241,7 +231,7 @@
                 e.preventDefault();
                 const bookingRef = '{{ $booking->booking_ref_no }}';
                 if (!bookingRef) {
-                    alert('Missing booking reference.');
+                    showToast('Missing booking reference.', 'danger');
                     return;
                 }
 
@@ -268,7 +258,7 @@
                     if (!res.ok) {
                         let text = await res.text();
                         console.error('create-source response not ok', res.status, text);
-                        alert('Payment initialization failed (server error). Check logs.');
+                        showToast('Payment initialization failed (server error). Check logs.', 'danger');
                         return;
                     }
 
@@ -278,13 +268,14 @@
                     } catch (jsonErr) {
                         const txt = await res.text();
                         console.error('Failed to parse JSON from create-source', txt, jsonErr);
-                        alert('Payment initialization failed (invalid response).');
+                        showToast('Payment initialization failed (invalid response).', 'danger');
                         return;
                     }
 
                     if (!data || !data.success) {
                         console.error('create-source failed', data);
-                        alert((data && data.message) ? data.message : 'Failed to initialize payment.');
+                        showToast((data && data.message) ? data.message : 'Failed to initialize payment.',
+                            'danger');
                         return;
                     }
 
@@ -294,11 +285,11 @@
                         window.location.href = checkoutUrl;
                     } else {
                         console.error('No checkout_url in create-source response', data);
-                        alert('Checkout URL not returned by payment provider.');
+                        showToast('Checkout URL not returned by payment provider.', 'danger');
                     }
                 } catch (err) {
                     console.error('Error calling create-source', err);
-                    alert('Error initializing payment. See console and server logs.');
+                    showToast('Error initializing payment. See console and server logs.', 'danger');
                 } finally {
                     // Restore button state if still on this page
                     if (document.contains(payBtnEl)) {
@@ -312,58 +303,80 @@
         // Handle cancel button click
         const cancelBtnEl = document.getElementById('cancelBtn');
         if (cancelBtnEl && !cancelBtnEl.disabled) {
-            cancelBtnEl.addEventListener('click', async function(e) {
+            cancelBtnEl.addEventListener('click', function(e) {
                 e.preventDefault();
 
-                // Confirm cancellation
-                if (!confirm('Are you sure you want to cancel this booking?')) {
-                    return;
-                }
+                showToast('Are you sure you want to cancel this booking?', 'warning', true);
 
-                // Set flag to prevent beforeunload cancellation
-                isFormSubmitting = true;
+                const container = document.getElementById('globalToastContainer');
+                const toast = container.querySelector('.toast:last-child');
+                if (toast) {
+                    const body = toast.querySelector('.toast-body');
+                    const closeBtn = toast.querySelector('.btn-close');
+                    if (closeBtn) closeBtn.remove();
 
-                const bookingRef = '{{ $booking->booking_ref_no }}';
-                if (!bookingRef) {
-                    alert('Missing booking reference.');
-                    return;
-                }
+                    body.innerHTML = `
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Are you sure you want to cancel this booking?
+                        <div class="mt-2 d-flex gap-2 justify-content-end">
+                            <button class="btn btn-sm btn-light" id="confirmCancelBooking">Yes, cancel</button>
+                            <button class="btn btn-sm btn-outline-light" id="stayCancelBooking">No, keep it</button>
+                        </div>
+                    `;
 
-                // Disable button to prevent double clicks
-                cancelBtnEl.disabled = true;
-                cancelBtnEl.innerText = 'Canceling...';
-
-                try {
-                    const res = await fetch(`{{ url('/booking/cancel') }}/${bookingRef}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
+                    document.getElementById('stayCancelBooking').addEventListener('click', function() {
+                        bootstrap.Toast.getInstance(toast).hide();
                     });
 
-                    if (!res.ok) {
-                        throw new Error(`HTTP error! status: ${res.status}`);
-                    }
+                    document.getElementById('confirmCancelBooking').addEventListener('click', async function() {
+                        bootstrap.Toast.getInstance(toast).hide();
 
-                    const data = await res.json();
+                        // Set flag to prevent beforeunload cancellation
+                        isFormSubmitting = true;
 
-                    if (data.success) {
-                        alert('Booking canceled successfully.');
-                        // Redirect to booking type page
-                        window.location.href = data.redirect_url || '{{ route('bookingtype') }}';
-                    } else {
-                        alert(data.message || 'Failed to cancel booking.');
-                        // Restore button state
-                        cancelBtnEl.disabled = false;
-                        cancelBtnEl.innerText = 'Cancel';
-                    }
-                } catch (err) {
-                    console.error('Error canceling booking', err);
-                    alert('Error canceling booking. Please try again.');
-                    // Restore button state
-                    cancelBtnEl.disabled = false;
-                    cancelBtnEl.innerText = 'Cancel';
+                        const bookingRef = '{{ $booking->booking_ref_no }}';
+                        if (!bookingRef) {
+                            showToast('Missing booking reference.', 'danger');
+                            return;
+                        }
+
+                        // Disable button to prevent double clicks
+                        cancelBtnEl.disabled = true;
+                        cancelBtnEl.innerText = 'Canceling...';
+
+                        try {
+                            const res = await fetch(`{{ url('/booking/cancel') }}/${bookingRef}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                }
+                            });
+
+                            if (!res.ok) {
+                                throw new Error(`HTTP error! status: ${res.status}`);
+                            }
+
+                            const data = await res.json();
+
+                            if (data.success) {
+                                showToast('Booking canceled successfully.', 'success');
+                                setTimeout(() => {
+                                    window.location.href = data.redirect_url ||
+                                        '{{ route('bookingtype') }}';
+                                }, 1500);
+                            } else {
+                                showToast(data.message || 'Failed to cancel booking.', 'danger');
+                                cancelBtnEl.disabled = false;
+                                cancelBtnEl.innerText = 'Cancel';
+                            }
+                        } catch (err) {
+                            console.error('Error canceling booking', err);
+                            showToast('Error canceling booking. Please try again.', 'danger');
+                            cancelBtnEl.disabled = false;
+                            cancelBtnEl.innerText = 'Cancel';
+                        }
+                    });
                 }
             });
         }

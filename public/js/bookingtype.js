@@ -149,7 +149,10 @@ function updateAvailableDates() {
     );
 
     if (!availableVoyages.length) {
-        alert("No voyages found for this route in the next 7 days.");
+        showToast(
+            "No voyages found for this route in the next 7 days.",
+            "danger",
+        );
         resetSelection();
         return;
     }
@@ -184,7 +187,7 @@ function updateAvailableTimes() {
     const today = new Date().toISOString().split("T")[0];
 
     if (selectedDate < today) {
-        alert("You cannot select a past date.");
+        showToast("You cannot select a past date.", "danger");
         tripDateInput.value = "";
         departureTimeSelect.disabled = true;
         checkProceedButton();
@@ -192,7 +195,10 @@ function updateAvailableTimes() {
     }
 
     if (!availableDates.includes(selectedDate)) {
-        alert("No voyages available on this date for the selected route.");
+        showToast(
+            "No voyages available on this date for the selected route.",
+            "danger",
+        );
         tripDateInput.value = "";
         departureTimeSelect.disabled = true;
         checkProceedButton();
@@ -283,8 +289,9 @@ function selectVoyageFromTable(row) {
 // Proceed button
 proceedBtn.addEventListener("click", function () {
     if (proceedBtn.disabled) {
-        alert(
+        showToast(
             "Please select origin, destination, date, and departure time before proceeding.",
+            "danger",
         );
         return;
     }
@@ -299,7 +306,7 @@ proceedBtn.addEventListener("click", function () {
         departureTimeSelect.options[departureTimeSelect.selectedIndex];
 
     if (!selectedTimeOption || !selectedTimeOption.dataset.voyageId) {
-        alert("Please select a valid departure time.");
+        showToast("Please select a valid departure time.", "danger");
         return;
     }
 
@@ -312,7 +319,7 @@ proceedBtn.addEventListener("click", function () {
     );
 
     if (!selectedVoyage) {
-        alert("Selected voyage not found. Please try again.");
+        showToast("Selected voyage not found. Please try again.", "danger");
         return;
     }
 
@@ -320,7 +327,7 @@ proceedBtn.addEventListener("click", function () {
     if (bookingType === "cargo") {
         const cutoffValidation = validateCargoCutoff(tripDate, departureTime);
         if (!cutoffValidation.valid) {
-            alert(cutoffValidation.message);
+            showToast(cutoffValidation.message, "danger");
             return;
         }
     }

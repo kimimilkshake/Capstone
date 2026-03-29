@@ -579,8 +579,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
                         if (!promoData.success) {
                             loader.style.display = "none";
-                            alert(
+                            showToast(
                                 `Passenger ${passengerNumber}: Invalid promo code "${promoCode}"`,
+                                "danger",
                             );
                             return;
                         }
@@ -598,8 +599,9 @@ document.addEventListener("DOMContentLoaded", function () {
                             `Promo validation error for Passenger ${passengerNumber}:`,
                             error,
                         );
-                        alert(
+                        showToast(
                             `Error validating promo for Passenger ${passengerNumber}`,
+                            "danger",
                         );
                         return;
                     }
@@ -638,8 +640,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 if (!idFile) {
                     loader.style.display = "none";
-                    alert(
+                    showToast(
                         `Passenger ${passengerNumber} (${type}): Please upload an ID image for discount verification.`,
+                        "danger",
                     );
                     return;
                 }
@@ -689,8 +692,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     !scanned.includes(idNumber.toLowerCase())
                 ) {
                     loader.style.display = "none";
-                    alert(
+                    showToast(
                         `Passenger ${passengerNumber} (${firstName} ${lastName}): ID does not match. Please check your input or upload a clearer photo.`,
+                        "danger",
                     );
                     return;
                 }
@@ -839,21 +843,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
             loader.style.display = "none";
             if (!result.success) {
-                alert(
+                showToast(
                     result.message ||
                         "Failed to create booking hold. Please try again.",
+                    "danger",
                 );
                 return;
             }
 
+            // Show persistent success toast before redirecting
+            showToast("Booking submitted successfully! Redirecting...", "success", true);
+
             // Redirect to confirm page for this booking
-            if (result.redirect_url) {
-                window.location.href = result.redirect_url;
-            } else if (result.booking_ref_no) {
-                window.location.href = `/passenger/confirmbooking/${result.booking_ref_no}`;
-            } else {
-                window.location.href = "/passenger/confirmbooking";
-            }
+            setTimeout(() => {
+                if (result.redirect_url) {
+                    window.location.href = result.redirect_url;
+                } else if (result.booking_ref_no) {
+                    window.location.href = `/passenger/confirmbooking/${result.booking_ref_no}`;
+                } else {
+                    window.location.href = "/passenger/confirmbooking";
+                }
+            }, 1500);
         } catch (err) {
             loader.style.display = "none";
             console.error("Detailed error:", err);
@@ -861,20 +871,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // More specific error messages
             if (err.message && err.message.includes("OCR")) {
-                alert(
+                showToast(
                     "Error during ID verification: " +
                         err.message +
                         ". Please try again.",
+                    "danger",
                 );
             } else if (err.message && err.message.includes("fetch")) {
-                alert(
+                showToast(
                     "Network error occurred. Please check your connection and try again.",
+                    "danger",
                 );
             } else {
-                alert(
+                showToast(
                     "Error during form submission: " +
                         (err.message || "Unknown error") +
                         ". Please check the browser console for details.",
+                    "danger",
                 );
             }
         }
