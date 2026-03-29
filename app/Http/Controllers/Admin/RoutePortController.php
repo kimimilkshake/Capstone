@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\RoutePort;
-use App\Models\RouteCode;
+use App\Models\RouteCategory;
 use App\Http\Controllers\Traits\AdminGuard;
 
 class RoutePortController extends Controller
@@ -31,26 +31,26 @@ class RoutePortController extends Controller
         $search = $request->input('search');
 
         $route_port = RoutePort::select('route_port.*')
-            ->join('route_code', 'route_port.route_code_id', '=', 'route_code.route_code_id')
+            ->join('route_category', 'route_port.route_category_id', '=', 'route_category.route_category_id')
             ->when($search, function ($query, $search) {
                 $query->where('route_origin', 'like', "%{$search}%")
                     ->orWhere('route_destination', 'like', "%{$search}%")
                     ->orWhere('port_origin_name', 'like', "%{$search}%")
                     ->orWhere('port_destination_name', 'like', "%{$search}%");
             })
-            ->orderBy('route_code.route_code_name', 'asc') // sort by route code name
+            ->orderBy('route_category.route_category_name', 'asc') // sort by route category name
             ->paginate(10)
             ->withQueryString(); // keeps search query when paginating
 
-        $route_codes = RouteCode::orderBy('route_code_name', 'asc')->get();
+        $route_categories = RouteCategory::orderBy('route_category_name', 'asc')->get();
 
-        return view('authorized.admin.route_port_list', compact('route_port', 'route_codes', 'search'));
+        return view('authorized.admin.route_port_list', compact('route_port', 'route_categories', 'search'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'route_code_id' => 'required|exists:route_code,route_code_id',
+            'route_category_id' => 'required|exists:route_category,route_category_id',
             'route_origin' => 'required|string|max:255',
             'route_destination' => 'required|string|max:255',
             'port_origin_name' => 'required|string|max:255',
@@ -61,6 +61,10 @@ class RoutePortController extends Controller
             'port_destination_province' => 'required|string|max:255',
         ]);
 
+        // 👉 CREATE ROUTE CODE
+        $originCode = strtoupper(substr($validated['route_origin'], 0, 3));
+        $destinationCode = strtoupper(substr($validated['route_destination'], 0, 3));
+        $validated['route_code'] = $originCode . $destinationCode;
         $route_port = RoutePort::create($validated);
 
         return response()->json([
@@ -74,7 +78,7 @@ class RoutePortController extends Controller
     {
         try {
             $validated = $request->validate([
-                'route_code_id' => 'required|exists:route_code,route_code_id',
+                'route_category_id' => 'required|exists:route_category,route_category_id',
                 'route_origin' => 'required|string|max:255',
                 'route_destination' => 'required|string|max:255',
                 'port_origin_name' => 'required|string|max:255',
@@ -86,6 +90,9 @@ class RoutePortController extends Controller
             ]);
 
 
+            $originCode = strtoupper(substr($validated['route_origin'], 0, 3));
+            $destinationCode = strtoupper(substr($validated['route_destination'], 0, 3));
+            $validated['route_code'] = $originCode . $destinationCode;
             $route_port = RoutePort::findOrFail($id);
             $route_port->update($validated);
 

@@ -19,7 +19,7 @@ class CargoBooking extends Model
         'booking_ref_no',
         'cargo_item_id',
         'cargo_classification_id',
-        'route_code_id',
+        'route_category_id',
         'measurement_unit_id',
         'with_measurement',
         'quantity',
@@ -51,9 +51,9 @@ class CargoBooking extends Model
         return $this->belongsTo(MeasurementUnit::class, 'measurement_unit_id', 'measurement_unit_id');
     }
 
-    public function routeCode()
+    public function routeCategory()
     {
-        return $this->belongsTo(RouteCode::class, 'route_code_id', 'route_code_id');
+        return $this->belongsTo(RouteCategory::class, 'route_category_id', 'route_category_id');
     }
 
     public function approvedByStaff()

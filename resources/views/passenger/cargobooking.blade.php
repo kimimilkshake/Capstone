@@ -154,9 +154,9 @@
                                                 <select name="cargo_item_id[]" class="form-control cargo-description required-field">
                                                     <option value="">-- Select Description --</option>
                                                     @foreach($cargoItems->sortBy('cargo_item_description') as $cargo)
-                                                            @if($cargo->route_code_id == ($voyage->routePort->route_code_id ?? null))
+                                                            @if($cargo->route_category_id == ($voyage->routePort->route_category_id ?? null))
                                                             <option value="{{ $cargo->cargo_item_id }}"
-                                                                data-route-code="{{ $cargo->route_code_id ?? '' }}"
+                                                                data-route-category="{{ $cargo->route_category_id ?? '' }}"
                                                                 data-classification="{{ $cargo->cargo_item_classification ?? '' }}"
                                                                 data-measure-required="{{ $cargo->cargo_item_measure_required ?? 'No' }}"
                                                                 data-measurement-unit="{{ $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm' }}"
@@ -685,7 +685,6 @@
             return isValid;
         }
 
-        // ...existing code...
 
 container.addEventListener('change', e => {
     if(!e.target.classList.contains('cargo-description')) return;
@@ -769,6 +768,7 @@ container.addEventListener('change', e => {
         }
     </script>
 
+    @include('components.footer')
 @endsection
 
 <style>

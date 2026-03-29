@@ -384,13 +384,25 @@
             </thead>
             <tbody>
                 @foreach($booking->cargoBookings as $cargo)
-                    @php
-                        $unit = $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm';
-                        $cbm = (float) ($cargo->cbm ?? (($cargo->length * $cargo->width * $cargo->height) / 1000000));
-                        $qty = (float) ($cargo->quantity ?? 0);
-                        $freightRate = (float) ($cargo->cargoItem->cargo_item_freight ?? 0);
-                        $subtotal = $freightRate * $cbm * $qty;
-                    @endphp
+    @php
+        $unit = $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm';
+
+        $cbm = (float) ($cargo->cbm ?? (($cargo->length * $cargo->width * $cargo->height) / 1000000));
+
+        $qty = (float) ($cargo->quantity ?? 0);
+
+        $freightRate = (float) ($cargo->cargoItem->cargo_item_freight ?? 0);
+
+        $measureRequired = strtolower($cargo->cargoItem->cargo_item_measure_required ?? 'no');
+
+        if ($measureRequired === 'yes') {
+            // Freight per quantity
+            $subtotal = $freightRate * $qty;
+        } else {
+            // Freight per CBM
+            $subtotal = $freightRate * $cbm * $qty;
+        }
+    @endphp
                     <tr>
                         <td style="text-align:center;">{{ $cargo->quantity }}</td>
                         <td>{{ $cargo->cargoClassification->cargo_classification_name ?? '' }}</td>
@@ -407,21 +419,29 @@
     </div>
 
     <!-- Charges Table -->
-    @php
-        $freight = 0;
-        $stamp = 20.00;
-        foreach($booking->cargoBookings as $cargo) {
-            $cbm = (float) ($cargo->cbm ?? (($cargo->length * $cargo->width * $cargo->height) / 1000000));
-            $qty = (float) ($cargo->quantity ?? 0);
-            $freightRate = (float) ($cargo->cargoItem->cargo_item_freight ?? 0);
+@php
+    $freight = 0;
+    $stamp = 20.00;
 
+    foreach($booking->cargoBookings as $cargo) {
+        $cbm = (float) ($cargo->cbm ?? (($cargo->length * $cargo->width * $cargo->height) / 1000000));
+        $qty = (float) ($cargo->quantity ?? 0);
+        $freightRate = (float) ($cargo->cargoItem->cargo_item_freight ?? 0);
+
+        $measureRequired = strtolower($cargo->cargoItem->cargo_item_measure_required ?? 'no');
+
+        if ($measureRequired === 'yes') {
+            $freight += $freightRate * $qty;
+        } else {
             $freight += $freightRate * $cbm * $qty;
         }
-        $total = $freight + $stamp;
-    @endphp
+    }
+
+    $total = $freight + $stamp;
+@endphp
     <table class="charges-table">
         <tr>
-            <td class="label">FREIGHT CHARGES</td>
+            <td class="label">SUBTOTAL</td>
             <td class="amount">₱{{ number_format($freight, 2) }}</td>
         </tr>
         <tr>

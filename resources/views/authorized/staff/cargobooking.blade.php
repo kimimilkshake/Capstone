@@ -6,19 +6,6 @@
 
 <div class="staff-body">   {{-- FIXED: Same wrapper as pending cargo --}}
 
-    @if(session('success'))
-        <div class="alert alert-success text-center mx-auto w-75" role="alert">{{ session('success') }}</div>
-    @endif
-    @if ($errors->any())
-        <div class="alert alert-danger text-center">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
     <form id="staffCargoForm" action="{{ route('cargo.bookings.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
@@ -40,9 +27,9 @@
                         @php
                             $depDate = \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('M j, Y');
                             $depTime = $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:i A') : '';
-                            $routeCodeId = $voyage->routePort->route_code_id ?? '';
+                            $routeCategoryId = $voyage->routePort->route_category_id ?? '';
                         @endphp
-                        <option value="{{ $voyage->voyage_id }}" data-route_port="{{ $voyage->route_port_id ?? $voyage->routePort->route_port_id ?? '' }}" data-route_code="{{ $routeCodeId }}" data-departure-date="{{ $voyage->voyage_departure_date ?? '' }}" data-departure-time="{{ $voyage->voyage_estimated_TD ?? '' }}">
+                        <option value="{{ $voyage->voyage_id }}" data-route_port="{{ $voyage->route_port_id ?? $voyage->routePort->route_port_id ?? '' }}" data-route_category="{{ $routeCategoryId }}" data-departure-date="{{ $voyage->voyage_departure_date ?? '' }}" data-departure-time="{{ $voyage->voyage_estimated_TD ?? '' }}">
                             {{ $voyage->voyage_code }} - {{ $voyage->routePort->route_origin ?? 'N/A' }} → {{ $voyage->routePort->route_destination ?? 'N/A' }} - Departure: {{ $depDate }} {{ $depTime ? '(' . $depTime . ')' : '' }}
                         </option>
                     @endforeach
@@ -122,7 +109,7 @@
                                         <option value="">-- Select Description --</option>
                                         @foreach($cargoItems->sortBy('cargo_item_description') as $item)
                                             <option value="{{ $item->cargo_item_id }}" 
-                                                data-route-code="{{ $item->route_code_id ?? '' }}"
+                                                data-route-category="{{ $item->route_category_id ?? '' }}"
                                                 data-measure-required="{{ $item->cargo_item_measure_required ?? 'No' }}"
                                                 data-measurement-unit="{{ $item->measurementUnit->measurement_unit_abbreviation ?? 'cm' }}"
                                                 data-min-length="{{ $item->cargo_item_min_length ?? '' }}"
@@ -508,20 +495,20 @@ container.addEventListener('change', e => {
     applyMeasurementRules(item, selectedOption);
 });
 
-// Handle voyage selection and filter cargo descriptions by route_code
+// Handle voyage selection and filter cargo descriptions by route_category
 const voyageSelect = document.querySelector('select[name="voyage_id"]');
 if(voyageSelect) {
     refreshVoyageAvailabilityByCutoff();
 
     voyageSelect.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
-        const routeCodeId = selectedOption.dataset.route_code;
+        const routeCategoryId = selectedOption.dataset.route_category;
         
-        // Filter all cargo descriptions by route_code
+        // Filter all cargo descriptions by route_category
         Array.from(container.querySelectorAll('.cargo-description')).forEach(descSelect => {
             Array.from(descSelect.options).forEach(opt => {
                 if(opt.value === '') return;
-                opt.style.display = (opt.dataset.routeCode === routeCodeId) ? 'block' : 'none';
+                opt.style.display = (opt.dataset.routeCategory === routeCategoryId) ? 'block' : 'none';
             });
             descSelect.value = '';
         });

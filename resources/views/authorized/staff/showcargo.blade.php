@@ -12,10 +12,52 @@
             <div class="col-lg-6">
                 <div class="card shadow-sm p-4 mb-4">
                     <h5 class="mb-2">Booking Information</h5>
+                    
                     @php
+                        // ✅ UNIT CONVERSION TO METERS
+                        function toMeters($value, $unit) {
+                            $unit = strtolower($unit);
+
+                            return match ($unit) {
+                                'm'   => $value,
+                                'cm'  => $value / 100,
+                                'in'  => $value * 0.0254,
+                                'ft'  => $value * 0.3048,
+                                default => $value
+                            };
+                        }
+
+                        // ✅ CBM CALCULATION (NOW UNIT-CONSISTENT)
+                        function computeCBM($cargo) {
+                            $unit = $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm';
+
+                            $length = toMeters((float)$cargo->length, $unit);
+                            $width  = toMeters((float)$cargo->width, $unit);
+                            $height = toMeters((float)$cargo->height, $unit);
+
+                            return $length * $width * $height;
+                        }
+
+                        // ✅ CENTRALIZED SUBTOTAL CALCULATION
+                        function computeSubtotal($cargo) {
+                            $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
+                            $qty = (float) ($cargo->quantity ?? 0);
+
+                            $measureRequired = strtolower($cargo->cargoItem->cargo_item_measure_required ?? 'no');
+
+                            if ($measureRequired === 'yes') {
+                                return $freight * $qty;
+                            }
+
+                            $cbm = computeCBM($cargo);
+
+                            return $freight * $cbm * $qty;
+                        }
+
                         $processedBy = optional(optional($booking->cargoBookings->first())->approvedByStaff)
                             ->staff_name;
                         $processedLabel = 'N/A';
+
                         if ($processedBy) {
                             if ($booking->booking_status === 'Confirmed') {
                                 $processedLabel = 'Approved by ' . $processedBy;
@@ -26,6 +68,7 @@
                             }
                         }
                     @endphp
+
                     <p><strong>Booking Ref #:</strong> {{ $booking->booking_code }}</p>
                     <p><strong>Status:</strong> {{ $booking->booking_status }}</p>
                     <p><strong>Created:</strong> {{ $booking->created_at->format('M d, Y') }}</p>
@@ -42,6 +85,19 @@
                     @if ($payment)
                         <p><strong>Mode of Payment:</strong> {{ $payment->mode_of_payment }}</p>
                         <p><strong>Payment Status:</strong> {{ $payment->payment_status }}</p>
+
+                        {{-- ✅ UPDATED CALCULATION --}}
+                        @php
+                            $calculatedTotal = 0;
+
+                            foreach ($booking->cargoBookings as $c) {
+                                $calculatedTotal += computeSubtotal($c);
+                            }
+
+                            $stamp = 20.00;
+                            $calculatedTotal += $stamp;
+                        @endphp
+
                         <p><strong>Amount Paid:</strong> ₱{{ number_format($payment->total_amount, 2) }}</p>
                     @endif
                 </div>
@@ -173,35 +229,26 @@
                     </thead>
 
                     <tbody>
-                        @php $total = 0; @endphp
+                       @php $total = 0; @endphp
 
-                        @foreach ($cargoBookings as $c)
+                        @foreach ($booking->cargoBookings as $c)
                             @php
-                                $freight = $c->cargoItem->cargo_item_freight;
-                                $cbm = (float) ($c->cbm ?? ($c->length * $c->width * $c->height) / 1000000);
-                                $subtotal = $freight * $cbm * $c->quantity;
+                                // ✅ FIXED: Use consistent CBM calculation
+                                $cbm = computeCBM($c);
+
+                                $freight = $c->cargoItem->cargo_item_freight ?? 0;
+
+                                $subtotal = computeSubtotal($c);
                                 $total += $subtotal;
-                                $unit = $c->measurementUnit->measurement_unit_abbreviation ?? 'cm';
-                                // Only show unit in value if mixed units
-                                $showUnitSuffix = $units->count() > 1;
                             @endphp
 
                             <tr>
                                 <td class="text-center">{{ $c->quantity }}</td>
                                 <td>{{ $c->cargoClassification->cargo_classification_name ?? 'N/A' }}</td>
                                 <td>{{ $c->cargoItem->cargo_item_description }}</td>
-                                <td class="text-end">{{ number_format($c->length, 2) }}@if ($showUnitSuffix)
-                                        {{ $unit }}
-                                    @endif
-                                </td>
-                                <td class="text-end">{{ number_format($c->width, 2) }}@if ($showUnitSuffix)
-                                        {{ $unit }}
-                                    @endif
-                                </td>
-                                <td class="text-end">{{ number_format($c->height, 2) }}@if ($showUnitSuffix)
-                                        {{ $unit }}
-                                    @endif
-                                </td>
+                                <td class="text-end">{{ number_format($c->length, 2) }}</td>
+                                <td class="text-end">{{ number_format($c->width, 2) }}</td>
+                                <td class="text-end">{{ number_format($c->height, 2) }}</td>
                                 <td class="text-end">{{ number_format($cbm, 4) }}</td>
                                 <td class="text-end">{{ number_format($c->weight, 2) }}</td>
                                 <td class="text-end">₱{{ number_format($freight, 2) }}</td>
@@ -214,11 +261,19 @@
                         <tr>
                             <th colspan="9" class="text-end">TOTAL:</th>
                             <th class="text-end">
-                                @if ($payment && $payment->total_amount)
-                                    ₱{{ number_format($payment->total_amount, 2) }}
-                                @else
-                                    ₱{{ number_format($total, 2) }}
-                                @endif
+                                @php
+                                    // ✅ FINAL TOTAL RECALCULATION (NO TRUSTING OLD VALUES)
+                                    $total = 0;
+
+                                    foreach ($booking->cargoBookings as $c) {
+                                        $total += computeSubtotal($c);
+                                    }
+
+                                    $stamp = 20.00;
+                                    $totalTransaction = $total + $stamp;
+                                @endphp
+
+                                ₱{{ number_format($totalTransaction, 2) }}
                             </th>
                         </tr>
                     </tfoot>

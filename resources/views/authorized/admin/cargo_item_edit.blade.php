@@ -14,11 +14,11 @@
 
           <div class="form-col">
             <div class="form-group">
-              <label>Route Code <span class="text-danger">*</span></label>
-              <select name="route_code_id" required>
-                @foreach ($route_codes as $routeCode)
-                  <option value="{{ $routeCode->route_code_id }}" {{ $cargo_item->route_code_id == $routeCode->route_code_id ? 'selected' : '' }}>
-                    {{ $routeCode->route_code_name }}
+              <label>Route Category <span class="text-danger">*</span></label>
+              <select name="route_category_id" required>
+                @foreach ($route_categories as $routeCategory)
+                  <option value="{{ $routeCategory->route_category_id }}" {{ $cargo_item->route_category_id == $routeCategory->route_category_id ? 'selected' : '' }}>
+                    {{ $routeCategory->route_category_name }}
                   </option>
                 @endforeach
               </select>

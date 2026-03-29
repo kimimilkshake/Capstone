@@ -60,8 +60,24 @@
                 @foreach($cargoItems as $cargo)
                     @php
                         $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
+
+                        // ✅ match measure_required logic
+                        $measureRequired = strtolower($cargo->cargoItem->cargo_item_measure_required ?? 'no');
+
                         $cbm = (float) ($cargo->cbm ?? 0);
-                        $subtotal = $freight * $cbm * $cargo->quantity;
+
+                        // fallback CBM if not stored
+                        if (!$cbm) {
+                            $cbm = ($cargo->length * $cargo->width * $cargo->height) / 1000000;
+                        }
+
+                        // ✅ UPDATED FORMULA (matches backend)
+                        if ($measureRequired === 'yes') {
+                            $subtotal = $freight * $cargo->quantity;
+                        } else {
+                            $subtotal = $cbm * $freight * $cargo->quantity;
+                        }
+
                         $total += $subtotal;
 
                         $unitDisplay = strtolower($cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm');

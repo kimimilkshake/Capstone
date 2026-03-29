@@ -60,17 +60,33 @@
                     $stampFee = 20;
                 @endphp
                 @foreach($cargoItems as $cargo)
-                    @php
-                        $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
-                        $cbm = (float) ($cargo->cbm ?? 0);
-                        $subtotal = $freight * $cbm * $cargo->quantity;
-                        $total += $subtotal;
+                @php
+                  $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
 
-                        $unitDisplay = strtolower($cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm');
-                        $displayLength = (float) $cargo->length;
-                        $displayWidth = (float) $cargo->width;
-                        $displayHeight = (float) $cargo->height;
-                    @endphp
+                 // ✅ match measure_required logic
+                 $measureRequired = strtolower($cargo->cargoItem->cargo_item_measure_required ?? 'no');
+
+                 $cbm = (float) ($cargo->cbm ?? 0);
+
+                 // fallback CBM if not stored
+                 if (!$cbm) {
+                    $cbm = ($cargo->length * $cargo->width * $cargo->height) / 1000000;
+                }
+
+                // ✅ UPDATED FORMULA (matches backend)
+                if ($measureRequired === 'yes') {
+                    $subtotal = $freight * $cargo->quantity;
+                 } else {
+                    $subtotal = $cbm * $freight * $cargo->quantity;
+                }
+
+                $total += $subtotal;
+
+                $unitDisplay = strtolower($cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm');
+                $displayLength = (float) $cargo->length;
+                $displayWidth = (float) $cargo->width;
+                $displayHeight = (float) $cargo->height;
+            @endphp
                     <tr>
                         <td>{{ $cargo->quantity }}</td>
                         <td>{{ $cargo->cargoClassification->cargo_classification_name ?? 'N/A' }}</td>

@@ -141,7 +141,7 @@ class StaffCargoController extends Controller
             $cargoBooking = new CargoBooking();
             $cargoBooking->booking_ref_no = $booking->booking_ref_no;
             $cargoBooking->cargo_item_id = $cargoId;
-            $cargoBooking->route_code_id = $cargoItem ? $cargoItem->route_code_id : null;
+            $cargoBooking->route_category_id = $cargoItem ? $cargoItem->route_category_id : null;
             $cargoBooking->quantity = $request->cargo_quantity[$index];
             $cargoBooking->weight = $request->cargo_weight[$index];
             $cargoBooking->length = $request->cargo_length[$index];

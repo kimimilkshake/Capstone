@@ -277,6 +277,23 @@ function showManifestError(message) {
     alert(message);
 }
 
+function getManifestPrintStyles() {
+    return [
+        '@page { margin: 10mm; size: landscape; }',
+        'body { font-family: Arial, sans-serif; font-size: 8pt; padding: 8px; }',
+        'table { width: 100%; border-collapse: collapse; margin-top: 12px; margin-bottom: 16px; table-layout: auto; }',
+        'th, td { border: 1px solid #000; padding: 4px 6px; font-size: 8pt; line-height: 1.15; white-space: nowrap; word-break: keep-all; overflow-wrap: normal; }',
+        'th { text-align: left; background-color: #f2f2f2; }',
+        'td { text-align: left; }',
+        '.manifest-header { text-align: center; margin-bottom: 12px; }',
+        '.manifest-title { font-size: 12pt; white-space: nowrap; }',
+        '.manifest-header-details { margin: 0 auto; max-width: 100%; }',
+        '.manifest-header-details, .manifest-header-details * { white-space: nowrap !important; word-break: keep-all !important; overflow-wrap: normal !important; }',
+        '.manifest-header-details p { margin: 0; font-size: 8pt; }',
+        '.system-note { margin-top: 20px; text-align: center; font-style: italic; white-space: nowrap; }'
+    ].join('');
+}
+
 function printCargoTable() {
     // Get voyageId from URL (expects /adminmanifest/{voyage})
     const match = window.location.pathname.match(/adminmanifest\/(\d+)/);
@@ -304,18 +321,7 @@ function printCargoTable() {
             }
             const printWindow = window.open('', '_blank', 'height=700,width=1000');
             printWindow.document.write('<html><head><title>Manifest Print</title>');
-            printWindow.document.write('<style>');
-            printWindow.document.write('@page { margin: 14mm; }');
-            printWindow.document.write('body { font-family: Arial, sans-serif; font-size: 10pt; padding: 12px; padding-bottom: 70px; }');
-            printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 16px; }');
-            printWindow.document.write('th, td { border: 1px solid #000; padding: 8px; }');
-            printWindow.document.write('th { text-align: left; }');
-            printWindow.document.write('td { text-align: left; }');
-            printWindow.document.write('th { background-color: #f2f2f2; }');
-            printWindow.document.write('.manifest-header { text-align: center; margin-bottom: 16px; }');
-            printWindow.document.write('.manifest-title { font-size: 14pt; }');
-            printWindow.document.write('.system-note { margin-top: 120px; text-align: center; font-style: italic; }');
-            printWindow.document.write('</style>');
+            printWindow.document.write('<style>' + getManifestPrintStyles() + '</style>');
             printWindow.document.write('</head><body>');
             printWindow.document.write(headerRowHtml);
             if (detailsGrid) printWindow.document.write('<div class="manifest-header-details">' + detailsGrid + '</div>');
@@ -377,18 +383,7 @@ function printTable(tableId) {
                 }
                 const printWindow = window.open('', '_blank', 'height=700,width=1000');
                 printWindow.document.write('<html><head><title>Manifest Print</title>');
-                printWindow.document.write('<style>');
-                printWindow.document.write('@page { margin: 14mm; }');
-                printWindow.document.write('body { font-family: Arial, sans-serif; font-size: 10pt; padding: 12px; padding-bottom: 70px; }');
-                printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 16px; }');
-                printWindow.document.write('th, td { border: 1px solid #000; padding: 8px; }');
-                printWindow.document.write('th { text-align: left; }');
-                printWindow.document.write('td { text-align: left; }');
-                printWindow.document.write('th { background-color: #f2f2f2; }');
-                printWindow.document.write('.manifest-header { text-align: center; margin-bottom: 16px; }');
-                printWindow.document.write('.manifest-title { font-size: 14pt; }');
-                printWindow.document.write('.system-note { position: fixed; bottom: 12px; left: 0; right: 0; text-align: center; font-style: italic; }');
-                printWindow.document.write('</style>');
+                printWindow.document.write('<style>' + getManifestPrintStyles() + '</style>');
                 printWindow.document.write('</head><body>');
                 printWindow.document.write(headerRowHtml);
                 if (detailsGrid) printWindow.document.write('<div class="manifest-header-details">' + detailsGrid + '</div>');
@@ -438,18 +433,7 @@ function printTable(tableId) {
     const detailsGrid = manifestHeaderDiv ? manifestHeaderDiv.querySelector('div[style*="grid-template-columns"]')?.outerHTML : '';
     const printWindow = window.open('', '_blank', 'height=700,width=1000');
     printWindow.document.write('<html><head><title>Manifest Print</title>');
-    printWindow.document.write('<style>');
-    printWindow.document.write('@page { margin: 14mm; }');
-    printWindow.document.write('body { font-family: Arial, sans-serif; font-size: 10pt; padding: 12px; padding-bottom: 70px; }');
-    printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 16px; }');
-    printWindow.document.write('th, td { border: 1px solid #000; padding: 8px; }');
-    printWindow.document.write('th { text-align: left; }');
-    printWindow.document.write('td { text-align: left; }');
-    printWindow.document.write('th { background-color: #f2f2f2; }');
-    printWindow.document.write('.manifest-header { text-align: center; margin-bottom: 16px; }');
-    printWindow.document.write('.manifest-title { font-size: 14pt; }');
-    printWindow.document.write('.system-note { margin-top: 120px; text-align: center; font-style: italic; }');
-    printWindow.document.write('</style>');
+    printWindow.document.write('<style>' + getManifestPrintStyles() + '</style>');
     printWindow.document.write('</head><body>');
     printWindow.document.write(headerRowHtml);
     if (detailsGrid) printWindow.document.write('<div class="manifest-header-details">' + detailsGrid + '</div>');

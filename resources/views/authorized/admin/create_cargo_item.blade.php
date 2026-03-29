@@ -15,12 +15,12 @@
 
           <div class="form-col">
             <div class="form-group">
-              <label>Route Code <span class="text-danger">*</span></label>
-              <select name="route_code_id" required>
-                <option value="">Select Route Code</option>
-                @foreach ($route_codes as $routeCode)
-                  <option value="{{ $routeCode->route_code_id }}">
-                    {{ $routeCode->route_code_name }}
+              <label>Route Category <span class="text-danger">*</span></label>
+              <select name="route_category_id" required>
+                <option value="">Select Route Category</option>
+                @foreach ($route_categories as $routeCategory)
+                  <option value="{{ $routeCategory->route_category_id }}">
+                    {{ $routeCategory->route_category_name }}
                   </option>
                 @endforeach
               </select>
@@ -29,7 +29,7 @@
 
           <div class="form-col">
             <div class="form-group">
-              <label>Category <span class="text-danger">*</span></label>
+              <label>Cargo Category <span class="text-danger">*</span></label>
               <select name="cargo_category_id" required>
                 <option value="">Select Category</option>
                 @foreach ($cargo_categories as $category)

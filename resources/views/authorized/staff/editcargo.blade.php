@@ -89,12 +89,7 @@
                                 @foreach($cargoItems as $item)
                                     <option value="{{ $item->cargo_item_id }}"
                                         data-freight="{{ $item->cargo_item_freight }}"
-                                        data-min-length="{{ $item->cargo_item_min_length ?? '' }}"
-                                        data-max-length="{{ $item->cargo_item_max_length ?? '' }}"
-                                        data-min-width="{{ $item->cargo_item_min_width ?? '' }}"
-                                        data-max-width="{{ $item->cargo_item_max_width ?? '' }}"
-                                        data-min-height="{{ $item->cargo_item_min_height ?? '' }}"
-                                        data-max-height="{{ $item->cargo_item_max_height ?? '' }}"
+                                        data-with-measurement="{{ strtolower($item->cargo_item_measure_required ?? 'no') }}"
                                         {{ $cargo->cargo_item_id == $item->cargo_item_id ? 'selected' : '' }}>
                                         {{ $item->cargo_item_description }}
                                     </option>
@@ -161,7 +156,7 @@
                     <div class="form-col">
                         <div class="form-group">
                             <label>CBM</label>
-                            <input type="number" step="0.0001" name="cbm[]" value="{{ old('cbm.'.$index, $cargo->cbm ?? 0) }}" placeholder="0.0000" class="cargo-cbm" data-index="{{ $index }}" readonly>
+                            <input type="number" step="0.0001" name="cbm[]" value="{{ old('cbm.'.$index, $cargo->cbm ?? 0) }}" class="cargo-cbm" readonly>
                         </div>
                     </div>
                 </div>
@@ -188,214 +183,119 @@
 </div>
 
 <script>
-    function getEditableFormState() {
-        const fields = document.querySelectorAll(
-            'select[name="classification[]"], ' +
-            'select[name="description[]"], ' +
-            'input[name="quantity[]"], ' +
-            'input[name="length[]"], ' +
-            'input[name="width[]"], ' +
-            'input[name="height[]"], ' +
-            'select[name="measurement_unit[]"], ' +
-            'input[name="weight[]"]'
-        );
+function getEditableFormState() {
+    const fields = document.querySelectorAll(
+        'select[name="classification[]"], ' +
+        'select[name="description[]"], ' +
+        'input[name="quantity[]"], ' +
+        'input[name="length[]"], ' +
+        'input[name="width[]"], ' +
+        'input[name="height[]"], ' +
+        'select[name="measurement_unit[]"], ' +
+        'input[name="weight[]"]'
+    );
 
-        return Array.from(fields).map(field => String(field.value ?? '').trim());
+    return Array.from(fields).map(field => String(field.value ?? '').trim());
+}
+
+function syncUpdateButtonState(initialState) {
+    const updateButton = document.getElementById('updateCargoItemsBtn');
+    if (!updateButton) return;
+
+    const currentState = getEditableFormState();
+
+    let hasChanges = false;
+
+    if (currentState.length !== initialState.length) {
+        hasChanges = true;
+    } else {
+        for (let i = 0; i < currentState.length; i++) {
+            if (currentState[i] !== initialState[i]) {
+                hasChanges = true;
+                break;
+            }
+        }
     }
 
-    function syncUpdateButtonState(initialState) {
-        const updateButton = document.getElementById('updateCargoItemsBtn');
-        if (!updateButton) return;
+    updateButton.disabled = !hasChanges;
+}
 
-        const currentState = getEditableFormState();
-        const hasChanges = currentState.length === initialState.length
-            && currentState.some((value, index) => value !== initialState[index]);
+function calculateCBM(index) {
+    const lengthInputs = document.querySelectorAll('input[name="length[]"]');
+    const widthInputs = document.querySelectorAll('input[name="width[]"]');
+    const heightInputs = document.querySelectorAll('input[name="height[]"]');
+    const unitSelects = document.querySelectorAll('select[name="measurement_unit[]"]');
+    const cbmInputs = document.querySelectorAll('input[name="cbm[]"]');
 
-        updateButton.disabled = !hasChanges;
+    let length = parseFloat(lengthInputs[index]?.value) || 0;
+    let width = parseFloat(widthInputs[index]?.value) || 0;
+    let height = parseFloat(heightInputs[index]?.value) || 0;
+
+    const unitOption = unitSelects[index]?.options[unitSelects[index].selectedIndex];
+    const unit = unitOption ? (unitOption.dataset.unitAbbrev || 'cm').toLowerCase() : 'cm';
+
+    if (unit === 'in') {
+        length *= 2.54; width *= 2.54; height *= 2.54;
+    } else if (unit === 'mm') {
+        length *= 0.1; width *= 0.1; height *= 0.1;
+    } else if (unit === 'm') {
+        length *= 100; width *= 100; height *= 100;
+    } else if (unit === 'ft') {
+        length *= 30.48; width *= 30.48; height *= 30.48;
     }
 
-    function setDimensionConstraint(input, minValue, maxValue, label) {
-        if (!input) return;
+    const cbm = (length * width * height) / 1000000;
 
-        const hasMin = minValue !== null && minValue !== '' && !Number.isNaN(Number(minValue));
-        const hasMax = maxValue !== null && maxValue !== '' && !Number.isNaN(Number(maxValue));
+    if (cbmInputs[index]) cbmInputs[index].value = cbm.toFixed(4);
 
-        if (hasMin) {
-            input.min = Number(minValue);
+    return cbm;
+}
+
+function calculateValues() {
+    let totalValue = 0;
+
+    const descriptionSelects = document.querySelectorAll('select[name="description[]"]');
+    const quantityInputs = document.querySelectorAll('input[name="quantity[]"]');
+
+    descriptionSelects.forEach((select, index) => {
+        const option = select.options[select.selectedIndex];
+        const freight = option ? (parseFloat(option.dataset.freight) || 0) : 0;
+        const measureRequired = option ? (option.dataset.withMeasurement || 'no').toLowerCase() : 'no';
+        const quantity = parseFloat(quantityInputs[index]?.value) || 0;
+
+        const cbm = calculateCBM(index);
+
+        let subtotal = 0;
+
+        if (measureRequired === 'yes') {
+            subtotal = freight * quantity;
         } else {
-            input.removeAttribute('min');
+            subtotal = cbm * freight * quantity;
         }
 
-        if (hasMax) {
-            input.max = Number(maxValue);
-        } else {
-            input.removeAttribute('max');
-        }
-
-        input.oninput = function() {
-            const value = parseFloat(input.value);
-            if (input.value === '' || Number.isNaN(value)) {
-                input.setCustomValidity('');
-                return;
-            }
-
-            if (hasMin && value < Number(minValue)) {
-                input.setCustomValidity(`${label} must be at least ${Number(minValue).toFixed(2)}.`);
-                return;
-            }
-
-            if (hasMax && value > Number(maxValue)) {
-                input.setCustomValidity(`${label} must not exceed ${Number(maxValue).toFixed(2)}.`);
-                return;
-            }
-
-            input.setCustomValidity('');
-        };
-
-        // Trigger initial validity check for pre-filled values.
-        input.dispatchEvent(new Event('input'));
-    }
-
-    function applyMeasurementRange(index) {
-        const descriptionSelects = document.querySelectorAll('select[name="description[]"]');
-        const lengthInputs = document.querySelectorAll('input[name="length[]"]');
-        const widthInputs = document.querySelectorAll('input[name="width[]"]');
-        const heightInputs = document.querySelectorAll('input[name="height[]"]');
-
-        const descriptionSelect = descriptionSelects[index];
-        if (!descriptionSelect) return;
-
-        const selectedOption = descriptionSelect.options[descriptionSelect.selectedIndex];
-        if (!selectedOption || !selectedOption.value) {
-            setDimensionConstraint(lengthInputs[index], null, null, 'Length');
-            setDimensionConstraint(widthInputs[index], null, null, 'Width');
-            setDimensionConstraint(heightInputs[index], null, null, 'Height');
-            return;
-        }
-
-        setDimensionConstraint(
-            lengthInputs[index],
-            selectedOption.dataset.minLength,
-            selectedOption.dataset.maxLength || selectedOption.dataset.minLength,
-            'Length'
-        );
-        setDimensionConstraint(
-            widthInputs[index],
-            selectedOption.dataset.minWidth,
-            selectedOption.dataset.maxWidth || selectedOption.dataset.minWidth,
-            'Width'
-        );
-        setDimensionConstraint(
-            heightInputs[index],
-            selectedOption.dataset.minHeight,
-            selectedOption.dataset.maxHeight || selectedOption.dataset.minHeight,
-            'Height'
-        );
-    }
-
-    function calculateCBM(index) {
-        const lengthInputs = document.querySelectorAll('input[name="length[]"]');
-        const widthInputs = document.querySelectorAll('input[name="width[]"]');
-        const heightInputs = document.querySelectorAll('input[name="height[]"]');
-        const unitSelects = document.querySelectorAll('select[name="measurement_unit[]"]');
-        const cbmInputs = document.querySelectorAll('input[name="cbm[]"]');
-
-        let length = lengthInputs[index] ? (parseFloat(lengthInputs[index].value) || 0) : 0;
-        let width = widthInputs[index] ? (parseFloat(widthInputs[index].value) || 0) : 0;
-        let height = heightInputs[index] ? (parseFloat(heightInputs[index].value) || 0) : 0;
-        const selectedUnitOption = unitSelects[index]
-            ? unitSelects[index].options[unitSelects[index].selectedIndex]
-            : null;
-        const unit = selectedUnitOption
-            ? (selectedUnitOption.dataset.unitAbbrev || 'cm').toLowerCase()
-            : 'cm';
-
-        if (unit === 'in') {
-            length *= 2.54;
-            width *= 2.54;
-            height *= 2.54;
-        } else if (unit === 'mm') {
-            length *= 0.1;
-            width *= 0.1;
-            height *= 0.1;
-        } else if (unit === 'm') {
-            length *= 100;
-            width *= 100;
-            height *= 100;
-        } else if (unit === 'ft') {
-            length *= 30.48;
-            width *= 30.48;
-            height *= 30.48;
-        }
-
-        const cbm = (length * width * height) / 1000000;
-        if (cbmInputs[index]) {
-            cbmInputs[index].value = cbm.toFixed(4);
-        }
-
-        return cbm;
-    }
-
-    function calculateValues() {
-        let totalValue = 0;
-        const descriptionSelects = document.querySelectorAll('select[name="description[]"]');
-        const quantityInputs = document.querySelectorAll('input[name="quantity[]"]');
-
-        descriptionSelects.forEach((descriptionSelect, index) => {
-            const selectedOption = descriptionSelect.options[descriptionSelect.selectedIndex];
-            const quantity = quantityInputs[index] ? (parseFloat(quantityInputs[index].value) || 0) : 0;
-            const cbm = calculateCBM(index);
-            const freight = selectedOption ? (parseFloat(selectedOption.dataset.freight) || 0) : 0;
-
-            totalValue += freight * cbm * quantity;
-        });
-
-        const totalDisplay = document.getElementById('totalValueDisplay');
-        const totalInput = document.getElementById('totalValueInput');
-        if (totalDisplay) totalDisplay.textContent = '₱' + totalValue.toFixed(2);
-        if (totalInput) totalInput.value = totalValue.toFixed(2);
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const editCargoForm = document.getElementById('editCargoForm');
-
-        calculateValues();
-        document.querySelectorAll('select[name="description[]"]').forEach((input, index) => {
-            applyMeasurementRange(index);
-            input.addEventListener('change', function() {
-                applyMeasurementRange(index);
-                calculateValues();
-            });
-        });
-        document.querySelectorAll('select[name="measurement_unit[]"]').forEach(input => {
-            input.addEventListener('change', calculateValues);
-        });
-        document.querySelectorAll('input[name="length[]"], input[name="width[]"], input[name="height[]"]').forEach(input => {
-            input.addEventListener('change', calculateValues);
-            input.addEventListener('input', calculateValues);
-        });
-        document.querySelectorAll('input[name="cbm[]"]').forEach(input => {
-            input.addEventListener('change', calculateValues);
-            input.addEventListener('input', calculateValues);
-        });
-        document.querySelectorAll('input[name="quantity[]"]').forEach(input => {
-            input.addEventListener('change', calculateValues);
-            input.addEventListener('input', calculateValues);
-        });
-
-        const initialState = getEditableFormState();
-        syncUpdateButtonState(initialState);
-
-        if (editCargoForm) {
-            editCargoForm.addEventListener('input', function() {
-                syncUpdateButtonState(initialState);
-            });
-
-            editCargoForm.addEventListener('change', function() {
-                syncUpdateButtonState(initialState);
-            });
-        }
+        totalValue += subtotal;
     });
 
+    document.getElementById('totalValueDisplay').textContent = '₱' + totalValue.toFixed(2);
+    document.getElementById('totalValueInput').value = totalValue.toFixed(2);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    calculateValues();
+
+    const initialState = getEditableFormState();
+    syncUpdateButtonState(initialState);
+
+    document.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('input', () => {
+            calculateValues();
+            syncUpdateButtonState(initialState);
+        });
+        el.addEventListener('change', () => {
+            calculateValues();
+            syncUpdateButtonState(initialState);
+        });
+    });
+});
 </script>
 @endsection
