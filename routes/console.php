@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 use App\Models\Booking;
 use App\Models\Payment;
+use Illuminate\Support\Facades\DB;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -29,3 +30,16 @@ Schedule::call(function () {
             ->update(['payment_status' => 'Canceled']);
     }
 })->everyFiveMinutes();
+
+// Prune completed queue batches daily
+Schedule::command('queue:prune-batches')->dailyAt('02:00');
+
+// Flush failed jobs daily
+Schedule::command('queue:flush')->dailyAt('02:05');
+
+// Clean expired sessions daily
+Schedule::call(function () {
+    DB::table('sessions')
+        ->where('last_activity', '<', now()->subHours(48)->getTimestamp())
+        ->delete();
+})->dailyAt('02:10');
