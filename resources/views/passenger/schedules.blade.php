@@ -16,13 +16,8 @@
 
                 <div class="route-card">
                     <div class="route-card-header">
-                        <i class="fas fa-ship"></i>
-                        {{ $category->route_category_name }}
-                    </div>
-
-                    {{-- SCHEDULES SECTION --}}
-                    <div class="route-card-section-title">
-                        <i class="fas fa-calendar-alt"></i> Weekly Sailing Schedules
+                        <span><i class="fas fa-ship"></i> {{ $category->route_category_name }}</span>
+                        <span class="route-card-header-right"><i class="fas fa-calendar-alt"></i> Weekly Sailing Schedules</span>
                     </div>
 
                     <div class="row">
@@ -258,8 +253,7 @@
             {{-- PASSAGE RATES SECTION (grouped by route, then by vessel) --}}
             <div class="route-card">
                 <div class="route-card-header">
-                    <i class="fas fa-tags"></i>
-                    Passage Rates
+                    <span><i class="fas fa-tags"></i> Passage Rates</span>
                 </div>
 
                 @foreach ($routeCategories as $category)
