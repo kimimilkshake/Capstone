@@ -1,0 +1,330 @@
+/* ===== SCHEDULES & RATES PAGE ===== */
+.schedules-page {
+    padding-top: 60px;
+    padding-bottom: 60px;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+
+    @media (max-width: 768px) {
+        padding-top: 20px;
+        padding-bottom: 30px;
+    }
+
+    .container {
+        @media (max-width: 768px) {
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+    }
+}
+
+.schedules-page-title {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1E2541;
+    margin-bottom: 2rem;
+
+    @media (max-width: 768px) {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+}
+
+/* Route Card */
+.route-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+    overflow: hidden;
+
+    @media (max-width: 768px) {
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+}
+
+.route-card-header {
+    background: #1E2541;
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    padding: 1rem 1.5rem;
+
+    i {
+        margin-right: 8px;
+    }
+
+    @media (max-width: 768px) {
+        font-size: 0.9rem;
+        padding: 0.6rem 0.75rem;
+    }
+}
+
+.route-card-section-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #1E2541;
+    padding: 1rem 1.5rem 0.5rem;
+    border-top: 1px solid #eee;
+
+    &:first-of-type {
+        border-top: none;
+    }
+
+    i {
+        margin-right: 6px;
+        color: #0d6efd;
+    }
+
+    @media (max-width: 768px) {
+        font-size: 0.85rem;
+        padding: 0.6rem 0.75rem 0.3rem;
+    }
+}
+
+/* Direction Block (left/right trip) */
+.direction-block {
+    padding: 0.5rem 1.5rem 1rem;
+
+    @media (max-width: 768px) {
+        padding: 0.25rem 0.5rem 0.75rem;
+    }
+}
+
+.direction-label {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #0d6efd;
+    margin-bottom: 0.5rem;
+
+    i {
+        margin: 0 6px;
+    }
+
+    @media (max-width: 768px) {
+        font-size: 0.85rem;
+        margin-bottom: 0.3rem;
+    }
+}
+
+/* Schedule Table */
+.schedule-table-wrapper {
+    border: 1px solid #adb5bd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.schedule-table {
+    font-size: 0.85rem;
+    margin-bottom: 0;
+
+    thead {
+        background: #1E2541;
+
+        th {
+            font-weight: 600;
+            color: #fff;
+            border-bottom: 2px solid #dee2e6;
+            white-space: nowrap;
+            padding: 0.5rem 0.6rem;
+            text-align: center;
+        }
+    }
+
+    tbody td {
+        vertical-align: middle;
+        padding: 0.45rem 0.6rem;
+        color: #333;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    tbody td[rowspan] {
+        font-weight: 600;
+        border-right: 1px solid #dee2e6;
+    }
+
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    tbody tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+
+    tbody tr:hover {
+        background-color: #e8f0fe;
+    }
+
+    @media (max-width: 768px) {
+        font-size: 0.72rem;
+
+        thead th,
+        tbody td {
+            padding: 0.3rem 0.35rem;
+        }
+    }
+}
+
+/* Rates Block */
+.rates-block {
+    padding: 0.5rem 1.5rem 1rem;
+
+    @media (max-width: 768px) {
+        padding: 0.5rem 0.5rem 0.75rem;
+    }
+}
+
+.rates-route-group {
+    padding: 0.75rem 1.5rem 0.5rem;
+    border-top: 1px solid #eee;
+
+    &:first-of-type {
+        border-top: none;
+    }
+
+    @media (max-width: 768px) {
+        padding: 0.5rem 0.5rem 0.5rem;
+    }
+}
+
+.rates-route-name {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #1E2541;
+    margin-bottom: 0.5rem;
+
+    @media (max-width: 768px) {
+        font-size: 0.9rem;
+    }
+}
+
+.rates-vessel-block {
+    margin-bottom: 0.75rem;
+    margin-left: 0.5rem;
+
+    @media (max-width: 768px) {
+        margin-left: 0;
+        margin-bottom: 0.5rem;
+    }
+}
+
+.rates-vessel-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #555;
+    margin-bottom: 0.3rem;
+
+    @media (max-width: 768px) {
+        font-size: 0.78rem;
+    }
+}
+
+.rates-table-wrapper {
+    border: 1px solid #adb5bd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.rates-table {
+    font-size: 0.85rem;
+    margin-bottom: 0;
+
+    thead {
+        background: #1E2541;
+
+        th {
+            font-weight: 600;
+            color: #fff;
+            border-bottom: 2px solid #dee2e6;
+            padding: 0.5rem 0.8rem;
+            text-align: center;
+            white-space: nowrap;
+        }
+    }
+
+    tbody td {
+        padding: 0.45rem 0.8rem;
+        color: #333;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    tbody tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+
+    tbody tr:hover {
+        background-color: #e8f0fe;
+    }
+
+    @media (max-width: 768px) {
+        font-size: 0.72rem;
+
+        thead th,
+        tbody td {
+            padding: 0.3rem 0.4rem;
+        }
+    }
+}
+
+.rates-note {
+    font-size: 0.78rem;
+    color: #777;
+    font-style: italic;
+    margin-top: 0.25rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+
+    @media (max-width: 768px) {
+        font-size: 0.68rem;
+        line-height: 1.4;
+    }
+}
+
+/* No schedule text */
+.no-schedule {
+    color: #888;
+    font-style: italic;
+    font-size: 0.9rem;
+    padding: 0.5rem 0;
+
+    @media (max-width: 768px) {
+        font-size: 0.8rem;
+    }
+}
+
+/* Empty state */
+.no-routes-card {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #888;
+
+    i {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+
+    p {
+        font-size: 1.1rem;
+    }
+
+    @media (max-width: 768px) {
+        padding: 2rem 0.75rem;
+
+        i {
+            font-size: 2rem;
+        }
+
+        p {
+            font-size: 0.95rem;
+        }
+    }
+}

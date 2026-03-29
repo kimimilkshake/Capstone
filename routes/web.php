@@ -11,6 +11,7 @@ use App\Http\Controllers\OcrController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\QrScannerController;
+use App\Http\Controllers\ScheduleController;
 
 // ADMIN CONTROLLERS
 use App\Http\Controllers\Admin\DashboardController;
@@ -126,9 +127,7 @@ Route::get('/paymongo/failed', function (Request $request) {
     return view('payments.failed', ['bookingRef' => $bookingRef]);
 })->name('paymongo.failed');
 
-Route::get('/passenger/schedules', function () {
-    return view('passenger.schedules');
-})->name('schedules');
+Route::get('/passenger/schedules', [ScheduleController::class, 'index'])->name('schedules');
 
 //About Us Page
 Route::get('/passenger/about', function () {

@@ -19,138 +19,136 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("Failed to load accommodations data:", error);
     }
 
-    function generatePassengerForms(count) {
-        passengerSections.innerHTML = "";
-        for (let i = 1; i <= count; i++) {
-            // Build accommodation options from vessel data
-            const accommodationOptions = accommodations
-                .map(
-                    (acc) =>
-                        `<option value="${acc.accommodation_id}" data-name="${
-                            acc.accommodation_name
-                        }" data-price="${acc.accommodation_regular_price}">${
-                            acc.accommodation_name
-                        } - ₱${parseFloat(
-                            acc.accommodation_regular_price,
-                        ).toFixed(2)}</option>`,
-                )
-                .join("");
-            const passengerHTML = `
-                <div class="passenger-form mb-4 p-3 bg-white rounded shadow-sm" data-passenger="${i}">
-                    <h6 class="fw-bold mb-3 text-primary">Personal Information - Person ${i}</h6>
-                    <div class="row g-3">
-                        <div class="col-md-8">
-                            <label class="form-label">Passenger Type <span class="text-danger">*</span></label>
-                            <select class="form-select passenger-type" name="type" required>
-                                <option value="">Select Type</option>
-                                <option value="Regular">Regular/Adult</option>
-                                <option value="Senior Citizen">Senior Citizen</option>
-                                <option value="PWD">PWD</option>
-                                <option value="Student">Student</option>
-                                <option value="Uniformed Personnel">Uniformed Personnel</option>
-                                <option value="3 to 11 years old">3 to 11 years old</option>
-                                <option value="Below 3 years old">Below 3 years old</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Promo Code <span class="text-muted">(Optional)</span></label>
-                            <input type="text" class="form-control passenger-promo-code" name="promo_code" placeholder="Enter promo code">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">First Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control first-name" name="first_name" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Last Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control last-name" name="last_name" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Middle Initial</label>
-                            <input type="text" maxlength="1" class="form-control text-center" name="middle_initial">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Suffix</label>
-                            <input type="text" class="form-control" name="suffix" placeholder="Jr., Sr., III">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Age <span class="text-danger">*</span></label>
-                            <input type="number" min="0" class="form-control" name="age" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Gender <span class="text-danger">*</span></label>
-                            <select class="form-select" name="gender" required>
-                                <option value="">Select Gender</option>
-                                <option>Male</option>
-                                <option>Female</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Province <span class="text-danger">*</span></label>
-                            <select class="form-select province-select" name="province" required>
-                                <option value="">Select Province</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">City/Municipality <span class="text-danger">*</span></label>
-                            <select class="form-select city-select" name="city" required disabled>
-                                <option value="">Select City/Municipality</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Barangay <span class="text-danger">*</span></label>
-                            <select class="form-select barangay-select" name="barangay" required disabled>
-                                <option value="">Select Barangay</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Contact Number <span class="text-danger">*</span></label>
-                            <input type="tel" class="form-control" name="contact_number" placeholder="09XXXXXXXXX" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Email Address <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control" name="email" placeholder="name@email.com" required>
-                        </div>
+    function createPassengerHTML(i) {
+        const accommodationOptions = accommodations
+            .map(
+                (acc) =>
+                    `<option value="${acc.accommodation_id}" data-name="${
+                        acc.accommodation_name
+                    }" data-price="${acc.accommodation_regular_price}">${
+                        acc.accommodation_name
+                    } - ₱${parseFloat(
+                        acc.accommodation_regular_price,
+                    ).toFixed(2)}</option>`,
+            )
+            .join("");
 
-                        <div class="id-fields mt-3" style="display:none;">
-                            <div class="col-md-6 mt-2">
-                                <label class="form-label">ID Number</label>
-                                <input type="text" class="form-control id-number" name="id_number">
-                            </div>
-                            <div class="col-md-6 mt-2">
-                                <label class="form-label">Upload ID Image</label>
-                                <input type="file" class="form-control id-upload" accept="image/*">
-                            </div>
-                        </div>
+        return `
+            <div class="passenger-form mb-4 p-3 bg-white rounded shadow-sm" data-passenger="${i}">
+                <h6 class="fw-bold mb-3 text-primary">Personal Information - Person ${i}</h6>
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label">Passenger Type <span class="text-danger">*</span></label>
+                        <select class="form-select passenger-type" name="type" required>
+                            <option value="">Select Type</option>
+                            <option value="Regular">Regular/Adult</option>
+                            <option value="Senior Citizen">Senior Citizen</option>
+                            <option value="PWD">PWD</option>
+                            <option value="Student">Student</option>
+                            <option value="Uniformed Personnel">Uniformed Personnel</option>
+                            <option value="3 to 11 years old">3 to 11 years old</option>
+                            <option value="Below 3 years old">Below 3 years old</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Promo Code <span class="text-muted">(Optional)</span></label>
+                        <input type="text" class="form-control passenger-promo-code" name="promo_code" placeholder="Enter promo code">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">First Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control first-name" name="first_name" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control last-name" name="last_name" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Middle Initial</label>
+                        <input type="text" maxlength="1" class="form-control text-center" name="middle_initial">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Suffix</label>
+                        <input type="text" class="form-control" name="suffix" placeholder="Jr., Sr., III">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Age <span class="text-danger">*</span></label>
+                        <input type="number" min="0" class="form-control" name="age" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Gender <span class="text-danger">*</span></label>
+                        <select class="form-select" name="gender" required>
+                            <option value="">Select Gender</option>
+                            <option>Male</option>
+                            <option>Female</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Province <span class="text-danger">*</span></label>
+                        <select class="form-select province-select" name="province" required>
+                            <option value="">Select Province</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">City/Municipality <span class="text-danger">*</span></label>
+                        <select class="form-select city-select" name="city" required disabled>
+                            <option value="">Select City/Municipality</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Barangay <span class="text-danger">*</span></label>
+                        <select class="form-select barangay-select" name="barangay" required disabled>
+                            <option value="">Select Barangay</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Contact Number <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" name="contact_number" placeholder="09XXXXXXXXX" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" name="email" placeholder="name@email.com" required>
                     </div>
 
-                    <hr>
-
-                    <h6 class="fw-bold mb-3 text-success">Accommodation - Person ${i}</h6>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Accommodation Type <span class="text-danger">*</span></label>
-                            <select class="form-select accommodation-select" name="accommodation_type" required>
-                                <option value="">Select Accommodation</option>
-                                ${accommodationOptions}
-                            </select>
+                    <div class="id-fields mt-3" style="display:none;">
+                        <div class="col-md-6 mt-2">
+                            <label class="form-label">ID Number</label>
+                            <input type="text" class="form-control id-number" name="id_number">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Cot Number <span class="text-danger">*</span></label>
-                            <select class="form-select cot-select" name="cot_number" required disabled>
-                                <option value="">Select Accommodation First</option>
-                            </select>
+                        <div class="col-md-6 mt-2">
+                            <label class="form-label">Upload ID Image</label>
+                            <input type="file" class="form-control id-upload" accept="image/*">
                         </div>
                     </div>
                 </div>
-            `;
-            passengerSections.insertAdjacentHTML("beforeend", passengerHTML);
-        }
 
-        // Attach event listeners for accommodation selection
-        document.querySelectorAll(".accommodation-select").forEach((select) => {
-            select.addEventListener("change", function () {
-                const passengerForm = this.closest(".passenger-form");
-                const cotSelect = passengerForm.querySelector(".cot-select");
+                <hr>
+
+                <h6 class="fw-bold mb-3 text-success">Accommodation - Person ${i}</h6>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Accommodation Type <span class="text-danger">*</span></label>
+                        <select class="form-select accommodation-select" name="accommodation_type" required>
+                            <option value="">Select Accommodation</option>
+                            ${accommodationOptions}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Cot Number <span class="text-danger">*</span></label>
+                        <select class="form-select cot-select" name="cot_number" required disabled>
+                            <option value="">Select Accommodation First</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function attachListenersToForm(form) {
+        // Accommodation select listener
+        const accSelect = form.querySelector(".accommodation-select");
+        if (accSelect) {
+            accSelect.addEventListener("change", function () {
+                const cotSelect = form.querySelector(".cot-select");
                 const accommodationId = this.value;
 
                 const cotPlanImage = document.getElementById("cotPlanImage");
@@ -170,12 +168,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     return;
                 }
 
-                // Find the accommodation data
                 const accommodation = accommodationsWithCots.find(
                     (acc) => acc.accommodation_id == accommodationId,
                 );
 
-                // Update cot plan image
                 if (cotPlanImage) {
                     if (accommodation && accommodation.cot_plan_url) {
                         cotPlanImage.src = accommodation.cot_plan_url;
@@ -191,23 +187,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
                 if (accommodation && accommodation.available_cots) {
-                    // Populate cot options with only available cots
                     cotSelect.disabled = false;
-
-                    console.log(
-                        "Rendering COTs for accommodation:",
-                        accommodation,
-                    );
-                    console.log(
-                        "First COT sample:",
-                        accommodation.available_cots[0],
-                    );
 
                     const options = accommodation.available_cots
                         .map((cot) => {
-                            // Handle both old format (number) and new format (object with number and bunk_type)
                             let cotNumber, bunkType;
-
                             if (
                                 typeof cot === "object" &&
                                 cot !== null &&
@@ -219,19 +203,15 @@ document.addEventListener("DOMContentLoaded", function () {
                                 cotNumber = parseInt(cot);
                                 bunkType = null;
                             }
-
                             const displayText = bunkType
                                 ? `${cotNumber} (${bunkType} bunk)`
                                 : `${cotNumber}`;
-                            console.log(`COT ${cotNumber}: ${displayText}`);
                             return `<option value="${cotNumber}">${displayText}</option>`;
                         })
                         .join("");
 
                     cotSelect.innerHTML =
                         '<option value="">Select Cot</option>' + options;
-
-                    // Update cot availability when selection changes
                     updateCotAvailability();
                 } else {
                     cotSelect.disabled = true;
@@ -239,20 +219,21 @@ document.addEventListener("DOMContentLoaded", function () {
                         '<option value="">No available cots</option>';
                 }
             });
-        });
+        }
 
-        // Attach change listeners for cot selects to prevent duplicate selections
-        document.querySelectorAll(".cot-select").forEach((s) => {
-            s.addEventListener("change", updateCotAvailability);
-        });
+        // Cot select listener
+        const cotSelect = form.querySelector(".cot-select");
+        if (cotSelect) {
+            cotSelect.addEventListener("change", updateCotAvailability);
+        }
 
-        // Attach passenger type listeners
-        document.querySelectorAll(".passenger-type").forEach((select) => {
-            select.addEventListener("change", function () {
-                const passengerForm = this.closest(".passenger-form");
-                const idFields = passengerForm.querySelector(".id-fields");
-                const idNumberInput = passengerForm.querySelector(".id-number");
-                const idUploadInput = passengerForm.querySelector(".id-upload");
+        // Passenger type listener
+        const typeSelect = form.querySelector(".passenger-type");
+        if (typeSelect) {
+            typeSelect.addEventListener("change", function () {
+                const idFields = form.querySelector(".id-fields");
+                const idNumberInput = form.querySelector(".id-number");
+                const idUploadInput = form.querySelector(".id-upload");
 
                 if (this.value === "Regular") {
                     idFields.style.display = "none";
@@ -268,10 +249,30 @@ document.addEventListener("DOMContentLoaded", function () {
                         idUploadInput.setAttribute("required", "required");
                 }
             });
-        });
+        }
+    }
 
-        // Initialize address cascading dropdowns
-        initializeAddressDropdowns();
+    function generatePassengerForms(count) {
+        const existingForms = passengerSections.querySelectorAll(".passenger-form");
+        const currentCount = existingForms.length;
+
+        if (count > currentCount) {
+            // Add new forms only — existing ones stay untouched with their data
+            for (let i = currentCount + 1; i <= count; i++) {
+                passengerSections.insertAdjacentHTML("beforeend", createPassengerHTML(i));
+                const newForm = passengerSections.querySelector(`.passenger-form[data-passenger="${i}"]`);
+                attachListenersToForm(newForm);
+            }
+            // Initialize address dropdowns only for newly added forms
+            initializeAddressDropdowns(currentCount);
+        } else if (count < currentCount) {
+            // Remove only the last form(s) — keep the rest intact with their data
+            for (let i = currentCount; i > count; i--) {
+                const formToRemove = passengerSections.querySelector(`.passenger-form[data-passenger="${i}"]`);
+                if (formToRemove) formToRemove.remove();
+            }
+            updateCotAvailability();
+        }
     }
 
     // PSGC API integration for Philippine addresses
@@ -291,10 +292,14 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    async function initializeAddressDropdowns() {
-        const passengerForms = document.querySelectorAll(".passenger-form");
+    async function initializeAddressDropdowns(startFrom) {
+        const allForms = document.querySelectorAll(".passenger-form");
+        // Only initialize forms that are new (skip already-initialized ones)
+        const formsToInit = startFrom !== undefined
+            ? Array.from(allForms).slice(startFrom)
+            : Array.from(allForms);
 
-        passengerForms.forEach(async (form) => {
+        for (const form of formsToInit) {
             const provinceSelect = form.querySelector(".province-select");
             const citySelect = form.querySelector(".city-select");
             const barangaySelect = form.querySelector(".barangay-select");
@@ -409,7 +414,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     barangaySelect.disabled = true;
                 }
             });
-        });
+        }
     }
 
     // Function to update cot availability across all passenger forms

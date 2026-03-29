@@ -3,51 +3,66 @@
     @include('components.hero')
 
     <div class="container my-5">
+
+        <!-- Voyage Information Card -->
+        <div class="card shadow-sm mb-5" style="border-radius: 8px; overflow: hidden;">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Voyage Information</h5>
+            </div>
+            <div class="card-body bg-light">
+                <div class="row text-center">
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <p class="mb-1 text-muted small">Vessel Name</p>
+                        <p class="mb-3 fw-bold">{{ $vesselName }}</p>
+                        <p class="mb-1 text-muted small">Route</p>
+                        <p class="mb-0 fw-bold">{{ $routeFrom }} - {{ $routeTo }}</p>
+                    </div>
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <p class="mb-1 text-muted small">Departure Date</p>
+                        <p class="mb-3 fw-bold">{{ \Carbon\Carbon::parse($departureDate)->format('F d, Y') }}</p>
+                        <p class="mb-1 text-muted small">Departure Time</p>
+                        <p class="mb-0 fw-bold">{{ \Carbon\Carbon::parse($departureTime)->format('g:i A') }}</p>
+                    </div>
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <p class="mb-1 text-muted small">Port of Origin</p>
+                        <p class="mb-3 fw-bold">{{ $portOfOrigin }}</p>
+                        <p class="mb-1 text-muted small">Number of Passengers</p>
+                        <div class="d-inline-flex align-items-center mx-auto">
+                            <button type="button" id="passengerMinus" class="btn btn-sm fw-bold"
+                                style="font-size: 1.2rem; padding: 0; width: 28px; border: none; background: none; box-shadow: none;">−</button>
+                            <input type="number" id="numPassengers" class="form-control form-control-sm text-center mx-1"
+                                value="1" min="1" max="50" style="width: 55px; height: 32px;">
+                            <button type="button" id="passengerPlus" class="btn btn-sm fw-bold"
+                                style="font-size: 1.2rem; padding: 0; width: 28px; border: none; background: none; box-shadow: none;">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row justify-content-center align-items-start">
 
             <!-- PASSENGER FORM (appears first on mobile, right side on desktop) -->
             <div class="col-md-6 order-1 order-md-2">
-                <div class="card shadow-sm">
+                <div class="card shadow-sm" style="border-radius: 8px; overflow: hidden;">
                     <div class="card-header bg-dark text-white text-center">
                         <h5 class="mb-0">PASSENGER FORM</h5>
                     </div>
                     <div class="card-body bg-light">
 
-                        <form id="bookingForm" data-submit-url="{{ route('booking.submit') }}" data-csrf="{{ csrf_token() }}">
+                        <form id="bookingForm" data-submit-url="{{ route('booking.submit') }}"
+                            data-csrf="{{ csrf_token() }}">
                             <!-- Hidden voyage fields used by JS to submit booking -->
                             <input type="hidden" id="routeFrom" name="route_from" value="{{ $routeFrom }}">
                             <input type="hidden" id="routeTo" name="route_to" value="{{ $routeTo }}">
                             <input type="hidden" id="departureDate" name="departure_date" value="{{ $departureDate }}">
                             <input type="hidden" id="departureTime" name="departure_time" value="{{ $departureTime }}">
                             <input type="hidden" id="voyageId" name="voyage_id" value="{{ $voyage->voyage_id }}">
-                            <!-- Number of Passengers -->
-                            <div class="row mb-4">
-                                <div class="col-12">
-                                    <label for="numPassengers" class="form-label fw-bold">Number of Passengers</label>
-                                    <select id="numPassengers" class="form-select"
-                                        style="font-size: 1.1rem; padding: 0.75rem;">
-                                        @for ($i = 1; $i <= 50; $i++)
-                                            <option value="{{ $i }}">{{ $i }}</option>
-                                        @endfor
-                                    </select>
-                                </div>
-                            </div>
 
                             <!-- Dynamic Passenger Sections -->
                             <div id="passengerSections"></div>
 
                             <hr>
-
-                            <!-- Voyage Information -->
-                            <h6 class="fw-bold mb-3">Voyage Information</h6>
-                            <div class="bg-white p-3 rounded shadow-sm small">
-                                <p class="mb-1"><strong>Vessel Name:</strong> {{ $vesselName }}</p>
-                                <p class="mb-1"><strong>Route:</strong> {{ $routeFrom }} - {{ $routeTo }}</p>
-                                <p class="mb-1"><strong>Departure Date:</strong> {{ $departureDate }}</p>
-                                <p class="mb-1"><strong>Departure Time:</strong>
-                                    {{ \Carbon\Carbon::parse($departureTime)->format('g:i A') }}</p>
-                                <p class="mb-0"><strong>Port of Origin:</strong> {{ $portOfOrigin }}</p>
-                            </div>
 
                             <div class="d-flex justify-content-between mt-4">
                                 <a href="{{ route('bookingtype') }}"
@@ -84,6 +99,59 @@
 
     <!-- JS Data -->
     <script type="application/json" id="accommodations-data">{!! json_encode($accommodations) !!}</script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('numPassengers');
+            const minBtn = document.getElementById('passengerMinus');
+            const maxBtn = document.getElementById('passengerPlus');
+
+            function clamp(val) {
+                return Math.max(1, Math.min(50, parseInt(val) || 1));
+            }
+
+            function updateMinusState() {
+                if (parseInt(input.value) <= 1) {
+                    minBtn.style.color = '#ccc';
+                    minBtn.style.pointerEvents = 'none';
+                } else {
+                    minBtn.style.color = '';
+                    minBtn.style.pointerEvents = '';
+                }
+            }
+
+            updateMinusState();
+
+            minBtn.addEventListener('click', function() {
+                input.value = clamp(input.value - 1);
+                input.dispatchEvent(new Event('change'));
+                updateMinusState();
+            });
+
+            maxBtn.addEventListener('click', function() {
+                input.value = clamp(parseInt(input.value) + 1);
+                input.dispatchEvent(new Event('change'));
+                updateMinusState();
+            });
+
+            input.addEventListener('blur', function() {
+                const clamped = clamp(input.value);
+                if (parseInt(input.value) !== clamped) {
+                    input.value = clamped;
+                    input.dispatchEvent(new Event('change'));
+                }
+                updateMinusState();
+            });
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    input.value = clamp(input.value);
+                    input.dispatchEvent(new Event('change'));
+                    updateMinusState();
+                }
+            });
+        });
+    </script>
     <script src="{{ asset('js/passengerform.js') }}"></script>
 
     @include('components.footer')
