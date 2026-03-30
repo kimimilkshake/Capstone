@@ -57,4 +57,8 @@ class Voyage extends Model
     {
         return $this->hasMany(\App\Models\CargoReceipt::class, 'voyage_id', 'voyage_id');
     }
+    public function passengerTickets()
+    {
+        return $this->hasMany(PassengerTicket::class, 'voyage_id');
+    }
 }

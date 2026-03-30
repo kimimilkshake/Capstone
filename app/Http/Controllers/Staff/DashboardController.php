@@ -42,25 +42,33 @@ class DashboardController extends Controller
                       ->from('booking')
                       ->where('booking_status', 'Confirmed');
             })
-            ->count();
+            ->distinct('booking_ref_no')
+            ->count('booking_ref_no');
 
-        // Cargo receipts approved today (payment completed)
         $cargoBookings = CargoReceipt::whereDate('created_at', $today)
             ->whereHas('payment', function($q) {
                 $q->where('payment_status', 'Completed');
             })
             ->count();
 
-        // Total sales today (sum of completed payments)
         $totalSales = Payment::whereDate('payment_date', $today)
             ->where('payment_status', 'Completed')
             ->sum('total_amount');
 
-        // Fetch voyages whose departure date is today
         $voyages = Voyage::with(['vessel', 'routePort'])
+            ->withCount([
+                'passengerTickets as passenger_tickets_count' => function ($query) {
+                    $query->whereIn('booking_ref_no', function ($q) {
+                        $q->select('booking_ref_no')
+                          ->from('booking')
+                          ->where('booking_status', 'Confirmed');
+                    });
+                }
+            ])
             ->whereDate('voyage_departure_date', $today)
             ->orderBy('voyage_departure_date', 'asc')
             ->get();
+
 
         return view('authorized.staff.dashboard', compact(
             'voyages',

@@ -94,6 +94,15 @@ class VoyageController extends Controller
         $end_date   = $request->input('end_date');
 
         $voyages = Voyage::with(['vessel', 'routePort'])
+            ->withCount([
+                'passengerTickets as passenger_tickets_count' => function ($query) {
+                    $query->whereIn('booking_ref_no', function ($q) {
+                        $q->select('booking_ref_no')
+                        ->from('booking')
+                        ->where('booking_status', 'Confirmed');
+                    });
+                }
+            ])
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('voyage_code', 'like', "%{$search}%")
