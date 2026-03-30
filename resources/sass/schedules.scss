@@ -244,6 +244,8 @@
     border: 1px solid #adb5bd;
     border-radius: 8px;
     overflow: hidden;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .rates-table {
