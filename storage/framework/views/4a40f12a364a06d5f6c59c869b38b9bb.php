@@ -1,41 +1,41 @@
-@extends('layouts.app')
-@section('content')
-    @include('components.hero')
+<?php $__env->startSection('content'); ?>
+    <?php echo $__env->make('components.hero', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <div class="schedules-page">
         <div class="container">
             <h2 class="schedules-page-title">Sailing Schedules & Rates</h2>
 
-            @forelse ($routeCategories as $category)
-                @php
+            <?php $__empty_1 = true; $__currentLoopData = $routeCategories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <?php
                     $routePorts = $category->routePorts;
                     // Separate into two directions (left = first, right = second)
                     $leftRoute = $routePorts->first();
                     $rightRoute = $routePorts->count() > 1 ? $routePorts->last() : null;
-                @endphp
+                ?>
 
                 <div class="route-card">
                     <div class="route-card-header">
-                        <span><i class="fas fa-ship"></i> {{ $category->route_category_name }}</span>
+                        <span><i class="fas fa-ship"></i> <?php echo e($category->route_category_name); ?></span>
                         <span class="route-card-header-right"><i class="fas fa-calendar-alt"></i> Weekly Sailing
                             Schedules</span>
                     </div>
 
                     <div class="row">
-                        {{-- LEFT DIRECTION --}}
-                        <div class="{{ $rightRoute ? 'col-md-6' : 'col-md-12' }}">
-                            @if ($leftRoute)
-                                @php
+                        
+                        <div class="<?php echo e($rightRoute ? 'col-md-6' : 'col-md-12'); ?>">
+                            <?php if($leftRoute): ?>
+                                <?php
                                     $leftVoyages = $schedulesByRoutePort[$leftRoute->route_port_id] ?? collect();
-                                @endphp
+                                ?>
                                 <div class="direction-block">
                                     <div class="direction-label">
-                                        {{ $leftRoute->route_origin }} <i class="fas fa-long-arrow-alt-right"></i>
-                                        {{ $leftRoute->route_destination }}
+                                        <?php echo e($leftRoute->route_origin); ?> <i class="fas fa-long-arrow-alt-right"></i>
+                                        <?php echo e($leftRoute->route_destination); ?>
+
                                     </div>
 
-                                    @if ($leftVoyages->isNotEmpty())
-                                        @php
+                                    <?php if($leftVoyages->isNotEmpty()): ?>
+                                        <?php
                                             $dayOrder = [
                                                 'Sunday',
                                                 'Monday',
@@ -89,7 +89,7 @@
         return strcmp($a['arr_raw'], $b['arr_raw']);
                                                 })
                                                 ->values();
-                                        @endphp
+                                        ?>
                                         <div class="schedule-table-wrapper">
                                             <table class="table schedule-table">
                                                 <thead>
@@ -102,51 +102,52 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    @php
+                                                    <?php
                                                         $grouped = $weeklySchedule
                                                             ->groupBy('day')
                                                             ->sortBy(function ($items, $day) use ($dayOrder) {
                                                                 return array_search($day, $dayOrder);
                                                             });
-                                                    @endphp
-                                                    @foreach ($grouped as $day => $rows)
-                                                        @foreach ($rows as $idx => $sched)
+                                                    ?>
+                                                    <?php $__currentLoopData = $grouped; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $day => $rows): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <?php $__currentLoopData = $rows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $sched): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                             <tr>
-                                                                @if ($idx === 0)
-                                                                    <td rowspan="{{ $rows->count() }}" class="align-middle">
-                                                                        {{ $day }}</td>
-                                                                @endif
-                                                                <td>{{ $sched['departure'] }}</td>
-                                                                <td>{{ $sched['arrival'] }}</td>
-                                                                <td>{{ $sched['eta'] }}</td>
-                                                                <td>{{ $sched['vessel'] }}</td>
+                                                                <?php if($idx === 0): ?>
+                                                                    <td rowspan="<?php echo e($rows->count()); ?>" class="align-middle">
+                                                                        <?php echo e($day); ?></td>
+                                                                <?php endif; ?>
+                                                                <td><?php echo e($sched['departure']); ?></td>
+                                                                <td><?php echo e($sched['arrival']); ?></td>
+                                                                <td><?php echo e($sched['eta']); ?></td>
+                                                                <td><?php echo e($sched['vessel']); ?></td>
                                                             </tr>
-                                                        @endforeach
-                                                    @endforeach
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                 </tbody>
                                             </table>
                                         </div>
-                                    @else
+                                    <?php else: ?>
                                         <p class="no-schedule">No schedule data available</p>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
-                            @endif
+                            <?php endif; ?>
                         </div>
 
-                        {{-- RIGHT DIRECTION (reverse trip) --}}
-                        @if ($rightRoute)
-                            @php
+                        
+                        <?php if($rightRoute): ?>
+                            <?php
                                 $rightVoyages = $schedulesByRoutePort[$rightRoute->route_port_id] ?? collect();
-                            @endphp
+                            ?>
                             <div class="col-md-6">
                                 <div class="direction-block">
                                     <div class="direction-label">
-                                        {{ $rightRoute->route_origin }} <i class="fas fa-long-arrow-alt-right"></i>
-                                        {{ $rightRoute->route_destination }}
+                                        <?php echo e($rightRoute->route_origin); ?> <i class="fas fa-long-arrow-alt-right"></i>
+                                        <?php echo e($rightRoute->route_destination); ?>
+
                                     </div>
 
-                                    @if ($rightVoyages->isNotEmpty())
-                                        @php
+                                    <?php if($rightVoyages->isNotEmpty()): ?>
+                                        <?php
                                             $dayOrder = [
                                                 'Sunday',
                                                 'Monday',
@@ -199,7 +200,7 @@
                                                     return strcmp($a['arr_raw'], $b['arr_raw']);
                                                 })
                                                 ->values();
-                                        @endphp
+                                        ?>
                                         <div class="schedule-table-wrapper">
                                             <table class="table schedule-table">
                                                 <thead>
@@ -212,68 +213,68 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    @php
+                                                    <?php
                                                         $groupedRight = $weeklyScheduleRight
                                                             ->groupBy('day')
                                                             ->sortBy(function ($items, $day) use ($dayOrder) {
                                                                 return array_search($day, $dayOrder);
                                                             });
-                                                    @endphp
-                                                    @foreach ($groupedRight as $day => $rows)
-                                                        @foreach ($rows as $idx => $sched)
+                                                    ?>
+                                                    <?php $__currentLoopData = $groupedRight; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $day => $rows): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <?php $__currentLoopData = $rows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $sched): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                             <tr>
-                                                                @if ($idx === 0)
-                                                                    <td rowspan="{{ $rows->count() }}"
-                                                                        class="align-middle">{{ $day }}</td>
-                                                                @endif
-                                                                <td>{{ $sched['departure'] }}</td>
-                                                                <td>{{ $sched['arrival'] }}</td>
-                                                                <td>{{ $sched['eta'] }}</td>
-                                                                <td>{{ $sched['vessel'] }}</td>
+                                                                <?php if($idx === 0): ?>
+                                                                    <td rowspan="<?php echo e($rows->count()); ?>"
+                                                                        class="align-middle"><?php echo e($day); ?></td>
+                                                                <?php endif; ?>
+                                                                <td><?php echo e($sched['departure']); ?></td>
+                                                                <td><?php echo e($sched['arrival']); ?></td>
+                                                                <td><?php echo e($sched['eta']); ?></td>
+                                                                <td><?php echo e($sched['vessel']); ?></td>
                                                             </tr>
-                                                        @endforeach
-                                                    @endforeach
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                 </tbody>
                                             </table>
                                         </div>
-                                    @else
+                                    <?php else: ?>
                                         <p class="no-schedule">No schedule data available</p>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                             </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
-            @empty
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                 <div class="no-routes-card">
                     <i class="fas fa-info-circle"></i>
                     <p>No schedules available at this time. Please check back later.</p>
                 </div>
-            @endforelse
+            <?php endif; ?>
 
-            {{-- PASSAGE RATES SECTION (grouped by route, then by vessel) --}}
+            
             <div class="route-card">
                 <div class="route-card-header">
                     <span><i class="fas fa-tags"></i> Passage Rates</span>
                 </div>
 
-                @foreach ($routeCategories as $category)
-                    @php
+                <?php $__currentLoopData = $routeCategories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php
                         $vessels = $vesselsByCategory[$category->route_category_id] ?? collect();
-                    @endphp
+                    ?>
 
-                    @if ($vessels->isNotEmpty())
-                        @php
+                    <?php if($vessels->isNotEmpty()): ?>
+                        <?php
                             $catName = $category->route_category_name;
                             $isBoholCebuCategory = stripos($catName, 'talibon') !== false;
-                        @endphp
+                        ?>
                         <div class="rates-route-group">
-                            <div class="rates-route-name">{{ $category->route_category_name }}</div>
+                            <div class="rates-route-name"><?php echo e($category->route_category_name); ?></div>
 
-                            @foreach ($vessels as $vessel)
-                                @if ($vessel->accommodations->isNotEmpty())
+                            <?php $__currentLoopData = $vessels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vessel): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php if($vessel->accommodations->isNotEmpty()): ?>
                                     <div class="rates-vessel-block">
-                                        <div class="rates-vessel-name">{{ $vessel->vessel_name }}</div>
+                                        <div class="rates-vessel-name"><?php echo e($vessel->vessel_name); ?></div>
                                         <div class="rates-table-wrapper">
                                             <table class="table rates-table">
                                                 <thead>
@@ -287,34 +288,35 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    @foreach ($vessel->accommodations as $accommodation)
-                                                        @php
+                                                    <?php $__currentLoopData = $vessel->accommodations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $accommodation): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <?php
                                                             $base = $accommodation->accommodation_regular_price;
-                                                        @endphp
+                                                        ?>
                                                         <tr>
-                                                            <td>{{ $accommodation->accommodation_name }}</td>
-                                                            <td>&#8369;{{ number_format($base, 2) }}</td>
-                                                            <td>&#8369;{{ number_format($base * 0.8, 2) }}</td>
-                                                            <td>&#8369;{{ number_format($base * 0.8, 2) }}</td>
-                                                            <td>&#8369;{{ number_format($base * 0.5, 2) }}</td>
+                                                            <td><?php echo e($accommodation->accommodation_name); ?></td>
+                                                            <td>&#8369;<?php echo e(number_format($base, 2)); ?></td>
+                                                            <td>&#8369;<?php echo e(number_format($base * 0.8, 2)); ?></td>
+                                                            <td>&#8369;<?php echo e(number_format($base * 0.8, 2)); ?></td>
+                                                            <td>&#8369;<?php echo e(number_format($base * 0.5, 2)); ?></td>
                                                             <td>
-                                                                @if ($isBoholCebuCategory)
+                                                                <?php if($isBoholCebuCategory): ?>
                                                                     <span class="text-success fw-bold">FREE</span>
-                                                                @else
-                                                                    &#8369;{{ number_format($base * 0.75, 2) }}
-                                                                @endif
+                                                                <?php else: ?>
+                                                                    &#8369;<?php echo e(number_format($base * 0.75, 2)); ?>
+
+                                                                <?php endif; ?>
                                                             </td>
                                                         </tr>
-                                                    @endforeach
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                 </tbody>
                                             </table>
                                         </div>
                                     </div>
-                                @endif
-                            @endforeach
+                                <?php endif; ?>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
-                    @endif
-                @endforeach
+                    <?php endif; ?>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
                 <div class="rates-block">
                     <p class="rates-note">
@@ -328,5 +330,7 @@
         </div>
     </div>
 
-    @include('components.footer')
-@endsection
+    <?php echo $__env->make('components.footer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Shem\Desktop\Capstone\resources\views/passenger/schedules.blade.php ENDPATH**/ ?>

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>E-Ticket / Itinerary Receipt - #{{ $booking->booking_ref_no }}</title>
+    <title>E-Ticket / Itinerary Receipt - #<?php echo e($booking->booking_ref_no); ?></title>
     <style>
         @page {
             margin: 18px;
@@ -44,7 +44,7 @@
 
 <body>
 
-    @php
+    <?php
         $totalAmount = 0;
         $printedBy =
             optional(auth()->guard('staff')->user())->staff_name ??
@@ -73,36 +73,36 @@
         $route = $voyage ? $voyage->routePort : null;
         $vessel = $voyage ? $voyage->vessel : null;
         $firstTicket = $tickets->first();
-    @endphp
+    ?>
 
-    {{-- ================================================================ --}}
-    {{-- ====================== MAIN TICKET AREA ======================== --}}
-    {{-- ================================================================ --}}
+    
+    
+    
 
-    {{-- ---- HEADER ---- --}}
+    
     <table width="100%" cellpadding="0" cellspacing="0"
         style="margin-bottom:18px; padding:26px 16px; border-radius:4px; background:#1a3a6b;">
         <tr>
-            {{-- Logo --}}
+            
             <td style="width:130px; vertical-align:middle; padding-left:10px;">
-                <img src="{{ public_path('images/logo_w_name.png') }}" width="100" alt="Logo" />
+                <img src="<?php echo e(public_path('images/logo_w_name.png')); ?>" width="100" alt="Logo" />
             </td>
-            {{-- Company Info --}}
+            
             <td style="vertical-align:middle; text-align:center; padding:6px 18px;">
                 <div class="company-name">LAPULAPU SHIPPING LINES CORPORATION</div>
                 <div class="company-sub">872-876 M.J CUENCO AVENUE, CEBU CITY, PHILIPPINES</div>
                 <div class="company-sub">Tel. No. 232-8864 / 232-8865 &nbsp;|&nbsp; TIN: 200-308-788-000-VAT</div>
             </td>
-            {{-- Issued By --}}
+            
             <td style="width:130px; vertical-align:middle; text-align:right; padding-right:10px;">
                 <div style="font-size:7.5px; color:rgba(255,255,255,0.70);">ISSUED BY</div>
-                <div style="font-size:8.5px; font-weight:bold; color:#fff;">{{ $printedBy }}</div>
-                <div style="font-size:7.5px; color:rgba(255,255,255,0.70);">{{ now()->format('m/d/Y h:i A') }}</div>
+                <div style="font-size:8.5px; font-weight:bold; color:#fff;"><?php echo e($printedBy); ?></div>
+                <div style="font-size:7.5px; color:rgba(255,255,255,0.70);"><?php echo e(now()->format('m/d/Y h:i A')); ?></div>
             </td>
         </tr>
     </table>
 
-    {{-- ---- TITLE BANNER ---- --}}
+    
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
         <tr>
             <td
@@ -112,31 +112,31 @@
         </tr>
     </table>
 
-    {{-- ---- E-TICKET NO / BOOKING REF ---- --}}
+    
     <table width="100%" cellpadding="0" cellspacing="0"
         style="background:#f0f4fa; padding:14px 18px; margin-bottom:18px;">
         <tr>
             <td style="font-size:10px; color:#555; vertical-align:top;">
                 E-TICKET NO.
                 <br><strong
-                    style="font-size:18px; color:#1a3a6b;">{{ $firstTicket->passenger_ticket_id ?? 'TKT-' . $booking->booking_ref_no }}</strong>
+                    style="font-size:18px; color:#1a3a6b;"><?php echo e($firstTicket->passenger_ticket_id ?? 'TKT-' . $booking->booking_ref_no); ?></strong>
             </td>
             <td style="text-align:right; font-size:10px; color:#555; vertical-align:top;">
                 BOOKING REFERENCE NO.
-                <br><strong style="font-size:18px; color:#1a3a6b;">{{ $booking->booking_ref_no }}</strong>
+                <br><strong style="font-size:18px; color:#1a3a6b;"><?php echo e($booking->booking_ref_no); ?></strong>
             </td>
         </tr>
     </table>
 
-    {{-- ---- SECTION LABEL ---- --}}
+    
     <div
         style="font-weight:bold; font-size:13px; color:#fff; background:#1a3a6b; padding:10px 12px; margin-bottom:12px; letter-spacing:1px;">
         ELECTRONIC TICKET DETAILS
     </div>
 
-    {{-- ---- PASSENGER + VOYAGE DETAILS (two columns) ---- --}}
-    @foreach ($tickets as $ticketItem)
-        @php
+    
+    <?php $__currentLoopData = $tickets; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ticketItem): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <?php
             $pax = $ticketItem->passenger;
             $accomName = 'N/A';
             if ($vessel && $vessel->accommodations) {
@@ -160,108 +160,114 @@
                     }
                 }
             }
-        @endphp
+        ?>
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px; border:1px solid #dde6f4;">
             <tr>
-                {{-- LEFT: Passenger details --}}
+                
                 <td width="48%" style="vertical-align:top; padding:16px 18px; border-right:1px dashed #b0c4de;">
                     <table width="100%" cellpadding="0" cellspacing="0">
                         <tr style="margin-bottom:10px;">
                             <td style="font-size:10px; color:#666; width:130px; padding-bottom:10px;">PASSENGER :</td>
                             <td style="font-size:14px; font-weight:bold; color:#1a1a2e; padding-bottom:10px;">
-                                {{ strtoupper($pax->passenger_lastname) }}, {{ strtoupper($pax->passenger_firstname) }}
-                                @if ($pax->passenger_midinitial)
-                                    {{ strtoupper($pax->passenger_midinitial) }}.
-                                @endif
-                                @if ($pax->passenger_suffix)
-                                    {{ strtoupper($pax->passenger_suffix) }}
-                                @endif
+                                <?php echo e(strtoupper($pax->passenger_lastname)); ?>, <?php echo e(strtoupper($pax->passenger_firstname)); ?>
+
+                                <?php if($pax->passenger_midinitial): ?>
+                                    <?php echo e(strtoupper($pax->passenger_midinitial)); ?>.
+                                <?php endif; ?>
+                                <?php if($pax->passenger_suffix): ?>
+                                    <?php echo e(strtoupper($pax->passenger_suffix)); ?>
+
+                                <?php endif; ?>
                             </td>
                         </tr>
                         <tr>
                             <td style="font-size:10px; color:#666; padding-bottom:10px;">AGE :</td>
                             <td style="font-size:13px; font-weight:bold; padding-bottom:10px;">
-                                {{ $pax->passenger_age ?? 'N/A' }}
+                                <?php echo e($pax->passenger_age ?? 'N/A'); ?>
+
                                 &nbsp;&nbsp;|&nbsp;&nbsp;
                                 <span style="font-size:10px; color:#666;">TYPE:</span>
-                                <strong style="font-size:13px;">{{ $pax->passenger_type }}</strong>
+                                <strong style="font-size:13px;"><?php echo e($pax->passenger_type); ?></strong>
                             </td>
                         </tr>
                         <tr>
                             <td style="font-size:10px; color:#666; padding-bottom:10px;">COT NO. :</td>
                             <td style="font-size:13px; font-weight:bold; padding-bottom:10px;">
-                                {{ $ticketItem->pt_cot_no }}</td>
+                                <?php echo e($ticketItem->pt_cot_no); ?></td>
                         </tr>
                         <tr>
                             <td style="font-size:10px; color:#666; padding-bottom:10px;">ACCOMMODATION :</td>
                             <td style="font-size:13px; font-weight:bold; padding-bottom:10px;">
-                                {{ strtoupper($accomName) }}</td>
+                                <?php echo e(strtoupper($accomName)); ?></td>
                         </tr>
-                        @if ($ticketItem->promo)
+                        <?php if($ticketItem->promo): ?>
                             <tr>
                                 <td style="font-size:10px; color:#666; padding-bottom:10px;">PROMO :</td>
                                 <td style="font-size:13px; font-weight:bold; color:#c0392b; padding-bottom:10px;">
-                                    {{ $ticketItem->promo->promo_code }}
-                                    (-{{ $ticketItem->promo->promo_discount_rate }}%)
+                                    <?php echo e($ticketItem->promo->promo_code); ?>
+
+                                    (-<?php echo e($ticketItem->promo->promo_discount_rate); ?>%)
                                 </td>
                             </tr>
-                        @endif
+                        <?php endif; ?>
                         <tr>
                             <td colspan="2" style="border-top:1px solid #dde6f4; padding-top:10px;">
                                 <table width="100%" cellpadding="0" cellspacing="0">
                                     <tr>
                                         <td style="font-size:10px; color:#666; width:130px;">TOTAL :</td>
                                         <td style="font-size:18px; font-weight:bold; color:#1a3a6b;">PHP
-                                            {{ number_format($ticketItem->pt_ticket_price, 2) }}</td>
+                                            <?php echo e(number_format($ticketItem->pt_ticket_price, 2)); ?></td>
                                     </tr>
                                 </table>
                             </td>
                         </tr>
                     </table>
                 </td>
-                {{-- RIGHT: Voyage details --}}
+                
                 <td width="52%" style="vertical-align:top; padding:16px 18px;">
                     <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                             <td style="font-size:10px; color:#666; width:130px; padding-bottom:10px;">ORIGIN :</td>
                             <td style="font-size:16px; font-weight:bold; color:#1a3a6b; padding-bottom:10px;">
-                                {{ strtoupper($route->route_origin ?? 'N/A') }}</td>
+                                <?php echo e(strtoupper($route->route_origin ?? 'N/A')); ?></td>
                         </tr>
                         <tr>
                             <td style="font-size:10px; color:#666; padding-bottom:10px;">DESTINATION :</td>
                             <td style="font-size:16px; font-weight:bold; color:#1a3a6b; padding-bottom:10px;">
-                                {{ strtoupper($route->route_destination ?? 'N/A') }}</td>
+                                <?php echo e(strtoupper($route->route_destination ?? 'N/A')); ?></td>
                         </tr>
                         <tr>
                             <td style="font-size:10px; color:#666; padding-bottom:10px;">VOYAGE NO. :</td>
                             <td style="font-size:13px; font-weight:bold; padding-bottom:10px;">
-                                {{ $voyage->voyage_code ?? 'N/A' }}</td>
+                                <?php echo e($voyage->voyage_code ?? 'N/A'); ?></td>
                         </tr>
                         <tr>
                             <td style="font-size:10px; color:#666; padding-bottom:10px;">DEPARTURE DATE :</td>
                             <td style="font-size:13px; font-weight:bold; padding-bottom:10px;">
-                                {{ $voyage ? \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('F d, Y') : 'N/A' }}
+                                <?php echo e($voyage ? \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('F d, Y') : 'N/A'); ?>
+
                             </td>
                         </tr>
                         <tr>
                             <td style="font-size:10px; color:#666; padding-bottom:10px;">DEPARTURE TIME :</td>
                             <td style="font-size:13px; font-weight:bold; padding-bottom:10px;">
-                                {{ $voyage ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:i A') : 'N/A' }}
+                                <?php echo e($voyage ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:i A') : 'N/A'); ?>
+
                             </td>
                         </tr>
                         <tr>
                             <td style="font-size:10px; color:#666;">VESSEL :</td>
-                            <td style="font-size:13px; font-weight:bold;">{{ $vessel->vessel_name ?? 'N/A' }}</td>
+                            <td style="font-size:13px; font-weight:bold;"><?php echo e($vessel->vessel_name ?? 'N/A'); ?></td>
                         </tr>
                     </table>
                 </td>
             </tr>
         </table>
-    @endforeach
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-    {{-- ================================================================ --}}
-    {{-- ====================== SCISSOR CUT LINE ======================== --}}
-    {{-- ================================================================ --}}
+    
+    
+    
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0 14px 0;">
         <tr>
             <td style="border-top:2px dashed #aaa;"></td>
@@ -271,13 +277,13 @@
         </tr>
     </table>
 
-    {{-- ================================================================ --}}
-    {{-- ============ BOTTOM: REMINDERS (left) + QR CODE (right) ======= --}}
-    {{-- ================================================================ --}}
+    
+    
+    
     <table width="100%" cellpadding="0" cellspacing="0">
         <tr>
 
-            {{-- ---- LEFT: REMINDERS + T&C ---- --}}
+            
             <td width="60%" style="vertical-align:top; padding-right:14px; border-right:1px dashed #ccc;">
 
                 <div
@@ -339,26 +345,28 @@
 
             </td>
 
-            {{-- ---- RIGHT: QR CODE ---- --}}
+            
             <td width="40%" style="vertical-align:middle; text-align:center; padding-left:14px;">
 
                 <div style="font-weight:bold; font-size:15px; color:#1a3a6b; margin-bottom:8px; letter-spacing:2px;">
                     BOARDING QR CODE</div>
                 <div style="font-size:11px; color:#666; margin-bottom:16px;">Present at Terminal Check-in</div>
 
-                @if (!empty($qrCodes))
-                    @foreach ($tickets as $ticket)
-                        @if (isset($qrCodes[$ticket->passenger_id]))
-                            <img src="{{ $qrCodes[$ticket->passenger_id] }}" width="190" height="190"
+                <?php if(!empty($qrCodes)): ?>
+                    <?php $__currentLoopData = $tickets; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ticket): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php if(isset($qrCodes[$ticket->passenger_id])): ?>
+                            <img src="<?php echo e($qrCodes[$ticket->passenger_id]); ?>" width="190" height="190"
                                 style="border:3px solid #1a3a6b; padding:4px;" /><br>
                             <div style="font-size:13px; font-weight:bold; margin-top:12px; color:#1a1a2e;">
-                                {{ strtoupper($ticket->passenger->passenger_firstname) }}
-                                {{ strtoupper($ticket->passenger->passenger_lastname) }}
+                                <?php echo e(strtoupper($ticket->passenger->passenger_firstname)); ?>
+
+                                <?php echo e(strtoupper($ticket->passenger->passenger_lastname)); ?>
+
                             </div>
-                            <div style="font-size:11px; color:#555;">Booking #{{ $booking->booking_ref_no }}</div>
-                        @endif
-                    @endforeach
-                @else
+                            <div style="font-size:11px; color:#555;">Booking #<?php echo e($booking->booking_ref_no); ?></div>
+                        <?php endif; ?>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                <?php else: ?>
                     <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
                         <tr>
                             <td
@@ -368,20 +376,22 @@
                         </tr>
                     </table>
                     <div style="font-size:13px; font-weight:bold; margin-top:12px; color:#1a1a2e;">
-                        @if ($firstTicket && $firstTicket->passenger)
-                            {{ strtoupper($firstTicket->passenger->passenger_firstname) }}
-                            {{ strtoupper($firstTicket->passenger->passenger_lastname) }}
-                        @endif
+                        <?php if($firstTicket && $firstTicket->passenger): ?>
+                            <?php echo e(strtoupper($firstTicket->passenger->passenger_firstname)); ?>
+
+                            <?php echo e(strtoupper($firstTicket->passenger->passenger_lastname)); ?>
+
+                        <?php endif; ?>
                     </div>
-                    <div style="font-size:11px; color:#555;">Booking #{{ $booking->booking_ref_no }}</div>
-                @endif
+                    <div style="font-size:11px; color:#555;">Booking #<?php echo e($booking->booking_ref_no); ?></div>
+                <?php endif; ?>
 
             </td>
 
         </tr>
     </table>
 
-    {{-- ---- FOOTER NOTE ---- --}}
+    
     <div
         style="margin-top:16px; text-align:center; font-size:8px; color:#999; border-top:1px solid #dde6f4; padding-top:6px;">
         This is an automatically generated e-ticket. Please keep this document for your records. &nbsp;|&nbsp; Page 1 of
@@ -391,3 +401,4 @@
 </body>
 
 </html>
+<?php /**PATH C:\Users\Shem\Desktop\Capstone\resources\views/passenger/passenger_ticket_pdf.blade.php ENDPATH**/ ?>
