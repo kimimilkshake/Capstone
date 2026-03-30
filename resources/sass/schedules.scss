@@ -1,16 +1,18 @@
 /* ===== SCHEDULES & RATES PAGE ===== */
 .schedules-page {
-    padding-top: 60px;
-    padding-bottom: 60px;
+    padding-top: 30px;
+    padding-bottom: 20px;
     background-color: #f8f9fa;
     min-height: 100vh;
 
     @media (max-width: 768px) {
         padding-top: 20px;
-        padding-bottom: 30px;
+        padding-bottom: 15px;
     }
 
     .container {
+        max-width: 1400px;
+
         @media (max-width: 768px) {
             padding-left: 10px;
             padding-right: 10px;
@@ -242,6 +244,8 @@
     border: 1px solid #adb5bd;
     border-radius: 8px;
     overflow: hidden;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .rates-table {

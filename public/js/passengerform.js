@@ -27,15 +27,15 @@ document.addEventListener("DOMContentLoaded", function () {
                         acc.accommodation_name
                     }" data-price="${acc.accommodation_regular_price}">${
                         acc.accommodation_name
-                    } - ₱${parseFloat(
-                        acc.accommodation_regular_price,
-                    ).toFixed(2)}</option>`,
+                    } - ₱${parseFloat(acc.accommodation_regular_price).toFixed(
+                        2,
+                    )}</option>`,
             )
             .join("");
 
         return `
             <div class="passenger-form mb-4 p-3 bg-white rounded shadow-sm" data-passenger="${i}">
-                <h6 class="fw-bold mb-3 text-primary">Personal Information - Person ${i}</h6>
+                <h6 class="fw-bold mb-3 text-primary passenger-number-header">Personal Information - Person ${i}</h6>
                 <div class="row g-3">
                     <div class="col-md-8">
                         <label class="form-label">Passenger Type <span class="text-danger">*</span></label>
@@ -110,20 +110,22 @@ document.addEventListener("DOMContentLoaded", function () {
                     </div>
 
                     <div class="id-fields mt-3" style="display:none;">
-                        <div class="col-md-6 mt-2">
-                            <label class="form-label">ID Number</label>
-                            <input type="text" class="form-control id-number" name="id_number">
-                        </div>
-                        <div class="col-md-6 mt-2">
-                            <label class="form-label">Upload ID Image</label>
-                            <input type="file" class="form-control id-upload" accept="image/*">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">ID Number</label>
+                                <input type="text" class="form-control id-number" name="id_number">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Upload ID Image</label>
+                                <input type="file" class="form-control id-upload" accept="image/*">
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <hr>
 
-                <h6 class="fw-bold mb-3 text-success">Accommodation - Person ${i}</h6>
+                <h6 class="fw-bold mb-3 text-success passenger-accommodation-header">Accommodation - Person ${i}</h6>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">Accommodation Type <span class="text-danger">*</span></label>
@@ -138,6 +140,12 @@ document.addEventListener("DOMContentLoaded", function () {
                             <option value="">Select Accommodation First</option>
                         </select>
                     </div>
+                </div>
+                <div class="remove-passenger-wrapper" style="display:none;">
+                    <hr class="mt-4 mb-3">
+                    <button type="button" class="btn btn-outline-danger remove-passenger-btn py-2 w-100">
+                        <i class="fas fa-trash-alt me-2"></i>Remove Passenger ${i}
+                    </button>
                 </div>
             </div>
         `;
@@ -221,6 +229,15 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
+        // Remove passenger button listener
+        const removeBtn = form.querySelector(".remove-passenger-btn");
+        if (removeBtn) {
+            removeBtn.addEventListener("click", function () {
+                form.remove();
+                renumberPassengerForms();
+            });
+        }
+
         // Cot select listener
         const cotSelect = form.querySelector(".cot-select");
         if (cotSelect) {
@@ -252,25 +269,68 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    function updateTrashVisibility() {
+        const allForms = passengerSections.querySelectorAll(".passenger-form");
+        allForms.forEach((f) => {
+            const wrapper = f.querySelector(".remove-passenger-wrapper");
+            if (wrapper)
+                wrapper.style.display = allForms.length > 1 ? "" : "none";
+        });
+    }
+
+    function renumberPassengerForms() {
+        const remainingForms =
+            passengerSections.querySelectorAll(".passenger-form");
+        remainingForms.forEach((f, index) => {
+            const newNum = index + 1;
+            f.setAttribute("data-passenger", newNum);
+            const personalHeader = f.querySelector(".passenger-number-header");
+            if (personalHeader)
+                personalHeader.textContent = `Personal Information - Person ${newNum}`;
+            const accHeader = f.querySelector(
+                ".passenger-accommodation-header",
+            );
+            if (accHeader)
+                accHeader.textContent = `Accommodation - Person ${newNum}`;
+            const removeBtn = f.querySelector(".remove-passenger-btn");
+            if (removeBtn)
+                removeBtn.innerHTML = `<i class="fas fa-trash-alt me-2"></i>Remove Passenger ${newNum}`;
+        });
+        numPassengersSelect.value = remainingForms.length;
+        numPassengersSelect.dispatchEvent(new Event("change"));
+        updateTrashVisibility();
+        updateCotAvailability();
+    }
+
     function generatePassengerForms(count) {
-        const existingForms = passengerSections.querySelectorAll(".passenger-form");
+        const existingForms =
+            passengerSections.querySelectorAll(".passenger-form");
         const currentCount = existingForms.length;
 
         if (count > currentCount) {
             // Add new forms only — existing ones stay untouched with their data
             for (let i = currentCount + 1; i <= count; i++) {
-                passengerSections.insertAdjacentHTML("beforeend", createPassengerHTML(i));
-                const newForm = passengerSections.querySelector(`.passenger-form[data-passenger="${i}"]`);
+                passengerSections.insertAdjacentHTML(
+                    "beforeend",
+                    createPassengerHTML(i),
+                );
+                const newForm = passengerSections.querySelector(
+                    `.passenger-form[data-passenger="${i}"]`,
+                );
                 attachListenersToForm(newForm);
             }
             // Initialize address dropdowns only for newly added forms
             initializeAddressDropdowns(currentCount);
+            updateTrashVisibility();
         } else if (count < currentCount) {
             // Remove only the last form(s) — keep the rest intact with their data
             for (let i = currentCount; i > count; i--) {
-                const formToRemove = passengerSections.querySelector(`.passenger-form[data-passenger="${i}"]`);
+                const formToRemove = passengerSections.querySelector(
+                    `.passenger-form[data-passenger="${i}"]`,
+                );
                 if (formToRemove) formToRemove.remove();
             }
+            updateTrashVisibility();
             updateCotAvailability();
         }
     }
@@ -295,9 +355,10 @@ document.addEventListener("DOMContentLoaded", function () {
     async function initializeAddressDropdowns(startFrom) {
         const allForms = document.querySelectorAll(".passenger-form");
         // Only initialize forms that are new (skip already-initialized ones)
-        const formsToInit = startFrom !== undefined
-            ? Array.from(allForms).slice(startFrom)
-            : Array.from(allForms);
+        const formsToInit =
+            startFrom !== undefined
+                ? Array.from(allForms).slice(startFrom)
+                : Array.from(allForms);
 
         for (const form of formsToInit) {
             const provinceSelect = form.querySelector(".province-select");
@@ -852,7 +913,11 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             // Show persistent success toast before redirecting
-            showToast("Booking submitted successfully! Redirecting...", "success", true);
+            showToast(
+                "Booking submitted successfully! Redirecting...",
+                "success",
+                true,
+            );
 
             // Redirect to confirm page for this booking
             setTimeout(() => {

@@ -1,6 +1,5 @@
-@extends('layouts.app')
-@section('content')
-    @include('components.hero')
+<?php $__env->startSection('content'); ?>
+    <?php echo $__env->make('components.hero', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <div class="container-fluid mt-4 mb-4 px-4">
 
@@ -13,23 +12,23 @@
                 <div class="row text-center align-items-center">
                     <div class="col">
                         <p class="mb-0 text-muted small">Vessel Name</p>
-                        <p class="mb-0 fw-bold">{{ $vesselName }}</p>
+                        <p class="mb-0 fw-bold"><?php echo e($vesselName); ?></p>
                     </div>
                     <div class="col">
                         <p class="mb-0 text-muted small">Route</p>
-                        <p class="mb-0 fw-bold">{{ $routeFrom }} - {{ $routeTo }}</p>
+                        <p class="mb-0 fw-bold"><?php echo e($routeFrom); ?> - <?php echo e($routeTo); ?></p>
                     </div>
                     <div class="col">
                         <p class="mb-0 text-muted small">Departure Date</p>
-                        <p class="mb-0 fw-bold">{{ \Carbon\Carbon::parse($departureDate)->format('F d, Y') }}</p>
+                        <p class="mb-0 fw-bold"><?php echo e(\Carbon\Carbon::parse($departureDate)->format('F d, Y')); ?></p>
                     </div>
                     <div class="col">
                         <p class="mb-0 text-muted small">Departure Time</p>
-                        <p class="mb-0 fw-bold">{{ \Carbon\Carbon::parse($departureTime)->format('g:i A') }}</p>
+                        <p class="mb-0 fw-bold"><?php echo e(\Carbon\Carbon::parse($departureTime)->format('g:i A')); ?></p>
                     </div>
                     <div class="col">
                         <p class="mb-0 text-muted small">Port of Origin</p>
-                        <p class="mb-0 fw-bold">{{ $portOfOrigin }}</p>
+                        <p class="mb-0 fw-bold"><?php echo e($portOfOrigin); ?></p>
                     </div>
                     <div class="col">
                         <p class="mb-0 text-muted small">No. of Passengers</p>
@@ -56,14 +55,14 @@
                     </div>
                     <div class="card-body bg-light">
 
-                        <form id="bookingForm" data-submit-url="{{ route('booking.submit') }}"
-                            data-csrf="{{ csrf_token() }}">
+                        <form id="bookingForm" data-submit-url="<?php echo e(route('booking.submit')); ?>"
+                            data-csrf="<?php echo e(csrf_token()); ?>">
                             <!-- Hidden voyage fields used by JS to submit booking -->
-                            <input type="hidden" id="routeFrom" name="route_from" value="{{ $routeFrom }}">
-                            <input type="hidden" id="routeTo" name="route_to" value="{{ $routeTo }}">
-                            <input type="hidden" id="departureDate" name="departure_date" value="{{ $departureDate }}">
-                            <input type="hidden" id="departureTime" name="departure_time" value="{{ $departureTime }}">
-                            <input type="hidden" id="voyageId" name="voyage_id" value="{{ $voyage->voyage_id }}">
+                            <input type="hidden" id="routeFrom" name="route_from" value="<?php echo e($routeFrom); ?>">
+                            <input type="hidden" id="routeTo" name="route_to" value="<?php echo e($routeTo); ?>">
+                            <input type="hidden" id="departureDate" name="departure_date" value="<?php echo e($departureDate); ?>">
+                            <input type="hidden" id="departureTime" name="departure_time" value="<?php echo e($departureTime); ?>">
+                            <input type="hidden" id="voyageId" name="voyage_id" value="<?php echo e($voyage->voyage_id); ?>">
 
                             <!-- Dynamic Passenger Sections -->
                             <div id="passengerSections"></div>
@@ -102,7 +101,7 @@
     </div>
 
     <!-- JS Data -->
-    <script type="application/json" id="accommodations-data">{!! json_encode($accommodations) !!}</script>
+    <script type="application/json" id="accommodations-data"><?php echo json_encode($accommodations); ?></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const input = document.getElementById('numPassengers');
@@ -156,8 +155,7 @@
             });
             // Cancel booking confirmation
             document.getElementById('cancelBookingBtn').addEventListener('click', function() {
-                showToast('Are you sure you want to cancel? All entered data will be lost.', 'warning',
-                    true);
+                showToast('Are you sure you want to cancel? All entered data will be lost.', 'warning', true);
 
                 // Replace the toast close button with confirm/stay buttons
                 const container = document.getElementById('globalToastContainer');
@@ -178,7 +176,7 @@
                     `;
 
                     document.getElementById('confirmCancel').addEventListener('click', function() {
-                        window.location.href = "{{ route('bookingtype') }}";
+                        window.location.href = "<?php echo e(route('bookingtype')); ?>";
                     });
 
                     document.getElementById('stayBooking').addEventListener('click', function() {
@@ -188,7 +186,9 @@
             });
         });
     </script>
-    <script src="{{ asset('js/passengerform.js') }}"></script>
+    <script src="<?php echo e(asset('js/passengerform.js')); ?>"></script>
 
-    @include('components.footer')
-@endsection
+    <?php echo $__env->make('components.footer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Shem\Desktop\Capstone\resources\views/passenger/passengerbooking.blade.php ENDPATH**/ ?>
