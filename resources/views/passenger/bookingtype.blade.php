@@ -44,7 +44,7 @@
                                         <td colspan="4" class="text-center">
                                             <div class="text-muted">
                                                 <i class="bi bi-calendar-x fs-1 d-block"></i>
-                                                No voyages available in the next 8 days
+                                                No voyages available in the next 7 days
                                             </div>
                                         </td>
                                     </tr>
