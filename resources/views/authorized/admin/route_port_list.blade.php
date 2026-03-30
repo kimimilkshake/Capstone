@@ -44,14 +44,10 @@
           <td>{{ $rp->route_origin }}</td>
           <td>{{ $rp->route_destination }}</td>
           <td>
-            {{ $rp->port_origin_name }},
-            {{ $rp->port_origin_city }},
-            {{ $rp->port_origin_province }}
+            {{ $rp->portOrigin->terminal_name ?? '' }} - {{ $rp->portOrigin->port_name ?? '' }} ({{ $rp->portOrigin->city ?? '' }})
           </td>
           <td>
-            {{ $rp->port_destination_name }},
-            {{ $rp->port_destination_city }},
-            {{ $rp->port_destination_province }}
+            {{ $rp->portDestination->terminal_name ?? '' }} - {{ $rp->portDestination->port_name ?? '' }} ({{ $rp->portDestination->city ?? '' }})
           </td>
           <td>
             <button 
@@ -59,15 +55,11 @@
                 class="editRouteBtn link-btn"
                 title="Edit Route and Port"
                 data-id="{{ $rp->route_port_id }}" 
-                data-origin="{{ $rp->route_origin }}" 
-                data-destination="{{ $rp->route_destination }}"
-                data-port_origin_name="{{ $rp->port_origin_name }}"
-                data-port_origin_city="{{ $rp->port_origin_city }}"
-                data-port_origin_province="{{ $rp->port_origin_province }}"
-                data-port_destination_name="{{ $rp->port_destination_name }}"
-                data-port_destination_city="{{ $rp->port_destination_city }}"
-                data-port_destination_province="{{ $rp->port_destination_province }}"
                 data-route_category_id="{{ $rp->route_category_id }}"
+                data-route_origin="{{ $rp->route_origin }}"
+                data-route_destination="{{ $rp->route_destination }}"
+                data-port_origin_id="{{ $rp->port_origin_id }}"
+                data-port_destination_id="{{ $rp->port_destination_id }}"
             >
                 <i class="fa fa-pencil"></i>
             </button>
@@ -140,35 +132,31 @@
         </div>
       </div>
 
-      <!-- 3 columns for Port Origin -->
-      <div class="rpmodal-row three-col">
+      <!-- PORT ORIGIN -->
+      <div class="rpmodal-row two-col">
         <div class="rpmodal-col">
-          <label>Port Origin Name <span class="text-danger">*</span></label>
-          <input type="text" name="port_origin_name" required>
+          <label>Port Origin <span class="text-danger">*</span></label>
+          <select name="port_origin_id" id="port_origin_select" required>
+            <option value="">Select Port</option>
+            @foreach($ports as $port)
+              <option value="{{ $port->port_id }}" data-city="{{ $port->city }}" data-terminal="{{ $port->terminal_name }}">
+                {{ $port->terminal_name }} - {{ $port->port_name }} ({{ $port->city }})
+              </option>
+            @endforeach
+          </select>
         </div>
-        <div class="rpmodal-col">
-          <label>Port Origin City <span class="text-danger">*</span></label>
-          <input type="text" name="port_origin_city" required>
-        </div>
-        <div class="rpmodal-col">
-          <label>Port Origin Province <span class="text-danger">*</span></label>
-          <input type="text" name="port_origin_province" required>
-        </div>
-      </div>
 
-      <!-- 3 columns for Port Destination -->
-      <div class="rpmodal-row three-col">
+        <!-- PORT DESTINATION -->
         <div class="rpmodal-col">
-          <label>Port Destination Name <span class="text-danger">*</span></label>
-          <input type="text" name="port_destination_name" required>
-        </div>
-        <div class="rpmodal-col">
-          <label>Port Destination City <span class="text-danger">*</span></label>
-          <input type="text" name="port_destination_city" required>
-        </div>
-        <div class="rpmodal-col">
-          <label>Port Destination Province<span class="text-danger">*</span></label>
-          <input type="text" name="port_destination_province" required>
+          <label>Port Destination <span class="text-danger">*</span></label>
+          <select name="port_destination_id" id="port_destination_select" required>
+            <option value="">Select Port</option>
+            @foreach($ports as $port)
+              <option value="{{ $port->port_id }}" data-city="{{ $port->city }}" data-terminal="{{ $port->terminal_name }}">
+                {{ $port->terminal_name }} - {{ $port->port_name }} ({{ $port->city }})
+              </option>
+            @endforeach
+          </select>
         </div>
       </div>
 
@@ -179,7 +167,7 @@
 
 
 <!-- Edit Route & Port Modal -->
-<div id="editRoutPortModal" class="modal-overlay" style="display:none;">
+<div id="editRoutePortModal" class="modal-overlay" style="display:none;">
   <div class="modal-content">
     <span class="close-btn" id="closeEditModal">&times;</span>
     <h3>Edit Route and Port</h3>
@@ -211,34 +199,31 @@
         </div>
       </div>
 
-      <div class="rpmodal-row three-col">
+      <!-- PORT ORIGIN -->
+      <div class="rpmodal-row two-col">
         <div class="rpmodal-col">
-          <label>Port Origin Name <span class="text-danger">*</span></label>
-          <input type="text" name="port_origin_name" id="editPortOriginName" required>
+          <label>Port Origin <span class="text-danger">*</span></label>
+          <select name="port_origin_id" id="editPortOriginSelect" required>
+            <option value="">Select Port</option>
+            @foreach($ports as $port)
+              <option value="{{ $port->port_id }}">{{ $port->terminal_name }} - {{ $port->port_name }} ({{ $port->city }})</option>
+            @endforeach
+          </select>
         </div>
+
+        <!-- PORT DESTINATION -->
         <div class="rpmodal-col">
-          <label>Port Origin City <span class="text-danger">*</span></label>
-          <input type="text" name="port_origin_city" id="editPortOriginCity" required>
-        </div>
-        <div class="rpmodal-col">
-          <label>Port Origin Province <span class="text-danger">*</span></label>
-          <input type="text" name="port_origin_province" id="editPortOriginProvince" required>
-        </div>
-      </div>
-      <div class="rpmodal-row three-col">
-        <div class="rpmodal-col">
-          <label>Port Destination Name <span class="text-danger">*</span></label>
-          <input type="text" name="port_destination_name" id="editPortDestinationName" required>
-        </div>
-        <div class="rpmodal-col">
-          <label>Port Destination City <span class="text-danger">*</span></label>
-          <input type="text" name="port_destination_city" id="editPortDestinationCity" required>
-        </div>
-        <div class="rpmodal-col">
-          <label>Port Destination Province<span class="text-danger">*</span></label>
-          <input type="text" name="port_destination_province" id="editPortDestinationProvince" required>
+          <label>Port Destination <span class="text-danger">*</span></label>
+          <select name="port_destination_id" id="editPortDestinationSelect" required>
+            <option value="">Select Port</option>
+            @foreach($ports as $port)
+              <option value="{{ $port->port_id }}">{{ $port->terminal_name }} - {{ $port->port_name }} ({{ $port->city }})</option>
+            @endforeach
+          </select>
         </div>
       </div>
+
+
       <button type="submit" id="saveEditBtn" disabled style="background-color: #ccc; cursor: not-allowed;">
         Save Changes
       </button>

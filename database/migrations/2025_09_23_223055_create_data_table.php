@@ -154,18 +154,23 @@ return new class extends Migration {
             $table->timestamps();
         });
 
+        Schema::create('ports', function (Blueprint $table) {
+            $table->id('port_id');
+            $table->string('terminal_name');
+            $table->string('port_name');
+            $table->string('city');
+            $table->string('province');
+            $table->timestamps();
+        });
+
         Schema::create('route_port', function (Blueprint $table) {
             $table->id('route_port_id');
             $table->foreignId('route_category_id')->constrained('route_category', 'route_category_id');
             $table->string('route_code')->unique();
             $table->string('route_origin');
             $table->string('route_destination');
-            $table->string('port_origin_name');
-            $table->string('port_origin_city');
-            $table->string('port_origin_province');
-            $table->string('port_destination_name');
-            $table->string('port_destination_city');
-            $table->string('port_destination_province');
+            $table->foreignId('port_origin_id')->nullable()->constrained('ports', 'port_id');
+            $table->foreignId('port_destination_id')->nullable()->constrained('ports', 'port_id');
             $table->timestamps();
         });
 

@@ -7,9 +7,6 @@ use Illuminate\Support\Facades\DB;
 
 class CargoItemSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $csvFile = database_path('seeders/cargo_items.csv');

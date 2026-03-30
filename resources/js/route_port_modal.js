@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const formData = new FormData(addRouteCategoryForm);
 
         try {
-            const response = await fetch("/authorized/admin/route_categories", { // use actual route URL
+            const response = await fetch("/authorized/admin/route_categories", {
                 method: 'POST',
                 headers: {
                     "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
@@ -42,45 +42,41 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = await response.json().catch(() => ({}));
 
             if (response.ok && data.status === 'success') {
-                showToast('Route Category added successfully!', 'success'); // NEW
+                showToast('Route Category added successfully!', 'success');
                 addRouteCategoryModal.style.display = 'none';
                 addRouteCategoryForm.reset();
 
                 // append new route category to dropdown in Add Route & Port modal
-                const routeCategorySelect = document.querySelector('#addRoutePortForm select[name="route_category_id"]');
+                const routeCategorySelect = document.getElementById('route_category_id');
                 if (routeCategorySelect && data.routeCategory) {
                     const option = document.createElement('option');
                     option.value = data.routeCategory.route_category_id;
                     option.text = data.routeCategory.route_category_name;
                     routeCategorySelect.appendChild(option);
 
-                    const options = Array.from(routeCategorySelect.options)
-                        .slice(1) // skip "Select Route Category"
-                        .sort((a, b) => a.text.localeCompare(b.text));
-
+                    // sort options alphabetically (skip first "Select Route Category")
+                    const options = Array.from(routeCategorySelect.options).slice(1).sort((a, b) => a.text.localeCompare(b.text));
                     routeCategorySelect.innerHTML = '<option value="">Select Route Category</option>';
                     options.forEach(o => routeCategorySelect.appendChild(o));
                 }
 
             } else {
-                showToast(data.message || 'Error adding route category', 'danger'); // NEW
+                showToast(data.message || 'Error adding route category', 'danger');
             }
 
         } catch (err) {
-            showToast('Server error', 'danger'); // NEW
+            showToast('Server error', 'danger');
             console.error(err);
         }
     });
 
 });
 
-
-
 // ===== Route & Port Modal =====
 document.addEventListener("DOMContentLoaded", function () {
 
     const addModal = document.getElementById("addRoutePortModal");
-    const editModal = document.getElementById("editRoutPortModal");
+    const editModal = document.getElementById("editRoutePortModal");
 
     const addBtn = document.getElementById("addRoutePortBtn");
     const closeAdd = document.getElementById("closeAddModal");
@@ -91,6 +87,87 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const saveEditBtn = document.getElementById("saveEditBtn");
     let originalFormData = {};
+
+    // Add Port selects
+    const portOriginSelect = document.getElementById('port_origin_select');
+    const portDestinationSelect = document.getElementById('port_destination_select');
+
+    const routeOriginInput = addForm.querySelector('input[name="route_origin"]');
+    const routeDestinationInput = addForm.querySelector('input[name="route_destination"]');
+
+    // Store original options for filtering later
+    const originalPortOriginOptions = Array.from(portOriginSelect.options);
+    const originalPortDestinationOptions = Array.from(portDestinationSelect.options);
+
+    // --- EDIT MODAL PORT FILTERING ---
+    const editRouteOriginInput = document.getElementById("editRouteOrigin");
+    const editRouteDestinationInput = document.getElementById("editRouteDestination");
+    const editPortOriginSelect = document.getElementById("editPortOriginSelect");
+    const editPortDestinationSelect = document.getElementById("editPortDestinationSelect");
+
+    // Store original options for filtering later
+    const originalEditPortOriginOptions = Array.from(editPortOriginSelect.options);
+    const originalEditPortDestinationOptions = Array.from(editPortDestinationSelect.options);
+
+    // Filter function (same as Add modal)
+    function filterPorts(inputValue, selectElement, originalOptions) {
+        const search = inputValue.toLowerCase().trim();
+        selectElement.innerHTML = '<option value="">Select Port</option>';
+
+        if (!search) {
+            originalOptions.forEach(opt => selectElement.appendChild(opt.cloneNode(true)));
+            return;
+        }
+
+        originalOptions.forEach(opt => {
+            const city = opt.dataset.city?.toLowerCase() || '';
+            const terminal = opt.dataset.terminal?.toLowerCase() || '';
+            const text = opt.text.toLowerCase();
+            if (city.includes(search) || terminal.includes(search) || text.includes(search)) {
+                selectElement.appendChild(opt.cloneNode(true));
+            }
+        });
+    }
+
+    // --- EVENT LISTENERS ---
+    editRouteOriginInput.addEventListener("input", () => {
+        filterPorts(editRouteOriginInput.value, editPortOriginSelect, originalEditPortOriginOptions);
+    });
+
+    editRouteDestinationInput.addEventListener("input", () => {
+        filterPorts(editRouteDestinationInput.value, editPortDestinationSelect, originalEditPortDestinationOptions);
+    });
+
+    // --- FILTER PORTS FUNCTION ---
+    function filterPorts(inputValue, selectElement, originalOptions) {
+        const search = inputValue.toLowerCase().trim();
+
+        // clear current options
+        selectElement.innerHTML = '<option value="">Select Port</option>';
+
+        if (search === '') {
+            originalOptions.forEach(opt => selectElement.appendChild(opt.cloneNode(true)));
+            return;
+        }
+
+        originalOptions.forEach(opt => {
+            const city = opt.dataset.city?.toLowerCase() || '';
+            const terminal = opt.dataset.terminal?.toLowerCase() || '';
+            const text = opt.text.toLowerCase();
+            if (city.includes(search) || terminal.includes(search) || text.includes(search)) {
+                selectElement.appendChild(opt.cloneNode(true));
+            }
+        });
+    }
+
+    // --- FILTER PORTS EVENT LISTENERS ---
+    routeOriginInput.addEventListener('input', () => {
+        filterPorts(routeOriginInput.value, portOriginSelect, originalPortOriginOptions);
+    });
+
+    routeDestinationInput.addEventListener('input', () => {
+        filterPorts(routeDestinationInput.value, portDestinationSelect, originalPortDestinationOptions);
+    });
 
     // --- OPEN MODALS ---
     addBtn.addEventListener("click", () => addModal.style.display = "flex");
@@ -107,7 +184,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const formData = new FormData(addForm);
 
         try {
-            const response = await fetch("/authorized/admin/route_port", {
+            const response = await fetch(addForm.action, {
                 method: "POST",
                 headers: {
                     "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
@@ -115,71 +192,89 @@ document.addEventListener("DOMContentLoaded", function () {
                 },
                 body: formData
             });
+
             const data = await response.json().catch(() => ({}));
 
             if (response.ok && data.status === "success") {
-                showToast(data.message, 'success'); // NEW
-                setTimeout(() => location.reload(), 1500);
+                showToast(data.message, 'success');
+                addForm.reset();
+                addModal.style.display = "none";
+
+                // Append new Route & Port to table dynamically
+                if (data.tableHtml) {
+                    document.querySelector(".rp-table").innerHTML = data.tableHtml;
+                }
+
             } else {
-                showToast(data.message || "Failed to add Route & Port.", 'danger'); // NEW
+                showToast(data.message || "Failed to add Route & Port.", 'danger');
             }
+
         } catch (err) {
-            showToast("Unexpected error: " + err.message, 'danger'); // NEW
+            showToast("Unexpected error: " + err.message, 'danger');
         }
     });
 
-    // --- OPEN EDIT MODAL ---
-    document.querySelectorAll(".editRouteBtn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-            editModal.style.display = "flex";
+    // --- OPEN EDIT MODAL FUNCTION ---
+    function openEditModal(data) {
+        editModal.style.display = "flex";
 
-            document.getElementById("editRoutePortId").value = btn.dataset.id;
+        document.getElementById("editRoutePortId").value = data.route_port_id;
+        document.getElementById("editRouteOrigin").value = data.route_origin;
+        document.getElementById("editRouteDestination").value = data.route_destination;
+        document.getElementById("editPortOriginSelect").value = data.port_origin_id || "";
+        document.getElementById("editPortDestinationSelect").value = data.port_destination_id || "";
+        document.getElementById("editRouteCategoryId").value = data.route_category_id || "";
 
-            document.getElementById("editRouteOrigin").value = btn.dataset.origin;
-            document.getElementById("editRouteDestination").value = btn.dataset.destination;
+        originalFormData = {
+            route_category_id: data.route_category_id,
+            route_origin: data.route_origin,
+            route_destination: data.route_destination,
+            port_origin_id: data.port_origin_id,
+            port_destination_id: data.port_destination_id
+        };
 
-            document.getElementById("editPortOriginName").value = btn.dataset.port_origin_name;
-            document.getElementById("editPortOriginCity").value = btn.dataset.port_origin_city;
-            document.getElementById("editPortOriginProvince").value = btn.dataset.port_origin_province;
+        saveEditBtn.disabled = true;
+        saveEditBtn.style.backgroundColor = "#ccc";
+        saveEditBtn.style.cursor = "not-allowed";
+    }
 
-            document.getElementById("editPortDestinationName").value = btn.dataset.port_destination_name;
-            document.getElementById("editPortDestinationCity").value = btn.dataset.port_destination_city;
-            document.getElementById("editPortDestinationProvince").value = btn.dataset.port_destination_province;
-
-            const routeCategorySelect = document.getElementById("editRouteCategoryId");
-            if (routeCategorySelect) {
-                routeCategorySelect.value = btn.dataset.route_category_id || "";
-            }
-
-            // STORE ORIGINAL VALUES
-            originalFormData = {
-                route_category_id: document.getElementById("editRouteCategoryId").value,
-                route_origin: document.getElementById("editRouteOrigin").value,
-                route_destination: document.getElementById("editRouteDestination").value,
-                port_origin_name: document.getElementById("editPortOriginName").value,
-                port_origin_city: document.getElementById("editPortOriginCity").value,
-                port_origin_province: document.getElementById("editPortOriginProvince").value,
-                port_destination_name: document.getElementById("editPortDestinationName").value,
-                port_destination_city: document.getElementById("editPortDestinationCity").value,
-                port_destination_province: document.getElementById("editPortDestinationProvince").value
-            };
-
-            // disable button initially
-            saveEditBtn.disabled = true;
-            saveEditBtn.style.backgroundColor = "#ccc";
-            saveEditBtn.style.cursor = "not-allowed";
-        });
+    // --- OPEN EDIT MODAL FROM EXISTING BUTTONS ---
+    document.querySelector(".rp-table tbody").addEventListener("click", (e) => {
+        if (e.target.closest(".editRouteBtn")) {
+            const btn = e.target.closest(".editRouteBtn");
+            openEditModal({
+                route_port_id: btn.dataset.id,
+                route_category_id: btn.dataset.route_category_id,
+                route_origin: btn.dataset.route_origin,
+                route_destination: btn.dataset.route_destination,
+                port_origin_id: btn.dataset.port_origin_id,
+                port_destination_id: btn.dataset.port_destination_id
+            });
+        }
     });
 
-    // ✅ DETECT CHANGES (STEP 4)
-    const editInputs = document.querySelectorAll(
-        "#editRoutePortForm input, #editRoutePortForm select"
-    );
-
+    // --- DETECT CHANGES ---
+    const editInputs = document.querySelectorAll("#editRoutePortForm input, #editRoutePortForm select");
     editInputs.forEach(input => {
         input.addEventListener("input", checkIfChanged);
         input.addEventListener("change", checkIfChanged);
     });
+
+    function checkIfChanged() {
+        const currentData = {
+            route_category_id: document.getElementById("editRouteCategoryId").value,
+            route_origin: document.getElementById("editRouteOrigin").value,
+            route_destination: document.getElementById("editRouteDestination").value,
+            port_origin_id: document.getElementById("editPortOriginSelect").value,
+            port_destination_id: document.getElementById("editPortDestinationSelect").value
+        };
+
+        const isChanged = Object.keys(originalFormData).some(key => originalFormData[key] !== currentData[key]);
+
+        saveEditBtn.disabled = !isChanged;
+        saveEditBtn.style.backgroundColor = isChanged ? "#485B8C" : "#ccc";
+        saveEditBtn.style.cursor = isChanged ? "pointer" : "not-allowed";
+    }
 
     // --- UPDATE ROUTE & PORT ---
     editForm.addEventListener("submit", async (e) => {
@@ -189,7 +284,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         try {
             const response = await fetch(`/authorized/admin/route_port/${id}`, {
-                method: "POST", // method spoofing via @method('PUT')
+                method: "POST",
                 headers: {
                     "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
                 },
@@ -199,44 +294,14 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = await response.json().catch(() => ({}));
 
             if (response.ok && data.status === "success") {
-                showToast(data.message, 'success'); // NEW
-                setTimeout(() => location.reload(), 1500); // optional delay
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 1500);
             } else {
-                showToast(data.message || "Failed to update Route & Port.", 'danger'); // NEW       
+                showToast(data.message || "Failed to update Route & Port.", 'danger');
             }
         } catch (err) {
-            showToast("Unexpected error: " + err.message, 'danger'); // NEW
+            showToast("Unexpected error: " + err.message, 'danger');
         }
     });
 
-     // ✅ STEP 5 FUNCTION GOES HERE
-    function checkIfChanged() {
-        const currentData = {
-            route_category_id: document.getElementById("editRouteCategoryId").value,
-            route_origin: document.getElementById("editRouteOrigin").value,
-            route_destination: document.getElementById("editRouteDestination").value,
-            port_origin_name: document.getElementById("editPortOriginName").value,
-            port_origin_city: document.getElementById("editPortOriginCity").value,
-            port_origin_province: document.getElementById("editPortOriginProvince").value,
-            port_destination_name: document.getElementById("editPortDestinationName").value,
-            port_destination_city: document.getElementById("editPortDestinationCity").value,
-            port_destination_province: document.getElementById("editPortDestinationProvince").value
-        };
-
-        const isChanged = Object.keys(originalFormData).some(key => {
-            return originalFormData[key] !== currentData[key];
-        });
-
-        if (isChanged) {
-            // ✅ ENABLE BUTTON
-            saveEditBtn.disabled = false;
-            saveEditBtn.style.backgroundColor = "#485B8C";
-            saveEditBtn.style.cursor = "pointer";
-        } else {
-            // ❌ DISABLE BUTTON
-            saveEditBtn.disabled = true;
-            saveEditBtn.style.backgroundColor = "#ccc";
-            saveEditBtn.style.cursor = "not-allowed";
-        }
-    }
 });

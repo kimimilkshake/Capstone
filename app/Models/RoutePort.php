@@ -13,12 +13,8 @@ class RoutePort extends Model
         'route_code',
         'route_origin',
         'route_destination',
-        'port_origin_name',
-        'port_origin_city',
-        'port_origin_province',
-        'port_destination_name',
-        'port_destination_city',
-        'port_destination_province',
+        'port_origin_id',
+        'port_destination_id',
     ];
 
     // One route_port can be used in many voyages
@@ -35,6 +31,16 @@ class RoutePort extends Model
     public function routeCategory()
     {
         return $this->belongsTo(RouteCategory::class, 'route_category_id', 'route_category_id');
+    }
+
+    public function portOrigin()
+    {
+        return $this->belongsTo(Port::class, 'port_origin_id', 'port_id');
+    }
+
+    public function portDestination()
+    {
+        return $this->belongsTo(Port::class, 'port_destination_id', 'port_id');
     }
 
 }

@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Middle Initial</label>
-                        <input type="text" maxlength="1" class="form-control text-center" name="middle_initial">
+                        <input type="text" maxlength="1" class="form-control" name="middle_initial">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Suffix</label>

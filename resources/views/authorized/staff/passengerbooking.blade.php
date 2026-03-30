@@ -169,7 +169,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Middle Initial</label>
-                    <input type="text" name="passengers[${i}][middle_initial]" class="form-control text-center" maxlength="1">
+                    <input type="text" name="passengers[${i}][middle_initial]" class="form-control" maxlength="1">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Age <span class="text-danger">*</span></label>

@@ -8,6 +8,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Database\Seeders\CargoItemSeeder;
+use Database\Seeders\PortSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -25,6 +26,10 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
+
+        // Check if the database is already seeded
+        $this->call(PortSeeder::class);
+
         // Admin seeders
         DB::table('admin')->insert([
             [
@@ -321,66 +326,70 @@ class DatabaseSeeder extends Seeder
         // Get inserted Route Category IDs
         $baybayId = DB::table('route_category')->where('route_category_name', 'BAYBAY')->value('route_category_id');
         $talibonId = DB::table('route_category')->where('route_category_name', 'TALIBON')->value('route_category_id');
+        
+
+        // Get inserted Port IDs
+        $cebuPortId = DB::table('ports')
+            ->where('terminal_name', 'Pier 2')
+            ->where('port_name', 'Cebu Port')
+            ->where('city', 'Cebu City')
+            ->value('port_id');
+
+        $baybayPortId = DB::table('ports')
+            ->where('port_name', 'Baybay Port')
+            ->value('port_id');
+
+        $talibonPortId = DB::table('ports')
+            ->where('port_name', 'Port of Talibon')
+            ->value('port_id');
+
+        if (!$cebuPortId || !$baybayPortId || !$talibonPortId) {
+            throw new \Exception('Port IDs not found. Check CSV data.');
+        }
 
         // Route and Port seeders
         DB::table('route_port')->insert([
-            [
-                'route_category_id' => $baybayId,
-                'route_code' => 'CEBBAY',
-                'route_origin' => 'Cebu',
-                'route_destination' => 'Baybay',
-                'port_origin_name' => 'Port of Cebu',
-                'port_origin_city' => 'Cebu City',
-                'port_origin_province' => 'Cebu',
-                'port_destination_name' => 'Port of Baybay',
-                'port_destination_city' => 'Baybay City',
-                'port_destination_province' => 'Leyte',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'route_category_id' => $talibonId,
-                'route_code' => 'CEBTAL',
-                'route_origin' => 'Cebu',
-                'route_destination' => 'Talibon',
-                'port_origin_name' => 'Port of Cebu',
-                'port_origin_city' => 'Cebu City',
-                'port_origin_province' => 'Cebu',
-                'port_destination_name' => 'Port of Talibon',
-                'port_destination_city' => 'Talibon',
-                'port_destination_province' => 'Bohol',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'route_category_id' => $baybayId,
-                'route_code' => 'BAYCEB',
-                'route_origin' => 'Baybay',
-                'route_destination' => 'Cebu',
-                'port_origin_name' => 'Port of Baybay',
-                'port_origin_city' => 'Baybay City',
-                'port_origin_province' => 'Leyte',
-                'port_destination_name' => 'Port of Cebu',
-                'port_destination_city' => 'Cebu City',
-                'port_destination_province' => 'Cebu',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'route_category_id' => $talibonId,
-                'route_code' => 'TALCEB',
-                'route_origin' => 'Talibon',
-                'route_destination' => 'Cebu',
-                'port_origin_name' => 'Port of Talibon',
-                'port_origin_city' => 'Talibon',
-                'port_origin_province' => 'Bohol',
-                'port_destination_name' => 'Port of Cebu',
-                'port_destination_city' => 'Cebu City',
-                'port_destination_province' => 'Cebu',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
+        [
+            'route_category_id' => $baybayId,
+            'route_code' => 'CEBBAY',
+            'route_origin' => 'Cebu',
+            'route_destination' => 'Baybay',
+            'port_origin_id' => $cebuPortId,
+            'port_destination_id' => $baybayPortId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+        [
+            'route_category_id' => $talibonId,
+            'route_code' => 'CEBTAL',
+            'route_origin' => 'Cebu',
+            'route_destination' => 'Talibon',
+            'port_origin_id' => $cebuPortId,
+            'port_destination_id' => $talibonPortId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+        [
+            'route_category_id' => $baybayId,
+            'route_code' => 'BAYCEB',
+            'route_origin' => 'Baybay',
+            'route_destination' => 'Cebu',
+            'port_origin_id' => $baybayPortId,
+            'port_destination_id' => $cebuPortId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+        [
+            'route_category_id' => $talibonId,
+            'route_code' => 'TALCEB',
+            'route_origin' => 'Talibon',
+            'route_destination' => 'Cebu',
+            'port_origin_id' => $talibonPortId,
+            'port_destination_id' => $cebuPortId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+    ]);
 
 
         //Vessel seeders
