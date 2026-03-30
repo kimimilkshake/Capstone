@@ -96,6 +96,10 @@
                             color: #0a3d91;
                         }
                     }
+
+                    &.voyage-row--new {
+                        animation: voyageHighlight 3s ease forwards;
+                    }
                 }
             }
         }
@@ -536,4 +540,10 @@
             font-size: 0.9rem;
         }
     }
+}
+
+@keyframes voyageHighlight {
+    0%   { background-color: #d1fae5; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); }
+    60%  { background-color: #d1fae5; }
+    100% { background-color: #f8f9fa; box-shadow: none; }
 }

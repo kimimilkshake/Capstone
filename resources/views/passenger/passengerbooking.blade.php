@@ -191,4 +191,22 @@
     <script src="{{ asset('js/passengerform.js') }}"></script>
 
     @include('components.footer')
+
+    <script>
+        // Lock back button: push a duplicate history entry so pressing back fires
+        // popstate here instead of actually navigating back to the booking type page.
+        (function() {
+            history.pushState(null, '', window.location.href);
+
+            window.addEventListener('popstate', function() {
+                window.location.replace('{{ route('bookingtype') }}');
+            });
+
+            window.addEventListener('pageshow', function(e) {
+                if (e.persisted) {
+                    window.location.replace('{{ route('bookingtype') }}');
+                }
+            });
+        })();
+    </script>
 @endsection

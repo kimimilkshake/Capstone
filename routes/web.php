@@ -74,6 +74,8 @@ Route::get('/passenger/homepage', function () {
 
 // Passenger booking route - show available voyages within 8 days
 Route::get('/passenger/bookingtype', [VoyageBookingController::class, 'index'])->name('bookingtype');
+// API: real-time voyage list for auto-refresh on booking page
+Route::get('/api/voyages', [VoyageBookingController::class, 'apiVoyages'])->name('api.voyages');
 // Passenger Booking Page
 Route::get('/passenger/passengerbooking', [PassengerController::class, 'index'])->name('passengerbooking');
 

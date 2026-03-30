@@ -7,7 +7,7 @@ const proceedBtn = document.getElementById("proceedBtn");
 const bookingTypeRadios = document.getElementsByName("bookingType");
 
 // Parse voyages data from Blade (updated from routes to voyages)
-const voyages = JSON.parse(document.getElementById("voyages-data").textContent);
+let voyages = JSON.parse(document.getElementById("voyages-data").textContent);
 
 let availableDates = [];
 let availableVoyages = []; // Store voyages for selected route
@@ -352,3 +352,165 @@ proceedBtn.addEventListener("click", function () {
 
     window.location.href = url;
 });
+
+// ─── Auto-refresh voyage table every 30 seconds ───────────────────────────────
+(function startVoyagePolling() {
+    const POLL_INTERVAL = 30000; // 30 seconds
+
+    function formatDate(dateStr) {
+        // dateStr: "YYYY-MM-DD"
+        const months = [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+        ];
+        const [, m, d] = dateStr.split("-");
+        return months[parseInt(m, 10) - 1] + " " + d;
+    }
+
+    function formatTime(timeStr) {
+        // timeStr: "HH:MM:SS"
+        const [h, min] = timeStr.split(":");
+        return new Date(
+            2000,
+            0,
+            1,
+            parseInt(h, 10),
+            parseInt(min, 10),
+        ).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function addVoyageRow(voyage) {
+        const tbody = document.querySelector(".voyage-table tbody");
+
+        // Remove "no voyages" placeholder if present
+        const placeholder = tbody.querySelector("tr td[colspan]");
+        if (placeholder) placeholder.closest("tr").remove();
+
+        const tr = document.createElement("tr");
+        tr.className = "voyage-row voyage-row--new";
+        tr.style.cursor = "pointer";
+        tr.dataset.voyageId = voyage.voyage_id;
+        tr.dataset.routeFrom = voyage.route_from;
+        tr.dataset.routeTo = voyage.route_to;
+        tr.dataset.departureDate = voyage.departure_date;
+        tr.dataset.departureTime = voyage.departure_time;
+
+        tr.innerHTML = `
+            <td>${formatDate(voyage.departure_date)}</td>
+            <td>${voyage.route_from} - ${voyage.route_to}</td>
+            <td>${voyage.departure_time ? formatTime(voyage.departure_time) : "-"}</td>
+            <td>${voyage.vessel_name}</td>
+        `;
+
+        tr.addEventListener("click", function () {
+            selectVoyageFromTable(this);
+        });
+
+        // Insert in date/time order
+        const existingRows = Array.from(tbody.querySelectorAll(".voyage-row"));
+        const insertBefore = existingRows.find((row) => {
+            const rowDate = row.dataset.departureDate || "";
+            const rowTime = row.dataset.departureTime || "";
+            return (
+                voyage.departure_date + voyage.departure_time <
+                rowDate + rowTime
+            );
+        });
+        insertBefore
+            ? tbody.insertBefore(tr, insertBefore)
+            : tbody.appendChild(tr);
+
+        // Brief highlight to draw attention to new row
+        setTimeout(() => tr.classList.remove("voyage-row--new"), 3000);
+    }
+
+    function syncOriginDropdown(newVoyages) {
+        const origins = [...new Set(newVoyages.map((v) => v.route_from))];
+        origins.forEach((origin) => {
+            if (
+                !routeFromSelect.querySelector(
+                    `option[value="${CSS.escape(origin)}"]`,
+                )
+            ) {
+                const opt = document.createElement("option");
+                opt.value = opt.textContent = origin;
+                routeFromSelect.appendChild(opt);
+            }
+        });
+    }
+
+    async function pollVoyages() {
+        try {
+            const response = await fetch("/api/voyages", {
+                headers: {
+                    Accept: "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+            });
+            if (!response.ok) return;
+
+            const fresh = await response.json();
+            const knownIds = new Set(voyages.map((v) => v.voyage_id));
+            const added = fresh.filter((v) => !knownIds.has(v.voyage_id));
+
+            if (added.length > 0) {
+                added.forEach((v) => {
+                    voyages.push(v);
+                    addVoyageRow(v);
+                });
+                syncOriginDropdown(added);
+                showToast(
+                    added.length === 1
+                        ? "1 new voyage is now available."
+                        : `${added.length} new voyages are now available.`,
+                    "info",
+                );
+            }
+
+            // Also remove voyages that are no longer in the list (departed / removed by admin)
+            const freshIds = new Set(fresh.map((v) => v.voyage_id));
+            const removed = voyages.filter((v) => !freshIds.has(v.voyage_id));
+            if (removed.length > 0) {
+                removed.forEach((v) => {
+                    const row = document.querySelector(
+                        `.voyage-row[data-voyage-id="${v.voyage_id}"]`,
+                    );
+                    if (row) row.remove();
+                });
+                voyages = voyages.filter((v) => freshIds.has(v.voyage_id));
+
+                // If selected voyage was removed, reset the form
+                const selectedOption =
+                    departureTimeSelect.options[
+                        departureTimeSelect.selectedIndex
+                    ];
+                if (
+                    selectedOption &&
+                    removed.some(
+                        (v) => v.voyage_id == selectedOption.dataset.voyageId,
+                    )
+                ) {
+                    showToast(
+                        "Your selected voyage is no longer available. Please choose another.",
+                        "danger",
+                    );
+                    resetSelection();
+                }
+            }
+        } catch (e) {
+            // Silent fail — network issues should not interrupt the user
+        }
+    }
+
+    setInterval(pollVoyages, POLL_INTERVAL);
+})();
