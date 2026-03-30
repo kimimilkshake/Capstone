@@ -127,8 +127,8 @@
     const routePorts = {
       @foreach($route_port as $rp)
           "{{ $rp->route_port_id }}": {
-              origin: "{{ $rp->port_origin_name }}, {{ $rp->port_origin_city }}, {{ $rp->port_origin_province }}",
-              destination: "{{ $rp->port_destination_name }}, {{ $rp->port_destination_city }}, {{ $rp->port_destination_province }}"
+              origin: "{{ $rp->portOrigin?->terminal_name ?? '' }}, {{ $rp->portOrigin?->city ?? '' }}, {{ $rp->portOrigin?->province ?? '' }}",
+              destination: "{{ $rp->portDestination?->terminal_name ?? '' }}, {{ $rp->portDestination?->city ?? '' }}, {{ $rp->portDestination?->province ?? '' }}"
           },
       @endforeach
     };

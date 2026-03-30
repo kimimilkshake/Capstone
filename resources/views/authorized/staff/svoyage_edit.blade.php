@@ -199,6 +199,39 @@
     const etdInput = document.getElementById('voyage_estimated_TD');
     const etaInput = document.getElementById('voyage_estimated_TA');
 
+    const routePorts = {
+        @foreach($route_port as $rp)
+            "{{ $rp->route_port_id }}": {
+                origin: "{{ $rp->portOrigin?->terminal_name ?? '' }}, {{ $rp->portOrigin?->city ?? '' }}, {{ $rp->portOrigin?->province ?? '' }}",
+                destination: "{{ $rp->portDestination?->terminal_name ?? '' }}, {{ $rp->portDestination?->city ?? '' }}, {{ $rp->portDestination?->province ?? '' }}"
+            },
+        @endforeach
+    };
+
+    function updatePortDisplay(routePortId) {
+        const originInput = document.getElementById('port_origin_info');
+        const destinationInput = document.getElementById('port_destination_info');
+
+        if (routePorts[routePortId]) {
+            originInput.value = routePorts[routePortId].origin;
+            destinationInput.value = routePorts[routePortId].destination;
+        } else {
+            originInput.value = '';
+            destinationInput.value = '';
+        }
+    }
+
+    const routeSelect = document.getElementById('route_port_id');
+
+    routeSelect.addEventListener('change', function () {
+        updatePortDisplay(this.value);
+    });
+
+    window.addEventListener('DOMContentLoaded', function () {
+        updatePortDisplay(routeSelect.value);
+    });
+
+
     // normalize date (remove time)
     function normalizeDate(d) {
         const date = new Date(d);

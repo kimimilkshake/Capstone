@@ -133,7 +133,9 @@ class VoyageController extends Controller
         $vessels = Vessel::where('vessel_status', 'Active')
                         ->orderBy('vessel_name')
                         ->get();
-        $route_port = RoutePort::orderBy('route_origin')
+         // Load route_port along with portOrigin and portDestination relationships
+        $route_port = RoutePort::with(['portOrigin', 'portDestination'])
+                        ->orderBy('route_origin')
                         ->orderBy('route_destination')
                         ->get();
 
