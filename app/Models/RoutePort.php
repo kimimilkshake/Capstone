@@ -43,4 +43,14 @@ class RoutePort extends Model
         return $this->belongsTo(Port::class, 'port_destination_id', 'port_id');
     }
 
+    public function getPortOriginNameAttribute(): ?string
+    {
+        return $this->portOrigin?->port_name;
+    }
+
+    public function getPortDestinationNameAttribute(): ?string
+    {
+        return $this->portDestination?->port_name;
+    }
+
 }

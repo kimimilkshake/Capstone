@@ -1,27 +1,26 @@
-@extends('layouts.app')
-@section('page-title', 'VOYAGES')
-@section('content')
-  @include('components.authHeader')
-  @include('components.staff_nav')
+<?php $__env->startSection('page-title', 'VOYAGES'); ?>
+<?php $__env->startSection('content'); ?>
+  <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+  <?php echo $__env->make('components.staff_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
   <div class="staff-body">
 
     <div class="search-add-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
-      <form class="search-bar" action="{{ route('staff.voyage_list') }}" method="GET" style="flex: 1;">
+      <form class="search-bar" action="<?php echo e(route('staff.voyage_list')); ?>" method="GET" style="flex: 1;">
           <input 
               type="text" 
               name="search" 
               placeholder="Search by name, code, route, vessel, status..." 
-              value="{{ request('search') }}">
+              value="<?php echo e(request('search')); ?>">
           <input 
               type="date" 
               name="start_date" 
-              value="{{ request('start_date') }}"
+              value="<?php echo e(request('start_date')); ?>"
               style="margin-left:10px;"
               placeholder="Start date">
           <input 
               type="date" 
               name="end_date" 
-              value="{{ request('end_date') }}"
+              value="<?php echo e(request('end_date')); ?>"
               style="margin-left:10px;"
               placeholder="End date">
           <button type="submit">
@@ -46,57 +45,59 @@
         </tr>
       </thead>
       <tbody>
-        @forelse($voyages as $voyage)
+        <?php $__empty_1 = true; $__currentLoopData = $voyages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $voyage): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
           <tr>
-            <td>{{ $voyage->voyage_code }}</td>
+            <td><?php echo e($voyage->voyage_code); ?></td>
             <td>
-              {{ $voyage->routePort->route_origin }} → 
-              {{ $voyage->routePort->route_destination }}
+              <?php echo e($voyage->routePort->route_origin); ?> → 
+              <?php echo e($voyage->routePort->route_destination); ?>
+
             </td>
-            <td>{{ \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('M j, Y, D') }}</td>
-            <td>{{ \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:iA') }}</td>
-            <td>{{ \Carbon\Carbon::parse($voyage->voyage_arrival_date)->format('M j, Y, D') }}</td>
-            <td>{{ \Carbon\Carbon::parse($voyage->voyage_estimated_TA)->format('g:iA') }}</td>
-            <td>{{ $voyage->passenger_tickets_count }}/{{ $voyage->vessel->vessel_total_passenger_capacity }}</td>
-            <td>{{ $voyage->vessel->vessel_name}}</td>
-            <td>{{ $voyage->voyage_status }}</td>
+            <td><?php echo e(\Carbon\Carbon::parse($voyage->voyage_departure_date)->format('M j, Y, D')); ?></td>
+            <td><?php echo e(\Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:iA')); ?></td>
+            <td><?php echo e(\Carbon\Carbon::parse($voyage->voyage_arrival_date)->format('M j, Y, D')); ?></td>
+            <td><?php echo e(\Carbon\Carbon::parse($voyage->voyage_estimated_TA)->format('g:iA')); ?></td>
+            <td><?php echo e($voyage->passenger_tickets_count); ?>/<?php echo e($voyage->vessel->vessel_total_passenger_capacity); ?></td>
+            <td><?php echo e($voyage->vessel->vessel_name); ?></td>
+            <td><?php echo e($voyage->voyage_status); ?></td>
             <td>
-              @if($voyage->voyage_status === 'At Sea')
+              <?php if($voyage->voyage_status === 'At Sea'): ?>
                   <a href="#" class="link-btn disabled-voyage" style="opacity: 0.5; cursor: not-allowed;" title="Cannot edit while At Sea">
                       <i class="fa fa-pencil me-1"></i>
                   </a>
-              @else
-                  <a href="{{ route('staff.voyage_edit', $voyage->voyage_id) }}" class="link-btn">
+              <?php else: ?>
+                  <a href="<?php echo e(route('staff.voyage_edit', $voyage->voyage_id)); ?>" class="link-btn">
                       <i class="fa fa-pencil me-1"></i>
                   </a>
-              @endif
-              <a href="{{ route('staff.manifest', $voyage->voyage_id) }}" title="View Manifest" class="editRouteBtn link-btn"><i class="fa-solid fa-file me-1"></i></a>
+              <?php endif; ?>
+              <a href="<?php echo e(route('staff.manifest', $voyage->voyage_id)); ?>" title="View Manifest" class="editRouteBtn link-btn"><i class="fa-solid fa-file me-1"></i></a>
               <button type="button" title="Send Message" class="editRouteBtn link-btn open-sms-modal"
-                data-voyage-id="{{ $voyage->voyage_id }}"
-                data-route-origin="{{ optional($voyage->routePort)->route_origin ?? '-' }}"
-                data-route-destination="{{ optional($voyage->routePort)->route_destination ?? '-' }}"
-                data-departure-date="{{ $voyage->voyage_departure_date }}"
-                data-etd="{{ $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('h:i A') : '-' }}"
+                data-voyage-id="<?php echo e($voyage->voyage_id); ?>"
+                data-route-origin="<?php echo e(optional($voyage->routePort)->route_origin ?? '-'); ?>"
+                data-route-destination="<?php echo e(optional($voyage->routePort)->route_destination ?? '-'); ?>"
+                data-departure-date="<?php echo e($voyage->voyage_departure_date); ?>"
+                data-etd="<?php echo e($voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('h:i A') : '-'); ?>"
                 style="border:none; background:transparent; padding:0; cursor:pointer;">
                 <i class="fa-solid fa-message"></i>
               </button>
             </td>
           </tr>
-        @empty
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
           <tr>
             <td colspan="9" class="text-center">No voyages found.</td>
           </tr>
-        @endforelse
+        <?php endif; ?>
       </tbody>
     </table>
 
-    {{-- Pagination links --}}
+    
     <div class="mt-3">
-      {{ $voyages->appends(['search' => request('search')])->links('pagination::bootstrap-5') }}
+      <?php echo e($voyages->appends(['search' => request('search')])->links('pagination::bootstrap-5')); ?>
+
     </div>
   </div>
 
-  {{-- SMS Modal Overlay --}}
+  
   <div id="smsModalOverlay" class="sms-modal-overlay" aria-hidden="true">
     <div class="sms-modal-panel">
       <div class="sms-modal-header">
@@ -104,8 +105,8 @@
         <button type="button" class="sms-modal-close" id="closeSmsModal" aria-label="Close">&times;</button>
       </div>
       <div class="sms-modal-body">
-        <form method="POST" action="{{ route('staff.semaphore.send') }}" id="smsForm">
-          @csrf
+        <form method="POST" action="<?php echo e(route('staff.semaphore.send')); ?>" id="smsForm">
+          <?php echo csrf_field(); ?>
           <input type="hidden" name="voyage_id" id="smsVoyageId" value="">
 
           <div class="sms-template-row">
@@ -115,12 +116,12 @@
           </div>
 
           <label for="message" class="sms-label">Message:</label>
-          <textarea id="message" name="message" class="sms-textarea" rows="5" required>{{ old('message') }}</textarea>
+          <textarea id="message" name="message" class="sms-textarea" rows="5" required><?php echo e(old('message')); ?></textarea>
           <button type="submit" class="sms-button">Send Message</button>
         </form>
       </div>
 
-      {{-- Confirm dialog --}}
+      
       <div id="smsConfirmModal" class="confirm-dialog-overlay" aria-hidden="true">
         <div class="confirm-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="smsConfirmModalLabel">
           <div class="confirm-dialog-header">
@@ -137,7 +138,7 @@
         </div>
       </div>
 
-      {{-- Loading overlay --}}
+      
       <div id="smsLoadingOverlay" class="confirm-dialog-overlay" aria-hidden="true">
         <div class="confirm-dialog-panel loading-dialog-panel" role="status" aria-live="polite">
           <div class="loading-spinner" aria-hidden="true"></div>
@@ -509,4 +510,5 @@
     });
   </script>
 
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/authorized/staff/svoyage_list.blade.php ENDPATH**/ ?>

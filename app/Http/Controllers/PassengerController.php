@@ -25,7 +25,7 @@ class PassengerController extends Controller
         $type = $request->query('type'); // 👈 booking type from radio buttons
 
         // Get voyage information from voyage table with relationships
-        $voyage = Voyage::with(['vessel.accommodations', 'routePort'])
+        $voyage = Voyage::with(['vessel.accommodations', 'routePort.portOrigin'])
             ->where('voyage_id', $voyageId)
             ->first();
 
@@ -239,18 +239,6 @@ class PassengerController extends Controller
                 ]);
             }
 
-            // Create notification for new cargo booking
-            $senderName = $request->sender_firstname . ' ' . $request->sender_lastname;
-            Notification::create([
-                'cargo_receipt_id' => null,
-                'payment_id' => null,
-                'booking_ref_no' => $bookingId,
-                'notification_message' => "New cargo booking #{$bookingId} from {$senderName} is pending review",
-                'notification_type' => 'cargo booking approval',
-                'notification_status' => 'approved',
-                'notification_created' => now(),
-            ]);
-
             DB::commit();
             return redirect()->route('cargobooking.show', ['booking_ref_no' => $bookingId]);
         } catch (\Exception $e) {
@@ -280,10 +268,18 @@ class PassengerController extends Controller
             ->get();
 
         $booking = Booking::where('booking_ref_no', $bookingRef)->first();
+
+        if (!$booking || in_array(strtolower($booking->booking_status), ['canceled', 'cancelled', 'confirmed'])) {
+            return redirect()->route('bookingtype')->with('info', 'This booking is no longer available.');
+        }
+
         $sender = \DB::table('sender')->where('sender_id', $booking->sender_id)->first();
         $consignee = \DB::table('consignee')->where('consignee_id', $booking->consignee_id)->first();
 
-        return view('passenger.cargobooking_confirm', compact('booking', 'sender', 'consignee', 'cargoItems'));
+        return response()
+            ->view('passenger.cargobooking_confirm', compact('booking', 'sender', 'consignee', 'cargoItems'))
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate')
+            ->header('Pragma', 'no-cache');
     }
 
 
@@ -295,13 +291,32 @@ class PassengerController extends Controller
             'updated_at' => now(),
         ]);
 
-        return redirect()->route('cargobooking')->with('success', 'Cargo booking canceled.');
+        // Archive the pending-review notification so admin/staff no longer see it
+        Notification::where('booking_ref_no', $bookingRef)
+            ->whereNotIn('notification_status', ['archived'])
+            ->update(['notification_status' => 'archived']);
+
+        return redirect()->route('bookingtype')->with('success', 'Cargo booking canceled.');
     }
 
 
-    // Step 4: Finalize booking (staff approval)
+    // Step 4: Finalize booking — user clicked Proceed on the confirm page
     public function finalizeCargo($bookingId)
     {
+        $booking = Booking::with('sender')->where('booking_ref_no', $bookingId)->first();
+
+        if ($booking && strtolower($booking->booking_status) === 'pending') {
+            $senderName = $booking->sender ? $booking->sender->sender_name : 'Customer';
+            Notification::create([
+                'cargo_receipt_id' => null,
+                'payment_id' => null,
+                'booking_ref_no' => $bookingId,
+                'notification_message' => "New cargo booking #{$bookingId} from {$senderName} is pending review",
+                'notification_type' => 'cargo booking approval',
+                'notification_status' => 'approved',
+                'notification_created' => now(),
+            ]);
+        }
 
         return redirect()->route('cargobooking.success')->with('success', 'Cargo booking submitted!');
     }

@@ -10,7 +10,8 @@
 
             <div class="card-body">
                 <h6>Booking Reference:
-                    <strong>{{ $booking->booking_code }}</strong></h6>
+                    <strong>{{ $booking->booking_code }}</strong>
+                </h6>
                 <p>Status: <strong>{{ $booking->booking_status }}</strong></p>
 
                 <hr>
@@ -50,27 +51,27 @@
                         </tr>
                     </thead>
                     <tbody>
-                    @php 
-                    $totalExpense = 0; @endphp
-
-                    @foreach ($cargoItems as $item)
                         @php
-                        
-                            $withMeasurement = strtolower(trim($item->with_measurement ?? 'yes'));
-                            $freight = (float) ($item->freight ?? 0);
-                            $quantity = (int) ($item->quantity ?? 0);
-                            $cbm = (float) ($item->cbm ?? 0);
+                        $totalExpense = 0; @endphp
 
-                            if ($withMeasurement === 'no') {
-                                $subtotal = $freight * $cbm * $quantity;
-                                $rateDisplay = '₱' . number_format($freight, 2) . ' / CBM';
-                            } else {
-                                $subtotal = $freight * $quantity;
-                                $rateDisplay = '₱' . number_format($freight, 2) . ' / qty';
-                            }
+                        @foreach ($cargoItems as $item)
+                            @php
 
-                            $totalExpense += $subtotal;
-                        @endphp
+                                $withMeasurement = strtolower(trim($item->with_measurement ?? 'yes'));
+                                $freight = (float) ($item->freight ?? 0);
+                                $quantity = (int) ($item->quantity ?? 0);
+                                $cbm = (float) ($item->cbm ?? 0);
+
+                                if ($withMeasurement === 'no') {
+                                    $subtotal = $freight * $cbm * $quantity;
+                                    $rateDisplay = '₱' . number_format($freight, 2) . ' / CBM';
+                                } else {
+                                    $subtotal = $freight * $quantity;
+                                    $rateDisplay = '₱' . number_format($freight, 2) . ' / qty';
+                                }
+
+                                $totalExpense += $subtotal;
+                            @endphp
                             <tr>
                                 <td>{{ $item->quantity }}</td>
                                 <td>{{ $item->cargo_classification_name ?? 'N/A' }}</td>
@@ -109,6 +110,27 @@
                         </form>
                     @endif
                 </div>
+            </div>
+        </div>
+    </div>
 
-                @include('components.footer')
-            @endsection
+    @include('components.footer')
+
+    <script>
+        // Lock back button: push a duplicate history entry so pressing back fires
+        // popstate here instead of actually navigating back to the form.
+        (function() {
+            history.pushState(null, '', window.location.href);
+
+            window.addEventListener('popstate', function() {
+                window.location.replace('{{ route('bookingtype') }}');
+            });
+
+            window.addEventListener('pageshow', function(e) {
+                if (e.persisted) {
+                    window.location.replace('{{ route('bookingtype') }}');
+                }
+            });
+        })();
+    </script>
+@endsection

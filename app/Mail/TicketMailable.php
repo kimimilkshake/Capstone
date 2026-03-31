@@ -75,7 +75,7 @@ class TicketMailable extends Mailable
             if ($this->voyage) {
                 // Load vessel and route details
                 $this->vessel = DB::table('vessel')->where('vessel_id', $this->voyage->vessel_id)->first();
-                $this->route = DB::table('route_port')->where('route_port_id', $this->voyage->route_port_id)->first();
+                $this->route = \App\Models\RoutePort::with(['portOrigin', 'portDestination'])->find($this->voyage->route_port_id);
             }
         }
     }

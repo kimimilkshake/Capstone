@@ -16,7 +16,8 @@
                     <div class="alert alert-danger">{{ session('error') }}</div>
                 @endif
 
-                <form id="passengerCargoForm" action="{{ route('cargobooking.confirm') }}" method="POST" enctype="multipart/form-data" novalidate>
+                <form id="passengerCargoForm" action="{{ route('cargobooking.confirm') }}" method="POST"
+                    enctype="multipart/form-data" novalidate>
                     @csrf
 
                     <div class="row">
@@ -38,8 +39,10 @@
                             <div class="mb-2">
                                 <label class="form-label">First Name <span class="text-danger">*</span></label>
                                 <div class="input-group has-validation">
-                                    <input type="text" name="sender_firstname" class="form-control required-field" required>
-                                    <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                    <input type="text" name="sender_firstname" class="form-control required-field"
+                                        required>
+                                    <span class="input-group-text error-icon"
+                                        style="display:none; background-color: #f8d7da;">
                                         <i class="bi bi-exclamation-circle-fill text-danger"></i>
                                     </span>
                                 </div>
@@ -48,8 +51,10 @@
                             <div class="mb-2">
                                 <label class="form-label">Last Name <span class="text-danger">*</span></label>
                                 <div class="input-group has-validation">
-                                    <input type="text" name="sender_lastname" class="form-control required-field" required>
-                                    <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                    <input type="text" name="sender_lastname" class="form-control required-field"
+                                        required>
+                                    <span class="input-group-text error-icon"
+                                        style="display:none; background-color: #f8d7da;">
                                         <i class="bi bi-exclamation-circle-fill text-danger"></i>
                                     </span>
                                 </div>
@@ -58,8 +63,10 @@
                             <div class="mb-2">
                                 <label class="form-label">Contact Number <span class="text-danger">*</span></label>
                                 <div class="input-group has-validation">
-                                    <input type="text" name="sender_contact" class="form-control required-field" required>
-                                    <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                    <input type="text" name="sender_contact" class="form-control required-field"
+                                        required>
+                                    <span class="input-group-text error-icon"
+                                        style="display:none; background-color: #f8d7da;">
                                         <i class="bi bi-exclamation-circle-fill text-danger"></i>
                                     </span>
                                 </div>
@@ -69,7 +76,8 @@
                                 <label class="form-label">Email Address <span class="text-danger">*</span></label>
                                 <div class="input-group has-validation">
                                     <input type="email" name="sender_email" class="form-control required-field" required>
-                                    <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                    <span class="input-group-text error-icon"
+                                        style="display:none; background-color: #f8d7da;">
                                         <i class="bi bi-exclamation-circle-fill text-danger"></i>
                                     </span>
                                 </div>
@@ -84,8 +92,10 @@
                             <div class="mb-2">
                                 <label class="form-label">First Name <span class="text-danger">*</span></label>
                                 <div class="input-group has-validation">
-                                    <input type="text" name="consignee_firstname" class="form-control required-field" required>
-                                    <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                    <input type="text" name="consignee_firstname" class="form-control required-field"
+                                        required>
+                                    <span class="input-group-text error-icon"
+                                        style="display:none; background-color: #f8d7da;">
                                         <i class="bi bi-exclamation-circle-fill text-danger"></i>
                                     </span>
                                 </div>
@@ -94,8 +104,10 @@
                             <div class="mb-2">
                                 <label class="form-label">Last Name <span class="text-danger">*</span></label>
                                 <div class="input-group has-validation">
-                                    <input type="text" name="consignee_lastname" class="form-control required-field" required>
-                                    <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                    <input type="text" name="consignee_lastname" class="form-control required-field"
+                                        required>
+                                    <span class="input-group-text error-icon"
+                                        style="display:none; background-color: #f8d7da;">
                                         <i class="bi bi-exclamation-circle-fill text-danger"></i>
                                     </span>
                                 </div>
@@ -104,8 +116,10 @@
                             <div class="mb-2">
                                 <label class="form-label">Contact Number <span class="text-danger">*</span></label>
                                 <div class="input-group has-validation">
-                                    <input type="text" name="consignee_contact" class="form-control required-field" required>
-                                    <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                    <input type="text" name="consignee_contact" class="form-control required-field"
+                                        required>
+                                    <span class="input-group-text error-icon"
+                                        style="display:none; background-color: #f8d7da;">
                                         <i class="bi bi-exclamation-circle-fill text-danger"></i>
                                     </span>
                                 </div>
@@ -119,43 +133,50 @@
                         <div class="col-md-6 mb-3">
                             <h6 class="fw-bold">Cargo Information</h6>
 
-                                <div class="mb-3 d-flex align-items-center gap-3">
-                                    <label class="form-label mb-0">No. of Cargo <span class="text-danger">*</span></label>
-                                    <input type="number" name="no_of_cargo" id="no_of_cargo" class="form-control form-control-sm" min="1" max="5" value="1" style="max-width:120px;">
-                                    <small class="text-muted mb-0">Maximum 5 items</small>
-                                </div>
+                            <div class="mb-3 d-flex align-items-center gap-3">
+                                <label class="form-label mb-0">No. of Cargo <span class="text-danger">*</span></label>
+                                <input type="number" name="no_of_cargo" id="no_of_cargo"
+                                    class="form-control form-control-sm" min="1" max="5" value="1"
+                                    style="max-width:120px;">
+                                <small class="text-muted mb-0">Maximum 5 items</small>
+                            </div>
 
-                                <div id="cargo-items-container">
+                            <div id="cargo-items-container">
 
                                 <div class="cargo-item border rounded p-3 mb-3">
 
-                                <!-- Classification + Description in one row -->
+                                    <!-- Classification + Description in one row -->
                                     <div class="mb-3 row gx-2">
                                         <div class="col-6">
                                             <label class="form-label">Classification <span
                                                     class="text-danger">*</span></label>
                                             <div class="input-group has-validation">
-                                                <select name="cargo_classification[]" class="form-control select2 cargo-classification required-field">
+                                                <select name="cargo_classification[]"
+                                                    class="form-control select2 cargo-classification required-field">
                                                     <option value="">-- Select Classification --</option>
-                                                    @foreach($cargoClassifications as $classification)
+                                                    @foreach ($cargoClassifications as $classification)
                                                         <option value="{{ $classification->cargo_classification_id }}">
                                                             {{ $classification->cargo_classification_name }}
                                                         </option>
                                                     @endforeach
                                                 </select>
-                                                <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                                <span class="input-group-text error-icon"
+                                                    style="display:none; background-color: #f8d7da;">
                                                     <i class="bi bi-exclamation-circle-fill text-danger"></i>
                                                 </span>
                                             </div>
-                                            <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
+                                            <small class="error-message text-danger d-block mt-1"
+                                                style="display:none;"></small>
                                         </div>
                                         <div class="col-6">
-                                            <label class="form-label">Description <span class="text-danger">*</span></label>
+                                            <label class="form-label">Description <span
+                                                    class="text-danger">*</span></label>
                                             <div class="input-group has-validation">
-                                                <select name="cargo_item_id[]" class="form-control select2 cargo-description required-field">
+                                                <select name="cargo_item_id[]"
+                                                    class="form-control select2 cargo-description required-field">
                                                     <option value="">-- Select Description --</option>
-                                                    @foreach($cargoItems->sortBy('cargo_item_description') as $cargo)
-                                                            @if($cargo->route_category_id == ($voyage->routePort->route_category_id ?? null))
+                                                    @foreach ($cargoItems->sortBy('cargo_item_description') as $cargo)
+                                                        @if ($cargo->route_category_id == ($voyage->routePort->route_category_id ?? null))
                                                             <option value="{{ $cargo->cargo_item_id }}"
                                                                 data-route-category="{{ $cargo->route_category_id ?? '' }}"
                                                                 data-classification="{{ $cargo->cargo_item_classification ?? '' }}"
@@ -173,11 +194,13 @@
                                                         @endif
                                                     @endforeach
                                                 </select>
-                                                <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                                <span class="input-group-text error-icon"
+                                                    style="display:none; background-color: #f8d7da;">
                                                     <i class="bi bi-exclamation-circle-fill text-danger"></i>
                                                 </span>
                                             </div>
-                                            <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
+                                            <small class="error-message text-danger d-block mt-1"
+                                                style="display:none;"></small>
                                         </div>
                                     </div>
 
@@ -186,85 +209,104 @@
                                         <div class="flex-fill">
                                             <label class="form-label">Quantity <span class="text-danger">*</span></label>
                                             <div class="input-group has-validation">
-                                                <input type="number" name="cargo_quantity[]" class="form-control required-field"
-                                                    placeholder="Quantity" min="1" required>
-                                                <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                                <input type="number" name="cargo_quantity[]"
+                                                    class="form-control required-field" placeholder="Quantity"
+                                                    min="1" required>
+                                                <span class="input-group-text error-icon"
+                                                    style="display:none; background-color: #f8d7da;">
                                                     <i class="bi bi-exclamation-circle-fill text-danger"></i>
                                                 </span>
                                             </div>
-                                            <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
+                                            <small class="error-message text-danger d-block mt-1"
+                                                style="display:none;"></small>
                                         </div>
                                         <div class="flex-fill">
-                                            <label class="form-label">Total Weight (kg) <span class="text-danger">*</span></label>
+                                            <label class="form-label">Total Weight (kg) <span
+                                                    class="text-danger">*</span></label>
                                             <div class="input-group has-validation">
-                                                <input type="number" name="cargo_weight[]" class="form-control required-field"
-                                                    placeholder="Weight" step="0.01" min="0" required>
-                                                <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
+                                                <input type="number" name="cargo_weight[]"
+                                                    class="form-control required-field" placeholder="Weight"
+                                                    step="0.01" min="0" required>
+                                                <span class="input-group-text error-icon"
+                                                    style="display:none; background-color: #f8d7da;">
                                                     <i class="bi bi-exclamation-circle-fill text-danger"></i>
                                                 </span>
                                             </div>
-                                            <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
+                                            <small class="error-message text-danger d-block mt-1"
+                                                style="display:none;"></small>
                                         </div>
                                     </div>
 
                                     <!-- Cargo Dimensions (Always Visible) -->
                                     <div class="cargo-dimensions-block">
-                                        <label class="form-label">Cargo Dimensions <span class="text-danger">*</span></label>
+                                        <label class="form-label">Cargo Dimensions <span
+                                                class="text-danger">*</span></label>
                                         <div class="d-flex gap-2 align-items-end mb-3">
-                                        <div class="flex-fill">
-                                            <label class="form-label small">Length <span
-                                                    class="text-danger">*</span></label>
-                                            <div class="input-group has-validation">
-                                                <input type="number" name="cargo_length[]" class="form-control dimension"
-                                                    placeholder="Length" step="0.01" min="0" required>
-                                                <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
-                                                    <i class="bi bi-exclamation-circle-fill text-danger"></i>
-                                                </span>
+                                            <div class="flex-fill">
+                                                <label class="form-label small">Length <span
+                                                        class="text-danger">*</span></label>
+                                                <div class="input-group has-validation">
+                                                    <input type="number" name="cargo_length[]"
+                                                        class="form-control dimension" placeholder="Length"
+                                                        step="0.01" min="0" required>
+                                                    <span class="input-group-text error-icon"
+                                                        style="display:none; background-color: #f8d7da;">
+                                                        <i class="bi bi-exclamation-circle-fill text-danger"></i>
+                                                    </span>
+                                                </div>
+                                                <!-- Removed measurement range display -->
+                                                <small class="error-message text-danger d-block mt-1"
+                                                    style="display:none;"></small>
                                             </div>
-                                            <!-- Removed measurement range display -->
-                                            <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
-                                        </div>
-                                        <div class="flex-fill">
-                                            <label class="form-label small">Width <span
-                                                    class="text-danger">*</span></label>
-                                            <div class="input-group has-validation">
-                                                <input type="number" name="cargo_width[]" class="form-control dimension"
-                                                    placeholder="Width" step="0.01" min="0" required>
-                                                <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
-                                                    <i class="bi bi-exclamation-circle-fill text-danger"></i>
-                                                </span>
-                                            </div>
+                                            <div class="flex-fill">
+                                                <label class="form-label small">Width <span
+                                                        class="text-danger">*</span></label>
+                                                <div class="input-group has-validation">
+                                                    <input type="number" name="cargo_width[]"
+                                                        class="form-control dimension" placeholder="Width" step="0.01"
+                                                        min="0" required>
+                                                    <span class="input-group-text error-icon"
+                                                        style="display:none; background-color: #f8d7da;">
+                                                        <i class="bi bi-exclamation-circle-fill text-danger"></i>
+                                                    </span>
+                                                </div>
 
-                                            <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
-                                        </div>
-                                        <div class="flex-fill">
-                                            <label class="form-label small">Height <span
-                                                    class="text-danger">*</span></label>
-                                            <div class="input-group has-validation">
-                                                <input type="number" name="cargo_height[]" class="form-control dimension"
-                                                    placeholder="Height" step="0.01" min="0" required>
-                                                <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da;">
-                                                    <i class="bi bi-exclamation-circle-fill text-danger"></i>
-                                                </span>
+                                                <small class="error-message text-danger d-block mt-1"
+                                                    style="display:none;"></small>
                                             </div>
+                                            <div class="flex-fill">
+                                                <label class="form-label small">Height <span
+                                                        class="text-danger">*</span></label>
+                                                <div class="input-group has-validation">
+                                                    <input type="number" name="cargo_height[]"
+                                                        class="form-control dimension" placeholder="Height"
+                                                        step="0.01" min="0" required>
+                                                    <span class="input-group-text error-icon"
+                                                        style="display:none; background-color: #f8d7da;">
+                                                        <i class="bi bi-exclamation-circle-fill text-danger"></i>
+                                                    </span>
+                                                </div>
 
-                                            <small class="error-message text-danger d-block mt-1" style="display:none;"></small>
+                                                <small class="error-message text-danger d-block mt-1"
+                                                    style="display:none;"></small>
+                                            </div>
+                                            <div class="flex-fill">
+                                                <label class="form-label small">Unit</label>
+                                                <select name="measurement_unit[]" class="form-select unitSelect">
+                                                    @foreach ($measurementUnits as $measurementUnit)
+                                                        <option
+                                                            value="{{ $measurementUnit->measurement_unit_abbreviation ?: 'cm' }}">
+                                                            {{ $measurementUnit->measurement_unit_abbreviation ?: 'cm' }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="flex-fill">
+                                                <label class="form-label small">CBM</label>
+                                                <input type="text" class="form-control cbm-output" readonly
+                                                    placeholder="0.0000">
+                                            </div>
                                         </div>
-                                        <div class="flex-fill">
-                                            <label class="form-label small">Unit</label>
-                                            <select name="measurement_unit[]" class="form-select unitSelect">
-                                                @foreach($measurementUnits as $measurementUnit)
-                                                    <option value="{{ $measurementUnit->measurement_unit_abbreviation ?: 'cm' }}">
-                                                        {{ $measurementUnit->measurement_unit_abbreviation ?: 'cm' }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="flex-fill">
-                                            <label class="form-label small">CBM</label>
-                                            <input type="text" class="form-control cbm-output" readonly placeholder="0.0000">
-                                        </div>
-                                    </div>
                                     </div>
                                     <input type="hidden" name="cargo_cbm[]" class="cargo-cbm-input" value="0.0000">
 
@@ -274,36 +316,43 @@
                                         <div class="photo-input-wrapper">
                                             <label class="btn btn-sm btn-outline-primary">
                                                 <i class="bi bi-cloud-arrow-up"></i> Choose Photo
-                                                <input type="file" name="cargo_picture[]" class="form-control cargo-photo required-field" style="display:none;" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+                                                <input type="file" name="cargo_picture[]"
+                                                    class="form-control cargo-photo required-field" style="display:none;"
+                                                    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
                                             </label>
-                                                                            <div class="mb-2">
-                                    <small class="text-muted">Accepted file types are JPG, JPEG, PNG, and WEBP. Maximum file size is 5 MB per photo.</small>
-                                </div>
-                                            <span class="input-group-text error-icon" style="display:none; background-color: #f8d7da; margin-top: 0.5rem; border-radius: 0.25rem; padding: 0.375rem 0.75rem;">
+                                            <div class="mb-2">
+                                                <small class="text-muted">Accepted file types are JPG, JPEG, PNG, and WEBP.
+                                                    Maximum file size is 5 MB per photo.</small>
+                                            </div>
+                                            <span class="input-group-text error-icon"
+                                                style="display:none; background-color: #f8d7da; margin-top: 0.5rem; border-radius: 0.25rem; padding: 0.375rem 0.75rem;">
                                                 <i class="bi bi-exclamation-circle-fill text-danger"></i>
                                             </span>
-                                            <small class="error-message photo-error-message text-danger ms-2" style="display:none;"></small>
+                                            <small class="error-message photo-error-message text-danger ms-2"
+                                                style="display:none;"></small>
                                         </div>
-                                        <small class="text-success photo-confirmation" style="display:none;">Photo selected!</small>
+                                        <small class="text-success photo-confirmation" style="display:none;">Photo
+                                            selected!</small>
                                     </div>
 
                                 </div> <!-- end cargo-item -->
 
                             </div>
 
-                    <div class="d-flex justify-content-end mt-4 gap-3">
-                        <a href="{{ route('bookingtype') }}" class="btn btn-outline-danger fw-bold py-3"
-                            style="width:180px;">
-                            CANCEL BOOKING
-                        </a>
-                        <button type="submit" class="btn btn-primary fw-bold py-3" style="width:180px;">
-                            PROCEED
-                        </button>
-                    </div>
+                            <div class="d-flex justify-content-end mt-4 gap-3">
+                                <a href="{{ route('bookingtype') }}" class="btn btn-outline-danger fw-bold py-3"
+                                    style="width:180px;">
+                                    CANCEL BOOKING
+                                </a>
+                                <button type="submit" class="btn btn-primary fw-bold py-3" style="width:180px;">
+                                    PROCEED
+                                </button>
+                            </div>
 
                 </form>
                 <!-- Loading overlay -->
-                <div id="passengerOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1055; align-items:center; justify-content:center;">
+                <div id="passengerOverlay"
+                    style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1055; align-items:center; justify-content:center;">
                     <div class="text-center text-white">
                         <div class="spinner-border text-light" role="status" style="width:3rem; height:3rem;"></div>
                         <div class="mt-3">Loading... please wait</div>
@@ -348,7 +397,9 @@
 
         function validatePhotoFileInput(photoInput) {
             if (!photoInput || !photoInput.files || photoInput.files.length === 0) {
-                return { valid: true };
+                return {
+                    valid: true
+                };
             }
 
             const file = photoInput.files[0];
@@ -367,7 +418,9 @@
                 };
             }
 
-            return { valid: true };
+            return {
+                valid: true
+            };
         }
 
         function clearAllErrors() {
@@ -450,32 +503,35 @@
         }
 
         // Validate that CBM meets the minimum base_cbm requirement when no predefined range exists
-        function validateBaseCbm(form){
+        function validateBaseCbm(form) {
             const cargoItems = form.querySelectorAll('.cargo-item');
-            
+
             for (let i = 0; i < cargoItems.length; i++) {
                 const item = cargoItems[i];
                 const requiresBaseCbm = item.dataset.baseCbmRequired === 'true';
-                
+
                 if (requiresBaseCbm) {
                     const baseCbm = parseFloat(item.dataset.baseCbm) || 0;
                     const cbmOutput = item.querySelector('.cbm-output');
                     const currentCbm = parseFloat(cbmOutput ? cbmOutput.value : '0') || 0;
-                    
+
                     // Get cargo description from the selected option
                     const descSelect = item.querySelector('.cargo-description');
-                    const cargoDescription = descSelect && descSelect.options[descSelect.selectedIndex] && descSelect.options[descSelect.selectedIndex].text !== '-- Select Description --'
-                        ? descSelect.options[descSelect.selectedIndex].text
-                        : `Cargo item #${i + 1}`;
-                    
+                    const cargoDescription = descSelect && descSelect.options[descSelect.selectedIndex] && descSelect
+                        .options[descSelect.selectedIndex].text !== '-- Select Description --' ?
+                        descSelect.options[descSelect.selectedIndex].text :
+                        `Cargo item #${i + 1}`;
+
                     if (currentCbm < baseCbm) {
-                        showToast(`"${cargoDescription}" - CBM (${currentCbm.toFixed(4)}) is below minimum required (${baseCbm.toFixed(4)}).`, 'danger');
+                        showToast(
+                            `"${cargoDescription}" - CBM (${currentCbm.toFixed(4)}) is below minimum required (${baseCbm.toFixed(4)}).`,
+                            'danger');
                         cbmOutput.focus();
                         return false;
                     }
                 }
             }
-            
+
             return true;
         }
 
@@ -497,7 +553,7 @@
             const unitFromItem = selectedOption.dataset.measurementUnit || 'cm';
 
             // Check if there is no predefined measurement range (all min/max dimensions are empty or zero)
-            const hasPredefinedRange = measureRequired === 'yes' || 
+            const hasPredefinedRange = measureRequired === 'yes' ||
                 (selectedOption.dataset.minLength !== '' && selectedOption.dataset.minLength !== null) ||
                 (selectedOption.dataset.maxLength !== '' && selectedOption.dataset.maxLength !== null) ||
                 (selectedOption.dataset.minWidth !== '' && selectedOption.dataset.minWidth !== null) ||
@@ -569,7 +625,7 @@
                 item.dataset.hasPredefinedRange = hasPredefinedRange ? 'true' : 'false';
                 item.dataset.baseCbmRequired = (!hasPredefinedRange && baseCbm > 0) ? 'true' : 'false';
                 item.dataset.baseCbm = baseCbm > 0 ? baseCbm.toFixed(4) : '';
-                
+
                 // If base_cbm is required, show a hint
                 if (!hasPredefinedRange && baseCbm > 0 && cbmOutput) {
                     cbmOutput.title = `Minimum CBM: ${baseCbm.toFixed(4)}`;
@@ -589,8 +645,14 @@
         function syncCargoItems() {
             if (!noInput) return;
             let desired = parseInt(noInput.value) || 1;
-            if (desired < 1) { desired = 1; noInput.value = 1; }
-            if (desired > MAX_ITEMS) { desired = MAX_ITEMS; noInput.value = MAX_ITEMS; }
+            if (desired < 1) {
+                desired = 1;
+                noInput.value = 1;
+            }
+            if (desired > MAX_ITEMS) {
+                desired = MAX_ITEMS;
+                noInput.value = MAX_ITEMS;
+            }
             const items = Array.from(container.querySelectorAll('.cargo-item'));
             const current = items.length;
             const original = items[0];
@@ -607,7 +669,9 @@
                     });
                     newItem.querySelectorAll('select').forEach(el => {
                         el.selectedIndex = 0;
-                        el.querySelectorAll('option').forEach(o => { o.style.display = ''; });
+                        el.querySelectorAll('option').forEach(o => {
+                            o.style.display = '';
+                        });
                     });
 
                     const photoInput = newItem.querySelector('input[type="file"][name="cargo_picture[]"]');
@@ -670,18 +734,39 @@
             const senderContact = form.querySelector('input[name="sender_contact"]');
             const senderEmail = form.querySelector('input[name="sender_email"]');
 
-            if (!senderFirstname.value.trim()) { showFieldError(senderFirstname, 'First Name is required'); isValid = false; }
-            if (!senderLastname.value.trim()) { showFieldError(senderLastname, 'Last Name is required'); isValid = false; }
-            if (!senderContact.value.trim()) { showFieldError(senderContact, 'Contact Number is required'); isValid = false; }
-            if (!senderEmail.value.trim()) { showFieldError(senderEmail, 'Email Address is required'); isValid = false; }
+            if (!senderFirstname.value.trim()) {
+                showFieldError(senderFirstname, 'First Name is required');
+                isValid = false;
+            }
+            if (!senderLastname.value.trim()) {
+                showFieldError(senderLastname, 'Last Name is required');
+                isValid = false;
+            }
+            if (!senderContact.value.trim()) {
+                showFieldError(senderContact, 'Contact Number is required');
+                isValid = false;
+            }
+            if (!senderEmail.value.trim()) {
+                showFieldError(senderEmail, 'Email Address is required');
+                isValid = false;
+            }
 
             const consigneeFirstname = form.querySelector('input[name="consignee_firstname"]');
             const consigneeLastname = form.querySelector('input[name="consignee_lastname"]');
             const consigneeContact = form.querySelector('input[name="consignee_contact"]');
 
-            if (!consigneeFirstname.value.trim()) { showFieldError(consigneeFirstname, 'First Name is required'); isValid = false; }
-            if (!consigneeLastname.value.trim()) { showFieldError(consigneeLastname, 'Last Name is required'); isValid = false; }
-            if (!consigneeContact.value.trim()) { showFieldError(consigneeContact, 'Contact Number is required'); isValid = false; }
+            if (!consigneeFirstname.value.trim()) {
+                showFieldError(consigneeFirstname, 'First Name is required');
+                isValid = false;
+            }
+            if (!consigneeLastname.value.trim()) {
+                showFieldError(consigneeLastname, 'Last Name is required');
+                isValid = false;
+            }
+            if (!consigneeContact.value.trim()) {
+                showFieldError(consigneeContact, 'Contact Number is required');
+                isValid = false;
+            }
 
             const cargoItems = document.querySelectorAll('.cargo-item');
             cargoItems.forEach((item) => {
@@ -694,11 +779,26 @@
                 const width = item.querySelector('[name="cargo_width[]"]');
                 const height = item.querySelector('[name="cargo_height[]"]');
 
-                if (!classification.value.trim()) { showFieldError(classification, 'Classification is required'); isValid = false; }
-                if (!description.value.trim()) { showFieldError(description, 'Description is required'); isValid = false; }
-                if (photo && photo.files.length === 0) { showFieldError(photo, 'Photo is required'); isValid = false; }
-                if (quantity && !quantity.value.trim()) { showFieldError(quantity, 'Quantity is required'); isValid = false; }
-                if (weight && !weight.value.trim()) { showFieldError(weight, 'Weight is required'); isValid = false; }
+                if (!classification.value.trim()) {
+                    showFieldError(classification, 'Classification is required');
+                    isValid = false;
+                }
+                if (!description.value.trim()) {
+                    showFieldError(description, 'Description is required');
+                    isValid = false;
+                }
+                if (photo && photo.files.length === 0) {
+                    showFieldError(photo, 'Photo is required');
+                    isValid = false;
+                }
+                if (quantity && !quantity.value.trim()) {
+                    showFieldError(quantity, 'Quantity is required');
+                    isValid = false;
+                }
+                if (weight && !weight.value.trim()) {
+                    showFieldError(weight, 'Weight is required');
+                    isValid = false;
+                }
 
                 if (quantity && quantity.value !== '' && Number(quantity.value) <= 0) {
                     showFieldError(quantity, 'Quantity must be greater than zero');
@@ -736,32 +836,34 @@
                 }
             });
 
-            if (!isValid) { window.scrollTo(0, 0); }
+            if (!isValid) {
+                window.scrollTo(0, 0);
+            }
             return isValid;
         }
 
 
-container.addEventListener('change', e => {
-    if(!e.target.classList.contains('cargo-description')) return;
-    const item = e.target.closest('.cargo-item');
-    const selectedOption = e.target.options[e.target.selectedIndex];
-    applyMeasurementRules(item, selectedOption);
-});
+        container.addEventListener('change', e => {
+            if (!e.target.classList.contains('cargo-description')) return;
+            const item = e.target.closest('.cargo-item');
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            applyMeasurementRules(item, selectedOption);
+        });
 
 
 
 
 
-        document.addEventListener('input', function(e){
-            if (e.target && e.target.classList && e.target.classList.contains('dimension')){
+        document.addEventListener('input', function(e) {
+            if (e.target && e.target.classList && e.target.classList.contains('dimension')) {
                 const item = e.target.closest('.cargo-item');
                 calculateCBM(item);
             }
         });
 
         // Recalculate CBM when per-item unit changes
-        container.addEventListener('change', function(e){
-            if (e.target && e.target.classList && e.target.classList.contains('unitSelect')){
+        container.addEventListener('change', function(e) {
+            if (e.target && e.target.classList && e.target.classList.contains('unitSelect')) {
                 const item = e.target.closest('.cargo-item');
                 calculateCBM(item);
             }
@@ -769,7 +871,7 @@ container.addEventListener('change', e => {
 
         if (noInput) {
             noInput.addEventListener('change', syncCargoItems);
-            window.addEventListener('DOMContentLoaded', function () {
+            window.addEventListener('DOMContentLoaded', function() {
                 syncCargoItems();
                 container.querySelectorAll('.cargo-item').forEach(updateCargoItemComputedValues);
             });
@@ -814,18 +916,44 @@ container.addEventListener('change', e => {
         });
 
         const passengerForm = document.getElementById('passengerCargoForm');
-        if(passengerForm){
-            passengerForm.addEventListener('submit', function(e){
-                if (!validateForm()) { e.preventDefault(); return false; }
+        if (passengerForm) {
+            passengerForm.addEventListener('submit', function(e) {
+                if (!validateForm()) {
+                    e.preventDefault();
+                    return false;
+                }
                 // Validate base_cbm requirement for cargo items without predefined measurement range
-                if (!validateBaseCbm(passengerForm)) { e.preventDefault(); return false; }
+                if (!validateBaseCbm(passengerForm)) {
+                    e.preventDefault();
+                    return false;
+                }
                 const overlay = document.getElementById('passengerOverlay');
-                if(overlay){ overlay.style.display = 'flex'; }
+                if (overlay) {
+                    overlay.style.display = 'flex';
+                }
             });
         }
     </script>
 
     @include('components.footer')
+
+    <script>
+        // Lock back button: push a duplicate history entry so pressing back fires
+        // popstate here instead of actually navigating back to the booking type page.
+        (function() {
+            history.pushState(null, '', window.location.href);
+
+            window.addEventListener('popstate', function() {
+                window.location.replace('{{ route('bookingtype') }}');
+            });
+
+            window.addEventListener('pageshow', function(e) {
+                if (e.persisted) {
+                    window.location.replace('{{ route('bookingtype') }}');
+                }
+            });
+        })();
+    </script>
 @endsection
 
 <style>
@@ -848,12 +976,13 @@ container.addEventListener('change', e => {
     }
 
     .error-message {
-    color: #dc3545 !important; /* force red */
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
+        color: #dc3545 !important;
+        /* force red */
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
     }
 
-    
+
     /* Passenger cargo card custom roundness */
     .passenger-cargo-card {
         border-radius: 14px;
@@ -912,8 +1041,8 @@ container.addEventListener('change', e => {
     }
 
     /* When error icon is hidden, restore right-side radius that Bootstrap removes for non-last-child inputs */
-    .passenger-cargo-card .input-group:has(.error-icon[style*="display:none"]) > .form-control,
-    .passenger-cargo-card .input-group:has(.error-icon[style*="display:none"]) > .form-select {
+    .passenger-cargo-card .input-group:has(.error-icon[style*="display:none"])>.form-control,
+    .passenger-cargo-card .input-group:has(.error-icon[style*="display:none"])>.form-select {
         border-top-right-radius: var(--bs-border-radius) !important;
         border-bottom-right-radius: var(--bs-border-radius) !important;
     }
@@ -925,7 +1054,7 @@ container.addEventListener('change', e => {
         align-items: end;
     }
 
-    .cargo-dimensions-block .d-flex.align-items-end > .flex-fill {
+    .cargo-dimensions-block .d-flex.align-items-end>.flex-fill {
         min-width: 0;
     }
 
@@ -943,4 +1072,3 @@ container.addEventListener('change', e => {
         }
     }
 </style>
-

@@ -68,7 +68,12 @@ class ManifestController extends Controller
                 // join passenger_ticket -> passenger (use voyage_id, since your data has that)
                 $passengers = DB::table('passenger_ticket as pt')
                     ->join('passenger as p', 'p.passenger_id', '=', 'pt.passenger_id')
+                    ->leftJoin('booking as b', 'b.booking_ref_no', '=', 'pt.booking_ref_no')
                     ->where('pt.voyage_id', $voyage->voyage_id)
+                    ->where(function ($q) {
+                        $q->whereNotNull('pt.pt_boarded_at')
+                          ->orWhere('b.booking_status', 'Confirmed');
+                    })
                     ->select(
                         'p.*',
                         'pt.passenger_ticket_id',

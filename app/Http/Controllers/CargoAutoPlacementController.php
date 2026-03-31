@@ -116,7 +116,7 @@ class CargoAutoPlacementController extends Controller
 
     private function getVoyagePlacementData($voyageId)
     {
-        $voyage = Voyage::with(['vessel.hatches', 'cargoReceipts.cargoBooking.cargoItem', 'cargoReceipts.booking'])
+        $voyage = Voyage::with(['vessel.hatches', 'routePort', 'cargoReceipts.cargoBooking.cargoItem', 'cargoReceipts.booking'])
             ->findOrFail($voyageId);
 
         $hatches = $voyage->vessel->hatches;

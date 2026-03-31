@@ -19,7 +19,12 @@ class ManifestPrintController extends Controller
 
         $passengers = DB::table('passenger_ticket as pt')
             ->join('passenger as p', 'p.passenger_id', '=', 'pt.passenger_id')
+            ->leftJoin('booking as b', 'b.booking_ref_no', '=', 'pt.booking_ref_no')
             ->where('pt.voyage_id', $voyageId)
+            ->where(function ($q) {
+                $q->whereNotNull('pt.pt_boarded_at')
+                  ->orWhere('b.booking_status', 'Confirmed');
+            })
             ->select(
                 'p.*',
                 'pt.passenger_ticket_id',
@@ -84,7 +89,10 @@ class ManifestPrintController extends Controller
         $voyage = \DB::table('voyage')->where('voyage_id', $voyageId)->first();
         $cargos = \DB::table('cargo_receipt as cr')
             ->where('cr.voyage_id', $voyageId)
-            ->leftJoin('cargo_booking as cb', 'cb.booking_ref_no', '=', 'cr.booking_ref_no')
+            ->leftJoin('cargo_booking as cb', function ($join) {
+                $join->on('cb.booking_ref_no', '=', 'cr.booking_ref_no')
+                     ->on('cb.cargo_item_id', '=', 'cr.cargo_item_id');
+            })
             ->leftJoin('cargo_classification as cc', 'cc.cargo_classification_id', '=', 'cb.cargo_classification_id')
             ->leftJoin('cargo_item as ci', 'ci.cargo_item_id', '=', 'cr.cargo_item_id')
             ->leftJoin('cargo_category as cg', 'cg.cargo_category_id', '=', 'ci.cargo_category_id')
@@ -104,6 +112,7 @@ class ManifestPrintController extends Controller
                 'co.consignee_name',
                 'p.total_amount'
             )
+            ->distinct()
             ->get();
 
         $rows = '';

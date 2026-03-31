@@ -44,7 +44,7 @@
                                         <td colspan="4" class="text-center">
                                             <div class="text-muted">
                                                 <i class="bi bi-calendar-x fs-1 d-block"></i>
-                                                No voyages available in the next 8 days
+                                                No voyages available in the next 7 days
                                             </div>
                                         </td>
                                     </tr>
@@ -144,66 +144,18 @@
                         <i class="bi bi-arrow-right-circle me-2"></i>PROCEED
                     </button>
 
+                    <!-- Mobile-only: link to open ticket request popup -->
+                    <a href="#" id="requestTicketLinkMobile"
+                        class="text-decoration-none text-primary fst-italic text-center mt-2 d-block d-lg-none"
+                        style="font-size: 0.9rem;">
+                        <i class="fas fa-ticket-alt me-1"></i>Request Ticket Copy
+                    </a>
+
                 </div>
             </div>
 
         </div>
 
-        <!-- Mobile-only Ticket Request Section -->
-        <div class="row d-lg-none mt-4">
-            <div class="col-12">
-                <div class="mobile-ticket-request-card">
-                    <div class="mobile-ticket-header">
-                        <h5><i class="fas fa-ticket-alt me-2"></i>Request Ticket Copy</h5>
-                    </div>
-                    <div class="mobile-ticket-body">
-                        <p class="text-muted mb-3">Lost your ticket? Enter your email and departure date to receive a copy.
-                        </p>
-
-                        <form id="requestTicketFormMobile">
-                            @csrf
-                            <div class="mb-3">
-                                <label for="ticketEmailMobile" class="form-label">Email Address <span
-                                        class="text-danger">*</span></label>
-                                <input type="email" class="form-control" id="ticketEmailMobile" name="email" required
-                                    placeholder="your.email@example.com">
-                            </div>
-                            <div class="mb-3">
-                                <label for="departureDateMobile" class="form-label">Departure Date <span
-                                        class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="departureDateMobile"
-                                    name="departure_date" required>
-                            </div>
-                            <div class="row g-2 mb-5">
-                                <div class="col-6">
-                                    <label for="requestRouteFromMobile" class="form-label">From <span
-                                            class="text-danger">*</span></label>
-                                    <select id="requestRouteFromMobile" name="route_from" class="form-select" required>
-                                        <option value="">Select Origin</option>
-                                        @foreach (collect($voyages)->pluck('route_from')->unique() as $origin)
-                                            <option value="{{ $origin }}">{{ $origin }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-6">
-                                    <label for="requestRouteToMobile" class="form-label">To <span
-                                            class="text-danger">*</span></label>
-                                    <select id="requestRouteToMobile" name="route_to" class="form-select" required
-                                        disabled>
-                                        <option value="">Select Destination</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="text-center">
-                                <button type="submit" class="btn btn-primary w-100" id="requestTicketBtnMobile">
-                                    <i class="fas fa-paper-plane me-2"></i>Request Ticket Copy
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Modal Overlay for Request Ticket Copy -->
@@ -270,12 +222,23 @@
         const closeBtn = document.getElementById('closeTicketModal');
         const overlay = modal.querySelector('.ticket-modal-overlay');
 
-        // Open modal (only on desktop)
+        // Open modal trigger (desktop link)
         if (openLink) {
             openLink.addEventListener('click', function(e) {
                 e.preventDefault();
                 modal.style.display = 'block';
                 // Force reflow for smooth animation
+                modal.offsetHeight;
+                modal.classList.add('active');
+            });
+        }
+
+        // Open modal trigger (mobile link below PROCEED button)
+        const mobileTicketLink = document.getElementById('requestTicketLinkMobile');
+        if (mobileTicketLink) {
+            mobileTicketLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                modal.style.display = 'block';
                 modal.offsetHeight;
                 modal.classList.add('active');
             });
@@ -306,8 +269,6 @@
         const voyagesData = JSON.parse(document.getElementById('voyages-data').textContent);
         const requestRouteFromSelect = document.getElementById('requestRouteFrom');
         const requestRouteToSelect = document.getElementById('requestRouteTo');
-        const requestRouteFromMobileSelect = document.getElementById('requestRouteFromMobile');
-        const requestRouteToMobileSelect = document.getElementById('requestRouteToMobile');
 
         // Update destinations based on selected origin for request form
         function updateRequestDestinations(fromSelect, toSelect) {
@@ -334,17 +295,10 @@
             toSelect.disabled = false;
         }
 
-        // Add listeners for desktop form
+        // Add listeners for route filtering
         if (requestRouteFromSelect) {
             requestRouteFromSelect.addEventListener('change', function() {
                 updateRequestDestinations(requestRouteFromSelect, requestRouteToSelect);
-            });
-        }
-
-        // Add listeners for mobile form
-        if (requestRouteFromMobileSelect) {
-            requestRouteFromMobileSelect.addEventListener('change', function() {
-                updateRequestDestinations(requestRouteFromMobileSelect, requestRouteToMobileSelect);
             });
         }
 
@@ -387,48 +341,6 @@
                 btn.innerHTML = originalText;
             }
         });
-
-        // Mobile form submission (same logic)
-        const mobileForm = document.getElementById('requestTicketFormMobile');
-        if (mobileForm) {
-            mobileForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-
-                const btn = document.getElementById('requestTicketBtnMobile');
-                const originalText = btn.innerHTML;
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Searching...';
-
-                const formData = new FormData(this);
-
-                try {
-                    const response = await fetch('{{ route('ticket.request-copy') }}', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json',
-                        },
-                        body: formData
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok && data.success) {
-                        showToast('Ticket sent to your email!', 'success');
-                        closeModal();
-                        this.reset();
-                    } else {
-                        showToast(data.message || 'No ticket found.', 'danger');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    showToast('An error occurred. Please try again.', 'danger');
-                } finally {
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                }
-            });
-        }
     </script>
 
     @include('components.footer')
