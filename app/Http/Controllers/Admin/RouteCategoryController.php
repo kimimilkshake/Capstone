@@ -44,7 +44,7 @@ class RouteCategoryController extends Controller
         ]);
 
         $routeCategory = RouteCategory::create([
-            'route_category_name' => $validated['route_category_name'],
+            'route_category_name' => strtoupper($validated['route_category_name']),
         ]);
 
         return response()->json([
