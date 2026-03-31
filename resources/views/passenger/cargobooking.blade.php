@@ -33,7 +33,7 @@
                                 <p class="mb-0"><strong>Port of Origin:</strong> {{ $portOfOrigin }}</p>
                             </div>
 
-                            <input type="hidden" name="voyage_id" value="{{ request()->voyage_id }}">
+                            <input type="hidden" name="voyage_id" value="{{ $voyage->voyage_id }}">
                             <h6 class="fw-bold">Sender Information</h6>
 
                             <div class="mb-2">
@@ -360,6 +360,8 @@
                 </div>
             </div>
         </div>
+    </div>
+    </div>
     </div>
 
     <script>
