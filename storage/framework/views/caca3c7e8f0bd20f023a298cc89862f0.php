@@ -183,7 +183,7 @@
                         <tr>
                             <th>B/L No / Ref</th>
                             <th>Qty</th>
-                            <th>Classification / Item</th>
+                            <th>Classification</th>
                             <th>Category</th>
                             <th>Description</th>
                             <th>Sender</th>
