@@ -56,9 +56,11 @@ class SemaphoreController extends Controller
     {
         $passengerNumbers = $this->getPassengerNumbers($voyageId);
         $cargoNumbers = $this->getCargoSenderNumbers($voyageId);
+        $consigneeNumbers = $this->getConsigneeNumbers($voyageId);
         
         return collect($passengerNumbers)
             ->merge($cargoNumbers)
+            ->merge($consigneeNumbers)
             ->map(fn($contact) => $this->normalizePhoneNumber($contact))
             ->filter()
             ->unique()
@@ -87,6 +89,19 @@ class SemaphoreController extends Controller
             ->join('sender', 'cargo_receipt.sender_id', '=', 'sender.sender_id')
             ->whereNotNull('sender.sender_contactno')
             ->pluck('sender.sender_contactno')
+            ->toArray();
+    }
+
+    private function getConsigneeNumbers(int $voyageId): array
+    {
+        return DB::table('booking')
+            ->where('booking.voyage_id', $voyageId)
+            ->where('booking.booking_type', 'cargo')
+            ->whereNotNull('booking.consignee_id')
+            ->join('consignee', 'booking.consignee_id', '=', 'consignee.consignee_id')
+            ->whereNotNull('consignee.consignee_contactno')
+            ->distinct()
+            ->pluck('consignee.consignee_contactno')
             ->toArray();
     }
 
