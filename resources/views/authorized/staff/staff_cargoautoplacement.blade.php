@@ -155,12 +155,31 @@
                                             // Convert dimensions to meters for display
                                             $unitName =
                                                 $booking?->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
-                                            $conversionFactor =
-                                                stripos($unitName, 'cm') !== false
-                                                    ? 0.01
-                                                    : (stripos($unitName, 'in') !== false
-                                                        ? 0.0254
-                                                        : 1);
+                                            $unitLower = strtolower(trim($unitName));
+                                            if (
+                                                str_contains($unitLower, 'cm') ||
+                                                str_contains($unitLower, 'centimeter')
+                                            ) {
+                                                $conversionFactor = 0.01;
+                                            } elseif (
+                                                str_contains($unitLower, 'mm') ||
+                                                str_contains($unitLower, 'millimeter')
+                                            ) {
+                                                $conversionFactor = 0.001;
+                                            } elseif (
+                                                str_contains($unitLower, 'in') ||
+                                                str_contains($unitLower, 'inch')
+                                            ) {
+                                                $conversionFactor = 0.0254;
+                                            } elseif (
+                                                str_contains($unitLower, 'ft') ||
+                                                str_contains($unitLower, 'feet') ||
+                                                str_contains($unitLower, 'foot')
+                                            ) {
+                                                $conversionFactor = 0.3048;
+                                            } else {
+                                                $conversionFactor = 1; // already meters
+                                            }
 
                                             $lengthM = ($booking?->length ?? 0) * $conversionFactor;
                                             $widthM = ($booking?->width ?? 0) * $conversionFactor;

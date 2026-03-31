@@ -37,8 +37,12 @@ class CargoAutoPlacementController extends Controller
         // Convert to meters based on unit
         if (strpos($unitLower, 'cm') !== false || strpos($unitLower, 'centimeter') !== false) {
             return (float) $value / 100; // cm to m
+        } elseif (strpos($unitLower, 'mm') !== false || strpos($unitLower, 'millimeter') !== false) {
+            return (float) $value / 1000; // mm to m
         } elseif (strpos($unitLower, 'in') !== false || strpos($unitLower, 'inch') !== false) {
             return (float) $value / 39.3701; // inches to m
+        } elseif (strpos($unitLower, 'ft') !== false || strpos($unitLower, 'feet') !== false || strpos($unitLower, 'foot') !== false) {
+            return (float) $value / 3.28084; // feet to m
         } elseif (strpos($unitLower, 'm') === 0 || strpos($unitLower, 'meter') !== false) {
             return (float) $value; // already in meters
         }
