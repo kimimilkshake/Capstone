@@ -10,7 +10,7 @@
                 Voyage Number: {{ $voyage->voyage_code ?? '-' }}
             </h2>
 
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 1rem; justify-items: center; text-align: center; width: 100%; max-width: 1100px; margin-left: auto; margin-right: auto;">
+            <div style="display: grid; grid-template-columns: repeat(4, auto); gap: 10px 40px; margin-top: 1rem; justify-content: center; text-align: left; width: 100%; max-width: 1100px; margin-left: auto; margin-right: auto;">
                 <div>
                     <p><strong>Schedule: </strong>{{ optional($voyage->voyage_departure_date) ? \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('F j, Y, D') : '-' }}</p>
                 </div>
