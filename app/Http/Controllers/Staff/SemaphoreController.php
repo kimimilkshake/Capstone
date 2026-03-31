@@ -49,7 +49,7 @@ class SemaphoreController extends Controller
 
         $this->dispatchMessages($numbers, $request->message);
 
-        return back()->with('success', 'Messages queued for sending (' . count($numbers) . ' recipients).');
+        return redirect()->route('staff.voyage_list')->with('success', 'Messages queued for sending (' . count($numbers) . ' recipients).');
     }
 
     private function getRecipientNumbers(int $voyageId): array

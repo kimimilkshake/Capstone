@@ -49,8 +49,17 @@ class QrScannerController extends Controller
                 return response()->json(['success' => false, 'message' => 'No Passenger found on the manifest.'], 404);
             }
 
+            $passengerInfo = DB::table('passenger')
+                ->where('passenger_id', $passengerId)
+                ->select('passenger_firstname', 'passenger_lastname')
+                ->first();
+
+            $passengerName = $passengerInfo
+                ? trim($passengerInfo->passenger_firstname . ' ' . $passengerInfo->passenger_lastname)
+                : 'Unknown';
+
             if ($passenger->pt_boarded_at) {
-                return response()->json(['success' => true, 'message' => 'The Passenger is already listed as Boarded.']);
+                return response()->json(['success' => true, 'message' => $passengerName . ' is already listed as Boarded.', 'passenger_name' => $passengerName]);
             }
 
             DB::transaction(function () use ($bookingRefNo, $passenger) {
@@ -74,7 +83,7 @@ class QrScannerController extends Controller
                     ]);
             });
 
-            return response()->json(['success' => true, 'message' => 'The Passenger is now listed as Boarded.']);
+            return response()->json(['success' => true, 'message' => $passengerName . ' is now listed as Boarded.', 'passenger_name' => $passengerName]);
         } catch (\Throwable $exception) {
             Log::error('QR boarding failed', [
                 'booking_ref_no' => $bookingRefNo,
