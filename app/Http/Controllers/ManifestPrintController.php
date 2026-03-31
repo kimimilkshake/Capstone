@@ -19,7 +19,12 @@ class ManifestPrintController extends Controller
 
         $passengers = DB::table('passenger_ticket as pt')
             ->join('passenger as p', 'p.passenger_id', '=', 'pt.passenger_id')
+            ->leftJoin('booking as b', 'b.booking_ref_no', '=', 'pt.booking_ref_no')
             ->where('pt.voyage_id', $voyageId)
+            ->where(function ($q) {
+                $q->whereNotNull('pt.pt_boarded_at')
+                  ->orWhere('b.booking_status', 'Confirmed');
+            })
             ->select(
                 'p.*',
                 'pt.passenger_ticket_id',
