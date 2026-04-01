@@ -601,7 +601,7 @@ class BookingController extends Controller
             }
 
             $promo = DB::table('promo')
-                ->where('promo_code', $promoCode)
+                ->whereRaw('LOWER(promo_code) = ?', [strtolower($promoCode)])
                 ->where('promo_status', 'Active')
                 ->first();
 

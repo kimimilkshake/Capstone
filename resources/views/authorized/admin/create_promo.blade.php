@@ -7,105 +7,106 @@
     <div class="admin-body">
 
         <form action="{{ route('admin.storePromo') }}" method="POST" class="create-promo-form promo-form">
-          @csrf
-          <div class="form-row">
-            <div class="form-col">
-              <div class="form-group">
-                <label for="promo_name">Promo Name <span class="text-danger">*</span></label>
-                <input type="text" id="promo_name" name="promo_name" required>
-              </div>
+            @csrf
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="promo_name">Promo Name <span class="text-danger">*</span></label>
+                        <input type="text" id="promo_name" name="promo_name" required>
+                    </div>
 
-              <div class="form-group">
-                <label for="promo_code">Promo Code <span class="text-danger">*</span></label>
-                <input type="text" id="promo_code" name="promo_code" required>
-              </div>
+                    <div class="form-group">
+                        <label for="promo_code">Promo Code <span class="text-danger">*</span></label>
+                        <input type="text" id="promo_code" name="promo_code" required style="text-transform:uppercase">
+                    </div>
 
-              <div class="form-group">
-                <label for="promo_discount_rate">Discount Rate</label>
-                <input type="number" id="promo_discount_rate" name="promo_discount_rate">
-              </div>
+                    <div class="form-group">
+                        <label for="promo_discount_rate">Discount Rate</label>
+                        <input type="number" id="promo_discount_rate" name="promo_discount_rate">
+                    </div>
 
+                </div>
+
+                <!-- Column 2 -->
+                <div class="form-col">
+
+                    <div class="form-group">
+                        <label for="promo_start_date">Date Start <span class="text-danger">*</span></label>
+                        <input type="date" id="promo_start_date" name="promo_start_date" required
+                            min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="promo_end_date">Date End <span class="text-danger">*</span></label>
+                        <input type="date" id="promo_end_date" name="promo_end_date" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="promo_status">Promo Status <span class="text-danger">*</span></label>
+                        <select id="promo_status" name="promo_status" required>
+                            <option value="">Select Status</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group" id="promo_desc">
+                    <label for="promo_description">Promo Description <span class="text-danger">*</span></label>
+                    <textarea id="promo_description" name="promo_description" placeholder="Enter promo description here"></textarea>
+                </div>
             </div>
 
-            <!-- Column 2 -->
-            <div class="form-col">
-
-              <div class="form-group">
-                <label for="promo_start_date">Date Start <span class="text-danger">*</span></label>
-                <input type="date" id="promo_start_date" name="promo_start_date" required min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}">
-              </div>
-
-              <div class="form-group">
-                <label for="promo_end_date">Date End <span class="text-danger">*</span></label>
-                <input type="date" id="promo_end_date" name="promo_end_date" required>
-              </div>
-
-              <div class="form-group">
-                <label for="promo_status">Promo Status <span class="text-danger">*</span></label>
-                <select id="promo_status" name="promo_status" required>
-                  <option value="">Select Status</option>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
-
+            <div class="form-actions" style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+                <button type="submit" class="acs-add-btn">
+                    <i class="fa-solid fa-plus me-2"></i>Add Promo
+                </button>
+                <a href="{{ route('admin.promo_list') }}" class="acs-add-btn acs-cancel-btn">
+                    <i class="fa-solid fa-xmark me-2"></i>Cancel
+                </a>
             </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group" id="promo_desc">
-                <label for="promo_description">Promo Description <span class="text-danger">*</span></label>
-                <textarea id="promo_description" name="promo_description" placeholder="Enter promo description here"></textarea>
-              </div>
-          </div>
-
-          <div class="form-actions" style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
-            <button type="submit" class="acs-add-btn">
-              <i class="fa-solid fa-plus me-2"></i>Add Promo
-            </button>
-            <a href="{{ route('admin.promo_list') }}" class="acs-add-btn acs-cancel-btn">
-              <i class="fa-solid fa-xmark me-2"></i>Cancel
-            </a>
-          </div>
         </form>
-      </div>
+    </div>
     </div>
 
     <script>
-      const startDateInput = document.getElementById('promo_start_date');
-      const endDateInput = document.getElementById('promo_end_date');
+        const startDateInput = document.getElementById('promo_start_date');
+        const endDateInput = document.getElementById('promo_end_date');
 
-      // Normalize date (remove time)
-      function normalizeDate(d) {
-          const date = new Date(d);
-          date.setHours(0,0,0,0);
-          return date;
-      }
+        // Normalize date (remove time)
+        function normalizeDate(d) {
+            const date = new Date(d);
+            date.setHours(0, 0, 0, 0);
+            return date;
+        }
 
-      // Format date in LOCAL time (fix timezone issue)
-      function formatDateLocal(date) {
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const day = String(date.getDate()).padStart(2, '0');
-          return `${year}-${month}-${day}`;
-      }
+        // Format date in LOCAL time (fix timezone issue)
+        function formatDateLocal(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
 
-      // Today & Tomorrow
-      const today = normalizeDate(new Date());
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
+        // Today & Tomorrow
+        const today = normalizeDate(new Date());
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
 
-      // Set start date min (FIXED)
-      startDateInput.min = formatDateLocal(tomorrow);
+        // Set start date min (FIXED)
+        startDateInput.min = formatDateLocal(tomorrow);
 
-      // Toast function (your system)
-      function showToast(message, type = 'danger') {
-          const container = document.getElementById('globalToastContainer');
+        // Toast function (your system)
+        function showToast(message, type = 'danger') {
+            const container = document.getElementById('globalToastContainer');
 
-          const toastEl = document.createElement('div');
-          toastEl.className = `toast align-items-center text-white bg-${type} border-0 fade`;
-          toastEl.role = 'alert';
+            const toastEl = document.createElement('div');
+            toastEl.className = `toast align-items-center text-white bg-${type} border-0 fade`;
+            toastEl.role = 'alert';
 
-          toastEl.innerHTML = `
+            toastEl.innerHTML = `
               <div class="d-flex">
                   <div class="toast-body">
                       ${type === 'success'
@@ -117,47 +118,49 @@
               </div>
           `;
 
-          container.appendChild(toastEl);
+            container.appendChild(toastEl);
 
-          const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
-          toast.show();
+            const toast = new bootstrap.Toast(toastEl, {
+                delay: 3000
+            });
+            toast.show();
 
-          toastEl.addEventListener('hidden.bs.toast', () => {
-              toastEl.remove();
-          });
-      }
+            toastEl.addEventListener('hidden.bs.toast', () => {
+                toastEl.remove();
+            });
+        }
 
-      // Instant validation for start date
-      startDateInput.addEventListener('change', () => {
-          const startDate = normalizeDate(startDateInput.value);
+        // Instant validation for start date
+        startDateInput.addEventListener('change', () => {
+            const startDate = normalizeDate(startDateInput.value);
 
-          if (startDate < tomorrow) {
-              showToast('Start date cannot be today. The earliest start date is tomorrow.');
-              startDateInput.value = '';
-              return;
-          }
+            if (startDate < tomorrow) {
+                showToast('Start date cannot be today. The earliest start date is tomorrow.');
+                startDateInput.value = '';
+                return;
+            }
 
-          // Set end date min (FIXED timezone)
-          const minEnd = new Date(startDate);
-          minEnd.setDate(minEnd.getDate() + 1);
-          endDateInput.min = formatDateLocal(minEnd);
+            // Set end date min (FIXED timezone)
+            const minEnd = new Date(startDate);
+            minEnd.setDate(minEnd.getDate() + 1);
+            endDateInput.min = formatDateLocal(minEnd);
 
-          // Reset invalid end date
-          if (endDateInput.value && normalizeDate(endDateInput.value) <= startDate) {
-              showToast('End date must be at least one day after start date.');
-              endDateInput.value = '';
-          }
-      });
+            // Reset invalid end date
+            if (endDateInput.value && normalizeDate(endDateInput.value) <= startDate) {
+                showToast('End date must be at least one day after start date.');
+                endDateInput.value = '';
+            }
+        });
 
-      // Instant validation for end date
-      endDateInput.addEventListener('change', () => {
-          const startDate = normalizeDate(startDateInput.value);
-          const endDate = normalizeDate(endDateInput.value);
+        // Instant validation for end date
+        endDateInput.addEventListener('change', () => {
+            const startDate = normalizeDate(startDateInput.value);
+            const endDate = normalizeDate(endDateInput.value);
 
-          if (startDateInput.value && endDate <= startDate) {
-              showToast('End date must be at least one day after start date.');
-              endDateInput.value = '';
-          }
-      });
+            if (startDateInput.value && endDate <= startDate) {
+                showToast('End date must be at least one day after start date.');
+                endDateInput.value = '';
+            }
+        });
     </script>
 @endsection

@@ -34,7 +34,7 @@ class PromoController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('promo_name', 'like', "%{$search}%")
-                  ->orWhere('promo_code', 'like', "%{$search}%");
+                    ->orWhere('promo_code', 'like', "%{$search}%");
             });
         }
 
@@ -65,7 +65,7 @@ class PromoController extends Controller
             'promo_discount_rate' => 'required|numeric|min:0|max:100',
         ]);
 
-        Promo::create($request->all());
+        Promo::create(array_merge($request->all(), ['promo_code' => strtoupper($request->promo_code)]));
 
         return redirect()->route('admin.promo_list')->with('success', 'Promo created successfully!');
     }
@@ -92,7 +92,7 @@ class PromoController extends Controller
             'promo_discount_rate' => 'required|numeric|min:0|max:100',
         ]);
 
-        $promo->update($request->all());
+        $promo->update(array_merge($request->all(), ['promo_code' => strtoupper($request->promo_code)]));
 
         return redirect()->route('admin.promo_list')->with('success', 'Promo updated successfully!');
     }
