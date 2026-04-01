@@ -20,7 +20,7 @@ class StaffController extends Controller
 
     public function index(Request $request)
     {
-           
+
         /*
         dd([
             'staff_guard' => auth()->guard('staff')->check(),
@@ -29,7 +29,7 @@ class StaffController extends Controller
             'admin_user' => auth()->guard('admin')->user(),
         ]);
         */
-        
+
         $this->ensureAdmin();
 
         $query = Staff::query();
@@ -39,9 +39,12 @@ class StaffController extends Controller
             $query->where('staff_name', 'like', '%' . $request->search . '%');
         }
 
-        // Filter by status
-        if ($request->has('status') && $request->status ?? 'Active') {
-            $query->where('staff_status', $request->status);
+        // Default to Active when no status param; 'all' = show all staff
+        $status = $request->input('status', 'Active');
+        if ($status === 'all') {
+            $query->whereIn('staff_status', ['Active', 'Inactive']);
+        } else {
+            $query->where('staff_status', $status);
         }
 
         $staff = $query
@@ -77,7 +80,7 @@ class StaffController extends Controller
             'staff_dob' => $request->staff_dob,
             'staff_gender' => $request->staff_gender,
             'staff_email' => $request->staff_email,
-            'staff_status' =>'Active', // match enum in DB
+            'staff_status' => 'Active', // match enum in DB
         ]);
 
 

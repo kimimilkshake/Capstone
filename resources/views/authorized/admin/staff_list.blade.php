@@ -12,10 +12,11 @@
             </form>
 
             <form method="GET" action="{{ route('admin.staff_list') }}">
-                <select name="status" onchange="this.form.submit()"> 
-                    <option value="" {{ request('status') == '' ? 'selected' : '' }}>All Staff</option>
-                    <option value="Active" {{ request('status', 'Active') == 'Active' ? 'selected' : '' }}>Active</option>
-                    <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                <select name="status" onchange="this.form.submit()">
+                    <option value="all" {{ request('status') === 'all' ? 'selected' : '' }}>All Staff</option>
+                    <option value="Active"
+                        {{ !request()->has('status') || request('status') === 'Active' ? 'selected' : '' }}>Active</option>
+                    <option value="Inactive" {{ request('status') === 'Inactive' ? 'selected' : '' }}>Inactive</option>
                 </select>
             </form>
 
@@ -47,11 +48,12 @@
                         <td>{{ $s->staff_email }}</td>
                         <td>{{ $s->staff_status }}</td>
                         <td>
-                        <a href="{{ route('admin.staff_edit', $s->staff_id) }}" class="editRouteBtn link-btn" title="Edit Staff">
-                            <!-- Using Font Awesome pencil icon -->
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </a>
-                    </td>
+                            <a href="{{ route('admin.staff_edit', $s->staff_id) }}" class="editRouteBtn link-btn"
+                                title="Edit Staff">
+                                <!-- Using Font Awesome pencil icon -->
+                                <i class="fa fa-pencil" aria-hidden="true"></i>
+                            </a>
+                        </td>
                     </tr>
                 @empty
                     <tr>
