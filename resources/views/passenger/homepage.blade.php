@@ -2,7 +2,7 @@
 @section('content')
     @include('components.hero'){{-- Head Nav --}}
 
-    <div class="container my-5">
+    <div class="container my-5 homepage-section">
         <div class="row">
             <div class="col-md-6 my-5">
                 <img src="{{ asset('images/travel.webp') }}" alt="Body Image" class="img-fluid body-image"
