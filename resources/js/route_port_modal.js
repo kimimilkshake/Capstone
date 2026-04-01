@@ -526,10 +526,12 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         originalOptions.forEach((opt) => {
+            const province = opt.dataset.province?.toLowerCase() || "";
             const city = opt.dataset.city?.toLowerCase() || "";
             const terminal = opt.dataset.terminal?.toLowerCase() || "";
             const text = opt.text.toLowerCase();
             if (
+                province.includes(search) ||
                 city.includes(search) ||
                 terminal.includes(search) ||
                 text.includes(search)

@@ -218,8 +218,8 @@
                             <option value="">Select Port</option>
                             @foreach ($ports as $port)
                                 <option value="{{ $port->port_id }}" data-city="{{ $port->city }}"
-                                    data-terminal="{{ $port->terminal_name }}">
-                                    {{ $port->terminal_name }} - {{ $port->port_name }} ({{ $port->city }})
+                                    data-terminal="{{ $port->terminal_name }}" data-province="{{ $port->province }}">
+                                    {{ $port->terminal_name }} - {{ $port->port_name }} ({{ $port->city }}, {{ $port->province }})
                                 </option>
                             @endforeach
                         </select>
