@@ -11,8 +11,8 @@ class ScheduleController extends Controller
 {
     public function index()
     {
-        // Load route categories with route ports
-        $routeCategories = RouteCategory::with(['routePorts'])->get();
+        // Load route categories with route ports and passenger discounts
+        $routeCategories = RouteCategory::with(['routePorts', 'passengerDiscounts'])->get();
 
         // For each route_port, build the weekly schedule pattern:
         // 1. Prefer upcoming scheduled voyages

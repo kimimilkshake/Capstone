@@ -43,7 +43,7 @@ class RoutePortController extends Controller
             ->paginate(10)
             ->withQueryString(); // keeps search query when paginating
 
-        $route_categories = RouteCategory::orderBy('route_category_name', 'asc')->get();
+        $route_categories = RouteCategory::with('passengerDiscounts')->orderBy('route_category_name', 'asc')->get();
         $ports = Port::orderBy('port_name')->get();
 
         return view('authorized.admin.route_port_list', compact('route_port', 'route_categories', 'ports', 'search'));
@@ -116,7 +116,7 @@ class RoutePortController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Server error: '.$e->getMessage()
+                'message' => 'Server error: ' . $e->getMessage()
             ], 500);
         }
     }

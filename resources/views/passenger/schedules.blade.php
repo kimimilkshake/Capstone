@@ -97,7 +97,7 @@
                                                         <th>Day</th>
                                                         <th>Departure</th>
                                                         <th>Arrival</th>
-                                                        <th>ETA</th>
+                                                        <th>Duration</th>
                                                         <th>Vessel</th>
                                                     </tr>
                                                 </thead>
@@ -207,7 +207,7 @@
                                                         <th>Day</th>
                                                         <th>Departure</th>
                                                         <th>Arrival</th>
-                                                        <th>ETA</th>
+                                                        <th>Duration</th>
                                                         <th>Vessel</th>
                                                     </tr>
                                                 </thead>
@@ -260,14 +260,31 @@
                 @foreach ($routeCategories as $category)
                     @php
                         $vessels = $vesselsByCategory[$category->route_category_id] ?? collect();
+                        // Order discounts by the canonical passenger type order
+                        $typeOrder = [
+                            'Regular',
+                            'Senior Citizen',
+                            'PWD',
+                            'Student',
+                            'Uniformed Personnel',
+                            '3 to 11 years old',
+                            'Below 3 years old',
+                        ];
+                        $discountMap = $category->passengerDiscounts
+                            ->sortBy(fn($d) => array_search($d->passenger_type, $typeOrder))
+                            ->values();
+                        $typeLabels = [
+                            'Regular' => 'Regular',
+                            'Senior Citizen' => 'Senior Citizen',
+                            'PWD' => 'PWD',
+                            'Student' => 'Student',
+                            'Uniformed Personnel' => 'Uniformed Personnel',
+                            '3 to 11 years old' => 'Child (3-11 yrs)',
+                            'Below 3 years old' => 'Infant (<3 yrs)',
+                        ];
                     @endphp
 
-                    @if ($vessels->isNotEmpty())
-                        @php
-                            $catName = $category->route_category_name;
-                            $isBoholCebuCategory = stripos($catName, 'talibon') !== false;
-                        @endphp
-                        <div class="rates-route-group">
+                    @if ($vessels->isNotEmpty()) <div class="rates-route-group">
                             <div class="rates-route-name">{{ $category->route_category_name }}</div>
 
                             @foreach ($vessels as $vessel)
@@ -279,53 +296,70 @@
                                                 <thead>
                                                     <tr>
                                                         <th>Accommodation</th>
-                                                        <th>Regular</th>
-                                                        <th>Senior / PWD</th>
-                                                        <th>Student / Uniformed</th>
-                                                        <th>Child (3-11 yrs)</th>
-                                                        <th>Infant (&lt;3 yrs)</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach ($vessel->accommodations as $accommodation)
-                                                        @php
-                                                            $base = $accommodation->accommodation_regular_price;
-                                                        @endphp
-                                                        <tr>
-                                                            <td>{{ $accommodation->accommodation_name }}</td>
-                                                            <td>&#8369;{{ number_format($base, 2) }}</td>
-                                                            <td>&#8369;{{ number_format($base * 0.8, 2) }}</td>
-                                                            <td>&#8369;{{ number_format($base * 0.8, 2) }}</td>
-                                                            <td>&#8369;{{ number_format($base * 0.5, 2) }}</td>
-                                                            <td>
-                                                                @if ($isBoholCebuCategory)
-                                                                    <span class="text-success fw-bold">FREE</span>
-                                                                @else
-                                                                    &#8369;{{ number_format($base * 0.75, 2) }}
-                                                                @endif
-                                                            </td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                @endif
-                            @endforeach
-                        </div>
-                    @endif
+                                                        @foreach ($discountMap as $disc)
+                                                            <th>{{ $typeLabels[$disc->passenger_type] ?? $disc->passenger_type }}
+                                                                @if ($disc->discount_rate > 0)
+                                                                    <small style="color:#fff;font-weight:normal;opacity:0.85;"> -{{ rtrim(rtrim(number_format($disc->discount_rate, 2), '0'), '.') }}%</small> @endif
+                    </th>
                 @endforeach
-
-                <div class="rates-block">
-                    <p class="rates-note">
-                        * Senior Citizen / PWD: 20% discount &bull;
-                        Student / Uniformed Personnel (PNP, AFP, BFP, BJMP, Seafarers): 20% discount &bull;
-                        Child (3-11 years old): Half fare &bull;
-                        Infant (Below 3 years old): 25% fare (Free on Bohol-Cebu routes)
-                    </p>
-                </div>
+                @if ($discountMap->isEmpty())
+                    <th>Regular</th>
+                @endif
+                </tr>
+                </thead>
+                <tbody>
+                    @foreach ($vessel->accommodations as $accommodation)
+                        @php
+                            $base =
+                                (float) $accommodation->accommodation_regular_price *
+                                (1 + ($category->route_rate ?? 0) / 100);
+                        @endphp
+                        <tr>
+                            <td>{{ $accommodation->accommodation_name }}</td>
+                            @if ($discountMap->isNotEmpty())
+                                @foreach ($discountMap as $disc)
+                                    @php
+                                        $discounted = $base * ((100 - $disc->discount_rate) / 100);
+                                    @endphp
+                                    <td>
+                                        @if ($disc->discount_rate >= 100)
+                                            <span class="text-success fw-bold">FREE</span>
+                                        @else
+                                            &#8369;{{ number_format($discounted, 2) }}
+                                        @endif
+                                    </td>
+                                @endforeach
+                            @else
+                                <td>&#8369;{{ number_format($base, 2) }}</td>
+                            @endif
+                        </tr>
+                    @endforeach
+                </tbody>
+                </table>
             </div>
         </div>
+        @endif
+        @endforeach
+
+        {{-- Discount notes for this route category --}}
+        @if ($discountMap->isNotEmpty())
+            <p class="rates-note text-center">
+                @foreach ($discountMap->where('discount_rate', '>', 0) as $disc)
+                    * {{ $disc->passenger_type }}:
+                    @if ($disc->discount_rate >= 100)
+                        FREE
+                    @else
+                        {{ rtrim(rtrim(number_format($disc->discount_rate, 2), '0'), '.') }}% discount
+                    @endif
+                    @if (!$loop->last) &bull; @endif
+                @endforeach
+            </p>
+        @endif
+    </div>
+    @endif
+    @endforeach
+    </div>
+    </div>
     </div>
 
     @include('components.footer')

@@ -119,7 +119,7 @@ class DatabaseSeeder extends Seeder
 
         //Measurement Unit Seeders
         DB::table('measurement_unit')->insert([
-            
+
             [
                 'measurement_unit_name' => 'centimeters',
                 'measurement_unit_abbreviation' => 'cm',
@@ -326,7 +326,33 @@ class DatabaseSeeder extends Seeder
         // Get inserted Route Category IDs
         $baybayId = DB::table('route_category')->where('route_category_name', 'BAYBAY')->value('route_category_id');
         $talibonId = DB::table('route_category')->where('route_category_name', 'TALIBON')->value('route_category_id');
-        
+
+        // Passenger type discounts for each route category
+        $commonDiscounts = [
+            ['passenger_type' => 'Regular', 'discount_rate' => 0],
+            ['passenger_type' => 'Senior Citizen', 'discount_rate' => 20],
+            ['passenger_type' => 'PWD', 'discount_rate' => 20],
+            ['passenger_type' => 'Student', 'discount_rate' => 20],
+            ['passenger_type' => 'Uniformed Personnel', 'discount_rate' => 20],
+            ['passenger_type' => '3 to 11 years old', 'discount_rate' => 50],
+        ];
+
+        $baybayDiscounts = array_merge($commonDiscounts, [
+            ['passenger_type' => 'Below 3 years old', 'discount_rate' => 75],
+        ]);
+
+        $talibonDiscounts = array_merge($commonDiscounts, [
+            ['passenger_type' => 'Below 3 years old', 'discount_rate' => 100],
+        ]);
+
+        $discountRows = [];
+        foreach ($baybayDiscounts as $d) {
+            $discountRows[] = array_merge($d, ['route_category_id' => $baybayId, 'created_at' => now(), 'updated_at' => now()]);
+        }
+        foreach ($talibonDiscounts as $d) {
+            $discountRows[] = array_merge($d, ['route_category_id' => $talibonId, 'created_at' => now(), 'updated_at' => now()]);
+        }
+        DB::table('route_category_passenger_discounts')->insert($discountRows);
 
         // Get inserted Port IDs
         $cebuPortId = DB::table('ports')
@@ -349,47 +375,47 @@ class DatabaseSeeder extends Seeder
 
         // Route and Port seeders
         DB::table('route_port')->insert([
-        [
-            'route_category_id' => $baybayId,
-            'route_code' => 'CEBBAY',
-            'route_origin' => 'Cebu',
-            'route_destination' => 'Baybay',
-            'port_origin_id' => $cebuPortId,
-            'port_destination_id' => $baybayPortId,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ],
-        [
-            'route_category_id' => $talibonId,
-            'route_code' => 'CEBTAL',
-            'route_origin' => 'Cebu',
-            'route_destination' => 'Talibon',
-            'port_origin_id' => $cebuPortId,
-            'port_destination_id' => $talibonPortId,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ],
-        [
-            'route_category_id' => $baybayId,
-            'route_code' => 'BAYCEB',
-            'route_origin' => 'Baybay',
-            'route_destination' => 'Cebu',
-            'port_origin_id' => $baybayPortId,
-            'port_destination_id' => $cebuPortId,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ],
-        [
-            'route_category_id' => $talibonId,
-            'route_code' => 'TALCEB',
-            'route_origin' => 'Talibon',
-            'route_destination' => 'Cebu',
-            'port_origin_id' => $talibonPortId,
-            'port_destination_id' => $cebuPortId,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ],
-    ]);
+            [
+                'route_category_id' => $baybayId,
+                'route_code' => 'CEBBAY',
+                'route_origin' => 'Cebu',
+                'route_destination' => 'Baybay',
+                'port_origin_id' => $cebuPortId,
+                'port_destination_id' => $baybayPortId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'route_category_id' => $talibonId,
+                'route_code' => 'CEBTAL',
+                'route_origin' => 'Cebu',
+                'route_destination' => 'Talibon',
+                'port_origin_id' => $cebuPortId,
+                'port_destination_id' => $talibonPortId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'route_category_id' => $baybayId,
+                'route_code' => 'BAYCEB',
+                'route_origin' => 'Baybay',
+                'route_destination' => 'Cebu',
+                'port_origin_id' => $baybayPortId,
+                'port_destination_id' => $cebuPortId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'route_category_id' => $talibonId,
+                'route_code' => 'TALCEB',
+                'route_origin' => 'Talibon',
+                'route_destination' => 'Cebu',
+                'port_origin_id' => $talibonPortId,
+                'port_destination_id' => $cebuPortId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
 
 
         //Vessel seeders

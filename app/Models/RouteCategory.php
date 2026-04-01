@@ -13,6 +13,7 @@ class RouteCategory extends Model
     protected $primaryKey = 'route_category_id';
     protected $fillable = [
         'route_category_name',
+        'route_rate',
     ];
 
     public function routePorts()
@@ -23,5 +24,10 @@ class RouteCategory extends Model
     public function cargoItems()
     {
         return $this->hasMany(CargoItem::class, 'route_category_id', 'route_category_id');
+    }
+
+    public function passengerDiscounts()
+    {
+        return $this->hasMany(RouteCategoryDiscount::class, 'route_category_id', 'route_category_id');
     }
 }

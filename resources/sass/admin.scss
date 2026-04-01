@@ -598,13 +598,13 @@ body {
 //ROUTES AND PORTS
 .add-link-btn {
   background-color: #485b8c;
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
   font: inherit;
   display: inline-block;
   text-decoration: none;
   color: #fff;
-  padding: 8px 16px;
+  padding: 10px 16px;
   border-radius: 5px;
   font-size: 14px;
   font-weight: 500;

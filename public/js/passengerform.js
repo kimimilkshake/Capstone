@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const loader = document.getElementById("ocrLoader");
     let accommodationsWithCots = []; // Will store accommodation data with available cots
     let currentPromo = null; // Store current promo info
+    let passengerDiscounts = {}; // passenger_type => discount_rate from route category
 
     // Get accommodations data from the page (basic info)
     let accommodations = [];
@@ -17,6 +18,39 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     } catch (error) {
         console.error("Failed to load accommodations data:", error);
+    }
+
+    // All known passenger types in display order (fallback when no route discounts configured)
+    const ALL_PASSENGER_TYPES = [
+        { value: "Regular", label: "Regular/Adult" },
+        { value: "Senior Citizen", label: "Senior Citizen" },
+        { value: "PWD", label: "PWD" },
+        { value: "Student", label: "Student" },
+        { value: "Uniformed Personnel", label: "Uniformed Personnel" },
+        { value: "3 to 11 years old", label: "3 to 11 years old" },
+        { value: "Below 3 years old", label: "Below 3 years old" },
+    ];
+
+    function buildPassengerTypeOptions() {
+        const configuredTypes = Object.keys(passengerDiscounts);
+        // If no discount config fetched, show all types without labels
+        const types =
+            configuredTypes.length > 0
+                ? ALL_PASSENGER_TYPES.filter((t) =>
+                      configuredTypes.includes(t.value),
+                  )
+                : ALL_PASSENGER_TYPES;
+
+        return types
+            .map((t) => {
+                const rate = passengerDiscounts[t.value];
+                const label =
+                    rate !== undefined && rate > 0
+                        ? `${t.label} (-${rate}%)`
+                        : t.label;
+                return `<option value="${t.value}">${label}</option>`;
+            })
+            .join("");
     }
 
     function createPassengerHTML(i) {
@@ -41,13 +75,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <label class="form-label">Passenger Type <span class="text-danger">*</span></label>
                         <select class="form-select passenger-type" name="type" required>
                             <option value="">Select Type</option>
-                            <option value="Regular">Regular/Adult</option>
-                            <option value="Senior Citizen">Senior Citizen</option>
-                            <option value="PWD">PWD</option>
-                            <option value="Student">Student</option>
-                            <option value="Uniformed Personnel">Uniformed Personnel</option>
-                            <option value="3 to 11 years old">3 to 11 years old</option>
-                            <option value="Below 3 years old">Below 3 years old</option>
+                            ${buildPassengerTypeOptions()}
                         </select>
                     </div>
                     <div class="col-md-4">
@@ -553,27 +581,34 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (voyageIdEl && voyageIdEl.value) {
             try {
-                const resp = await fetch(
-                    `/voyage/available-cots-by-accommodation?voyage_id=${voyageIdEl.value}`,
-                );
-                const json = await resp.json();
+                const [cotsResp, discountsResp] = await Promise.all([
+                    fetch(
+                        `/voyage/available-cots-by-accommodation?voyage_id=${voyageIdEl.value}`,
+                    ),
+                    fetch(
+                        `/api/voyage/${voyageIdEl.value}/passenger-discounts`,
+                    ),
+                ]);
 
+                const cotsJson = await cotsResp.json();
                 if (
-                    json &&
-                    json.success &&
-                    Array.isArray(json.accommodations)
+                    cotsJson &&
+                    cotsJson.success &&
+                    Array.isArray(cotsJson.accommodations)
                 ) {
-                    accommodationsWithCots = json.accommodations;
+                    accommodationsWithCots = cotsJson.accommodations;
                     console.log(
                         "Loaded accommodation cot data:",
                         accommodationsWithCots,
                     );
                 }
+
+                const discountsJson = await discountsResp.json();
+                if (discountsJson && typeof discountsJson === "object") {
+                    passengerDiscounts = discountsJson;
+                }
             } catch (err) {
-                console.error(
-                    "Failed to fetch available cots by accommodation",
-                    err,
-                );
+                console.error("Failed to fetch voyage init data", err);
             }
         }
 

@@ -106,8 +106,12 @@ Route::post('/passenger/store', [PassengerController::class, 'store'])->name('pa
 // Form submission
 Route::post('/booking/submit', [BookingController::class, 'store'])->name('booking.submit');
 Route::post('/booking/cancel/{booking_ref_no}', [BookingController::class, 'cancel'])->name('booking.cancel');
+// Promo code validation
+Route::post('/api/validate-promo', [BookingController::class, 'validatePromo'])->name('api.validate_promo');
 // Request ticket copy
 Route::post('/ticket/request-copy', [BookingController::class, 'requestTicketCopy'])->name('ticket.request-copy');
+// API: passenger type discounts for a voyage's route category
+Route::get('/api/voyage/{voyageId}/passenger-discounts', [BookingController::class, 'voyagePassengerDiscounts'])->name('api.voyage.passenger_discounts');
 // Get unavailable cot numbers for a voyage (by route/date or voyage_id)
 Route::get('/voyage/unavailable-cots', [BookingController::class, 'unavailableCots'])->name('voyage.unavailable_cots');
 // API: return available cots per accommodation for a voyage
@@ -250,6 +254,7 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
     Route::post('/route_categories', [RouteCategoryController::class, 'store'])->name('admin.routecategories.store');
     Route::put('/route_categories/{id}', [RouteCategoryController::class, 'update'])->name('admin.routecategories.update');
     Route::delete('/route_categories/{id}', [RouteCategoryController::class, 'destroy'])->name('admin.routecategories.destroy');
+    Route::get('/route_categories/{id}/discounts', [RouteCategoryController::class, 'discounts'])->name('admin.routecategories.discounts');
 
     //Route and Port
     Route::get('/route_port', [RoutePortController::class, 'index'])->name('admin.route_port_list');

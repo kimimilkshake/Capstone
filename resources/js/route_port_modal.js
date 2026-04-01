@@ -1,4 +1,116 @@
 // ===== Route Category Modal =====
+
+const PASSENGER_TYPES = [
+    "Regular",
+    "Senior Citizen",
+    "PWD",
+    "Student",
+    "Uniformed Personnel",
+    "3 to 11 years old",
+    "Below 3 years old",
+];
+
+const DEFAULT_DISCOUNT_RATES = {
+    Regular: 0,
+    "Senior Citizen": 20,
+    PWD: 20,
+    Student: 20,
+    "Uniformed Personnel": 20,
+    "3 to 11 years old": 50,
+    "Below 3 years old": 75,
+};
+
+function getUsedTypes(containerEl) {
+    return Array.from(
+        containerEl.querySelectorAll(
+            'select[name="discounts[][passenger_type]"]',
+        ),
+    )
+        .map((s) => s.value)
+        .filter(Boolean);
+}
+
+function refreshDiscountSelects(containerEl, addBtn) {
+    const usedTypes = getUsedTypes(containerEl);
+    containerEl
+        .querySelectorAll('select[name="discounts[][passenger_type]"]')
+        .forEach((sel) => {
+            const own = sel.value;
+            sel.innerHTML =
+                '<option value="">Passenger Type</option>' +
+                PASSENGER_TYPES.filter(
+                    (t) => t === own || !usedTypes.includes(t),
+                )
+                    .map(
+                        (t) =>
+                            `<option value="${t}"${t === own ? " selected" : ""}>${t}</option>`,
+                    )
+                    .join("");
+        });
+    if (addBtn) {
+        const full = usedTypes.length >= PASSENGER_TYPES.length;
+        addBtn.disabled = full;
+        addBtn.style.opacity = full ? "0.4" : "1";
+        addBtn.style.cursor = full ? "not-allowed" : "pointer";
+    }
+}
+
+function buildDiscountRow(containerEl, type = "", rate = null, addBtn = null) {
+    const defaultRate = type !== "" ? (DEFAULT_DISCOUNT_RATES[type] ?? 20) : 20;
+    const actualRate = rate !== null ? rate : defaultRate;
+
+    const row = document.createElement("div");
+    row.style.cssText =
+        "display:flex;gap:8px;align-items:center;margin-top:6px;";
+
+    const usedTypes = getUsedTypes(containerEl);
+    const sel = document.createElement("select");
+    sel.name = "discounts[][passenger_type]";
+    sel.style.cssText =
+        "flex:1;padding:4px 6px;border:1px solid #ccc;border-radius:4px;";
+    sel.innerHTML =
+        '<option value="">Passenger Type</option>' +
+        PASSENGER_TYPES.filter((t) => t === type || !usedTypes.includes(t))
+            .map(
+                (t) =>
+                    `<option value="${t}"${t === type ? " selected" : ""}>${t}</option>`,
+            )
+            .join("");
+
+    const inp = document.createElement("input");
+    inp.type = "number";
+    inp.name = "discounts[][discount_rate]";
+    inp.placeholder = "Discount %";
+    inp.min = 0;
+    inp.max = 100;
+    inp.step = 0.01;
+    inp.value = actualRate;
+    inp.style.cssText =
+        "width:110px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;";
+
+    sel.addEventListener("change", function () {
+        inp.value = DEFAULT_DISCOUNT_RATES[this.value] ?? 20;
+        refreshDiscountSelects(containerEl, addBtn);
+    });
+
+    const rm = document.createElement("button");
+    rm.type = "button";
+    rm.textContent = "×";
+    rm.style.cssText =
+        "background:none;border:none;color:#dc3545;font-size:1.2em;cursor:pointer;line-height:1;padding:0 4px;";
+    rm.addEventListener("click", () => {
+        row.remove();
+        refreshDiscountSelects(containerEl, addBtn);
+    });
+
+    row.appendChild(sel);
+    row.appendChild(inp);
+    row.appendChild(rm);
+    containerEl.appendChild(row);
+
+    refreshDiscountSelects(containerEl, addBtn);
+}
+
 const addRouteCategoryBtn = document.getElementById("addRouteCategoryBtn");
 const addRouteCategoryModal = document.getElementById("addRouteCategoryModal");
 const closeAddRouteCategoryModal = document.getElementById(
@@ -7,15 +119,49 @@ const closeAddRouteCategoryModal = document.getElementById(
 const addRouteCategoryForm = document.getElementById("addRouteCategoryForm");
 
 document.addEventListener("DOMContentLoaded", function () {
-    // --- OPEN MODAL ---
+    // --- DISCOUNT ROWS (Add) ---
+    const addRCDiscountsContainer = document.getElementById(
+        "addRCDiscountsContainer",
+    );
+    const addRCDiscountRowBtn = document.getElementById("addRCDiscountRowBtn");
+
+    function populateDefaultDiscountRows() {
+        addRCDiscountsContainer.innerHTML = "";
+        PASSENGER_TYPES.forEach((type) => {
+            buildDiscountRow(
+                addRCDiscountsContainer,
+                type,
+                null,
+                addRCDiscountRowBtn,
+            );
+        });
+    }
+
+    addRCDiscountRowBtn.addEventListener("click", () => {
+        const used = getUsedTypes(addRCDiscountsContainer);
+        const nextType = PASSENGER_TYPES.find((t) => !used.includes(t)) || "";
+        buildDiscountRow(
+            addRCDiscountsContainer,
+            nextType,
+            null,
+            addRCDiscountRowBtn,
+        );
+    });
+
+    // --- OPEN MODAL --- auto-fill defaults
     addRouteCategoryBtn.addEventListener("click", () => {
+        populateDefaultDiscountRows();
         addRouteCategoryModal.style.display = "flex";
     });
+
+    // Detach the original open listener reference (handled above now)
+    addRouteCategoryBtn._rcOpenHandled = true;
 
     // --- CLOSE MODAL ---
     function closeRouteCategoryModal() {
         addRouteCategoryModal.style.display = "none";
         addRouteCategoryForm.reset();
+        populateDefaultDiscountRows();
     }
     closeAddRouteCategoryModal.addEventListener(
         "click",
@@ -32,6 +178,17 @@ document.addEventListener("DOMContentLoaded", function () {
         e.preventDefault();
 
         const formData = new FormData(addRouteCategoryForm);
+
+        // Collect discount rows
+        const rows = addRCDiscountsContainer.querySelectorAll("div");
+        rows.forEach((row, i) => {
+            const sel = row.querySelector("select");
+            const inp = row.querySelector('input[type="number"]');
+            if (sel && inp && sel.value && inp.value !== "") {
+                formData.append(`discounts[${i}][passenger_type]`, sel.value);
+                formData.append(`discounts[${i}][discount_rate]`, inp.value);
+            }
+        });
 
         try {
             const response = await fetch("/authorized/admin/route_categories", {
@@ -51,27 +208,244 @@ document.addEventListener("DOMContentLoaded", function () {
                 showToast("Route Category added successfully!", "success");
                 addRouteCategoryModal.style.display = "none";
                 addRouteCategoryForm.reset();
+                populateDefaultDiscountRows();
 
-                // append new route category to dropdown in Add Route & Port modal
-                const routeCategorySelect =
-                    document.getElementById("route_category_id");
-                if (routeCategorySelect && data.routeCategory) {
-                    const option = document.createElement("option");
-                    option.value = data.routeCategory.route_category_id;
-                    option.text = data.routeCategory.route_category_name;
-                    routeCategorySelect.appendChild(option);
+                if (data.routeCategory) {
+                    const rc = data.routeCategory;
+                    const discounts = rc.passenger_discounts ?? [];
+                    const discountsJson = JSON.stringify(
+                        discounts.map((d) => ({
+                            passenger_type: d.passenger_type,
+                            discount_rate: d.discount_rate,
+                        })),
+                    );
 
-                    // sort options alphabetically (skip first "Select Route Category")
-                    const options = Array.from(routeCategorySelect.options)
-                        .slice(1)
-                        .sort((a, b) => a.text.localeCompare(b.text));
-                    routeCategorySelect.innerHTML =
-                        '<option value="">Select Route Category</option>';
-                    options.forEach((o) => routeCategorySelect.appendChild(o));
+                    // Helper: build a sorted option and append to a select
+                    function addSortedOption(
+                        selectEl,
+                        value,
+                        text,
+                        extraDataset,
+                    ) {
+                        const option = document.createElement("option");
+                        option.value = value;
+                        option.text = text;
+                        if (extraDataset)
+                            Object.assign(option.dataset, extraDataset);
+                        selectEl.appendChild(option);
+                        const opts = Array.from(selectEl.options)
+                            .slice(1)
+                            .sort((a, b) => a.text.localeCompare(b.text));
+                        selectEl.innerHTML = selectEl.options[0].outerHTML;
+                        opts.forEach((o) => selectEl.appendChild(o));
+                    }
+
+                    // Update Add Route & Port dropdown
+                    const routeCategorySelect =
+                        document.getElementById("route_category_id");
+                    if (routeCategorySelect) {
+                        addSortedOption(
+                            routeCategorySelect,
+                            rc.route_category_id,
+                            rc.route_category_name,
+                            {},
+                        );
+                    }
+
+                    // Update Edit Route Category dropdown
+                    const editRCSelect =
+                        document.getElementById("editRCSelect");
+                    if (editRCSelect) {
+                        addSortedOption(
+                            editRCSelect,
+                            rc.route_category_id,
+                            rc.route_category_name,
+                            {
+                                name: rc.route_category_name,
+                                rate: rc.route_rate ?? "",
+                                discounts: discountsJson,
+                            },
+                        );
+                    }
                 }
             } else {
                 showToast(
                     data.message || "Error adding route category",
+                    "danger",
+                );
+            }
+        } catch (err) {
+            showToast("Server error", "danger");
+            console.error(err);
+        }
+    });
+});
+
+// ===== Edit Route Category Modal =====
+document.addEventListener("DOMContentLoaded", function () {
+    const editRCBtn = document.getElementById("editRouteCategoryBtn");
+    const editRCModal = document.getElementById("editRouteCategoryModal");
+    const closeEditRCModal = document.getElementById(
+        "closeEditRouteCategoryModal",
+    );
+    const editRCForm = document.getElementById("editRouteCategoryForm");
+    const editRCSelect = document.getElementById("editRCSelect");
+    const editRCRate = document.getElementById("editRCRate");
+    const saveEditRCBtn = document.getElementById("saveEditRCBtn");
+    const editRCDiscountsContainer = document.getElementById(
+        "editRCDiscountsContainer",
+    );
+
+    let originalRCRate = null;
+
+    function closeEditRouteCategory() {
+        editRCModal.style.display = "none";
+        editRCForm.reset();
+        saveEditRCBtn.disabled = true;
+        saveEditRCBtn.style.backgroundColor = "#ccc";
+        saveEditRCBtn.style.cursor = "not-allowed";
+        originalRCRate = null;
+        editRCDiscountsContainer.innerHTML = "";
+    }
+
+    editRCBtn.addEventListener("click", () => {
+        editRCModal.style.display = "flex";
+    });
+
+    closeEditRCModal.addEventListener("click", closeEditRouteCategory);
+
+    window.addEventListener("click", (e) => {
+        if (e.target === editRCModal) closeEditRouteCategory();
+    });
+
+    // When a category is selected, populate the rate and discount fields
+    editRCSelect.addEventListener("change", function () {
+        const selected = this.options[this.selectedIndex];
+        if (selected && selected.value !== "") {
+            editRCRate.value = selected.dataset.rate ?? "";
+            originalRCRate = selected.dataset.rate ?? "";
+
+            // Load existing discounts
+            editRCDiscountsContainer.innerHTML = "";
+            try {
+                const discounts = JSON.parse(
+                    selected.dataset.discounts || "[]",
+                );
+                discounts.forEach((d) =>
+                    buildDiscountRow(
+                        editRCDiscountsContainer,
+                        d.passenger_type,
+                        d.discount_rate,
+                        editRCDiscountRowBtn,
+                    ),
+                );
+                refreshDiscountSelects(
+                    editRCDiscountsContainer,
+                    editRCDiscountRowBtn,
+                );
+            } catch (e) {
+                /* ignore */
+            }
+        } else {
+            editRCRate.value = "";
+            originalRCRate = null;
+            editRCDiscountsContainer.innerHTML = "";
+        }
+        checkRCChanged();
+    });
+
+    // Wire + Add Discount button for edit modal
+    const editRCDiscountRowBtn = document.getElementById(
+        "editRCDiscountRowBtn",
+    );
+    editRCDiscountRowBtn.addEventListener("click", () => {
+        const used = getUsedTypes(editRCDiscountsContainer);
+        const nextType = PASSENGER_TYPES.find((t) => !used.includes(t)) || "";
+        buildDiscountRow(
+            editRCDiscountsContainer,
+            nextType,
+            null,
+            editRCDiscountRowBtn,
+        );
+        checkRCChanged();
+    });
+
+    // Enable save button only when something changed
+    editRCRate.addEventListener("input", checkRCChanged);
+    editRCDiscountsContainer.addEventListener("input", checkRCChanged);
+    editRCDiscountsContainer.addEventListener("change", checkRCChanged);
+
+    function checkRCChanged() {
+        const hasCategory = editRCSelect.value !== "";
+        const rateChanged = editRCRate.value !== (originalRCRate ?? "");
+        // Always allow save if a category is selected (discounts may have changed)
+        const canSave = hasCategory;
+
+        saveEditRCBtn.disabled = !canSave;
+        saveEditRCBtn.style.backgroundColor = canSave ? "#485B8C" : "#ccc";
+        saveEditRCBtn.style.cursor = canSave ? "pointer" : "not-allowed";
+    }
+
+    editRCForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const id = editRCSelect.value;
+        const selectedOption = editRCSelect.options[editRCSelect.selectedIndex];
+        const formData = new FormData(editRCForm);
+        // Include the current name so validation passes
+        formData.set("route_category_name", selectedOption.dataset.name);
+        // Laravel method spoofing
+        formData.set("_method", "PUT");
+
+        // Collect discount rows
+        const rows = editRCDiscountsContainer.querySelectorAll("div");
+        rows.forEach((row, i) => {
+            const sel = row.querySelector("select");
+            const inp = row.querySelector('input[type="number"]');
+            if (sel && inp && sel.value && inp.value !== "") {
+                formData.append(`discounts[${i}][passenger_type]`, sel.value);
+                formData.append(`discounts[${i}][discount_rate]`, inp.value);
+            }
+        });
+
+        try {
+            const response = await fetch(
+                `/authorized/admin/route_categories/${id}`,
+                {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": document.querySelector(
+                            'meta[name="csrf-token"]',
+                        ).content,
+                        Accept: "application/json",
+                    },
+                    body: formData,
+                },
+            );
+
+            const data = await response.json().catch(() => ({}));
+
+            if (response.ok && data.status === "success") {
+                showToast("Route Category updated successfully!", "success");
+
+                // Update the stored data-rate and data-discounts on the option
+                selectedOption.dataset.rate = editRCRate.value;
+                if (
+                    data.routeCategory &&
+                    data.routeCategory.passenger_discounts
+                ) {
+                    selectedOption.dataset.discounts = JSON.stringify(
+                        data.routeCategory.passenger_discounts.map((d) => ({
+                            passenger_type: d.passenger_type,
+                            discount_rate: d.discount_rate,
+                        })),
+                    );
+                }
+
+                closeEditRouteCategory();
+            } else {
+                showToast(
+                    data.message || "Error updating route category",
                     "danger",
                 );
             }

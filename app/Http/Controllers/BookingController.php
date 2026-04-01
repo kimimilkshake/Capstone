@@ -60,6 +60,16 @@ class BookingController extends Controller
             return response()->json(['success' => false, 'message' => 'No voyage found for selected date. Please contact administrator.'], 422);
         }
 
+        // Fetch route_rate and route_category_id from voyage → route_port → route_category
+        $rcRow = DB::table('voyage')
+            ->join('route_port', 'voyage.route_port_id', '=', 'route_port.route_port_id')
+            ->join('route_category', 'route_port.route_category_id', '=', 'route_category.route_category_id')
+            ->where('voyage.voyage_id', $voyage->voyage_id)
+            ->select('route_category.route_rate', 'route_port.route_category_id')
+            ->first();
+        $routeRate = $rcRow->route_rate ?? 0;
+        $routeCategoryId = $rcRow->route_category_id ?? null;
+
         // Simple pricing: attempt to use accommodation price; fallback to flat price
         $flatPrice = 500.00;
 
@@ -150,8 +160,11 @@ class BookingController extends Controller
                     // ignore and use flat price
                 }
 
+                // Apply route rate surcharge
+                $basePrice = $basePrice * (1 + ($routeRate / 100));
+
                 // Apply discounts based on passenger type and route
-                $price = $this->calculateDiscountedPrice($basePrice, $p['type'] ?? 'Regular', $routeFrom, $routeTo);
+                $price = $this->calculateDiscountedPrice($basePrice, $p['type'] ?? 'Regular', $routeCategoryId);
 
                 // Apply promo discount if applicable PER PASSENGER
                 $passengerPromoId = $p['promo_id'] ?? null;
@@ -241,13 +254,62 @@ class BookingController extends Controller
             ->with('promo')
             ->get();
 
+        // Fetch route_rate and route_category_id for the booking's voyage
+        $rcRow = DB::table('voyage')
+            ->join('route_port', 'voyage.route_port_id', '=', 'route_port.route_port_id')
+            ->join('route_category', 'route_port.route_category_id', '=', 'route_category.route_category_id')
+            ->where('voyage.voyage_id', $booking->voyage_id)
+            ->select('route_category.route_rate', 'route_port.route_category_id')
+            ->first();
+        $routeRate = $rcRow->route_rate ?? 0;
+        $routeCategoryId = $rcRow->route_category_id ?? null;
+
+        // Build passenger-type discount map for this route category
+        $typeDiscounts = [];
+        if ($routeCategoryId) {
+            $rows = DB::table('route_category_passenger_discounts')
+                ->where('route_category_id', $routeCategoryId)
+                ->get();
+            foreach ($rows as $r) {
+                $typeDiscounts[$r->passenger_type] = (float) $r->discount_rate;
+            }
+        }
+
+        // Fetch vessel accommodations to reverse-look base price per cot
+        $voyageRow = DB::table('voyage')->where('voyage_id', $booking->voyage_id)->first();
+        $accommodations = $voyageRow
+            ? DB::table('accommodation')->where('vessel_id', $voyageRow->vessel_id)->get()
+            : collect();
+
+        // Helper: find accommodation by cot number
+        $findAccom = function (int $cotNo) use ($accommodations) {
+            foreach ($accommodations as $accom) {
+                $ranges = array_map('trim', explode(',', $accom->accommodation_cot_range));
+                foreach ($ranges as $range) {
+                    if (strpos($range, '-') !== false) {
+                        [$start, $end] = explode('-', $range);
+                        if ($cotNo >= (int) $start && $cotNo <= (int) $end) {
+                            return $accom;
+                        }
+                    }
+                }
+            }
+            return null;
+        };
+
         // join passenger data
         $passengers = [];
         foreach ($tickets as $t) {
             $p = \App\Models\Passenger::where('passenger_id', $t->passenger_id)->first();
+            $accom = $findAccom((int) $t->pt_cot_no);
+            $pType = $p ? ($p->passenger_type ?? 'Regular') : 'Regular';
             $passengers[] = [
                 'ticket' => $t,
                 'passenger' => $p,
+                'accommodation_name' => $accom ? $accom->accommodation_name : null,
+                'accommodation_base_price' => $accom ? (float) $accom->accommodation_regular_price : null,
+                'route_rate' => (float) $routeRate,
+                'type_discount_rate' => $typeDiscounts[$pType] ?? 0,
             ];
         }
 
@@ -336,6 +398,13 @@ class BookingController extends Controller
             return response()->json(['success' => false, 'message' => 'Voyage not found'], 404);
         }
 
+        // Get route_rate for this voyage
+        $routeRate = DB::table('voyage')
+            ->join('route_port', 'voyage.route_port_id', '=', 'route_port.route_port_id')
+            ->join('route_category', 'route_port.route_category_id', '=', 'route_category.route_category_id')
+            ->where('voyage.voyage_id', $voyageId)
+            ->value('route_category.route_rate') ?? 0;
+
         // Get accommodations for this vessel with their cot ranges
         $accommodations = DB::table('accommodation')
             ->where('vessel_id', $voyage->vessel_id)
@@ -393,10 +462,12 @@ class BookingController extends Controller
                 });
             }
 
+            $adjustedPrice = round((float) $accommodation->accommodation_regular_price * (1 + ($routeRate / 100)), 2);
+
             $result[] = [
                 'accommodation_id' => $accommodation->accommodation_id,
                 'accommodation_name' => $accommodation->accommodation_name,
-                'accommodation_price' => $accommodation->accommodation_regular_price,
+                'accommodation_price' => $adjustedPrice,
                 'cot_range' => $cotRange,
                 'cot_plan_url' => !empty($accommodation->accommodation_cot_plan_url)
                     ? asset('files/' . $accommodation->accommodation_cot_plan_url)
@@ -474,40 +545,44 @@ class BookingController extends Controller
     }
 
     /**
-     * Calculate discounted price based on passenger type and route
+     * Calculate discounted price using per-route-category DB discounts.
      */
-    private function calculateDiscountedPrice($basePrice, $passengerType, $routeFrom, $routeTo)
+    private function calculateDiscountedPrice($basePrice, $passengerType, $routeCategoryId)
     {
-        // Check if route is Bohol-Cebu or Cebu-Bohol (case insensitive)
-        $isBoholCebuRoute = (
-            (stripos($routeFrom, 'bohol') !== false && stripos($routeTo, 'cebu') !== false) ||
-            (stripos($routeFrom, 'cebu') !== false && stripos($routeTo, 'bohol') !== false)
-        );
+        if ($routeCategoryId) {
+            $discount = DB::table('route_category_passenger_discounts')
+                ->where('route_category_id', $routeCategoryId)
+                ->where('passenger_type', $passengerType)
+                ->value('discount_rate');
 
-        switch ($passengerType) {
-            case 'Regular':
-                return $basePrice; // No discount
-
-            case 'Student':
-            case 'Uniformed Personnel':
-                return $basePrice * 0.80; // 20% discount
-
-            case 'Senior Citizen':
-            case 'PWD':
-                return $basePrice * 0.80; // 20% discount
-
-            case '3 to 11 years old':
-                return $basePrice * 0.50; // Half fare
-
-            case 'Below 3 years old':
-                if ($isBoholCebuRoute) {
-                    return 0; // Free for Bohol-Cebu/Cebu-Bohol routes
-                }
-                return $basePrice * 0.75; // 25% discount for other routes
-
-            default:
-                return $basePrice; // Default to regular price
+            if ($discount !== null) {
+                return $basePrice * (1 - ($discount / 100));
+            }
         }
+
+        // No discount configured — regular price
+        return $basePrice;
+    }
+
+    /**
+     * Return passenger type discounts for a voyage's route category (public API)
+     */
+    public function voyagePassengerDiscounts($voyageId)
+    {
+        $routeCategoryId = DB::table('voyage')
+            ->join('route_port', 'voyage.route_port_id', '=', 'route_port.route_port_id')
+            ->where('voyage.voyage_id', $voyageId)
+            ->value('route_port.route_category_id');
+
+        if (!$routeCategoryId) {
+            return response()->json([]);
+        }
+
+        $discounts = DB::table('route_category_passenger_discounts')
+            ->where('route_category_id', $routeCategoryId)
+            ->pluck('discount_rate', 'passenger_type');
+
+        return response()->json($discounts);
     }
 
     /**

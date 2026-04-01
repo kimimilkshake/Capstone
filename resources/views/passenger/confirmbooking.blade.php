@@ -94,30 +94,105 @@
                         <h6>Booking Reference: #{{ $booking->booking_ref_no }}</h6>
                         <p>Status: <strong>{{ $booking->booking_status }}</strong></p>
 
-                        @if ($payment)
-                            <p>Total: <strong>PHP {{ number_format($payment->total_amount, 2) }}</strong></p>
-                            <p>Payment Status: <strong>{{ $payment->payment_status }}</strong></p>
-                        @endif
-
                         <hr>
 
                         <h6>Passengers</h6>
-                        <ul class="list-group mb-3">
+                        @php $grandTotal = 0; @endphp
+                        <div class="mb-3">
                             @foreach ($passengers as $item)
-                                <li class="list-group-item">
-                                    <strong>{{ $item['passenger']->passenger_firstname }}
-                                        {{ $item['passenger']->passenger_lastname }}</strong>
-                                    <div>Type: {{ $item['passenger']->passenger_type }}</div>
-                                    <div>Cot: {{ $item['ticket']->pt_cot_no }}</div>
-                                    <div>Price: PHP {{ number_format($item['ticket']->pt_ticket_price, 2) }}
-                                        @if ($item['ticket']->promo)
-                                            <span class="badge bg-success">Promo:
-                                                -{{ $item['ticket']->promo->promo_discount_rate }}%</span>
+                                @php
+                                    $routeRate = $item['route_rate'] ?? 0;
+                                    $basePrice = $item['accommodation_base_price'] ?? null;
+                                    $rateDisplay = rtrim(rtrim(number_format($routeRate, 2), '0'), '.');
+                                    $ticketPrice = (float) $item['ticket']->pt_ticket_price;
+                                    $grandTotal += $ticketPrice;
+
+                                    $passengerType = $item['passenger']->passenger_type ?? 'Regular';
+                                    $typeDiscountPct = $item['type_discount_rate'] ?? 0;
+
+                                    $showBreakdown =
+                                        ($routeRate > 0 && $basePrice !== null) ||
+                                        $typeDiscountPct > 0 ||
+                                        $item['ticket']->promo;
+                                @endphp
+                                <div class="border rounded p-3 mb-2">
+                                    {{-- Passenger name - large, on its own line --}}
+                                    <div class="fw-bold fs-5 mb-2">
+                                        {{ $item['passenger']->passenger_firstname }}
+                                        @if ($item['passenger']->passenger_midinitial)
+                                            {{ $item['passenger']->passenger_midinitial }}.
+                                        @endif
+                                        {{ $item['passenger']->passenger_lastname }}
+                                        @if ($item['passenger']->passenger_suffix)
+                                            {{ $item['passenger']->passenger_suffix }}
                                         @endif
                                     </div>
-                                </li>
+                                    {{-- Info row: spread edge to edge, each item left-aligned --}}
+                                    <div class="d-flex justify-content-between small mb-0">
+                                        <div style="white-space: nowrap;"><span class="text-muted">Type: </span><strong
+                                                class="text-dark">{{ $item['passenger']->passenger_type }}</strong></div>
+                                        <div style="white-space: nowrap;"><span class="text-muted">Cot: </span><strong
+                                                class="text-dark">{{ $item['ticket']->pt_cot_no }}</strong></div>
+                                        <div style="white-space: nowrap;">
+                                            @if ($item['accommodation_name'])
+                                                <span class="text-muted">Accommodation: </span><strong
+                                                    class="text-dark">{{ $item['accommodation_name'] }}</strong>
+                                            @endif
+                                        </div>
+                                        <div style="white-space: nowrap;">
+                                            @if ($routeRate > 0 && $basePrice !== null)
+                                                <span class="text-muted">Accommodation Price: </span><strong
+                                                    class="text-dark">PHP {{ number_format($basePrice, 2) }}</strong>
+                                            @else
+                                                <span class="text-muted">Price: </span><strong class="text-dark">PHP
+                                                    {{ number_format($ticketPrice, 2) }}</strong>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    {{-- DISCOUNTS + ROUTE RATE + TOTAL --}}
+                                    @if ($showBreakdown)
+                                        <div class="border-top mt-2 pt-2">
+                                            @if ($routeRate > 0 && $basePrice !== null)
+                                                <div class="d-flex align-items-center text-muted small">
+                                                    <span style="white-space:nowrap;">Route Rate</span>
+                                                    <span style="flex:1;border-bottom:2px dotted #aaa;margin:0 8px;"></span>
+                                                    <span style="white-space:nowrap;">+{{ $rateDisplay }}%</span>
+                                                </div>
+                                            @endif
+                                            @if ($typeDiscountPct > 0)
+                                                <div class="d-flex align-items-center text-muted small">
+                                                    <span style="white-space:nowrap;">Passenger Type Discount</span>
+                                                    <span style="flex:1;border-bottom:2px dotted #aaa;margin:0 8px;"></span>
+                                                    <span style="white-space:nowrap;">-{{ $typeDiscountPct }}%</span>
+                                                </div>
+                                            @endif
+                                            @if ($item['ticket']->promo)
+                                                <div class="d-flex align-items-center text-muted small">
+                                                    <span style="white-space:nowrap;">Promo</span>
+                                                    <span style="flex:1;border-bottom:2px dotted #aaa;margin:0 8px;"></span>
+                                                    <span
+                                                        style="white-space:nowrap;">-{{ $item['ticket']->promo->promo_discount_rate }}%</span>
+                                                </div>
+                                            @endif
+                                            <div class="d-flex align-items-center mt-1">
+                                                <span class="fw-semibold" style="white-space:nowrap;">Total</span>
+                                                <span style="flex:1;border-bottom:2px dotted #888;margin:0 8px;"></span>
+                                                <span class="fw-semibold" style="white-space:nowrap;">PHP
+                                                    {{ number_format($ticketPrice, 2) }}</span>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
                             @endforeach
-                        </ul>
+
+                            {{-- GRAND TOTAL (only shown when multiple passengers) --}}
+                            @if (count($passengers) > 1)
+                                <div class="border rounded p-3 bg-dark text-white d-flex justify-content-between">
+                                    <span class="fw-bold">Grand Total</span>
+                                    <span class="fw-bold">PHP {{ number_format($grandTotal, 2) }}</span>
+                                </div>
+                            @endif
+                        </div>
 
                         <div class="mb-3">
                             <p>Your hold will expire in: <span id="countdown">--:--</span></p>
@@ -132,7 +207,7 @@
                             @endphp
 
                             @if ($canCancel)
-                                <button type="button" id="cancelBtn" class="btn btn-outline-secondary">Cancel</button>
+                                <button type="button" id="cancelBtn" class="btn btn-outline-danger">Cancel</button>
                             @else
                                 <button type="button" class="btn btn-outline-secondary" disabled>
                                     @if (strtolower($booking->booking_status) === 'canceled')
@@ -306,6 +381,9 @@
             cancelBtnEl.addEventListener('click', function(e) {
                 e.preventDefault();
 
+                // Prevent stacking: disable while confirmation toast is visible
+                cancelBtnEl.disabled = true;
+
                 showToast('Are you sure you want to cancel this booking?', 'warning', true);
 
                 const container = document.getElementById('globalToastContainer');
@@ -326,6 +404,14 @@
 
                     document.getElementById('stayCancelBooking').addEventListener('click', function() {
                         bootstrap.Toast.getInstance(toast).hide();
+                        cancelBtnEl.disabled = false;
+                    });
+
+                    toast.addEventListener('hidden.bs.toast', function() {
+                        // Re-enable if user didn't confirm (confirmation sets disabled permanently)
+                        if (cancelBtnEl.innerText !== 'Canceling...') {
+                            cancelBtnEl.disabled = false;
+                        }
                     });
 
                     document.getElementById('confirmCancelBooking').addEventListener('click', async function() {

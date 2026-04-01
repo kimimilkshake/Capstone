@@ -353,7 +353,13 @@
                                 style="border:3px solid #1a3a6b; padding:4px;" /><br>
                             <div style="font-size:13px; font-weight:bold; margin-top:12px; color:#1a1a2e;">
                                 {{ strtoupper($ticket->passenger->passenger_firstname) }}
+                                @if ($ticket->passenger->passenger_midinitial)
+                                    {{ strtoupper($ticket->passenger->passenger_midinitial) }}.
+                                @endif
                                 {{ strtoupper($ticket->passenger->passenger_lastname) }}
+                                @if ($ticket->passenger->passenger_suffix)
+                                    {{ strtoupper($ticket->passenger->passenger_suffix) }}
+                                @endif
                             </div>
                             <div style="font-size:11px; color:#555;">Booking #{{ $booking->booking_ref_no }}</div>
                         @endif
@@ -370,7 +376,13 @@
                     <div style="font-size:13px; font-weight:bold; margin-top:12px; color:#1a1a2e;">
                         @if ($firstTicket && $firstTicket->passenger)
                             {{ strtoupper($firstTicket->passenger->passenger_firstname) }}
+                            @if ($firstTicket->passenger->passenger_midinitial)
+                                {{ strtoupper($firstTicket->passenger->passenger_midinitial) }}.
+                            @endif
                             {{ strtoupper($firstTicket->passenger->passenger_lastname) }}
+                            @if ($firstTicket->passenger->passenger_suffix)
+                                {{ strtoupper($firstTicket->passenger->passenger_suffix) }}
+                            @endif
                         @endif
                     </div>
                     <div style="font-size:11px; color:#555;">Booking #{{ $booking->booking_ref_no }}</div>

@@ -23,6 +23,12 @@
             </div>
 
             <div class="add-vessel">
+                <button type="button" id="editRouteCategoryBtn" class="add-link-btn">
+                    <i class="fa-solid fa-pen me-2"></i>Edit Route Category
+                </button>
+            </div>
+
+            <div class="add-vessel">
                 <button type="button" id="addRoutePortBtn" class="add-link-btn">
                     <i class="fa-solid fa-plus me-2"></i>Add Route and Port
                 </button>
@@ -86,11 +92,25 @@
 
             <form id="addRouteCategoryForm">
                 @csrf
-                <div class="rpmodal-row one-col">
+                <div class="rpmodal-row two-col">
                     <div class="rpmodal-col">
                         <label>Route Category Name <span class="text-danger">*</span></label>
                         <input type="text" name="route_category_name" required style="text-transform: uppercase;">
                     </div>
+                    <div class="rpmodal-col">
+                        <label>Increase Route Rate (%) <span class="text-muted"
+                                style="font-size:0.85em;">(optional)</span></label>
+                        <input type="number" name="route_rate" min="0" max="100" step="0.01"
+                            placeholder="e.g. 10">
+                    </div>
+                </div>
+
+                <div style="margin-top:12px;">
+                    <label style="font-weight:600;">Passenger Type Discounts</label>
+                    <div id="addRCDiscountsContainer"></div>
+                    <button type="button" id="addRCDiscountRowBtn"
+                        style="margin-top:6px;background:none;border:1px dashed #485B8C;color:#485B8C;padding:4px 12px;border-radius:4px;cursor:pointer;">+
+                        Add Discount</button>
                 </div>
 
                 <button type="submit">Add Route Category</button>
@@ -98,6 +118,51 @@
         </div>
     </div>
 
+
+
+    <!-- Edit Route Category Modal -->
+    <div id="editRouteCategoryModal" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <span class="close-btn" id="closeEditRouteCategoryModal">&times;</span>
+            <h3>Edit Route Category</h3>
+
+            <form id="editRouteCategoryForm">
+                @csrf
+                <div class="rpmodal-row two-col">
+                    <div class="rpmodal-col">
+                        <label>Route Category <span class="text-danger">*</span></label>
+                        <select name="route_category_id" id="editRCSelect" required>
+                            <option value="">Select Route Category</option>
+                            @foreach ($route_categories as $rc)
+                                <option value="{{ $rc->route_category_id }}" data-name="{{ $rc->route_category_name }}"
+                                    data-rate="{{ $rc->route_rate ?? '' }}"
+                                    data-discounts="{{ json_encode($rc->passengerDiscounts->map(fn($d) => ['passenger_type' => $d->passenger_type, 'discount_rate' => $d->discount_rate])) }}">
+                                    {{ $rc->route_category_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="rpmodal-col">
+                        <label>Increase Route Rate (%) <span class="text-muted"
+                                style="font-size:0.85em;">(optional)</span></label>
+                        <input type="number" id="editRCRate" name="route_rate" min="0" max="100" step="0.01"
+                            placeholder="e.g. 10">
+                    </div>
+                </div>
+
+                <div style="margin-top:12px;">
+                    <label style="font-weight:600;">Passenger Type Discounts</label>
+                    <div id="editRCDiscountsContainer"></div>
+                    <button type="button" id="editRCDiscountRowBtn"
+                        style="margin-top:6px;background:none;border:1px dashed #485B8C;color:#485B8C;padding:4px 12px;border-radius:4px;cursor:pointer;">+
+                        Add Discount</button>
+                </div>
+
+                <button type="submit" id="saveEditRCBtn" disabled style="background-color:#ccc;cursor:not-allowed;">Save
+                    Changes</button>
+            </form>
+        </div>
+    </div>
 
 
     <!-- Add Route & Port Modal -->
@@ -209,7 +274,8 @@
                             <option value="">Select Port</option>
                             @foreach ($ports as $port)
                                 <option value="{{ $port->port_id }}">{{ $port->terminal_name }} - {{ $port->port_name }}
-                                    ({{ $port->city }})</option>
+                                    ({{ $port->city }})
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -221,7 +287,8 @@
                             <option value="">Select Port</option>
                             @foreach ($ports as $port)
                                 <option value="{{ $port->port_id }}">{{ $port->terminal_name }} - {{ $port->port_name }}
-                                    ({{ $port->city }})</option>
+                                    ({{ $port->city }})
+                                </option>
                             @endforeach
                         </select>
                     </div>

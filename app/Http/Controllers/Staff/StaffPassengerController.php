@@ -80,7 +80,7 @@ class StaffPassengerController extends Controller
             'passengers.*.email' => 'required|email',
         ]);
 
-        $voyage = Voyage::findOrFail($request->voyage_id);
+        $voyage = Voyage::with('routePort.routeCategory')->findOrFail($request->voyage_id);
         $passengers = $request->passengers;
         $paymentMode = $request->payment_mode;
 
@@ -146,12 +146,15 @@ class StaffPassengerController extends Controller
                 $accommodation = Accommodation::find($passengerData['accommodation_id']);
                 $basePrice = $accommodation->accommodation_regular_price ?? 500;
 
+                // Apply route rate surcharge
+                $routeRate = $voyage->routePort->routeCategory->route_rate ?? 0;
+                $basePrice = $basePrice * (1 + ($routeRate / 100));
+
                 // Calculate price with discounts
                 $price = $this->calculateDiscountedPrice(
                     $basePrice,
                     $passengerData['type'],
-                    $voyage->routePort->route_origin ?? '',
-                    $voyage->routePort->route_destination ?? ''
+                    $voyage->routePort->route_category_id ?? null
                 );
 
                 $totalAmount += $price;
@@ -269,40 +272,22 @@ class StaffPassengerController extends Controller
     }
 
     /**
-     * Calculate discounted price based on passenger type and route
+     * Calculate discounted price using per-route-category DB discounts.
      */
-    private function calculateDiscountedPrice($basePrice, $passengerType, $routeFrom, $routeTo)
+    private function calculateDiscountedPrice($basePrice, $passengerType, $routeCategoryId)
     {
-        // Check if route is Bohol-Cebu or Cebu-Bohol (case insensitive)
-        $isBoholCebuRoute = (
-            (stripos($routeFrom, 'bohol') !== false && stripos($routeTo, 'cebu') !== false) ||
-            (stripos($routeFrom, 'cebu') !== false && stripos($routeTo, 'bohol') !== false)
-        );
+        if ($routeCategoryId) {
+            $discount = DB::table('route_category_passenger_discounts')
+                ->where('route_category_id', $routeCategoryId)
+                ->where('passenger_type', $passengerType)
+                ->value('discount_rate');
 
-        switch ($passengerType) {
-            case 'Regular':
-                return $basePrice; // No discount
-
-            case 'Student':
-            case 'Uniformed Personnel':
-                return $basePrice * 0.80; // 20% discount
-
-            case 'Senior Citizen':
-            case 'PWD':
-                return $basePrice * 0.80; // 20% discount
-
-            case '3 to 11 years old':
-                return $basePrice * 0.50; // Half fare
-
-            case 'Below 3 years old':
-                if ($isBoholCebuRoute) {
-                    return 0; // Free for Bohol-Cebu/Cebu-Bohol routes
-                }
-                return $basePrice * 0.75; // 25% discount for other routes
-
-            default:
-                return $basePrice; // Default to regular price
+            if ($discount !== null) {
+                return $basePrice * (1 - ($discount / 100));
+            }
         }
+
+        return $basePrice;
     }
 
     /**
@@ -316,11 +301,13 @@ class StaffPassengerController extends Controller
             return response()->json(['success' => false, 'message' => 'Missing voyage_id'], 422);
         }
 
-        $voyage = Voyage::with('vessel.accommodations')->find($voyageId);
+        $voyage = Voyage::with('vessel.accommodations', 'routePort.routeCategory')->find($voyageId);
 
         if (!$voyage) {
             return response()->json(['success' => false, 'message' => 'Voyage not found'], 404);
         }
+
+        $routeRate = $voyage->routePort->routeCategory->route_rate ?? 0;
 
         // Get booked cots
         $bookedCots = DB::table('passenger_ticket')
@@ -368,10 +355,12 @@ class StaffPassengerController extends Controller
                 });
             }
 
+            $adjustedPrice = round((float) $accommodation->accommodation_regular_price * (1 + ($routeRate / 100)), 2);
+
             $result[] = [
                 'accommodation_id' => $accommodation->accommodation_id,
                 'accommodation_name' => $accommodation->accommodation_name,
-                'accommodation_price' => $accommodation->accommodation_regular_price,
+                'accommodation_price' => $adjustedPrice,
                 'cot_range' => $cotRange,
                 'cot_plan_url' => !empty($accommodation->accommodation_cot_plan_url)
                     ? asset('files/' . $accommodation->accommodation_cot_plan_url)
