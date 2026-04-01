@@ -6,28 +6,48 @@
 
   <div class="admin-body">
 
-    <div class="search-add-row" style="display: flex; gap: 10px; margin-bottom: 20px;">
-      <form class="search-bar" action="{{ route('admin.voyage_list') }}" method="GET" style="flex: 1;">
-          <input 
-              type="text" 
-              name="search" 
-              placeholder="Search by name, code, route, vessel, status..." 
-              value="{{ request('search') }}">
-          <input 
-              type="date" 
-              name="start_date" 
-              value="{{ request('start_date') }}"
-              style="margin-left:10px;"
-              placeholder="Start date">
-          <input 
-              type="date" 
-              name="end_date" 
-              value="{{ request('end_date') }}"
-              style="margin-left:10px;"
-              placeholder="End date">
-          <button type="submit">
-              <i class="fa-solid fa-magnifying-glass me-2"></i>Search
-          </button>
+    <div class="search-add-row" style="display: flex; gap: 10px; margin-bottom: 20px; align-items: flex-end;">
+      <form class="search-bar" action="{{ route('admin.voyage_list') }}" method="GET"
+      style="flex: 1; display: flex; gap: 10px; align-items: flex-end;">
+
+          <!-- SEARCH -->
+          <div style="flex: 2; display: flex; flex-direction: column;">
+              <label style="font-size: 12px;">Search</label>
+              <input 
+                  type="text" 
+                  name="search" 
+                  placeholder="Search by name, code, route, vessel, status..." 
+                  value="{{ request('search') }}"
+                  style="height: 38px;">
+          </div>
+
+          <!-- FROM -->
+          <div style="display: flex; flex-direction: column;">
+              <label style="font-size: 12px;">From</label>
+              <input 
+                  type="date" 
+                  name="start_date" 
+                  value="{{ request('start_date') }}"
+                  style="height: 38px;">
+          </div>
+
+          <!-- TO -->
+          <div style="display: flex; flex-direction: column;">
+              <label style="font-size: 12px;">To</label>
+              <input 
+                  type="date" 
+                  name="end_date" 
+                  value="{{ request('end_date') }}"
+                  style="height: 38px;">
+          </div>
+
+          <!-- BUTTON -->
+          <div>
+              <button type="submit" style="height: 38px; padding: 0 15px;">
+                  <i class="fa-solid fa-magnifying-glass me-2"></i>Search
+              </button>
+          </div>
+
       </form>
 
       <div class="add-vessel">

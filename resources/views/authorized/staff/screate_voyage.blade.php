@@ -84,7 +84,6 @@
                 name="voyage_arrival_date" 
                 required 
                 min="{{ \Carbon\Carbon::today()->addDay()->format('Y-m-d') }}"
-                max="{{ \Carbon\Carbon::today()->addDays(14)->format('Y-m-d') }}"
               >
             </div>
           </div>

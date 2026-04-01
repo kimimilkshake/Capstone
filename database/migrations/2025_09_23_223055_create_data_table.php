@@ -183,6 +183,8 @@ return new class extends Migration {
             $table->string('voyage_code')->unique();
             $table->time('voyage_estimated_TD');
             $table->time('voyage_estimated_TA');
+            $table->date('voyage_actual_departure_date')->nullable();
+            $table->date('voyage_actual_arrival_date')->nullable();
             $table->time('voyage_actual_TD')->nullable();
             $table->time('voyage_actual_TA')->nullable();
             $table->enum('voyage_status', ['Scheduled', 'At Sea', 'Completed', 'Cancelled', 'Archived'])

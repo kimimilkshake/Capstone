@@ -20,6 +20,8 @@ class Voyage extends Model
         'voyage_arrival_date',
         'voyage_estimated_TD',
         'voyage_estimated_TA',
+        'voyage_actual_departure_date',
+        'voyage_actual_arrival_date',
         'voyage_actual_TD',
         'voyage_actual_TA',
         'voyage_status',

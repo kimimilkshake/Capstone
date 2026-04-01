@@ -23,7 +23,7 @@
 
         @if($isCancelled)
           <p style="color:red; font-weight:600;">
-            This voyage is cancelled. Only actual times can be edited.
+            This voyage is cancelled. Only actual deparute and arrival dates and times can be edited.
           </p>
         @endif
 
@@ -75,7 +75,7 @@
             </div>
         </div>
 
-        <!-- ROW 3: DEPARTURE DATE, ETD, ATD -->
+        <!-- ROW 3: DEPARTURE DATE, ETD, ADD, ATD -->
         <div class="form-row">
           <div class="form-col">
             <div class="form-group">
@@ -87,7 +87,6 @@
                 value="{{ $voyage->voyage_departure_date }}" 
                 @if($isLocked) disabled @endif
                 min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}"
-                max="{{ \Carbon\Carbon::today()->addDays(8)->format('Y-m-d') }}"
                 onchange="setArrivalMin(this.value)"
                 required>
             </div>
@@ -105,6 +104,14 @@
 
           <div class="form-col">
             <div class="form-group">
+              <label for="">Actual Date of Departure</label>
+              <input type="date" id="voyage_actual_departure_date" name="voyage_actual_departure_date" 
+                value="{{ $voyage->voyage_actual_departure_date }}" >
+            </div>
+          </div>
+
+          <div class="form-col">
+            <div class="form-group">
               <label for="voyage_actual_TD">Actual Time of Departure (ATD)</label>
               <input type="time" id="voyage_actual_TD" name="voyage_actual_TD" 
                 value="{{ $voyage->voyage_actual_TD }}">
@@ -112,7 +119,7 @@
           </div>
         </div>
 
-        <!-- ROW 4: ARRIVAL DATE, ETA, ATA -->
+        <!-- ROW 4: ARRIVAL DATE, ETA, ADA, ATA -->
         <div class="form-row">
           <div class="form-col">
             <div class="form-group">
@@ -124,7 +131,6 @@
                 value="{{ $voyage->voyage_arrival_date }}" 
                 @if($isLocked) disabled @endif
                 min="{{ $voyage->voyage_departure_date }}" 
-                max="{{ \Carbon\Carbon::today()->addDays(14)->format('Y-m-d') }}"
                 required>
             </div>
           </div>
@@ -139,6 +145,17 @@
                 value="{{ $voyage->voyage_estimated_TA }}" 
                 @if($isLocked) disabled @endif
                 required>
+            </div>
+          </div>
+
+          <div class="form-col">
+            <div class="form-group">
+              <label for="">Actual Date of Arrival</label>
+              <input 
+                type="date" 
+                id="voyage_actual_arrival_date" 
+                name="voyage_actual_arrival_date" 
+                value="{{ $voyage->voyage_actual_arrival_date }}">
             </div>
           </div>
 

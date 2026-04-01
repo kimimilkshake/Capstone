@@ -280,14 +280,18 @@ class VoyageController extends Controller
 
             case 'Completed':
                 $rules = array_merge($rules, [
-                    'voyage_actual_TD' => 'nullable',
-                    'voyage_actual_TA' => 'nullable',
+                    'voyage_actual_departure_date' => 'required|date',
+                    'voyage_actual_arrival_date' => 'required|date|after_or_equal:voyage_actual_departure_date',
+                    'voyage_actual_TD' => 'required',
+                    'voyage_actual_TA' => 'required',
                     'voyage_status' => 'required|in:Completed,Archived',
                 ]);
                 break;
 
             case 'Cancelled':
                 $rules = array_merge($rules, [
+                    'voyage_actual_departure_date' => 'nullable|date',
+                    'voyage_actual_arrival_date' => 'nullable|date|after_or_equal:voyage_actual_departure_date',
                     'voyage_actual_TD' => 'nullable',
                     'voyage_actual_TA' => 'nullable',
                     // status is locked
@@ -362,14 +366,18 @@ class VoyageController extends Controller
                 'voyage_status' => $request->voyage_status,
             ]);
         }
-        // Completed → only actual times & status
+        // Completed → only actual dates, times & status
         elseif ($voyage->voyage_status === 'Completed') {
+            $updateData['voyage_actual_departure_date'] = $request->voyage_actual_departure_date;
+            $updateData['voyage_actual_arrival_date'] = $request->voyage_actual_arrival_date;
             $updateData['voyage_actual_TD'] = $request->voyage_actual_TD;
             $updateData['voyage_actual_TA'] = $request->voyage_actual_TA;
             $updateData['voyage_status'] = $request->voyage_status;
         }
-        // Cancelled → only actual times
+        // Cancelled → only actual dates and times
         elseif ($voyage->voyage_status === 'Cancelled') {
+            $updateData['voyage_actual_departure_date'] = $request->voyage_actual_departure_date;
+            $updateData['voyage_actual_arrival_date'] = $request->voyage_actual_arrival_date;
             $updateData['voyage_actual_TD'] = $request->voyage_actual_TD;
             $updateData['voyage_actual_TA'] = $request->voyage_actual_TA;
             // status remains locked
