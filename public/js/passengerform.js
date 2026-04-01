@@ -22,13 +22,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // All known passenger types in display order (fallback when no route discounts configured)
     const ALL_PASSENGER_TYPES = [
-        { value: "Regular", label: "Regular/Adult" },
-        { value: "Senior Citizen", label: "Senior Citizen" },
-        { value: "PWD", label: "PWD" },
-        { value: "Student", label: "Student" },
-        { value: "Uniformed Personnel", label: "Uniformed Personnel" },
         { value: "3 to 11 years old", label: "3 to 11 years old" },
         { value: "Below 3 years old", label: "Below 3 years old" },
+        { value: "PWD", label: "PWD" },
+        { value: "Regular", label: "Regular/Adult" },
+        { value: "Senior Citizen", label: "Senior Citizen" },
+        { value: "Student", label: "Student" },
+        { value: "Uniformed Personnel", label: "Uniformed Personnel" },
     ];
 
     function buildPassengerTypeOptions() {

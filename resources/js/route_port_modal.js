@@ -1,13 +1,13 @@
 // ===== Route Category Modal =====
 
 const PASSENGER_TYPES = [
-    "Regular",
-    "Senior Citizen",
-    "PWD",
-    "Student",
-    "Uniformed Personnel",
     "3 to 11 years old",
     "Below 3 years old",
+    "PWD",
+    "Regular",
+    "Senior Citizen",
+    "Student",
+    "Uniformed Personnel",
 ];
 
 const DEFAULT_DISCOUNT_RATES = {
@@ -330,6 +330,9 @@ document.addEventListener("DOMContentLoaded", function () {
             try {
                 const discounts = JSON.parse(
                     selected.dataset.discounts || "[]",
+                );
+                discounts.sort((a, b) =>
+                    a.passenger_type.localeCompare(b.passenger_type),
                 );
                 discounts.forEach((d) =>
                     buildDiscountRow(

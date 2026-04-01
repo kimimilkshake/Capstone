@@ -146,13 +146,13 @@
                     <label class="form-label">Passenger Type <span class="text-danger">*</span></label>
                     <select name="passengers[${i}][type]" class="form-select passenger-type" required>
                         <option value="">Select Type</option>
-                        <option value="Regular">Regular/Adult</option>
-                        <option value="Senior Citizen">Senior Citizen</option>
-                        <option value="PWD">PWD</option>
-                        <option value="Student">Student</option>
-                        <option value="Uniformed Personnel">Uniformed Personnel</option>
                         <option value="3 to 11 years old">3 to 11 years old</option>
                         <option value="Below 3 years old">Below 3 years old</option>
+                        <option value="PWD">PWD</option>
+                        <option value="Regular">Regular/Adult</option>
+                        <option value="Senior Citizen">Senior Citizen</option>
+                        <option value="Student">Student</option>
+                        <option value="Uniformed Personnel">Uniformed Personnel</option>
                     </select>
                 </div>
                 <div class="col-md-4">
