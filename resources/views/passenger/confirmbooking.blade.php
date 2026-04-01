@@ -140,7 +140,7 @@
                                             @endif
                                         </div>
                                         <div style="white-space: nowrap;">
-                                            @if ($routeRate > 0 && $basePrice !== null)
+                                            @if ($basePrice !== null && ($routeRate > 0 || $typeDiscountPct > 0 || $item['ticket']->promo))
                                                 <span class="text-muted">Accommodation Price: </span><strong
                                                     class="text-dark">PHP {{ number_format($basePrice, 2) }}</strong>
                                             @else
