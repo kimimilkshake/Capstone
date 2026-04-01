@@ -132,4 +132,15 @@
     .footer-contact li {
         justify-content: center;
     }
+
+    .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.25rem 1.25rem;
+
+        li {
+            margin-bottom: 0;
+        }
+    }
 }

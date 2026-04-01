@@ -39,6 +39,29 @@ body, .container {
     }
 }
 
+@media (min-width: 769px) {
+    .homepage-section {
+        margin-top: 2.5rem !important;
+        margin-bottom: 3rem !important;
+    }
+
+    .homepage-section .col-md-6 {
+        margin-top: 2.5rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .homepage-section {
+        margin-top: 1.5rem !important;
+    }
+
+    .homepage-section .col-md-6:first-child {
+        margin-top: 0.75rem !important;
+        margin-bottom: 0 !important;
+    }
+}
+
 .body-text{
     margin-right: 50px;
     text-align: right;
