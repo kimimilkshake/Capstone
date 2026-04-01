@@ -91,7 +91,9 @@
                     </div>
                     <div class="card-body">
 
-                        <h6>Booking Reference: #{{ $booking->booking_ref_no }}</h6>
+                        <h6>Booking Reference:
+                            {{ 'LSLCBK' . \Carbon\Carbon::parse($booking->created_at)->format('y') . str_pad($booking->booking_ref_no, 6, '0', STR_PAD_LEFT) }}
+                        </h6>
                         <p>Status: <strong>{{ $booking->booking_status }}</strong></p>
 
                         <hr>
@@ -131,14 +133,14 @@
                                     <div class="d-flex justify-content-between small mb-0">
                                         <div style="white-space: nowrap;"><span class="text-muted">Type: </span><strong
                                                 class="text-dark">{{ $item['passenger']->passenger_type }}</strong></div>
-                                        <div style="white-space: nowrap;"><span class="text-muted">Cot: </span><strong
-                                                class="text-dark">{{ $item['ticket']->pt_cot_no }}</strong></div>
                                         <div style="white-space: nowrap;">
                                             @if ($item['accommodation_name'])
                                                 <span class="text-muted">Accommodation: </span><strong
                                                     class="text-dark">{{ $item['accommodation_name'] }}</strong>
                                             @endif
                                         </div>
+                                        <div style="white-space: nowrap;"><span class="text-muted">Cot: </span><strong
+                                                class="text-dark">{{ $item['ticket']->pt_cot_no }}</strong></div>
                                         <div style="white-space: nowrap;">
                                             @if ($basePrice !== null && ($routeRate > 0 || $typeDiscountPct > 0 || $item['ticket']->promo))
                                                 <span class="text-muted">Accommodation Price: </span><strong

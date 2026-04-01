@@ -28,7 +28,7 @@
         }
 
         .company-name {
-            font-size: 23px;
+            font-size: 20px;
             font-weight: bold;
             color: #fff;
             letter-spacing: 1.5px;
@@ -84,8 +84,8 @@
         style="margin-bottom:18px; padding:26px 16px; border-radius:4px; background:#1a3a6b;">
         <tr>
             {{-- Logo --}}
-            <td style="width:130px; vertical-align:middle; padding-left:10px;">
-                <img src="{{ public_path('images/logo_w_name.png') }}" width="100" alt="Logo" />
+            <td style="width:160px; vertical-align:middle; padding-left:10px;">
+                <img src="{{ public_path('images/logo_wo_name.png') }}" width="120" alt="Logo" />
             </td>
             {{-- Company Info --}}
             <td style="vertical-align:middle; text-align:center; padding:6px 18px;">
@@ -94,10 +94,10 @@
                 <div class="company-sub">Tel. No. 232-8864 / 232-8865 &nbsp;|&nbsp; TIN: 200-308-788-000-VAT</div>
             </td>
             {{-- Issued By --}}
-            <td style="width:130px; vertical-align:middle; text-align:right; padding-right:10px;">
-                <div style="font-size:7.5px; color:rgba(255,255,255,0.70);">ISSUED BY</div>
-                <div style="font-size:8.5px; font-weight:bold; color:#fff;">{{ $printedBy }}</div>
-                <div style="font-size:7.5px; color:rgba(255,255,255,0.70);">{{ now()->format('m/d/Y h:i A') }}</div>
+            <td style="width:160px; vertical-align:middle; text-align:right; padding-right:10px;">
+                <div style="font-size:9px; color:rgba(255,255,255,0.70);">ISSUED BY</div>
+                <div style="font-size:11px; font-weight:bold; color:#fff;">{{ $printedBy }}</div>
+                <div style="font-size:9px; color:rgba(255,255,255,0.70);">{{ now()->format('m/d/Y h:i A') }}</div>
             </td>
         </tr>
     </table>
@@ -113,17 +113,25 @@
     </table>
 
     {{-- ---- E-TICKET NO / BOOKING REF ---- --}}
+    @php
+        $bookingYear = $booking->created_at ? $booking->created_at->format('y') : date('y');
+        $formattedBookingRef = 'LSLCBK' . $bookingYear . str_pad($booking->booking_ref_no, 6, '0', STR_PAD_LEFT);
+        $ticketYear = $firstTicket && $firstTicket->created_at ? $firstTicket->created_at->format('y') : date('y');
+        $formattedETicket =
+            'LSLCTKT' .
+            $ticketYear .
+            str_pad($firstTicket->passenger_ticket_id ?? $booking->booking_ref_no, 6, '0', STR_PAD_LEFT);
+    @endphp
     <table width="100%" cellpadding="0" cellspacing="0"
         style="background:#f0f4fa; padding:14px 18px; margin-bottom:18px;">
         <tr>
             <td style="font-size:10px; color:#555; vertical-align:top;">
                 E-TICKET NO.
-                <br><strong
-                    style="font-size:18px; color:#1a3a6b;">{{ $firstTicket->passenger_ticket_id ?? 'TKT-' . $booking->booking_ref_no }}</strong>
+                <br><strong style="font-size:18px; color:#1a3a6b;">{{ $formattedETicket }}</strong>
             </td>
             <td style="text-align:right; font-size:10px; color:#555; vertical-align:top;">
                 BOOKING REFERENCE NO.
-                <br><strong style="font-size:18px; color:#1a3a6b;">{{ $booking->booking_ref_no }}</strong>
+                <br><strong style="font-size:18px; color:#1a3a6b;">{{ $formattedBookingRef }}</strong>
             </td>
         </tr>
     </table>
@@ -290,9 +298,10 @@
                         <td style="vertical-align:top; width:12px; font-size:9px; color:#1a3a6b; font-weight:bold;">•
                         </td>
                         <td style="font-size:9px; line-height:1.55;">
-                            Passengers may check-in <strong>1 hour prior</strong> to the indicated departure time.
+                            Passengers may check-in <strong>2 hours prior</strong> to the indicated departure time.
                             Failure to arrive on time at the check-in counter or boarding gate (even if the passenger
-                            has already checked in) may result in the cancellation of the passenger's seat. Lapulapu
+                            has already checked in) may result in the cancellation of the passenger's
+                            <strong>cot</strong>. Lapulapu
                             Shipping Lines Corporation shall not be liable to the passengers for any loss or expense as
                             a consequence thereto.
                         </td>
@@ -361,7 +370,7 @@
                                     {{ strtoupper($ticket->passenger->passenger_suffix) }}
                                 @endif
                             </div>
-                            <div style="font-size:11px; color:#555;">Booking #{{ $booking->booking_ref_no }}</div>
+                            <div style="font-size:11px; color:#555;">{{ $formattedBookingRef }}</div>
                         @endif
                     @endforeach
                 @else
@@ -385,7 +394,7 @@
                             @endif
                         @endif
                     </div>
-                    <div style="font-size:11px; color:#555;">Booking #{{ $booking->booking_ref_no }}</div>
+                    <div style="font-size:11px; color:#555;">{{ $formattedBookingRef }}</div>
                 @endif
 
             </td>
