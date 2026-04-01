@@ -10,30 +10,36 @@
                 Voyage Number: {{ $voyage->voyage_code ?? '-' }}
             </h2>
 
-            <div style="display: grid; grid-template-columns: repeat(4, auto); gap: 10px 40px; margin-top: 1rem; justify-content: center; text-align: left; width: 100%; max-width: 1100px; margin-left: auto; margin-right: auto;">
+            <div style="display: grid; grid-template-columns: repeat(5, auto); gap: 10px 20px; margin-top: 1rem; justify-content: center; text-align: left; width: 100%; max-width: 1500px; margin-left: auto; margin-right: auto;">
                 <div>
-                    <p><strong>Schedule: </strong>{{ optional($voyage->voyage_departure_date) ? \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('F j, Y, D') : '-' }}</p>
+                    <p><strong>Schedule: </strong>{{ optional($voyage->voyage_departure_date) ? \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('F j, Y, D') : 'NULL' }}</p>
                 </div>
                 <div>
-                    <p><strong>Time of Departure: </strong> {{ $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('h:i A') : '-' }}</p>
+                    <p><strong>Time of Departure: </strong> {{ $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('h:i A') : 'NULL' }}</p>
                 </div>
                 <div>
                     <p><strong>Vessel: </strong> {{ optional($voyage->vessel)->vessel_name ?? '-' }}</p>
                 </div>
                 <div>
-                    <p><strong>Actual Time of Departure: </strong> {{ $voyage->voyage_actual_TD ? \Carbon\Carbon::parse($voyage->voyage_actual_TD)->format('h:i A') : '-' }}</p>
+                    <p><strong>Actual Departure Date: </strong>{{ $voyage->voyage_actual_departure_date ? \Carbon\Carbon::parse($voyage->voyage_actual_departure_date)->format('F j, Y, D') : 'NULL' }}</p>
                 </div>
                 <div>
-                    <p><strong>Voyage Route: </strong>{{ optional($voyage->routePort)->route_origin ?? '-' }} to {{ optional($voyage->routePort)->route_destination ?? '-' }}</p>
+                    <p><strong>Actual Time of Departure: </strong> {{ $voyage->voyage_actual_TD ? \Carbon\Carbon::parse($voyage->voyage_actual_TD)->format('h:i A') : 'NULL' }}</p>
                 </div>
                 <div>
-                    <p><strong>Time of Arrival: </strong>{{ $voyage->voyage_estimated_TA ? \Carbon\Carbon::parse($voyage->voyage_estimated_TA)->format('h:i A') : '-' }}</p>
+                    <p><strong>Voyage Route: </strong>{{ optional($voyage->routePort)->route_origin ?? 'NULL' }} to {{ optional($voyage->routePort)->route_destination ?? 'NULL' }}</p>
                 </div>
                 <div>
-                    <p><strong>Status: </strong> {{ $voyage->voyage_status ?? '-' }}</p>
+                    <p><strong>Time of Arrival: </strong>{{ $voyage->voyage_estimated_TA ? \Carbon\Carbon::parse($voyage->voyage_estimated_TA)->format('h:i A') : 'NULL' }}</p>
                 </div>
                 <div>
-                    <p><strong>Actual Time of Arrival: </strong>{{ $voyage->voyage_actual_TA ? \Carbon\Carbon::parse($voyage->voyage_actual_TA)->format('h:i A') : '-' }}</p>
+                    <p><strong>Status: </strong> {{ $voyage->voyage_status ?? 'NULL' }}</p>
+                </div>
+                <div>
+                    <p><strong>Actual Arrival Date: </strong>{{ $voyage->voyage_actual_arrival_date ? \Carbon\Carbon::parse($voyage->voyage_actual_arrival_date)->format('F j, Y, D') : 'NULL' }}</p>
+                </div>
+                <div>
+                    <p><strong>Actual Time of Arrival: </strong>{{ $voyage->voyage_actual_TA ? \Carbon\Carbon::parse($voyage->voyage_actual_TA)->format('h:i A') : 'NULL' }}</p>
                 </div>
             </div>
         </div>
