@@ -84,7 +84,7 @@
         style="margin-bottom:18px; padding:26px 16px; border-radius:4px; background:#1a3a6b;">
         <tr>
             {{-- Logo --}}
-            <td style="width:160px; vertical-align:middle; padding-left:10px;">
+            <td style="width:160px; vertical-align:middle; text-align:center;">
                 <img src="{{ public_path('images/logo_wo_name.png') }}" width="120" alt="Logo" />
             </td>
             {{-- Company Info --}}
@@ -93,12 +93,9 @@
                 <div class="company-sub">872-876 M.J CUENCO AVENUE, CEBU CITY, PHILIPPINES</div>
                 <div class="company-sub">Tel. No. 232-8864 / 232-8865 &nbsp;|&nbsp; TIN: 200-308-788-000-VAT</div>
             </td>
-            {{-- Issued By --}}
-            <td style="width:160px; vertical-align:middle; text-align:right; padding-right:10px;">
-                <div style="font-size:9px; color:rgba(255,255,255,0.70);">ISSUED BY</div>
-                <div style="font-size:11px; font-weight:bold; color:#fff;">{{ $printedBy }}</div>
-                <div style="font-size:9px; color:rgba(255,255,255,0.70);">{{ now()->format('m/d/Y h:i A') }}</div>
-            </td>
+            {{-- Spacer to balance logo width --}}
+            <td style="width:160px;"></td>
+
         </tr>
     </table>
 
@@ -407,6 +404,8 @@
         style="margin-top:16px; text-align:center; font-size:8px; color:#999; border-top:1px solid #dde6f4; padding-top:6px;">
         This is an automatically generated e-ticket. Please keep this document for your records. &nbsp;|&nbsp; Page 1 of
         1
+        <br>
+        Issued by System &nbsp;|&nbsp; {{ now()->format('F d, Y h:i A') }}
     </div>
 
 </body>
