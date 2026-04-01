@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Promo Code <span class="text-muted">(Optional)</span></label>
-                        <input type="text" class="form-control passenger-promo-code" name="promo_code" placeholder="Enter promo code">
+                        <input type="text" class="form-control passenger-promo-code" name="promo_code" placeholder="Enter promo code" style="text-transform:uppercase">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">First Name <span class="text-danger">*</span></label>
@@ -676,7 +676,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (!promoData.success) {
                             loader.style.display = "none";
                             showToast(
-                                `Passenger ${passengerNumber}: Invalid promo code "${promoCode}"`,
+                                `Passenger ${passengerNumber}: ${promoData.message || `Invalid promo code "${promoCode}"`}`,
                                 "danger",
                             );
                             return;

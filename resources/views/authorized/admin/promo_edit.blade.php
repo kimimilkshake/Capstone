@@ -5,117 +5,124 @@
     @include('components.admin_nav')
 
     <div class="admin-body">
-      
-      <div class="acs-form_container">
 
-        <form action="{{ route('admin.promo_update', $promo->promo_id) }}" method="POST" class="create-promo-form">
-          @csrf
-          @method('PUT')
+        <div class="acs-form_container">
 
-          <div class="form-row">
-            <!-- Column 1 -->
-            <div class="form-col">
-              <div class="form-group">
-                <label for="promo_name">Promo Name <span class="text-danger">*</span></label>
-                <input type="text" id="promo_name" name="promo_name" value="{{ $promo->promo_name }}" required>
-              </div>
+            <form action="{{ route('admin.promo_update', $promo->promo_id) }}" method="POST" class="create-promo-form">
+                @csrf
+                @method('PUT')
 
-              <div class="form-group">
-                <label for="promo_code">Promo Code <span class="text-danger">*</span></label>
-                <input type="text" id="promo_code" name="promo_code" value="{{ $promo->promo_code }}" required>
-              </div>
+                <div class="form-row">
+                    <!-- Column 1 -->
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="promo_name">Promo Name <span class="text-danger">*</span></label>
+                            <input type="text" id="promo_name" name="promo_name" value="{{ $promo->promo_name }}"
+                                required>
+                        </div>
 
-              <div class="form-group">
-                <label for="promo_discount_rate">Discount Rate</label>
-                <input type="number" id="promo_discount_rate" name="promo_discount_rate" value="{{ $promo->promo_discount_rate }}" required>
-              </div>
-            </div>
+                        <div class="form-group">
+                            <label for="promo_code">Promo Code <span class="text-danger">*</span></label>
+                            <input type="text" id="promo_code" name="promo_code" value="{{ $promo->promo_code }}"
+                                required style="text-transform:uppercase">
+                        </div>
 
-            <!-- Column 2 -->
-            <div class="form-col">
-              <div class="form-group">
-                <label for="promo_start_date">Date Start <span class="text-danger">*</span></label>
-                <input type="date" id="promo_start_date" name="promo_start_date" value="{{ $promo->promo_start_date }}" required readonly>
-              </div>
+                        <div class="form-group">
+                            <label for="promo_discount_rate">Discount Rate</label>
+                            <input type="number" id="promo_discount_rate" name="promo_discount_rate"
+                                value="{{ $promo->promo_discount_rate }}" required>
+                        </div>
+                    </div>
 
-              <div class="form-group">
-                <label for="promo_end_date">Date End <span class="text-danger">*</span></label>
-                <input type="date" id="promo_end_date" name="promo_end_date" value="{{ $promo->promo_end_date }}" required>
-              </div>
+                    <!-- Column 2 -->
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="promo_start_date">Date Start <span class="text-danger">*</span></label>
+                            <input type="date" id="promo_start_date" name="promo_start_date"
+                                value="{{ $promo->promo_start_date }}" required readonly>
+                        </div>
 
-                <div class="form-group" style="flex: 1;">
-                  <label for="promo_status">Status <span class="text-danger">*</span></label>
-                  <select id="promo_status" name="promo_status" required>
-                    <option value="Active" {{ $promo->promo_status == 'Active' ? 'selected' : '' }}>Active</option>
-                    <option value="Inactive" {{ $promo->promo_status == 'Inactive' ? 'selected' : '' }}>Inactive</option>
-                  </select>
-              </div>
-            </div>
-          </div>
+                        <div class="form-group">
+                            <label for="promo_end_date">Date End <span class="text-danger">*</span></label>
+                            <input type="date" id="promo_end_date" name="promo_end_date"
+                                value="{{ $promo->promo_end_date }}" required>
+                        </div>
 
-          <!-- Description & Status side by side -->
-          <div class="form-row" style="display: flex; gap: 1rem;">
-            <div class="form-group" style="flex: 1;">
-              <label for="promo_description">Promo Description <span class="text-danger">*</span></label>
-              <textarea id="promo_description" name="promo_description" required>{{ $promo->promo_description }}</textarea>
-            </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="promo_status">Status <span class="text-danger">*</span></label>
+                            <select id="promo_status" name="promo_status" required>
+                                <option value="Active" {{ $promo->promo_status == 'Active' ? 'selected' : '' }}>Active
+                                </option>
+                                <option value="Inactive" {{ $promo->promo_status == 'Inactive' ? 'selected' : '' }}>Inactive
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 
-            
-          </div>
+                <!-- Description & Status side by side -->
+                <div class="form-row" style="display: flex; gap: 1rem;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="promo_description">Promo Description <span class="text-danger">*</span></label>
+                        <textarea id="promo_description" name="promo_description" required>{{ $promo->promo_description }}</textarea>
+                    </div>
 
-          <div class="form-actions" style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
-            <button type="submit" class="acs-add-btn" id="saveEditBtn">
-              <i class="fa-solid fa-floppy-disk me-2"></i>Save Changes
-            </button>
-            <a href="{{ route('admin.promo_list') }}" class="acs-add-btn acs-cancel-btn">
-              <i class="fa-solid fa-xmark me-2"></i>Cancel
-            </a>
-          </div>
-        </form>
-      </div>
+
+                </div>
+
+                <div class="form-actions" style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+                    <button type="submit" class="acs-add-btn" id="saveEditBtn">
+                        <i class="fa-solid fa-floppy-disk me-2"></i>Save Changes
+                    </button>
+                    <a href="{{ route('admin.promo_list') }}" class="acs-add-btn acs-cancel-btn">
+                        <i class="fa-solid fa-xmark me-2"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
     <script>
-      const startDateInput = document.getElementById('promo_start_date');
-      const endDateInput = document.getElementById('promo_end_date');
+        const startDateInput = document.getElementById('promo_start_date');
+        const endDateInput = document.getElementById('promo_end_date');
 
-      function normalizeDate(d) {
-          const date = new Date(d);
-          date.setHours(0,0,0,0);
-          return date;
-      }
+        function normalizeDate(d) {
+            const date = new Date(d);
+            date.setHours(0, 0, 0, 0);
+            return date;
+        }
 
-      // ✅ Set correct min for end date based on existing start date
-      function updateEndDateMin() {
-          if (!startDateInput.value) return;
+        // ✅ Set correct min for end date based on existing start date
+        function updateEndDateMin() {
+            if (!startDateInput.value) return;
 
-          const startDate = normalizeDate(startDateInput.value);
-          const minEnd = new Date(startDate);
-          minEnd.setDate(minEnd.getDate() + 1);
+            const startDate = normalizeDate(startDateInput.value);
+            const minEnd = new Date(startDate);
+            minEnd.setDate(minEnd.getDate() + 1);
 
-          const year = minEnd.getFullYear();
-          const month = String(minEnd.getMonth() + 1).padStart(2, '0');
-          const day = String(minEnd.getDate()).padStart(2, '0');
+            const year = minEnd.getFullYear();
+            const month = String(minEnd.getMonth() + 1).padStart(2, '0');
+            const day = String(minEnd.getDate()).padStart(2, '0');
 
-          endDateInput.min = `${year}-${month}-${day}`;
-      }
+            endDateInput.min = `${year}-${month}-${day}`;
+        }
 
-      // Run on load
-      updateEndDateMin();
+        // Run on load
+        updateEndDateMin();
 
-      // Also update if start date is changed (optional but safe)
-      startDateInput.addEventListener('change', updateEndDateMin);
+        // Also update if start date is changed (optional but safe)
+        startDateInput.addEventListener('change', updateEndDateMin);
 
-      // ✅ Validate end date instantly
-      endDateInput.addEventListener('change', () => {
-          if (!startDateInput.value) return;
+        // ✅ Validate end date instantly
+        endDateInput.addEventListener('change', () => {
+            if (!startDateInput.value) return;
 
-          const startDate = normalizeDate(startDateInput.value);
-          const endDate = normalizeDate(endDateInput.value);
+            const startDate = normalizeDate(startDateInput.value);
+            const endDate = normalizeDate(endDateInput.value);
 
-          if (endDate <= startDate) {
-              showToast('End date must be after the start date.', 'danger');
-              endDateInput.value = '';
-          }
-      });
+            if (endDate <= startDate) {
+                showToast('End date must be after the start date.', 'danger');
+                endDateInput.value = '';
+            }
+        });
     </script>
 @endsection
