@@ -4,7 +4,8 @@
     <div class="container my-5">
         <div class="row">
             <div class="col-md-6 my-5">
-                <img src="<?php echo e(asset('images/travel.svg')); ?>" alt="Body Image" class="img-fluid body-image">
+                <img src="<?php echo e(asset('images/travel.webp')); ?>" alt="Body Image" class="img-fluid body-image"
+                    style="-webkit-mask-image: linear-gradient(to bottom, black 55%, transparent 100%); mask-image: linear-gradient(to bottom, black 55%, transparent 100%);">
             </div>
             <div class="col-md-6 d-flex align-items-center justify-content-center">
                 <p class="body-text">
@@ -26,4 +27,4 @@
     <?php echo $__env->make('components.footer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/passenger/homepage.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/passenger/homepage.blade.php ENDPATH**/ ?>

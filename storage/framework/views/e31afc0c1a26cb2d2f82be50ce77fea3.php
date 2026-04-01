@@ -1,13 +1,13 @@
 <?php $__env->startSection('page-title', 'EDIT VOYAGE'); ?>
 <?php $__env->startSection('content'); ?>
   <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-  <?php echo $__env->make('components.staff_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+  <?php echo $__env->make('components.admin_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-  <div class="staff-body">
+  <div class="admin-body">
 
     <div class="acs-form_container">
-      
-      <form action="<?php echo e(route('staff.voyage_update', $voyage->voyage_id)); ?>" method="POST" enctype="multipart/form-data" id="editVoyageForm">
+
+      <form action="<?php echo e(route('admin.voyage_update', $voyage->voyage_id)); ?>" method="POST" enctype="multipart/form-data" id="editVoyageForm">
         <?php echo csrf_field(); ?>
         <?php echo method_field('PUT'); ?>
 
@@ -85,7 +85,7 @@
                 type="date" 
                 id="voyage_departure_date" 
                 name="voyage_departure_date" 
-                value="<?php echo e($voyage->voyage_departure_date); ?>" 
+                value="<?php echo e($voyage->voyage_departure_date); ?>"
                 <?php if($isLocked): ?> disabled <?php endif; ?>
                 min="<?php echo e(\Carbon\Carbon::today()->format('Y-m-d')); ?>"
                 max="<?php echo e(\Carbon\Carbon::today()->addDays(8)->format('Y-m-d')); ?>"
@@ -158,7 +158,7 @@
         <!-- ROW 5: DESCRIPTION -->
         <div class="form-row">
           <div class="form-group" style="width: 100%;">
-            <label for="voyage_description">Voyage Description <span class="text-danger">*</span></label>
+            <label for="voyage_description">Voyage Description</label>
             <textarea id="voyage_description" name="voyage_description" placeholder="Enter voyage description here"><?php echo e($voyage->voyage_description); ?></textarea>
           </div>
         </div>
@@ -166,7 +166,7 @@
         <!-- ROW 6: STATUS + ACTIONS -->
         <div class="form-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
           <div class="form-group" style="flex: 0 0 250px;">
-            <label for="voyage_status">Status</label>
+            <label for="voyage_status">Status <span class="text-danger">*</span></label>
             <select id="voyage_status" name="voyage_status" required <?php if($isCancelled): ?> disabled <?php endif; ?>>
               <option value="Scheduled" <?php echo e($voyage->voyage_status == 'Scheduled' ? 'selected' : ''); ?>>Scheduled</option>
               <option value="At Sea" <?php echo e($voyage->voyage_status == 'At Sea' ? 'selected' : ''); ?>>At Sea</option>
@@ -181,10 +181,10 @@
           </div>
 
           <div class="form-actions" style="display: flex; gap: 1rem;">
-            <button type="submit" class="acs-add-btn update-btn" id="saveEditBtn">
+            <button type="submit" class="acs-add-btn" id="saveEditBtn">
               <i class="fa-solid fa-save me-2"></i>Save Changes
             </button>
-            <a href="<?php echo e(route('staff.voyage_list')); ?>" class="acs-add-btn acs-cancel-btn">
+            <a href="<?php echo e(route('admin.voyage_list')); ?>" class="acs-add-btn acs-cancel-btn">
               <i class="fa-solid fa-xmark me-2"></i>Cancel
             </a>
           </div>
@@ -193,13 +193,12 @@
       </form>
     </div>
   </div>
-
   <script>
     const depDateInput = document.getElementById('voyage_departure_date');
     const arrDateInput = document.getElementById('voyage_arrival_date');
     const etdInput = document.getElementById('voyage_estimated_TD');
     const etaInput = document.getElementById('voyage_estimated_TA');
-
+    
     const routePorts = {
         <?php $__currentLoopData = $route_port; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             "<?php echo e($rp->route_port_id); ?>": {
@@ -231,7 +230,6 @@
     window.addEventListener('DOMContentLoaded', function () {
         updatePortDisplay(routeSelect.value);
     });
-
 
     // normalize date (remove time)
     function normalizeDate(d) {
@@ -297,5 +295,7 @@
     etdInput.addEventListener('change', validateTimeInstant);
     etaInput.addEventListener('change', validateTimeInstant);
   </script>
+
 <?php $__env->stopSection(); ?>
-<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/authorized/staff/svoyage_edit.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/authorized/admin/voyage_edit.blade.php ENDPATH**/ ?>

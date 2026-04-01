@@ -306,4 +306,4 @@
   });
 </script>
 
-<?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/components/authHeader.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/components/authHeader.blade.php ENDPATH**/ ?>

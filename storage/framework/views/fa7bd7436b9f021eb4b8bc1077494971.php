@@ -65,4 +65,4 @@
         </div>
     </div>
 </footer>
-<?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/components/footer.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/components/footer.blade.php ENDPATH**/ ?>

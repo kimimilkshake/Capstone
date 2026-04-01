@@ -62,4 +62,4 @@
         }
     });
 </script>
-<?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/components/hero.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/components/hero.blade.php ENDPATH**/ ?>

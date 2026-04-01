@@ -1,13 +1,14 @@
 <?php $__env->startSection('page-title', 'CREATE VOYAGE'); ?>
 <?php $__env->startSection('content'); ?>
   <?php echo $__env->make('components.authHeader', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-  <?php echo $__env->make('components.staff_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-  <div class="staff-body">
+  <?php echo $__env->make('components.admin_nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-    <div class="scs-form_container">
+  <div class="admin-body">
+
+    <div class="acs-form_container">
 
       
-      <form action="<?php echo e(route('staff.store_voyage')); ?>" method="POST">
+      <form action="<?php echo e(route('admin.store_voyage')); ?>" method="POST">
         <?php echo csrf_field(); ?>
 
         <!--ROW 1: ROUTE, PORT, AND VESSEL-->
@@ -65,24 +66,25 @@
             <div class="form-group">
               <label for="voyage_departure_date">Departure Date <span class="text-danger">*</span></label>
               <input 
-                id="voyage_departure_date" 
-                type="date" 
-                name="voyage_departure_date" 
-                required min="<?php echo e(\Carbon\Carbon::today()->format('Y-m-d')); ?>"
-                max="<?php echo e(\Carbon\Carbon::today()->addDays(8)->format('Y-m-d')); ?>"
-                onchange="setArrivalMin(this.value)"
+                  id="voyage_departure_date" 
+                  type="date" 
+                  name="voyage_departure_date" 
+                  required
+                  min="<?php echo e(\Carbon\Carbon::today()->format('Y-m-d')); ?>"
+                  max="<?php echo e(\Carbon\Carbon::today()->addDays(8)->format('Y-m-d')); ?>"
+                  onchange="setArrivalMin(this.value)"
               >
             </div>
           </div>
 
           <div class="form-col">
             <div class="form-group">
-              <label for="voyage_arrival_date">Arrival Date <span class="text-danger">*</span></label>
+              <label for="voyage_arrival_date">Arrival Date</label>
               <input 
                 id="voyage_arrival_date" 
                 type="date" 
                 name="voyage_arrival_date" 
-                required 
+                required
                 min="<?php echo e(\Carbon\Carbon::today()->addDay()->format('Y-m-d')); ?>"
                 max="<?php echo e(\Carbon\Carbon::today()->addDays(14)->format('Y-m-d')); ?>"
               >
@@ -112,7 +114,7 @@
           <button type="submit" class="acs-add-btn">
             <i class="fa-solid fa-plus me-2"></i>ADD
           </button>
-          <a href="<?php echo e(route('staff.voyage_list')); ?>" class="acs-add-btn acs-cancel-btn">
+          <a href="<?php echo e(route('admin.voyage_list')); ?>" class="acs-add-btn acs-cancel-btn">
             <i class="fa-solid fa-xmark me-2"></i>CANCEL
           </a>
         </div>
@@ -120,7 +122,6 @@
       
     </div>
   </div>
-
 
   <script>
     const routePorts = {
@@ -219,6 +220,8 @@
     etaInput.addEventListener('change', validateTimeInstant);
 
   </script>
-  
+
+
 <?php $__env->stopSection(); ?>
-<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/authorized/staff/screate_voyage.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Sophia\Documents\Capstone\resources\views/authorized/admin/create_voyage.blade.php ENDPATH**/ ?>
