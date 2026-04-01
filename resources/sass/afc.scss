@@ -334,12 +334,6 @@ THIS SCSS FILE CONTAINS THE CSS FOR ABOUT US PAGE, THE ABOUT_PARTIALS, FAQs PAGE
   flex: 1;
 }
 
-.ava-pic{
-  width: 285px;
-  height: 285px;
-  object-fit: cover; 
-  border-radius: 12px; 
-}
 
 @media screen and (max-width: 992px) {
   .ava-col {
@@ -417,12 +411,7 @@ THIS SCSS FILE CONTAINS THE CSS FOR ABOUT US PAGE, THE ABOUT_PARTIALS, FAQs PAGE
   flex: 1;
 }
 
-.apoc-pic{
-  width: 285px;
-  height: 285px;
-  object-fit: cover; 
-  border-radius: 12px; 
-}
+
 
 .apoc-title {
   font-size: 1.2rem;
@@ -622,4 +611,108 @@ THIS SCSS FILE CONTAINS THE CSS FOR ABOUT US PAGE, THE ABOUT_PARTIALS, FAQs PAGE
   text-decoration: none;
   color: #333;
   font-weight: 100;
+}
+
+@media screen and (max-width: 768px) {
+
+  .ava-pic,
+  .apoc-pic {
+    width: 100%;
+    height: auto;
+  }
+
+}
+
+//ABOUT US MOBILE VIEW
+@media screen and (max-width: 768px) {
+
+  .about-container {
+    flex-direction: column;  // 🔥 stack sidebar + content
+    height: auto;
+    padding: 10px;
+  }
+
+  .about-sidebar {
+    width: 100%;
+    height: auto;
+  }
+
+  .about-sidebar ul {
+    display: flex;
+    overflow-x: auto;        // 🔥 horizontal scroll menu
+    gap: 0.5rem;
+  }
+
+  .about-sidebar li {
+    font-size: 14px;
+    flex: 0 0 auto;
+    white-space: nowrap;
+    text-align: center;
+    padding: 8px 12px;
+  }
+
+  .about-content-fragment {
+    height: auto;
+    padding: 1rem;
+  }
+
+  .about-sidebar li.active {
+    clip-path: none;         // 🔥 removes arrow shape
+    border-radius: 6px;      // restore normal shape
+  }
+
+}
+
+//CONTACT US MOBILE VIEW
+@media screen and (max-width: 768px) {
+
+  .contact-divider {
+    margin: 10px 0;     // 🔥 remove side margin
+    padding: 10px;
+  }
+
+  .contact-divtitle {
+    font-size: 20px;    // smaller title
+  }
+
+
+  .contact-row {
+    flex-direction: column;  // 🔥 STACK EVERYTHING
+  }
+
+  .contact-col {
+    width: 100%;
+    padding: 0.5rem;
+  }
+
+  .main-office-pics {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .main-office-pic {
+    width: 100%;   // 🔥 responsive images
+    max-width: 350px;
+    height: auto;
+  }
+
+  .ticketbooth-pic1 {
+    width: 100%;
+    height: auto;
+  }
+
+  .contact-card {
+    padding: 15px;
+  }
+
+  .contact-title {
+    font-size: 20px;
+  }
+
+  .main-office-details p,
+  .main-office-details a {
+    font-size: 14px;
+    margin: 8px 10px;
+  }
+
 }
