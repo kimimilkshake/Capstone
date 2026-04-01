@@ -26,11 +26,6 @@ class DashboardController extends Controller
         $today = Carbon::today();
 
         $passengerBookings = PassengerTicket::whereDate('created_at', $today)
-            ->whereIn('booking_ref_no', function($query) {
-                $query->select('booking_ref_no')
-                      ->from('booking')
-                      ->where('booking_status', 'Confirmed');
-            })
             ->distinct('booking_ref_no')
             ->count('booking_ref_no');
 

@@ -309,6 +309,20 @@ class DatabaseSeeder extends Seeder
             ],
         ]);
 
+        DB::table('promo')->insert([
+            [
+                'promo_name' => 'Summer 2026 Promo',
+                'promo_code' => 'SUMMER2026',
+                'promo_description' => 'Enjoy our special summer promo with discounted fares and exciting offers! Book your voyage now and experience the best of our services while saving big. Don\'t miss out on this limited-time opportunity to make your travel dreams come true!',
+                'promo_start_date' => '2026-04-01',
+                'promo_end_date' => '2026-06-30',
+                'promo_status' => 'Active',
+                'promo_discount_rate' => 15.00,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
         // Route Category seeders
         DB::table('route_category')->insert([
             [
