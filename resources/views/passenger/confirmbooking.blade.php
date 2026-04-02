@@ -149,10 +149,10 @@
                                         <div class="d-flex d-sm-block justify-content-between">
                                             @if ($basePrice !== null && ($routeRate > 0 || $typeDiscountPct > 0 || $item['ticket']->promo))
                                                 <span class="text-muted">Accommodation Price: </span><strong
-                                                    class="text-dark">PHP {{ number_format($basePrice, 2) }}</strong>
+                                                    class="text-dark">₱{{ number_format($basePrice, 2) }}</strong>
                                             @else
-                                                <span class="text-muted">Price: </span><strong class="text-dark">PHP
-                                                    {{ number_format($ticketPrice, 2) }}</strong>
+                                                <span class="text-muted">Price: </span><strong
+                                                    class="text-dark">₱{{ number_format($ticketPrice, 2) }}</strong>
                                             @endif
                                         </div>
                                     </div>
@@ -184,8 +184,8 @@
                                             <div class="d-flex align-items-center mt-1">
                                                 <span class="fw-semibold" style="white-space:nowrap;">Total</span>
                                                 <span style="flex:1;border-bottom:2px dotted #888;margin:0 8px;"></span>
-                                                <span class="fw-semibold" style="white-space:nowrap;">PHP
-                                                    {{ number_format($ticketPrice, 2) }}</span>
+                                                <span class="fw-semibold"
+                                                    style="white-space:nowrap;">₱{{ number_format($ticketPrice, 2) }}</span>
                                             </div>
                                         </div>
                                     @endif
@@ -196,7 +196,7 @@
                             @if (count($passengers) > 1)
                                 <div class="border rounded p-3 bg-dark text-white d-flex justify-content-between">
                                     <span class="fw-bold">Grand Total</span>
-                                    <span class="fw-bold">PHP {{ number_format($grandTotal, 2) }}</span>
+                                    <span class="fw-bold">₱{{ number_format($grandTotal, 2) }}</span>
                                 </div>
                             @endif
                         </div>

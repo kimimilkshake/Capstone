@@ -30,7 +30,7 @@
                 <p>Cargo Bookings</p>
             </div>
             <div class="astat-boxes-col">
-                <span class="anumberStat">PHP {{ number_format($totalSales, 2) }}</span>
+                <span class="anumberStat">₱{{ number_format($totalSales, 2) }}</span>
                 <p>Total Sales</p>
             </div>
         </div>
@@ -63,7 +63,8 @@
                             <td>{{ \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:iA') }}</td>
                             <td>{{ \Carbon\Carbon::parse($voyage->voyage_arrival_date)->format('M j, Y, D') }}</td>
                             <td>{{ \Carbon\Carbon::parse($voyage->voyage_estimated_TA)->format('g:iA') }}</td>
-                            <td>{{ $voyage->passenger_tickets_count }}/{{ $voyage->vessel->vessel_total_passenger_capacity }}</td>
+                            <td>{{ $voyage->passenger_tickets_count }}/{{ $voyage->vessel->vessel_total_passenger_capacity }}
+                            </td>
                             <td>{{ $voyage->vessel->vessel_name }}</td>
                             <td>{{ $voyage->voyage_status }}</td>
                         </tr>

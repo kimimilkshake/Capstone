@@ -296,15 +296,14 @@
                                                 <thead>
                                                     <tr>
                                                         <th>Accommodation</th>
+                                                        <th>Regular</th>
                                                         @foreach ($discountMap as $disc)
-                                                            <th>{{ $typeLabels[$disc->passenger_type] ?? $disc->passenger_type }}
+                                                            <th>
+                                                                {{ $typeLabels[$disc->passenger_type] ?? $disc->passenger_type }}
                                                                 @if ($disc->discount_rate > 0)
-                                                                    <small style="color:#fff;font-weight:normal;opacity:0.85;"> -{{ rtrim(rtrim(number_format($disc->discount_rate, 2), '0'), '.') }}%</small> @endif
+                                                                    <br><small style="color:#fff;font-weight:normal;opacity:0.85;">-{{ rtrim(rtrim(number_format($disc->discount_rate, 2), '0'), '.') }}%</small> @endif
                     </th>
                 @endforeach
-                @if ($discountMap->isEmpty())
-                    <th>Regular</th>
-                @endif
                 </tr>
                 </thead>
                 <tbody>
@@ -316,22 +315,19 @@
                         @endphp
                         <tr>
                             <td>{{ $accommodation->accommodation_name }}</td>
-                            @if ($discountMap->isNotEmpty())
-                                @foreach ($discountMap as $disc)
-                                    @php
-                                        $discounted = $base * ((100 - $disc->discount_rate) / 100);
-                                    @endphp
-                                    <td>
-                                        @if ($disc->discount_rate >= 100)
-                                            <span class="text-success fw-bold">FREE</span>
-                                        @else
-                                            &#8369;{{ number_format($discounted, 2) }}
-                                        @endif
-                                    </td>
-                                @endforeach
-                            @else
-                                <td>&#8369;{{ number_format($base, 2) }}</td>
-                            @endif
+                            <td>&#8369;{{ number_format($base, 2) }}</td>
+                            @foreach ($discountMap as $disc)
+                                @php
+                                    $discounted = $base * ((100 - $disc->discount_rate) / 100);
+                                @endphp
+                                <td>
+                                    @if ($disc->discount_rate >= 100)
+                                        <span class="text-success fw-bold">FREE</span>
+                                    @else
+                                        &#8369;{{ number_format($discounted, 2) }}
+                                    @endif
+                                </td>
+                            @endforeach
                         </tr>
                     @endforeach
                 </tbody>

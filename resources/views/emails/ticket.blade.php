@@ -287,8 +287,8 @@
                     @if ($payment)
                         <div class="info-item">
                             <span class="info-label">Total Amount:</span>
-                            <span class="info-value total-amount">PHP
-                                {{ number_format($payment->total_amount, 2) }}</span>
+                            <span
+                                class="info-value total-amount">₱{{ number_format($payment->total_amount, 2) }}</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Payment Method:</span>

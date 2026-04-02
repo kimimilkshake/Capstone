@@ -70,6 +70,23 @@ class BookingController extends Controller
         $routeRate = $rcRow->route_rate ?? 0;
         $routeCategoryId = $rcRow->route_category_id ?? null;
 
+        // Server-side: validate each passenger type is allowed for this route
+        $allowedTypes = ['Regular'];
+        if ($routeCategoryId) {
+            $configuredTypes = DB::table('route_category_passenger_discounts')
+                ->where('route_category_id', $routeCategoryId)
+                ->where('discount_rate', '>', 0)
+                ->pluck('passenger_type')
+                ->toArray();
+            $allowedTypes = array_merge($allowedTypes, $configuredTypes);
+        }
+        foreach ($passengers as $index => $p) {
+            $type = $p['type'] ?? 'Regular';
+            if (!in_array($type, $allowedTypes)) {
+                return response()->json(['success' => false, 'message' => "Passenger type '{$type}' is not available for this route."], 422);
+            }
+        }
+
         // Simple pricing: attempt to use accommodation price; fallback to flat price
         $flatPrice = 500.00;
 

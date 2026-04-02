@@ -6,6 +6,19 @@
 
     <div class="staff-body">
 
+        @if ($errors->any())
+            <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1100;">
+                <div class="toast align-items-center text-bg-danger border-0 show" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            {{ $errors->first() }}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <form action="{{ route('staff.passenger_booking.store') }}" method="POST" id="passengerBookingForm">
             @csrf
 
@@ -74,6 +87,57 @@
         const numPassengersSelect = document.getElementById('numPassengers');
         const passengersContainer = document.getElementById('passengersContainer');
         let accommodationsData = [];
+        let staffPassengerDiscounts = null; // null = not yet fetched; {} = fetched but empty
+
+        const ALL_PASSENGER_TYPES = [{
+                value: '3 to 11 years old',
+                label: '3 to 11 years old'
+            },
+            {
+                value: 'Below 3 years old',
+                label: 'Below 3 years old'
+            },
+            {
+                value: 'PWD',
+                label: 'PWD'
+            },
+            {
+                value: 'Regular',
+                label: 'Regular/Adult'
+            },
+            {
+                value: 'Senior Citizen',
+                label: 'Senior Citizen'
+            },
+            {
+                value: 'Student',
+                label: 'Student'
+            },
+            {
+                value: 'Uniformed Personnel',
+                label: 'Uniformed Personnel'
+            },
+        ];
+
+        function buildStaffPassengerTypeOptions() {
+            // null means discounts haven't been fetched yet — show all as fallback
+            if (staffPassengerDiscounts === null) {
+                return ALL_PASSENGER_TYPES
+                    .map((t) => `<option value="${t.value}"${t.value === 'Regular' ? ' selected' : ''}>${t.label}</option>`)
+                    .join('');
+            }
+            // Regular always shows; others only if configured with discount > 0
+            const configuredTypes = Object.keys(staffPassengerDiscounts);
+            const types = ALL_PASSENGER_TYPES.filter((t) =>
+                t.value === 'Regular' ||
+                (configuredTypes.includes(t.value) && (staffPassengerDiscounts[t.value] ?? 0) > 0)
+            );
+            return types.map((t) => {
+                const rate = staffPassengerDiscounts[t.value];
+                const label = rate !== undefined && rate > 0 ? `${t.label} (-${rate}%)` : t.label;
+                return `<option value="${t.value}"${t.value === 'Regular' ? ' selected' : ''}>${label}</option>`;
+            }).join('');
+        }
 
         // PSGC API for Philippine addresses
         const PSGC_API_BASE = 'https://psgc.gitlab.io/api';
@@ -106,28 +170,32 @@
         async function loadAccommodations(voyageId) {
             if (!voyageId) {
                 accommodationsData = [];
+                staffPassengerDiscounts = {};
                 return;
             }
 
             try {
-                const url = `/authorized/staff/passenger-booking/available-cots?voyage_id=${voyageId}`;
-                console.log('Fetching accommodations from:', url); // Debug log
+                const [accomsResp, discountsResp] = await Promise.all([
+                    fetch(`/authorized/staff/passenger-booking/available-cots?voyage_id=${voyageId}`),
+                    fetch(`/api/voyage/${voyageId}/passenger-discounts`),
+                ]);
 
-                const response = await fetch(url);
-                const data = await response.json();
-
-                console.log('Accommodations loaded:', data); // Debug log
-
+                const data = await accomsResp.json();
                 if (data.success) {
                     accommodationsData = data.accommodations;
-                    console.log('Accommodations data:', accommodationsData); // Debug log
                 } else {
                     accommodationsData = [];
                     alert('Failed to load accommodations: ' + (data.message || 'Unknown error'));
                 }
+
+                const discountsData = await discountsResp.json();
+                if (discountsData && typeof discountsData === 'object') {
+                    staffPassengerDiscounts = discountsData;
+                }
             } catch (error) {
-                console.error('Error loading accommodations:', error);
+                console.error('Error loading voyage data:', error);
                 accommodationsData = [];
+                staffPassengerDiscounts = {};
                 alert('Error loading accommodations. Check console for details.');
             }
         }
@@ -145,14 +213,7 @@
                 <div class="col-md-8">
                     <label class="form-label">Passenger Type <span class="text-danger">*</span></label>
                     <select name="passengers[${i}][type]" class="form-select passenger-type" required>
-                        <option value="">Select Type</option>
-                        <option value="3 to 11 years old">3 to 11 years old</option>
-                        <option value="Below 3 years old">Below 3 years old</option>
-                        <option value="PWD">PWD</option>
-                        <option value="Regular">Regular/Adult</option>
-                        <option value="Senior Citizen">Senior Citizen</option>
-                        <option value="Student">Student</option>
-                        <option value="Uniformed Personnel">Uniformed Personnel</option>
+                        ${buildStaffPassengerTypeOptions()}
                     </select>
                 </div>
                 <div class="col-md-4">
@@ -471,7 +532,10 @@
 
             await loadAccommodations(this.value);
 
-            // Populate accommodations for existing passenger forms
+            // Regenerate passenger forms so passenger type dropdown reflects new voyage's discounts
+            await generatePassengerForms(parseInt(numPassengersSelect.value));
+
+            // Populate accommodations for the newly generated forms
             populateAccommodations();
 
             checkFormCompletion();

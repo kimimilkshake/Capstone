@@ -106,7 +106,11 @@
                 </div>
 
                 <div style="margin-top:12px;">
-                    <label style="font-weight:600;">Passenger Type Discounts</label>
+                    <div style="display:flex;gap:8px;margin-bottom:2px;">
+                        <span style="font-weight:600;flex:1;">Passenger Type</span>
+                        <span style="font-weight:600;width:140px;">Discount Rate (%)</span>
+                        <span style="width:24px;"></span>
+                    </div>
                     <div id="addRCDiscountsContainer"></div>
                     <button type="button" id="addRCDiscountRowBtn"
                         style="margin-top:6px;background:none;border:1px dashed #485B8C;color:#485B8C;padding:4px 12px;border-radius:4px;cursor:pointer;">+
@@ -151,7 +155,11 @@
                 </div>
 
                 <div style="margin-top:12px;">
-                    <label style="font-weight:600;">Passenger Type Discounts</label>
+                    <div style="display:flex;gap:8px;margin-bottom:2px;">
+                        <span style="font-weight:600;flex:1;">Passenger Type</span>
+                        <span style="font-weight:600;width:140px;">Discount Rate (%)</span>
+                        <span style="width:24px;"></span>
+                    </div>
                     <div id="editRCDiscountsContainer"></div>
                     <button type="button" id="editRCDiscountRowBtn"
                         style="margin-top:6px;background:none;border:1px dashed #485B8C;color:#485B8C;padding:4px 12px;border-radius:4px;cursor:pointer;">+
@@ -219,7 +227,8 @@
                             @foreach ($ports as $port)
                                 <option value="{{ $port->port_id }}" data-city="{{ $port->city }}"
                                     data-terminal="{{ $port->terminal_name }}" data-province="{{ $port->province }}">
-                                    {{ $port->terminal_name }} - {{ $port->port_name }} ({{ $port->city }}, {{ $port->province }})
+                                    {{ $port->terminal_name }} - {{ $port->port_name }} ({{ $port->city }},
+                                    {{ $port->province }})
                                 </option>
                             @endforeach
                         </select>

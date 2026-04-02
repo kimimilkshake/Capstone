@@ -216,8 +216,8 @@
                                 <table width="100%" cellpadding="0" cellspacing="0">
                                     <tr>
                                         <td style="font-size:10px; color:#666; width:130px;">TOTAL :</td>
-                                        <td style="font-size:18px; font-weight:bold; color:#1a3a6b;">PHP
-                                            {{ number_format($ticketItem->pt_ticket_price, 2) }}</td>
+                                        <td style="font-size:18px; font-weight:bold; color:#1a3a6b;">
+                                            ₱{{ number_format($ticketItem->pt_ticket_price, 2) }}</td>
                                     </tr>
                                 </table>
                             </td>

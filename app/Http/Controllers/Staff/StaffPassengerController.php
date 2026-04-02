@@ -84,6 +84,24 @@ class StaffPassengerController extends Controller
         $passengers = $request->passengers;
         $paymentMode = $request->payment_mode;
 
+        // Server-side: validate each passenger type is allowed for this route
+        $routeCategoryId = $voyage->routePort->route_category_id ?? null;
+        $allowedTypes = ['Regular'];
+        if ($routeCategoryId) {
+            $configuredTypes = DB::table('route_category_passenger_discounts')
+                ->where('route_category_id', $routeCategoryId)
+                ->where('discount_rate', '>', 0)
+                ->pluck('passenger_type')
+                ->toArray();
+            $allowedTypes = array_merge($allowedTypes, $configuredTypes);
+        }
+        foreach ($passengers as $passengerData) {
+            $type = $passengerData['type'] ?? 'Regular';
+            if (!in_array($type, $allowedTypes)) {
+                return back()->withErrors(['error' => "Passenger type '{$type}' is not available for this route."])->withInput();
+            }
+        }
+
         // Validate cot availability
         foreach ($passengers as $passengerData) {
             $cotBooked = DB::table('passenger_ticket')
