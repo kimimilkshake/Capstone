@@ -337,6 +337,18 @@ class PaymentController extends Controller
             return $response;
         }
 
+        // Fallback: check DB in case the webhook already processed the payment
+        // (source status becomes 'consumed' after webhook charges it, which falls through above)
+        $freshPayment = DB::table('payment')->where('booking_ref_no', $bookingRef)->first();
+        $freshBooking = DB::table('booking')->where('booking_ref_no', $bookingRef)->first();
+        if (
+            $freshPayment && strtolower($freshPayment->payment_status) === 'completed' &&
+            $freshBooking && strtolower($freshBooking->booking_status) === 'confirmed'
+        ) {
+            Log::info('redirectReturn: payment already confirmed by webhook', ['booking_ref_no' => $bookingRef]);
+            return redirect()->route('homepage')->with('success', "Your booking is confirmed! Booking Reference: {$bookingRef}. Please check your email (including spam folder) for your ticket details.");
+        }
+
         // If payment failed or status unknown, redirect to homepage with error
         Log::info('Redirecting to homepage with error message', ['status' => $status, 'booking_ref_no' => $bookingRef]);
         return redirect()->route('homepage')->with('error', 'Payment could not be completed. Please try again.');
