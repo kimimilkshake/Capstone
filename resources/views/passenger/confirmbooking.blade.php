@@ -129,19 +129,19 @@
                                             {{ $item['passenger']->passenger_suffix }}
                                         @endif
                                     </div>
-                                    {{-- Info row: spread edge to edge, each item left-aligned --}}
-                                    <div class="d-flex justify-content-between small mb-0">
-                                        <div style="white-space: nowrap;"><span class="text-muted">Type: </span><strong
+                                    {{-- Info row: wraps on mobile --}}
+                                    <div class="row g-1 small mb-0">
+                                        <div class="col-6 col-sm-3"><span class="text-muted">Type: </span><strong
                                                 class="text-dark">{{ $item['passenger']->passenger_type }}</strong></div>
-                                        <div style="white-space: nowrap;">
+                                        <div class="col-6 col-sm-3">
                                             @if ($item['accommodation_name'])
                                                 <span class="text-muted">Accommodation: </span><strong
                                                     class="text-dark">{{ $item['accommodation_name'] }}</strong>
                                             @endif
                                         </div>
-                                        <div style="white-space: nowrap;"><span class="text-muted">Cot: </span><strong
+                                        <div class="col-6 col-sm-3"><span class="text-muted">Cot: </span><strong
                                                 class="text-dark">{{ $item['ticket']->pt_cot_no }}</strong></div>
-                                        <div style="white-space: nowrap;">
+                                        <div class="col-6 col-sm-3">
                                             @if ($basePrice !== null && ($routeRate > 0 || $typeDiscountPct > 0 || $item['ticket']->promo))
                                                 <span class="text-muted">Accommodation Price: </span><strong
                                                     class="text-dark">PHP {{ number_format($basePrice, 2) }}</strong>
