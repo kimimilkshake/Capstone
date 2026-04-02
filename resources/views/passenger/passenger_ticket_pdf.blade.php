@@ -270,9 +270,6 @@
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0 14px 0;">
         <tr>
             <td style="border-top:2px dashed #aaa;"></td>
-            <td style="width:28px; text-align:center; font-size:20px; color:#777; padding:0 4px; white-space:nowrap;">✂
-            </td>
-            <td style="border-top:2px dashed #aaa;"></td>
         </tr>
     </table>
 

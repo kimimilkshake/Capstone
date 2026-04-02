@@ -128,6 +128,12 @@ class BookingController extends Controller
                 'updated_at' => now(),
             ]);
 
+            // Link payment_id back to booking
+            DB::table('booking')->where('booking_ref_no', $bookingId)->update([
+                'payment_id' => $paymentId,
+                'updated_at' => now(),
+            ]);
+
             foreach ($passengers as $index => $p) {
                 // Insert or create passenger record
                 $passengerId = DB::table('passenger')->insertGetId([

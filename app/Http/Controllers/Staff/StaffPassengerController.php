@@ -183,6 +183,12 @@ class StaffPassengerController extends Controller
             // Update payment with total amount
             $payment->update(['total_amount' => $totalAmount]);
 
+            // Link payment_id back to booking
+            DB::table('booking')->where('booking_ref_no', $booking->booking_ref_no)->update([
+                'payment_id' => $payment->payment_id,
+                'updated_at' => now(),
+            ]);
+
             // Note: Notification is not created for passenger bookings as the schema only supports cargo notifications
 
             DB::commit();
