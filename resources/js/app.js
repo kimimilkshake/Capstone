@@ -1,13 +1,13 @@
-import './bootstrap';
-import * as bootstrap from 'bootstrap';
-import './admin_nav';
-import './staff_nav';
-import './vessel';
-import './route_port_modal';
-import './afc';
+import "./bootstrap";
+import * as bootstrap from "bootstrap";
+window.bootstrap = bootstrap;
+import "./admin_nav";
+import "./staff_nav";
+import "./vessel";
+import "./route_port_modal";
+import "./afc";
 
 document.addEventListener("DOMContentLoaded", function () {
-
     const saveBtn = document.getElementById("saveEditBtn");
 
     // ❗ If page has no save button → DO NOTHING
@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let originalData = {};
 
     // STORE ORIGINAL VALUES
-    inputs.forEach(input => {
+    inputs.forEach((input) => {
         if (input.name) {
             originalData[input.name] = input.value;
         }
@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
     saveBtn.style.cursor = "not-allowed";
 
     // CHECK CHANGES
-    inputs.forEach(input => {
+    inputs.forEach((input) => {
         input.addEventListener("input", checkChanges);
         input.addEventListener("change", checkChanges);
     });
@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function checkChanges() {
         let changed = false;
 
-        inputs.forEach(input => {
+        inputs.forEach((input) => {
             if (input.name && originalData[input.name] !== input.value) {
                 changed = true;
             }
@@ -57,14 +57,16 @@ document.addEventListener("DOMContentLoaded", function () {
             saveBtn.style.cursor = "not-allowed";
         }
     }
-
 });
 
-document.addEventListener("DOMContentLoaded", function() {
-    document.querySelectorAll('.disabled-voyage').forEach(el => {
-        el.addEventListener('click', function(e) {
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".disabled-voyage").forEach((el) => {
+        el.addEventListener("click", function (e) {
             e.preventDefault(); // stop navigation
-            showToast('This voyage is currently "At Sea" and cannot be edited.', 'danger');
+            showToast(
+                'This voyage is currently "At Sea" and cannot be edited.',
+                "danger",
+            );
         });
     });
 });
