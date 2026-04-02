@@ -130,18 +130,23 @@
                                         @endif
                                     </div>
                                     {{-- Info row: wraps on mobile --}}
-                                    <div class="row g-1 small mb-0">
-                                        <div class="col-6 col-sm-3"><span class="text-muted">Type: </span><strong
-                                                class="text-dark">{{ $item['passenger']->passenger_type }}</strong></div>
-                                        <div class="col-6 col-sm-3">
-                                            @if ($item['accommodation_name'])
+                                    <div class="d-sm-flex justify-content-sm-between small mb-0"
+                                        style="gap: 0.25rem 0.75rem;">
+                                        <div class="d-flex d-sm-block justify-content-between">
+                                            <span class="text-muted">Type: </span><strong
+                                                class="text-dark">{{ $item['passenger']->passenger_type }}</strong>
+                                        </div>
+                                        @if ($item['accommodation_name'])
+                                            <div class="d-flex d-sm-block justify-content-between">
                                                 <span class="text-muted">Accommodation: </span><strong
                                                     class="text-dark">{{ $item['accommodation_name'] }}</strong>
-                                            @endif
+                                            </div>
+                                        @endif
+                                        <div class="d-flex d-sm-block justify-content-between">
+                                            <span class="text-muted">Cot: </span><strong
+                                                class="text-dark">{{ $item['ticket']->pt_cot_no }}</strong>
                                         </div>
-                                        <div class="col-6 col-sm-3"><span class="text-muted">Cot: </span><strong
-                                                class="text-dark">{{ $item['ticket']->pt_cot_no }}</strong></div>
-                                        <div class="col-6 col-sm-3">
+                                        <div class="d-flex d-sm-block justify-content-between">
                                             @if ($basePrice !== null && ($routeRate > 0 || $typeDiscountPct > 0 || $item['ticket']->promo))
                                                 <span class="text-muted">Accommodation Price: </span><strong
                                                     class="text-dark">PHP {{ number_format($basePrice, 2) }}</strong>

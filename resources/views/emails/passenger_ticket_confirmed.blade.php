@@ -112,50 +112,16 @@
                         <th>Type</th>
                         <th>Cot #</th>
                         <th>Accommodation</th>
-                        <th>Price</th>
+                        <th>Base Price</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @php
-                        $totalAmount = 0;
-                    @endphp
                     @forelse($allPassengers as $index => $item)
                         @php
                             $passenger = $item['passenger'] ?? null;
                             $ticket = $item['ticket'] ?? null;
-                            if ($ticket) {
-                                $totalAmount += $ticket->pt_ticket_price;
-                            }
-
-                            // Find accommodation by COT number
-                            $accommodation = null;
-                            if ($voyage && isset($voyage->vessel_id)) {
-                                $accommodations = \DB::table('accommodation')
-                                    ->where('vessel_id', $voyage->vessel_id)
-                                    ->get();
-
-                                foreach ($accommodations as $accom) {
-                                    $ranges = explode(',', $accom->accommodation_cot_range);
-                                    foreach ($ranges as $range) {
-                                        $range = trim($range);
-                                        if (strpos($range, '-') !== false) {
-                                            [$start, $end] = explode('-', $range);
-                                            if (
-                                                $ticket->pt_cot_no >= (int) trim($start) &&
-                                                $ticket->pt_cot_no <= (int) trim($end)
-                                            ) {
-                                                $accommodation = $accom;
-                                                break 2;
-                                            }
-                                        } else {
-                                            if ($ticket->pt_cot_no == (int) trim($range)) {
-                                                $accommodation = $accom;
-                                                break 2;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            $basePrice = $item['accommodation_base_price'] ?? null;
+                            $displayPrice = $basePrice !== null ? $basePrice : $ticket->pt_ticket_price ?? 0;
                         @endphp
                         <tr>
                             <td>{{ $index + 1 }}</td>
@@ -171,8 +137,8 @@
                             </td>
                             <td>{{ $passenger->passenger_type ?? 'N/A' }}</td>
                             <td>{{ $ticket->pt_cot_no ?? 'N/A' }}</td>
-                            <td>{{ $accommodation ? $accommodation->accommodation_name : 'N/A' }}</td>
-                            <td>₱{{ number_format($ticket->pt_ticket_price ?? 0, 2) }}</td>
+                            <td>{{ $item['accommodation_name'] ?? 'N/A' }}</td>
+                            <td>₱{{ number_format($displayPrice, 2) }}</td>
                         </tr>
                     @empty
                         <tr>
@@ -187,6 +153,76 @@
         <div class="section highlight">
             <div class="section-title">💳 Payment Information</div>
             @if ($payment)
+                {{-- Per-passenger price breakdown --}}
+                @php $hasAnyBreakdown = false; @endphp
+                @foreach ($allPassengers as $item)
+                    @php
+                        $ticket = $item['ticket'] ?? null;
+                        $routeRate = $item['route_rate'] ?? 0;
+                        $typeDiscountRate = $item['type_discount_rate'] ?? 0;
+                        $promo = $item['promo'] ?? null;
+                        $hasBreakdown = $ticket && ($routeRate > 0 || $typeDiscountRate > 0 || $promo);
+                        if ($hasBreakdown) {
+                            $hasAnyBreakdown = true;
+                        }
+                    @endphp
+                @endforeach
+
+                @if ($hasAnyBreakdown)
+                    <table style="margin-bottom:12px; font-size:13px;">
+                        <thead>
+                            <tr>
+                                <th>Passenger</th>
+                                <th>Base Price</th>
+                                <th>Route Rate</th>
+                                <th>Type Discount</th>
+                                <th>Promo</th>
+                                <th>Final Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($allPassengers as $item)
+                                @php
+                                    $passenger = $item['passenger'] ?? null;
+                                    $ticket = $item['ticket'] ?? null;
+                                    $basePrice = $item['accommodation_base_price'] ?? null;
+                                    $routeRate = (float) ($item['route_rate'] ?? 0);
+                                    $typeDiscountRate = (float) ($item['type_discount_rate'] ?? 0);
+                                    $promo = $item['promo'] ?? null;
+                                    $rateDisplay =
+                                        $routeRate > 0
+                                            ? '+' . rtrim(rtrim(number_format($routeRate, 2), '0'), '.') . '%'
+                                            : '—';
+                                    $typeDisplay =
+                                        $typeDiscountRate > 0
+                                            ? '-' . rtrim(rtrim(number_format($typeDiscountRate, 2), '0'), '.') . '%'
+                                            : '—';
+                                    $promoDisplay = $promo
+                                        ? '-' .
+                                            rtrim(rtrim(number_format($promo->promo_discount_rate, 2), '0'), '.') .
+                                            '%'
+                                        : '—';
+                                    $basePriceDisplay = $basePrice !== null ? '₱' . number_format($basePrice, 2) : '—';
+                                @endphp
+                                <tr>
+                                    <td>
+                                        {{ $passenger->passenger_firstname ?? '' }}
+                                        @if ($passenger && $passenger->passenger_midinitial)
+                                            {{ $passenger->passenger_midinitial }}.
+                                        @endif
+                                        {{ $passenger->passenger_lastname ?? '' }}
+                                    </td>
+                                    <td>{{ $basePriceDisplay }}</td>
+                                    <td>{{ $rateDisplay }}</td>
+                                    <td>{{ $typeDisplay }}</td>
+                                    <td>{{ $promoDisplay }}</td>
+                                    <td><strong>₱{{ number_format($ticket->pt_ticket_price ?? 0, 2) }}</strong></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+
                 <p><strong>Total Amount Paid:</strong> ₱{{ number_format($payment->total_amount, 2) }}</p>
                 <p><strong>Payment Method:</strong> {{ $payment->mode_of_payment }}</p>
                 <p><strong>Payment Status:</strong> {{ $payment->payment_status }}</p>
@@ -205,7 +241,8 @@
                 <li>Present this ticket and your ID at check-in</li>
                 <li>Ticket modifications must be made <strong>at least 2 hours</strong> before departure</li>
                 <li>For inquiries, call <strong>(032) 232-8864</strong> or email
-                    <strong>lapulapulslc1964@gmail.com</strong></li>
+                    <strong>lapulapulslc1964@gmail.com</strong>
+                </li>
             </ul>
         </div>
 
@@ -213,7 +250,8 @@
             this email (one PDF for each passenger).</p>
 
         <div class="footer">
-            <p>This is an automatically generated confirmation email. Please keep this email and all attached PDF tickets
+            <p>This is an automatically generated confirmation email. Please keep this email and all attached PDF
+                tickets
                 for your records.</p>
         </div>
     </div>

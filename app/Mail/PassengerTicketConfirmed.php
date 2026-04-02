@@ -68,14 +68,79 @@ class PassengerTicketConfirmed extends Mailable
         }
 
         // Load voyage details (from first ticket)
+        $this->voyage = null;
+        $this->vessel = null;
+        $this->route = null;
         if (!empty($tickets)) {
             $firstTicket = $tickets->first();
             $this->voyage = DB::table('voyage')->where('voyage_id', $firstTicket->voyage_id)->first();
 
             if ($this->voyage) {
-                // Load vessel and route details
                 $this->vessel = DB::table('vessel')->where('vessel_id', $this->voyage->vessel_id)->first();
                 $this->route = \App\Models\RoutePort::with(['portOrigin', 'portDestination'])->find($this->voyage->route_port_id);
+
+                // Resolve route rate and route category
+                $rcRow = DB::table('voyage')
+                    ->join('route_port', 'voyage.route_port_id', '=', 'route_port.route_port_id')
+                    ->join('route_category', 'route_port.route_category_id', '=', 'route_category.route_category_id')
+                    ->where('voyage.voyage_id', $this->voyage->voyage_id)
+                    ->select('route_category.route_rate', 'route_port.route_category_id')
+                    ->first();
+                $routeRate = $rcRow ? (float) $rcRow->route_rate : 0;
+                $routeCategoryId = $rcRow ? $rcRow->route_category_id : null;
+
+                // Load all accommodations for the vessel
+                $accommodations = DB::table('accommodation')
+                    ->where('vessel_id', $this->voyage->vessel_id)
+                    ->get();
+
+                // Enrich each passenger item with accommodation + pricing data
+                foreach ($this->allPassengers as &$item) {
+                    $ticket = $item['ticket'];
+                    $passenger = $item['passenger'];
+
+                    // Find accommodation by cot range
+                    $accommodation = null;
+                    foreach ($accommodations as $accom) {
+                        $ranges = array_map('trim', explode(',', $accom->accommodation_cot_range));
+                        foreach ($ranges as $range) {
+                            if (strpos($range, '-') !== false) {
+                                [$start, $end] = explode('-', $range);
+                                if ($ticket->pt_cot_no >= (int) trim($start) && $ticket->pt_cot_no <= (int) trim($end)) {
+                                    $accommodation = $accom;
+                                    break 2;
+                                }
+                            } elseif ((int) trim($range) === (int) $ticket->pt_cot_no) {
+                                $accommodation = $accom;
+                                break 2;
+                            }
+                        }
+                    }
+
+                    // Type discount rate
+                    $passType = $passenger ? ($passenger->passenger_type ?? 'Regular') : 'Regular';
+                    $typeDiscountRate = 0;
+                    if ($routeCategoryId) {
+                        $discount = DB::table('route_category_passenger_discounts')
+                            ->where('route_category_id', $routeCategoryId)
+                            ->where('passenger_type', $passType)
+                            ->value('discount_rate');
+                        $typeDiscountRate = $discount !== null ? (float) $discount : 0;
+                    }
+
+                    // Promo data
+                    $promo = null;
+                    if ($ticket->promo_id) {
+                        $promo = DB::table('promo')->where('promo_id', $ticket->promo_id)->first();
+                    }
+
+                    $item['accommodation_name'] = $accommodation ? $accommodation->accommodation_name : null;
+                    $item['accommodation_base_price'] = $accommodation ? (float) $accommodation->accommodation_regular_price : null;
+                    $item['route_rate'] = $routeRate;
+                    $item['type_discount_rate'] = $typeDiscountRate;
+                    $item['promo'] = $promo;
+                }
+                unset($item);
             }
         }
     }
