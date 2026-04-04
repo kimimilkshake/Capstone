@@ -12,34 +12,37 @@
             <div class="col-lg-6">
                 <div class="card shadow-sm p-4 mb-4">
                     <h5 class="mb-2">Booking Information</h5>
-                    
+
                     @php
                         // ✅ UNIT CONVERSION TO METERS
-                        function toMeters($value, $unit) {
+                        function toMeters($value, $unit)
+                        {
                             $unit = strtolower($unit);
 
                             return match ($unit) {
-                                'm'   => $value,
-                                'cm'  => $value / 100,
-                                'in'  => $value * 0.0254,
-                                'ft'  => $value * 0.3048,
-                                default => $value
+                                'm' => $value,
+                                'cm' => $value / 100,
+                                'in' => $value * 0.0254,
+                                'ft' => $value * 0.3048,
+                                default => $value,
                             };
                         }
 
                         // ✅ CBM CALCULATION (NOW UNIT-CONSISTENT)
-                        function computeCBM($cargo) {
+                        function computeCBM($cargo)
+                        {
                             $unit = $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm';
 
-                            $length = toMeters((float)$cargo->length, $unit);
-                            $width  = toMeters((float)$cargo->width, $unit);
-                            $height = toMeters((float)$cargo->height, $unit);
+                            $length = toMeters((float) $cargo->length, $unit);
+                            $width = toMeters((float) $cargo->width, $unit);
+                            $height = toMeters((float) $cargo->height, $unit);
 
                             return $length * $width * $height;
                         }
 
                         // ✅ CENTRALIZED SUBTOTAL CALCULATION
-                        function computeSubtotal($cargo) {
+                        function computeSubtotal($cargo)
+                        {
                             $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
                             $qty = (float) ($cargo->quantity ?? 0);
 
@@ -94,7 +97,7 @@
                                 $calculatedTotal += computeSubtotal($c);
                             }
 
-                            $stamp = 20.00;
+                            $stamp = 20.0;
                             $calculatedTotal += $stamp;
                         @endphp
 
@@ -229,7 +232,7 @@
                     </thead>
 
                     <tbody>
-                       @php $total = 0; @endphp
+                        @php $total = 0; @endphp
 
                         @foreach ($booking->cargoBookings as $c)
                             @php
@@ -269,7 +272,7 @@
                                         $total += computeSubtotal($c);
                                     }
 
-                                    $stamp = 20.00;
+                                    $stamp = 20.0;
                                     $totalTransaction = $total + $stamp;
                                 @endphp
 
@@ -290,8 +293,8 @@
                         onclick="validateAndAccept(event)">Accept</button>
                 </form>
 
-                <button type="button" class="btn btn-danger btn-lg px-4" id="rejectBtn"
-                    onclick="showRejectModal(event)" style="width: 200px;">Reject</button>
+                <button type="button" class="btn btn-danger btn-lg px-4" id="rejectBtn" onclick="showRejectModal(event)"
+                    style="width: 200px;">Reject</button>
             </div>
         @endif
 
@@ -355,7 +358,8 @@
     </div>
 
     {{-- Loading Modal --}}
-    <div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+        data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0">
                 <div class="modal-body text-center p-5">
@@ -386,7 +390,7 @@
             event.preventDefault();
             const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
             modal.show();
-            
+
             // Submit the form after showing the modal
             setTimeout(() => {
                 event.target.submit();
@@ -445,12 +449,16 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
+                    console.error('Validation error:', error);
                     btn.innerHTML = originalText;
                     btn.disabled = false;
 
-                    // If error, still allow to proceed (fail-open policy)
-                    showLoadingAndSubmit();
+                    // Fail-closed: if validation API errors, block acceptance
+                    showToast(
+                        '<strong>\u26a0 Validation Error</strong><br>Could not reach the placement validation service. Please try again before accepting.',
+                        'danger',
+                        true
+                    );
                 });
         }
 
@@ -460,17 +468,37 @@
         function showLoadingAndSubmit() {
             const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
             modal.show();
-            
+
             setTimeout(() => {
                 document.getElementById('acceptForm').submit();
             }, 500);
         }
 
         /**
-         * Show placement validation warning as browser alert
+         * Show placement validation warning as a persistent danger toast
          */
         function showPlacementWarning(data) {
-            alert(data.message);
+            let msg = `<strong>\u26a0 Cannot Validate Placement</strong><br>${data.message}`;
+
+            // List unpacked items if provided
+            if (data.unpackedItems && data.unpackedItems.length > 0) {
+                const names = data.unpackedItems
+                    .map(i => `<li>${i.item_name ?? i.description ?? 'Item'} &mdash; ${i.weight ?? 0}kg</li>`)
+                    .join('');
+                msg += `<ul style="margin:6px 0 0 0;padding-left:18px;font-size:0.9em;">${names}</ul>`;
+            }
+
+            // Hatch capacity summary if provided
+            if (data.hatchCapacities) {
+                const totalAvailable = Object.values(data.hatchCapacities)
+                    .reduce((sum, h) => sum + h.availableWeight, 0);
+                const totalCapacity = Object.values(data.hatchCapacities)
+                    .reduce((sum, h) => sum + h.maxWeight, 0);
+                msg +=
+                    `<div style="margin:6px 0 0 0;font-size:0.85em;color:#ffe;">Total vessel capacity: ${totalCapacity.toFixed(0)}kg — Available: ${totalAvailable.toFixed(0)}kg</div>`;
+            }
+
+            showToast(msg, 'danger', true); // persist=true so it stays until dismissed
         }
 
         /**
@@ -483,7 +511,7 @@
                 if (modal) {
                     modal.hide();
                 }
-                
+
                 showLoadingAndSubmit();
             }
         }

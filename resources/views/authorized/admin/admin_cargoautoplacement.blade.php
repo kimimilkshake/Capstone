@@ -53,6 +53,25 @@
                             <h5>Hatch Specifications</h5>
                         </div>
                         <div class="card-body">
+                            @php
+                                // Total weight of all confirmed cargo on this voyage (across all hatches)
+                                $totalVoyageWeight = \Illuminate\Support\Facades\DB::table('cargo_receipt')
+                                    ->join(
+                                        'cargo_booking',
+                                        'cargo_receipt.cargo_booking_id',
+                                        '=',
+                                        'cargo_booking.cargo_booking_id',
+                                    )
+                                    ->join('booking', 'cargo_receipt.booking_ref_no', '=', 'booking.booking_ref_no')
+                                    ->where('cargo_receipt.voyage_id', $selectedVoyageId)
+                                    ->whereRaw("LOWER(booking.booking_status) = 'confirmed'")
+                                    ->sum('cargo_booking.weight');
+
+                                $totalCapacityKg = $placementData['hatches']->sum(
+                                    fn($h) => $h->hatch_capacity_per_hold * 1000,
+                                );
+                                $totalAvailableKg = max(0, $totalCapacityKg - $totalVoyageWeight);
+                            @endphp
                             <table class="table table-bordered">
                                 <thead style="background-color: #485b8c; color: white;">
                                     <tr>
@@ -81,36 +100,27 @@
                                 </thead>
                                 <tbody>
                                     @foreach ($placementData['hatches'] as $hatch)
-                                        @php
-                                            $currentWeight = \Illuminate\Support\Facades\DB::table('cargo_receipt')
-                                                ->join(
-                                                    'cargo_booking',
-                                                    'cargo_receipt.cargo_booking_id',
-                                                    '=',
-                                                    'cargo_booking.cargo_booking_id',
-                                                )
-                                                ->where('cargo_receipt.hatch_id', $hatch->hatch_id)
-                                                ->where('cargo_receipt.voyage_id', $selectedVoyageId)
-                                                ->sum('cargo_booking.weight');
-                                        @endphp
                                         <tr>
                                             <td style="text-align: center;">{{ $hatch->hatch_label }}</td>
                                             <td style="text-align: center;">{{ $hatch->hatch_length }}</td>
                                             <td style="text-align: center;">{{ $hatch->hatch_width }}</td>
                                             <td style="text-align: center;">{{ $hatch->hatch_height }}</td>
                                             <td style="text-align: center;">{{ $hatch->hatch_capacity_per_hold }} tons
-                                                ({{ $hatch->hatch_capacity_per_hold * 1000 }}kg)
-                                            </td>
-                                            <td style="text-align: center;" class="hatch-weight-cell"
-                                                data-hatch-id="{{ $hatch->hatch_id }}">
-                                                {{ number_format($currentWeight, 2) }}</td>
-                                            <td style="text-align: center;">
-                                                {{ number_format($hatch->hatch_capacity_per_hold * 1000 - $currentWeight, 2) }}
-                                            </td>
+                                                ({{ number_format($hatch->hatch_capacity_per_hold * 1000) }}kg)</td>
+                                            @if ($loop->first)
+                                                <td style="text-align: center; vertical-align: middle;"
+                                                    rowspan="{{ $loop->count }}" id="total-voyage-weight">
+                                                    {{ number_format($totalVoyageWeight, 2) }} kg</td>
+                                                <td style="text-align: center; vertical-align: middle;"
+                                                    rowspan="{{ $loop->count }}" id="total-available-weight">
+                                                    {{ number_format($totalAvailableKg, 2) }} kg</td>
+                                            @endif
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
+                            <small class="text-muted">* Current weight and availability are tracked across all hatches
+                                combined.</small>
                         </div>
                     </div>
 
@@ -202,16 +212,21 @@
                         <div class="card-header text-white"
                             style="background-color: #485b8c; display: flex; justify-content: space-between; align-items: center;">
                             <h5 style="margin: 0;">3D Cargo Visualization</h5>
-                            <div style="display: flex; gap: 20px; font-size: 13px;">
+                            <div style="display: flex; gap: 16px; font-size: 13px; flex-wrap: wrap; align-items: center;">
                                 <div style="display: flex; align-items: center; gap: 6px;">
                                     <span
-                                        style="display: inline-block; width: 14px; height: 14px; background-color: #ff6b6b; border-radius: 2px;"></span>
-                                    <span>Heavy (≥300kg)</span>
+                                        style="display: inline-block; width: 14px; height: 14px; background-color: #ff8c00; border-radius: 2px;"></span>
+                                    <span>Floor-Only</span>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 6px;">
                                     <span
-                                        style="display: inline-block; width: 14px; height: 14px; background-color: #77a1ff; border-radius: 2px;"></span>
-                                    <span>Light (&lt;300kg)</span>
+                                        style="display: inline-block; width: 14px; height: 14px; background-color: #ffd700; border-radius: 2px;"></span>
+                                    <span>Breakable</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span
+                                        style="display: inline-block; width: 14px; height: 14px; background-color: #4caf50; border-radius: 2px;"></span>
+                                    <span>Regular (Stackable)</span>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 6px;">
                                     <span
@@ -221,9 +236,16 @@
                             </div>
                         </div>
                         <div class="card-body" style="padding: 15px;">
-                            <div id="cargo-visualizer-container"
-                                style="width: 100%; height: auto; min-height: 650px; max-height: 85vh; border: 1px solid #ccc; background: #f0f0f0;">
-                                <!-- 3D visualization renders here -->
+                            <div style="position: relative;">
+                                <button onclick="if(window.cargoVisualizer) window.cargoVisualizer.frameScene()"
+                                    title="Reset View"
+                                    style="position: absolute; top: 10px; right: 10px; z-index: 10; background: none; border: none; color: #555; cursor: pointer; font-size: 18px; line-height: 1; padding: 4px;">
+                                    <i class="fas fa-redo-alt"></i>
+                                </button>
+                                <div id="cargo-visualizer-container"
+                                    style="width: 100%; height: auto; min-height: 650px; max-height: 85vh; border: 1px solid #ccc; background: #f0f0f0;">
+                                    <!-- 3D visualization renders here -->
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -341,8 +363,32 @@
                         data.cargo
                     );
 
-                    // Save placement results to database (only for unpacked items)
-                    if (results && results.packed && results.packed.length > 0) {
+                    // Remove any previous placement warning
+                    const prevWarning = document.getElementById('placement-warning');
+                    if (prevWarning) prevWarning.remove();
+
+                    if (results && results.unpacked && results.unpacked.length > 0) {
+                        // Some items could not be placed — block save and warn admin
+                        const affectedBookings = [...new Set(results.unpacked.map(i => i.booking_ref || 'Unknown'))];
+                        const unpackedList = results.unpacked.map(i =>
+                            `<li><strong>${i.description}</strong> (${i.weight}kg) — Booking: ${i.booking_ref || '—'}</li>`
+                        ).join('');
+                        const warningDiv = document.createElement('div');
+                        warningDiv.id = 'placement-warning';
+                        warningDiv.style.cssText =
+                            'margin:16px 15px 0; padding:14px 18px; background:#fff3cd; border:1px solid #ffc107; border-left:5px solid #dc3545; border-radius:4px;';
+                        warningDiv.innerHTML = `
+                            <strong style="color:#dc3545;">⚠ Auto-placement Incomplete — Placement NOT Saved</strong><br>
+                            <b>${results.unpacked.length}</b> item(s) could not be placed (insufficient space or weight capacity exceeded).<br>
+                            <strong>Affected bookings:</strong> ${affectedBookings.join(', ')}<br>
+                            <ul style="margin:8px 0 0 0; padding-left:20px; font-size:0.9em;">${unpackedList}</ul>
+                            <small style="color:#666;">Resolve these bookings (bump to next voyage) before placement can be saved.</small>
+                        `;
+                        document.getElementById('cargo-visualizer-container').insertAdjacentElement('afterend',
+                            warningDiv);
+
+                    } else if (results && results.packed && results.packed.length > 0) {
+                        // All items placed successfully — save to database
                         const placements = results.packed.map(item => ({
                             receiptId: parseInt(item.id.split('_')[0]),
                             hatchId: item.binId,

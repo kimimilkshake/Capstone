@@ -134,24 +134,43 @@ class SimpleBinPacker {
 
             const stickyBinId = bookingBins[itemBookingRef];
             // If item has hatch_id, ONLY try that hatch. Otherwise try all bins
-            const binsToTry = item.hatch_id 
-                ? this.bins.filter(bin => bin.id === item.hatch_id && this.canFit(item, bin))
-                : this.bins.filter((bin) => this.canFit(item, bin)).sort((a, b) => {
-                    if (stickyBinId !== undefined) {
-                        if (a.id === stickyBinId) return -1;
-                        if (b.id === stickyBinId) return 1;
-                    }
-                    const weightDiff = b.usedWeight - a.usedWeight;
-                    return weightDiff !== 0 ? weightDiff : a.id - b.id;
-                });
+            const binsToTry = item.hatch_id
+                ? this.bins.filter(
+                      (bin) =>
+                          bin.id === item.hatch_id && this.canFit(item, bin),
+                  )
+                : this.bins
+                      .filter((bin) => this.canFit(item, bin))
+                      .sort((a, b) => {
+                          if (stickyBinId !== undefined) {
+                              if (a.id === stickyBinId) return -1;
+                              if (b.id === stickyBinId) return 1;
+                          }
+                          const weightDiff = b.usedWeight - a.usedWeight;
+                          return weightDiff !== 0 ? weightDiff : a.id - b.id;
+                      });
 
             for (const bin of binsToTry) {
                 const rotatedItem = this.autoRotateToFlatten(item);
-                const position = this.findPosition(
+                let position = this.findPosition(
                     rotatedItem,
                     bin,
                     assignedZone,
                 );
+                let placedZone = assignedZone;
+
+                // Zone spillover: if assigned zone is full, try the other zone before giving up
+                if (!position && assignedZone !== undefined) {
+                    const spillZone = assignedZone === 0 ? 1 : 0;
+                    position = this.findPosition(rotatedItem, bin, spillZone);
+                    if (position) {
+                        placedZone = spillZone;
+                        console.log(
+                            `     ⚠️ Zone spillover: "${item.description}" → ${spillZone === 0 ? "LEFT" : "RIGHT"} zone (assigned zone full)`,
+                        );
+                    }
+                }
+
                 if (position) {
                     this.placeItem(rotatedItem, bin, position);
                     if (bookingBins[itemBookingRef] === undefined) {
@@ -160,7 +179,7 @@ class SimpleBinPacker {
                     packed.push({
                         ...rotatedItem,
                         binId: bin.id,
-                        zone: assignedZone,
+                        zone: placedZone,
                         x: position.x,
                         y: position.y,
                         z: position.z,
@@ -237,6 +256,10 @@ class SimpleBinPacker {
     autoRotateToFlatten(item) {
         // Don't rotate breakable items - they should stack for safety
         if (item.is_breakable) {
+            return item; // Return unchanged
+        }
+        // Don't rotate floor_only items - they must keep their natural orientation
+        if (item.floor_only) {
             return item; // Return unchanged
         }
 
@@ -337,8 +360,11 @@ class SimpleBinPacker {
                     z = Math.round((z + step) * 1000) / 1000
                 ) {
                     const posZ = Math.min(z, bin.depth - item.depth);
-                    // Stack height at (posX, posZ)
+                    // Stack height at (posX, posZ) — track top item's floor_only, breakable, and weight
                     let stackHeight = 0;
+                    let stackedOnFloorOnly = false;
+                    let stackedOnBreakable = false; // fragile items — nothing may be placed on top
+                    let stackTopWeight = Infinity; // weight of the item at the top of the stack
                     for (const existing of bin.items) {
                         const xOv = !(
                             posX + item.width <= existing.x ||
@@ -348,12 +374,41 @@ class SimpleBinPacker {
                             posZ + item.depth <= existing.z ||
                             posZ >= existing.z + existing.depth
                         );
-                        if (xOv && zOv)
-                            stackHeight = Math.max(
-                                stackHeight,
-                                existing.y + existing.height + this.gap,
-                            );
+                        if (xOv && zOv) {
+                            // Sticky flags: breakable/floor_only block the entire column
+                            // regardless of which item happens to be the tallest.
+                            // A short breakable item beside a tall regular item must
+                            // still prevent anything being placed above the breakable
+                            // item's footprint (even if the new item lands at the taller
+                            // item's height — it would visually float over the breakable).
+                            if (existing.is_breakable)
+                                stackedOnBreakable = true;
+                            if (existing.floor_only) stackedOnFloorOnly = true;
+
+                            const top = existing.y + existing.height + this.gap;
+                            if (top > stackHeight + 0.001) {
+                                stackHeight = top;
+                                stackTopWeight = existing.weight ?? Infinity;
+                            } else if (Math.abs(top - stackHeight) < 0.001) {
+                                // Tied top — take the lighter (more restrictive) weight
+                                if (
+                                    (existing.weight ?? Infinity) <
+                                    stackTopWeight
+                                )
+                                    stackTopWeight =
+                                        existing.weight ?? Infinity;
+                            }
+                        }
                     }
+                    // floor_only items cannot have cargo stacked on top of them
+                    if (stackHeight > 0.001 && stackedOnFloorOnly) continue;
+                    // Breakable items (TV, fridge, eggs…) — nothing may be placed on top
+                    if (stackHeight > 0.001 && stackedOnBreakable) continue;
+                    // floor_only items must sit on the actual deck — cannot be elevated onto other cargo
+                    if (item.floor_only && stackHeight > 0.001) continue;
+                    // Heavier items cannot be stacked on top of lighter ones
+                    if (stackHeight > 0.001 && item.weight > stackTopWeight)
+                        continue;
                     if (stackHeight + item.height > bin.height) continue;
                     const pos = { x: posX, y: stackHeight, z: posZ };
                     if (!this.collidesWith(item, pos, bin))
@@ -376,13 +431,15 @@ class SimpleBinPacker {
             return null;
         }
 
-        // Prefer floor (y===0) first, fill floor space before stacking
+        // Prefer floor (y===0) first, fill floor space before stacking.
+        // LEFT zone (0): fill right→left (from zone centre outward toward left catwalk).
+        // RIGHT zone (1) or FULL: fill left→right (from zone centre outward toward right catwalk).
         candidates.sort((a, b) => {
             const aFloor = a.y < 0.001 ? 0 : 1;
             const bFloor = b.y < 0.001 ? 0 : 1;
             if (aFloor !== bFloor) return aFloor - bFloor; // floor first
             if (Math.abs(a.z - b.z) > 0.001) return a.z - b.z;
-            return a.x - b.x;
+            return zoneConstraint === 0 ? b.x - a.x : a.x - b.x;
         });
 
         const chosen = candidates[0];
@@ -639,7 +696,7 @@ class CargoVisualizer {
         this.renderer.domElement.style.padding = "0";
         this.renderer.domElement.style.border = "none";
 
-        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.enabled = false;
         if (this.container) {
             // Ensure the container properly clips the canvas
             // Note: DO NOT override height/width that's set in HTML
@@ -661,9 +718,6 @@ class CargoVisualizer {
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
         directionalLight.position.set(100, 100, 100);
-        directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
         this.scene.add(directionalLight);
 
         // Grid (hidden to show container clearly)
@@ -772,9 +826,9 @@ class CargoVisualizer {
                     .normalize();
 
                 target.addScaledVector(right, -deltaX * panSpeed);
-                target.y += deltaY * panSpeed;
+                target.y -= deltaY * panSpeed;
                 this.camera.position.addScaledVector(right, -deltaX * panSpeed);
-                this.camera.position.y += deltaY * panSpeed;
+                this.camera.position.y -= deltaY * panSpeed;
             }
 
             this.camera.lookAt(target);
@@ -799,11 +853,10 @@ class CargoVisualizer {
                 .normalize();
             const radius = this.camera.position.clone().sub(target).length();
 
-            // Smoother zoom with wider range (1 to 30 meters)
-            const newRadius = Math.max(
-                1,
-                Math.min(30, radius + e.deltaY * 0.15),
-            );
+            // Zoom speed: multiply deltaY by a small factor then scale by
+            // current distance so zooming feels consistent at any zoom level.
+            const zoomFactor = 1 + e.deltaY * 0.001;
+            const newRadius = Math.max(1, Math.min(200, radius * zoomFactor));
 
             this.camera.position
                 .copy(target)
@@ -985,7 +1038,7 @@ class CargoVisualizer {
         // This ensures hatches touch each other with minimal gap
         const gapBetweenHatches = 0.2; // 20cm gap between hatches
         let cumulativeZ = hatch.depth / 2; // Start with half depth of current hatch
-        
+
         // Add full depth of all previously added hatches to position this hatch after them
         for (let i = 0; i < this.hatchMeshes.length; i++) {
             const prevHatch = this.hatchMeshes[i].hatch;
@@ -1012,8 +1065,6 @@ class CargoVisualizer {
             `   World bounds: X[${(worldX - hatch.width / 2).toFixed(1)}-${(worldX + hatch.width / 2).toFixed(1)}] Y[${(worldY - hatch.height / 2).toFixed(1)}-${(worldY + hatch.height / 2).toFixed(1)}] Z[${(worldZ - hatch.depth / 2).toFixed(1)}-${(worldZ + hatch.depth / 2).toFixed(1)}]`,
         );
 
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
         this.sceneRoot.add(mesh);
 
         // Add a box helper to show hatch edges
@@ -1048,7 +1099,7 @@ class CargoVisualizer {
             width: hatch.width,
             height: hatch.height,
             depth: hatch.depth,
-            maxWeight: (hatch.maxWeight || 0), // Already in kg
+            maxWeight: hatch.maxWeight || 0, // Already in kg
         };
 
         // Store hatch info for weight tracking
@@ -1065,14 +1116,14 @@ class CargoVisualizer {
         console.log(`\n📦 VISUALIZING ${packedItems.length} ITEMS:`);
 
         packedItems.forEach((item, index) => {
-            // Color coding based on weight
+            // Color coding based on item type
             let color;
-            if (item.weight > 100) {
-                color = 0xff4444;
-            } else if (item.weight > 50) {
-                color = 0xff8800;
+            if (item.floor_only) {
+                color = 0xff8c00; // Orange — floor only
+            } else if (item.is_breakable) {
+                color = 0xffd700; // Yellow — breakable/fragile
             } else {
-                color = 0x4488ff;
+                color = 0x4caf50; // Green — regular stackable
             }
 
             // Create geometry with gap/allowance on each side (subtract 2*gap from each dimension)
@@ -1086,14 +1137,10 @@ class CargoVisualizer {
                 gapHeight,
                 gapDepth,
             );
-            const material = new THREE.MeshStandardMaterial({
+            const material = new THREE.MeshLambertMaterial({
                 color: color,
-                metalness: 0.3,
-                roughness: 0.4,
-                emissive: 0x000000,
-                transparent: true,
-                opacity: 0.75,
-                side: THREE.DoubleSide,
+                transparent: false,
+                opacity: 1.0,
             });
 
             const mesh = new THREE.Mesh(geometry, material);
@@ -1176,14 +1223,12 @@ class CargoVisualizer {
                 this.sceneRoot.add(mesh);
 
                 // Track weight per hatch (usedWeight in kg, same as maxWeight)
-                hatchMeshInfo.usedWeight += (item.weight || 0);
+                hatchMeshInfo.usedWeight += item.weight || 0;
             } else {
                 console.warn(`  ✗ Hatch ${item.binId} not found!`);
                 this.sceneRoot.add(mesh);
             }
 
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
             mesh.userData = {
                 itemId: item.id,
                 description: item.description,
@@ -1200,7 +1245,7 @@ class CargoVisualizer {
             "📦 HATCH CAPACITY STATUS (60% threshold for sequential fill):",
         );
         this.hatchMeshes.forEach((hatchInfo) => {
-            const maxWeightKg = (hatchInfo.hatch.maxWeight || 0);
+            const maxWeightKg = hatchInfo.hatch.maxWeight || 0;
             const usedWeightKg = hatchInfo.usedWeight;
             const weightPercent =
                 maxWeightKg > 0
@@ -1242,7 +1287,17 @@ class CargoVisualizer {
     }
 
     frameScene() {
-        // compute bounding box of sceneRoot and position camera
+        // If we already saved the default view, just restore it exactly (no movement)
+        if (this._defaultCameraPos) {
+            this.camera.position.copy(this._defaultCameraPos);
+            if (this.controlsTarget) {
+                this.controlsTarget.copy(this._defaultTarget);
+            }
+            this.camera.lookAt(this._defaultTarget);
+            return;
+        }
+
+        // First call — compute and store the default view
         try {
             const box = new THREE.Box3().setFromObject(this.sceneRoot);
             const size = new THREE.Vector3();
@@ -1272,6 +1327,10 @@ class CargoVisualizer {
                 center.z + cameraZ,
             );
             this.camera.lookAt(center);
+
+            // Save this position so reset always returns to the exact same spot
+            this._defaultCameraPos = this.camera.position.clone();
+            this._defaultTarget = center.clone();
         } catch (e) {
             console.warn("frameScene failed", e);
         }
@@ -1295,13 +1354,10 @@ class CargoVisualizer {
                 item.height,
                 item.depth,
             );
-            const material = new THREE.MeshStandardMaterial({
+            const material = new THREE.MeshLambertMaterial({
                 color: color,
-                metalness: 0.2,
-                roughness: 0.6,
-                transparent: true,
-                opacity: 0.75,
-                side: THREE.DoubleSide,
+                transparent: false,
+                opacity: 1.0,
             });
             const mesh = new THREE.Mesh(geometry, material);
 
@@ -1352,7 +1408,6 @@ class CargoVisualizer {
         this.scene.add(ambientLight);
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
         directionalLight.position.set(100, 100, 100);
-        directionalLight.castShadow = true;
         this.scene.add(directionalLight);
 
         // Add hatches
@@ -1378,17 +1433,118 @@ class CargoVisualizer {
         const bookingRefs = Object.keys(itemsByBooking);
         console.log("Booking refs:", bookingRefs.join(", "));
 
-        // For each hatch, pack all items in that hatch (old and new) in booking order
+        // Collect results across all hatches
+        const allPacked = [];
+        const allUnpacked = [];
+
+        // ── FREE-ASSIGNMENT MODE ──────────────────────────────────────────
+        // When no items have a pre-assigned hatch_id (fresh packing run),
+        // use ONE global packer with ALL hatches as bins so the algorithm
+        // can freely distribute items across all hatches for best fit.
+        const freeAssignment = cargo.every((c) => c.hatch_id == null);
+        if (freeAssignment) {
+            const globalPacker = new SimpleBinPacker();
+            const CATWALK_W = 0.6;
+            hatches.forEach((hatch) => {
+                globalPacker.addBin({
+                    id: hatch.id,
+                    width: hatch.width,
+                    height: hatch.height,
+                    depth: hatch.depth,
+                    maxWeight: hatch.maxWeight,
+                });
+                // Pre-register crew catwalks in each bin
+                const hBin = globalPacker.bins[globalPacker.bins.length - 1];
+                const catwalks = [
+                    {
+                        x: 0,
+                        y: 0,
+                        z: 0,
+                        width: CATWALK_W,
+                        height: hatch.height,
+                        depth: hatch.depth,
+                    },
+                    {
+                        x: hatch.width - CATWALK_W,
+                        y: 0,
+                        z: 0,
+                        width: CATWALK_W,
+                        height: hatch.height,
+                        depth: hatch.depth,
+                    },
+                    {
+                        x: 0,
+                        y: 0,
+                        z: 0,
+                        width: hatch.width,
+                        height: hatch.height,
+                        depth: CATWALK_W,
+                    },
+                    {
+                        x: 0,
+                        y: 0,
+                        z: hatch.depth - CATWALK_W,
+                        width: hatch.width,
+                        height: hatch.height,
+                        depth: CATWALK_W,
+                    },
+                ];
+                catwalks.forEach((cw) => {
+                    hBin.items.push({
+                        ...cw,
+                        weight: 0,
+                        catwalk: true,
+                        description: "Crew Catwalk",
+                    });
+                    hBin.usedVolume += cw.width * cw.height * cw.depth;
+                });
+            });
+
+            // Prepare items — normalise dimensions + pass all flags
+            const itemsTopack = cargo.map((c) => ({
+                id: `${c.id}`,
+                width: parseFloat(c.width) || 0.1,
+                height: parseFloat(c.height) || 0.1,
+                depth: parseFloat(c.depth) || 0.1,
+                weight: parseFloat(c.weight) || 0,
+                description: c.description || c.desc || "",
+                booking_ref: String(c.booking_ref),
+                receipt_id: c.receipt_id,
+                is_breakable: c.is_breakable === true || c.is_breakable === 1,
+                floor_only: c.floor_only === true || c.floor_only === 1,
+                hatch_id: null, // free to go to any hatch
+            }));
+
+            const results = globalPacker.pack(itemsTopack);
+            this.visualizeItems(results.packed);
+            if (results.unpacked.length > 0)
+                this.visualizeUnpacked(results.unpacked);
+            allPacked.push(...results.packed);
+            allUnpacked.push(...results.unpacked);
+
+            this.frameScene();
+            console.log(
+                `📊 packAndVisualize (free-assign) complete: ${allPacked.length} packed, ${allUnpacked.length} unpacked`,
+            );
+            return { packed: allPacked, unpacked: allUnpacked };
+        }
+
+        // ── PRE-ASSIGNED MODE ─────────────────────────────────────────────
+        // Items already have hatch_id from a prior save — route each item to
+        // its designated hatch and pack within that hatch only.
+        // For each hatch, pack all items in that hatch in booking order
         hatches.forEach((hatch) => {
             // Get all items for this hatch
-            const hatchItems = cargo.filter(c => c.hatch_id === hatch.id);
-            
+            const hatchItems = cargo.filter((c) => c.hatch_id === hatch.id);
+
             if (hatchItems.length === 0) {
                 console.log(`Hatch ${hatch.id}: no items`);
                 return;
             }
 
-            console.log(`Hatch ${hatch.id}: packing ${hatchItems.length} items`);
+            console.log(
+                `Hatch ${hatch.id}: packing ${hatchItems.length} items`,
+            );
 
             // Create packer for this hatch
             const hatchPacker = new SimpleBinPacker();
@@ -1400,42 +1556,110 @@ class CargoVisualizer {
                 maxWeight: hatch.maxWeight,
             });
 
-            // Prepare items in booking order
+            // ── Pre-register crew catwalks as phantom blocked regions ──────
+            // 0.6 m walkways run along all 4 walls at full height/length.
+            // Registering them as items means collidesWith() will never let
+            // real cargo land inside a walkway.
+            const CATWALK_W = 0.6;
+            const hBin = hatchPacker.bins[0];
+            const catwalks = [
+                // Left wall strip
+                {
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                    width: CATWALK_W,
+                    height: hatch.height,
+                    depth: hatch.depth,
+                },
+                // Right wall strip
+                {
+                    x: hatch.width - CATWALK_W,
+                    y: 0,
+                    z: 0,
+                    width: CATWALK_W,
+                    height: hatch.height,
+                    depth: hatch.depth,
+                },
+                // Front wall strip (full width so corners are covered)
+                {
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                    width: hatch.width,
+                    height: hatch.height,
+                    depth: CATWALK_W,
+                },
+                // Back wall strip
+                {
+                    x: 0,
+                    y: 0,
+                    z: hatch.depth - CATWALK_W,
+                    width: hatch.width,
+                    height: hatch.height,
+                    depth: CATWALK_W,
+                },
+            ];
+            catwalks.forEach((cw) => {
+                hBin.items.push({
+                    ...cw,
+                    weight: 0,
+                    catwalk: true,
+                    description: "Crew Catwalk",
+                });
+                hBin.usedVolume += cw.width * cw.height * cw.depth;
+            });
+
+            // Prepare items in booking order — pass all flags through
             const itemsInOrder = [];
             bookingRefs.forEach((bookingRef) => {
-                const bookingItems = hatchItems.filter(c => String(c.booking_ref) === bookingRef);
+                const bookingItems = hatchItems.filter(
+                    (c) => String(c.booking_ref) === bookingRef,
+                );
                 bookingItems.forEach((c) => {
                     itemsInOrder.push({
                         id: `${c.id}`,
-                        width: c.width,
-                        height: c.height,
-                        depth: c.depth,
-                        weight: c.weight || 0,
+                        width: parseFloat(c.width) || 0.1,
+                        height: parseFloat(c.height) || 0.1,
+                        depth: parseFloat(c.depth) || 0.1,
+                        weight: parseFloat(c.weight) || 0,
                         description: c.description || c.desc || "",
                         booking_ref: String(c.booking_ref),
                         receipt_id: c.receipt_id,
+                        is_breakable:
+                            c.is_breakable === true || c.is_breakable === 1,
+                        floor_only: c.floor_only === true || c.floor_only === 1,
+                        hatch_id: hatch.id,
                     });
                 });
             });
 
-            console.log(`Hatch ${hatch.id}: itemsInOrder has ${itemsInOrder.length} items before packing`);
+            console.log(
+                `Hatch ${hatch.id}: itemsInOrder has ${itemsInOrder.length} items before packing`,
+            );
 
             // Pack using 2-zone algorithm
             const results = hatchPacker.pack(itemsInOrder);
-            console.log(`Hatch ${hatch.id}: packed ${results.packed.length}, unpacked ${results.unpacked.length}`);
-            
-            // Visualize
+            console.log(
+                `Hatch ${hatch.id}: packed ${results.packed.length}, unpacked ${results.unpacked.length}`,
+            );
+
+            // Visualize packed; render unpacked as warning meshes outside hatch
             this.visualizeItems(results.packed);
+            if (results.unpacked.length > 0)
+                this.visualizeUnpacked(results.unpacked);
+
+            allPacked.push(...results.packed);
+            allUnpacked.push(...results.unpacked);
         });
 
         // Frame camera
         this.frameScene();
 
-        // Return last booking items for DB saving
-        const lastBookingRef = bookingRefs[bookingRefs.length - 1];
-        const lastBookingItems = cargo.filter(c => String(c.booking_ref) === lastBookingRef);
-        console.log("Returning packed items for DB:", lastBookingItems.length);
-        return { packed: lastBookingItems, unpacked: [] };
+        console.log(
+            `📊 packAndVisualize complete: ${allPacked.length} packed, ${allUnpacked.length} unpacked`,
+        );
+        return { packed: allPacked, unpacked: allUnpacked };
     }
 
     /**
@@ -1504,6 +1728,7 @@ class CargoVisualizer {
             weight: parseFloat(c.weight) || 0,
             description: c.description || "Cargo Item",
             is_breakable: c.is_breakable === true || c.is_breakable === 1,
+            floor_only: c.floor_only === true || c.floor_only === 1,
             booking_ref: c.booking_ref || c.bookingRef || null,
         }));
 
@@ -1546,23 +1771,28 @@ class CargoVisualizer {
                 packedItem.z +
                 packedItem.depth / 2;
 
-            // Create colored mesh based on weight - Heavy items red, light items blue
-            const weight = packedItem.weight || 0;
-            const heavyWeightThreshold = 300; // kg - items >= 300kg are red (heavy)
-            const color = weight >= heavyWeightThreshold ? 0xff6b6b : 0x77a1ff; // Red for heavy, blue for light
+            // Create colored mesh based on item type:
+            // Orange  = floor_only (motorcycle, livestock, cadaver)
+            // Yellow  = is_breakable (TV, fridge, glass, eggs)
+            // Green   = regular stackable
+            let color;
+            if (packedItem.floor_only) {
+                color = 0xff8c00; // Orange — floor only
+            } else if (packedItem.is_breakable) {
+                color = 0xffd700; // Yellow — breakable/fragile
+            } else {
+                color = 0x4caf50; // Green — regular stackable
+            }
             const mesh = new THREE.Mesh(
                 new THREE.BoxGeometry(
                     packedItem.width,
                     packedItem.height,
                     packedItem.depth,
                 ),
-                new THREE.MeshStandardMaterial({
+                new THREE.MeshLambertMaterial({
                     color: color,
-                    metalness: 0.3,
-                    roughness: 0.5,
-                    transparent: true,
-                    opacity: 0.85,
-                    side: THREE.DoubleSide,
+                    transparent: false,
+                    opacity: 1.0,
                 }),
             );
 
@@ -1574,8 +1804,6 @@ class CargoVisualizer {
                 isBreakable: packedItem.is_breakable,
                 hatchId: packedItem.binId,
             };
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
             this.sceneRoot.add(mesh);
 
             console.log(
@@ -1594,13 +1822,10 @@ class CargoVisualizer {
                     unpackedItem.height,
                     unpackedItem.depth,
                 ),
-                new THREE.MeshStandardMaterial({
+                new THREE.MeshLambertMaterial({
                     color: 0xff9999, // Light red for warning
-                    metalness: 0.2,
-                    roughness: 0.6,
-                    transparent: true,
-                    opacity: 0.6,
-                    side: THREE.DoubleSide,
+                    transparent: false,
+                    opacity: 1.0,
                 }),
             );
 
@@ -1711,12 +1936,18 @@ class CargoVisualizer {
                     childItemId.startsWith(itemIdStr + "_");
 
                 if (isMatch) {
-                    // This is the item to highlight - make it opaque and solid
+                    // This is the item to highlight - swap to flat Lambert (no specular, GPU-cheap)
                     foundItem = true;
                     if (child.material) {
-                        child.material.transparent = false;
-                        child.material.opacity = 1.0;
-                        child.material.needsUpdate = true; // Force material update
+                        // Save original material so we can restore it on reset
+                        if (!child.userData.originalMaterial) {
+                            child.userData.originalMaterial = child.material;
+                        }
+                        child.material = new THREE.MeshLambertMaterial({
+                            color: child.userData.originalMaterial.color,
+                            transparent: false,
+                            opacity: 1.0,
+                        });
                     }
                     child.visible = true; // Make sure mesh is visible
                     console.log(
@@ -1787,10 +2018,14 @@ class CargoVisualizer {
                 child.userData &&
                 child.userData.itemId
             ) {
-                child.visible = true; // Show the mesh again
-                if (child.material) {
-                    child.material.transparent = true;
-                    child.material.opacity = 0.75;
+                child.visible = true;
+                // Restore original MeshStandardMaterial if it was swapped
+                if (child.userData.originalMaterial) {
+                    child.material = child.userData.originalMaterial;
+                    child.userData.originalMaterial = null;
+                } else if (child.material) {
+                    child.material.transparent = false;
+                    child.material.opacity = 1.0;
                 }
             }
         });

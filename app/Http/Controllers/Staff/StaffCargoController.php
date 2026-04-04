@@ -617,9 +617,34 @@ class StaffCargoController extends Controller
             'cargo_booking_ids.*' => 'exists:cargo_booking,cargo_booking_id',
         ]);
 
+        $voyageId = (int) $request->voyage_id;
+
+        // Security: ensure every cargo_booking_id belongs to this voyage
+        // via cargo_booking → booking → voyage_id (receipts may not exist yet for pending bookings)
+        $validIds = \DB::table('cargo_booking')
+            ->join('booking', 'cargo_booking.booking_ref_no', '=', 'booking.booking_ref_no')
+            ->where('booking.voyage_id', $voyageId)
+            ->whereRaw("LOWER(booking.booking_status) IN ('confirmed', 'pending')")
+            ->whereIn('cargo_booking.cargo_booking_id', $request->cargo_booking_ids)
+            ->pluck('cargo_booking.cargo_booking_id')
+            ->map(fn($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        $invalid = array_diff(array_map('intval', $request->cargo_booking_ids), $validIds);
+        if (!empty($invalid)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'One or more cargo items do not belong to the selected voyage.',
+                'packedItems' => [],
+                'unpackedItems' => [],
+            ], 422);
+        }
+
         $result = CargoAutoPlacementService::validateCargoPlacement(
-            $request->voyage_id,
-            $request->cargo_booking_ids
+            $voyageId,
+            $validIds
         );
 
         return response()->json($result);

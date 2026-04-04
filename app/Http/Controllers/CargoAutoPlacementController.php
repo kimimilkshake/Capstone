@@ -303,7 +303,8 @@ class CargoAutoPlacementController extends Controller
                         'quantity' => 1,
                         'description' => $bookingRow->cargoItem->cargo_item_description ?? 'Cargo Item',
                         'is_breakable' => (bool) ($bookingRow->cargoItem->is_breakable ?? false),
-                        'hatch_id' => $receipt->hatch_id, // If already assigned, use it; if null, needs packing
+                        'floor_only' => (bool) ($bookingRow->cargoItem->floor_only ?? false),
+                        'hatch_id' => null, // Always null — packer freely assigns across hatches every run
                         'original_unit' => $unitName,
                         'original_dims' => "{$bookingRow->length} × {$bookingRow->width} × {$bookingRow->height}",
                     ];

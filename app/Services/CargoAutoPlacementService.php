@@ -4,8 +4,10 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use App\Models\Voyage;
 use App\Models\CargoBooking;
+use App\Models\CargoReceipt;
 
 class CargoAutoPlacementService
 {
@@ -85,6 +87,8 @@ class CargoAutoPlacementService
                     $lengthM = self::convertToMeters($cargo->length, $unitName);
 
                     $cargoWeight = (float) ($cargo->weight ?? 0);
+                    $qty = max(1, (int) ($cargo->quantity ?? 1));
+                    // weight in DB is the TOTAL for the booking line (all items combined)
                     $totalCargoWeight += $cargoWeight;
 
                     $cargoItems[] = [
@@ -92,9 +96,12 @@ class CargoAutoPlacementService
                         'w' => (float) $widthM,
                         'h' => (float) $heightM,
                         'd' => (float) $lengthM,
-                        'weight' => $cargoWeight,
-                        'q' => (int) ($cargo->quantity ?? 1),
+                        'weight' => $cargoWeight,          // booking-line total
+                        'weight_each' => $cargoWeight / $qty,   // per single item
+                        'q' => $qty,
                         'item_name' => $cargo->cargoItem->cargo_item_description ?? 'Unknown',
+                        'is_breakable' => (bool) ($cargo->cargoItem->is_breakable ?? false),
+                        'floor_only' => (bool) ($cargo->cargoItem->floor_only ?? false),
                         'original_unit' => $unitName,
                         'original_dims' => "{$cargo->length} × {$cargo->width} × {$cargo->height}",
                     ];
@@ -110,80 +117,214 @@ class CargoAutoPlacementService
                 ];
             }
 
-            // Check if cargo fits in available hatch capacity
+            // Build hatch capacity map (weight + volume)
             $hatches = $voyage->vessel->hatches;
-            $totalAvailableCapacity = 0;
+            $totalAvailableWeight = 0;
+            $totalAvailableVolume = 0;
             $hatchCapacities = [];
 
             foreach ($hatches as $hatch) {
-                $maxWeightKg = (float) $hatch->hatch_capacity_per_hold * 1000; // Convert tons to kg
+                $maxWeightKg = (float) $hatch->hatch_capacity_per_hold * 1000; // tons → kg
 
-                // Get current weight used in this hatch
-                $currentWeight = \Illuminate\Support\Facades\DB::table('cargo_receipt')
+                // Hatch physical volume in m³ (dimensions stored in metres)
+                // Subtract crew catwalk volume (0.6 m walkways on all 4 walls).
+                // Net packable box: (W-1.2) × (L-1.2) × H  (catwalks on ±X and ±Z)
+                $catwalkW = 0.6;
+                $hw = (float) $hatch->hatch_width;
+                $hh = (float) $hatch->hatch_height;
+                $hl = (float) $hatch->hatch_length;
+                $packableW = max(0, $hw - 2 * $catwalkW);
+                $packableL = max(0, $hl - 2 * $catwalkW);
+                $hatchVolume = $packableW * $hh * $packableL;
+
+                // Get already-used weight for this hatch on this voyage
+                $usedWeight = (float) DB::table('cargo_receipt')
                     ->join('cargo_booking', 'cargo_receipt.cargo_booking_id', '=', 'cargo_booking.cargo_booking_id')
                     ->where('cargo_receipt.hatch_id', $hatch->hatch_id)
                     ->where('cargo_receipt.voyage_id', $voyageId)
                     ->sum('cargo_booking.weight');
 
-                $availableWeight = $maxWeightKg - ($currentWeight ?? 0);
-                $totalAvailableCapacity += $availableWeight;
+                // Used volume: load existing receipts with cargo bookings and convert units properly
+                $usedVolume = 0.0;
+                $existingReceipts = CargoReceipt::where('hatch_id', $hatch->hatch_id)
+                    ->where('voyage_id', $voyageId)
+                    ->with('cargoBooking.measurementUnit')
+                    ->get();
+                foreach ($existingReceipts as $receipt) {
+                    $cb = $receipt->cargoBooking;
+                    if ($cb && $cb->length && $cb->width && $cb->height) {
+                        $unit = $cb->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
+                        $wM2 = self::convertToMeters($cb->width, $unit);
+                        $hM2 = self::convertToMeters($cb->height, $unit);
+                        $lM2 = self::convertToMeters($cb->length, $unit);
+                        $usedVolume += $wM2 * $hM2 * $lM2 * max(1, (int) ($cb->quantity ?? 1));
+                    }
+                }
+
+                $availableWeight = max(0, $maxWeightKg - $usedWeight);
+                $availableVolume = max(0, $hatchVolume - $usedVolume);
+
+                $totalAvailableWeight += $availableWeight;
+                $totalAvailableVolume += $availableVolume;
 
                 $hatchCapacities[$hatch->hatch_id] = [
                     'label' => $hatch->hatch_label,
                     'maxWeight' => $maxWeightKg,
-                    'currentWeight' => $currentWeight ?? 0,
-                    'availableWeight' => $availableWeight
+                    'currentWeight' => $usedWeight,
+                    'availableWeight' => $availableWeight,
+                    'totalVolume' => $hatchVolume,
+                    'usedVolume' => $usedVolume,
+                    'availableVolume' => $availableVolume,
                 ];
             }
 
-            // Check if total cargo weight exceeds total available capacity
-            if ($totalCargoWeight > $totalAvailableCapacity) {
-                $shortfall = $totalCargoWeight - $totalAvailableCapacity;
+            // ── Weight check ─────────────────────────────────────────────
+            if ($totalCargoWeight > $totalAvailableWeight) {
+                $shortfall = $totalCargoWeight - $totalAvailableWeight;
                 return [
                     'success' => false,
-                    'message' => "Cargo exceeds available hatch capacity. Total cargo weight: {$totalCargoWeight}kg. Available capacity: {$totalAvailableCapacity}kg. Shortfall: {$shortfall}kg.",
+                    'message' => "Weight capacity exceeded. New cargo: {$totalCargoWeight}kg — Available: {$totalAvailableWeight}kg — Shortfall: " . round($shortfall, 1) . "kg. These items cannot be loaded on this voyage.",
                     'packedItems' => [],
                     'unpackedItems' => $cargoItems,
-                    'hatchCapacities' => $hatchCapacities
+                    'hatchCapacities' => $hatchCapacities,
                 ];
             }
 
-            // Check if each individual cargo item can fit in at least one hatch
-            $itemsThatCantFit = [];
-            foreach ($cargoItems as $item) {
-                $itemWeight = $item['weight'];
-                $canFitInAnyHatch = false;
+            // ── Volume / space check ──────────────────────────────────────
+            $totalCargoVolume = array_sum(array_map(
+                fn($i) => $i['w'] * $i['h'] * $i['d'] * $i['q'],
+                $cargoItems
+            ));
 
-                foreach ($hatchCapacities as $hatchId => $hatchInfo) {
-                    if ($itemWeight <= $hatchInfo['availableWeight']) {
-                        $canFitInAnyHatch = true;
-                        break;
+            if ($totalCargoVolume > $totalAvailableVolume) {
+                $shortfall = $totalCargoVolume - $totalAvailableVolume;
+                return [
+                    'success' => false,
+                    'message' => "Insufficient hatch space. New cargo volume: " . round($totalCargoVolume, 2) . "m³ — Available: " . round($totalAvailableVolume, 2) . "m³ — Shortfall: " . round($shortfall, 2) . "m³. These items cannot physically fit.",
+                    'packedItems' => [],
+                    'unpackedItems' => $cargoItems,
+                    'hatchCapacities' => $hatchCapacities,
+                ];
+            }
+
+            // ── Per-item dimension check ──────────────────────────────────
+            // Every single item must physically fit inside at least one hatch's
+            // packable interior (after subtracting 0.6 m catwalks on all 4 walls).
+            // • Non-breakable items: packer can auto-rotate (6 orientations checked).
+            // • Breakable items: must keep original orientation — only 1 orientation checked.
+            // • floor_only items: packer never rotates them — only 1 orientation checked.
+            $oversizedItems = [];
+            foreach ($cargoItems as $item) {
+                $w = $item['w'];
+                $h = $item['h'];
+                $d = $item['d'];
+                $noRotate = $item['is_breakable'] || $item['floor_only'];
+                $orientations = $noRotate
+                    ? [[$w, $h, $d]]
+                    : [
+                        [$w, $h, $d],
+                        [$w, $d, $h],
+                        [$h, $w, $d],
+                        [$h, $d, $w],
+                        [$d, $w, $h],
+                        [$d, $h, $w],
+                    ];
+                $fitsInAnyHatch = false;
+                $cw = 0.6;
+                foreach ($hatches as $hatch) {
+                    // Usable interior after catwalks on all 4 walls
+                    $hw = max(0, (float) $hatch->hatch_width - 2 * $cw);
+                    $hh = (float) $hatch->hatch_height;
+                    $hl = max(0, (float) $hatch->hatch_length - 2 * $cw);
+                    foreach ($orientations as [$iw, $ih, $id]) {
+                        if ($iw <= $hw + 0.01 && $ih <= $hh + 0.01 && $id <= $hl + 0.01) {
+                            $fitsInAnyHatch = true;
+                            break 2;
+                        }
                     }
                 }
+                if (!$fitsInAnyHatch) {
+                    $oversizedItems[] = $item;
+                }
+            }
+            if (!empty($oversizedItems)) {
+                $names = implode(', ', array_map(
+                    fn($i) => "{$i['item_name']} ({$i['w']}×{$i['h']}×{$i['d']}m)",
+                    $oversizedItems
+                ));
+                return [
+                    'success' => false,
+                    'message' => "Item(s) too large to fit in any hatch: {$names}. Check item dimensions against hatch dimensions.",
+                    'packedItems' => [],
+                    'unpackedItems' => $oversizedItems,
+                    'hatchCapacities' => $hatchCapacities,
+                ];
+            }
 
-                if (!$canFitInAnyHatch) {
+            // ── Per-item weight check ─────────────────────────────────────
+            // The packer distributes items freely across all hatches, so check
+            // each item's weight_each against the TOTAL available weight across
+            // all hatches combined — not per individual hatch.
+            $itemsThatCantFit = [];
+            foreach ($cargoItems as $item) {
+                if ($item['weight_each'] > $totalAvailableWeight) {
                     $itemsThatCantFit[] = $item;
                 }
             }
 
             if (!empty($itemsThatCantFit)) {
+                $names = implode(', ', array_map(fn($i) => $i['item_name'], $itemsThatCantFit));
                 return [
                     'success' => false,
-                    'message' => "Insufficient weight allowance",
+                    'message' => "No single hatch has enough remaining weight for: {$names}. Reduce the booking quantity or bump to the next voyage.",
                     'packedItems' => [],
                     'unpackedItems' => $itemsThatCantFit,
-                    'hatchCapacities' => $hatchCapacities
+                    'hatchCapacities' => $hatchCapacities,
                 ];
             }
 
-            // All cargo weight fits - ready for placement
+            // ── Floor area check (floor_only items) ───────────────────────
+            // floor_only items (vehicles, livestock, machinery) cannot be stacked — they
+            // need actual deck space (floor area), not just volumetric space.
+            // Check: sum of all floor_only item footprints ≤ total packable hatch floor area
+            // (after subtracting 0.6 m crew catwalks on all 4 walls per hatch).
+            $floorOnlyItems = array_filter($cargoItems, fn($i) => $i['floor_only']);
+            if (!empty($floorOnlyItems)) {
+                $catwalkW2 = 0.6;
+                // Packable floor area per hatch = (W-1.2) × (L-1.2)
+                $totalHatchFloorArea = array_sum(array_map(
+                    fn($h) => max(0, (float) $h->hatch_width - 2 * $catwalkW2)
+                    * max(0, (float) $h->hatch_length - 2 * $catwalkW2),
+                    $hatches->all()
+                ));
+
+                // Sum footprint (w × d) × qty for each floor_only item
+                $neededFloorArea = array_sum(array_map(
+                    fn($i) => $i['w'] * $i['d'] * $i['q'],
+                    $floorOnlyItems
+                ));
+
+                if ($neededFloorArea > $totalHatchFloorArea + 0.01) {
+                    $shortfall = round($neededFloorArea - $totalHatchFloorArea, 2);
+                    $names = implode(', ', array_map(fn($i) => $i['item_name'], $floorOnlyItems));
+                    return [
+                        'success' => false,
+                        'message' => "Insufficient deck floor space for floor-only items ({$names}). Required: " . round($neededFloorArea, 2) . "m² — Available: " . round($totalHatchFloorArea, 2) . "m² — Shortfall: {$shortfall}m².",
+                        'packedItems' => [],
+                        'unpackedItems' => array_values($floorOnlyItems),
+                        'hatchCapacities' => $hatchCapacities,
+                    ];
+                }
+            }
+
+            // ── All checks passed ─────────────────────────────────────────
             return [
                 'success' => true,
-                'message' => "Cargo weight validation passed. Total cargo: {$totalCargoWeight}kg. Available capacity: {$totalAvailableCapacity}kg.",
+                'message' => "Placement validated. Total cargo: {$totalCargoWeight}kg / " . round($totalCargoVolume, 2) . "m³. Available: {$totalAvailableWeight}kg / " . round($totalAvailableVolume, 2) . "m³.",
                 'packedItems' => $cargoItems,
                 'unpackedItems' => [],
                 'hatchCapacities' => $hatchCapacities,
-                'skipValidation' => true
+                'skipValidation' => true,
             ];
 
         } catch (\Exception $e) {

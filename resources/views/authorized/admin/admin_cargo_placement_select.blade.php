@@ -31,29 +31,22 @@
                             // Calculate cargo count first
                             $cargoCount = $voyage->cargoReceipts()->count();
 
-                            // Get hatches and calculate available weight
+                            // Calculate combined available weight across all hatches
                             $hatches = $voyage->vessel->hatches ?? collect();
-                            $hatchInfo = [];
-                            foreach ($hatches->take(2) as $hatch) {
-                                $currentWeight =
-                                    \Illuminate\Support\Facades\DB::table('cargo_receipt')
-                                        ->join(
-                                            'cargo_booking',
-                                            'cargo_receipt.cargo_booking_id',
-                                            '=',
-                                            'cargo_booking.cargo_booking_id',
-                                        )
-                                        ->where('cargo_receipt.hatch_id', $hatch->hatch_id)
-                                        ->where('cargo_receipt.voyage_id', $voyage->voyage_id)
-                                        ->sum('cargo_booking.weight') ?? 0;
-
-                                $maxCapacity = ((float) $hatch->hatch_capacity_per_hold) * 1000;
-                                $availableWeight = $maxCapacity - $currentWeight;
-                                $hatchInfo[] = [
-                                    'label' => $hatch->hatch_label,
-                                    'available' => number_format($availableWeight, 2),
-                                ];
-                            }
+                            $totalCapacityKg = $hatches->sum(fn($h) => ((float) $h->hatch_capacity_per_hold) * 1000);
+                            $totalCurrentWeight =
+                                \Illuminate\Support\Facades\DB::table('cargo_receipt')
+                                    ->join(
+                                        'cargo_booking',
+                                        'cargo_receipt.cargo_booking_id',
+                                        '=',
+                                        'cargo_booking.cargo_booking_id',
+                                    )
+                                    ->join('booking', 'cargo_receipt.booking_ref_no', '=', 'booking.booking_ref_no')
+                                    ->where('cargo_receipt.voyage_id', $voyage->voyage_id)
+                                    ->whereRaw("LOWER(booking.booking_status) = 'confirmed'")
+                                    ->sum('cargo_booking.weight') ?? 0;
+                            $totalAvailableWeight = max(0, $totalCapacityKg - $totalCurrentWeight);
                         @endphp
 
                         @if ($cargoCount === 0)
@@ -110,20 +103,14 @@
                                         </p>
                                     </div>
                                 @else
-                                    @foreach ($hatchInfo as $hatch)
-                                        <div style="text-align: center;">
-                                            <p class="mb-1"
-                                                style="font-size: 1.5rem; color: #485b8c; font-weight: bold; margin-bottom: 0.5rem;">
-                                                Hatch {{ $hatch['label'] }}
-                                            </p>
-                                            <p style="font-size: 0.85rem; color: #666; margin: 0.3rem 0;">
-                                                Available Weight
-                                            </p>
-                                            <p style="font-size: 1rem; color: #485b8c; font-weight: bold; margin: 0;">
-                                                {{ $hatch['available'] }} kg
-                                            </p>
-                                        </div>
-                                    @endforeach
+                                    <div style="text-align: center;">
+                                        <p style="font-size: 0.85rem; color: #666; margin: 0.3rem 0;">
+                                            Available Weight
+                                        </p>
+                                        <p style="font-size: 1.5rem; color: #485b8c; font-weight: bold; margin: 0;">
+                                            {{ number_format($totalAvailableWeight, 2) }} kg
+                                        </p>
+                                    </div>
                                 @endif
                             </div>
                         </div>
