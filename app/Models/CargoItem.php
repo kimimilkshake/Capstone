@@ -28,11 +28,13 @@ class CargoItem extends Model
         'cargo_item_base_cbm',
         'is_breakable',
         'floor_only',
+        'is_stackable',
     ];
 
     protected $casts = [
         'is_breakable' => 'boolean',
         'floor_only' => 'boolean',
+        'is_stackable' => 'boolean',
     ];
 
     public function measurementUnit()

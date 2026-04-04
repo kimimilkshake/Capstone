@@ -277,6 +277,14 @@ class CargoAutoPlacementController extends Controller
             return response()->json(['error' => 'Missing hatches'], 400);
         }
 
+        // Load all saved hatch assignments for this voyage so the packer can
+        // restore the previous layout instead of reassigning everything from scratch.
+        $savedPlacements = \DB::table('cargo_hatch_placement')
+            ->where('voyage_id', $voyageId)
+            ->select('cargo_receipt_id', 'hatch_id', 'unit_count')
+            ->get()
+            ->groupBy('cargo_receipt_id');
+
         foreach ($cargoReceipts as $receipt) {
             $bookingRow = CargoBooking::with('measurementUnit')->where('cargo_booking_id', $receipt->cargo_booking_id)->first();
             if ($bookingRow && $bookingRow->length && $bookingRow->width && $bookingRow->height) {
@@ -289,25 +297,50 @@ class CargoAutoPlacementController extends Controller
                 $heightM = $this->convertToMeters($bookingRow->height, $unitName);
                 $lengthM = $this->convertToMeters($bookingRow->length, $unitName);
 
-                for ($i = 0; $i < $quantity; $i++) {
-                    $cargoData[] = [
-                        'id' => (string) $receipt->cargo_receipt_id . '_' . $i,
-                        'receipt_id' => $receipt->cargo_receipt_id,
-                        'booking_ref' => $receipt->booking_ref_no,
-                        'voyage_id' => $voyageId,
-                        'vessel_id' => $voyage->vessel_id,
-                        'width' => $widthM,
-                        'height' => $heightM,
-                        'depth' => $lengthM,
-                        'weight' => $weightPerItem,
-                        'quantity' => 1,
-                        'description' => $bookingRow->cargoItem->cargo_item_description ?? 'Cargo Item',
-                        'is_breakable' => (bool) ($bookingRow->cargoItem->is_breakable ?? false),
-                        'floor_only' => (bool) ($bookingRow->cargoItem->floor_only ?? false),
-                        'hatch_id' => null, // Always null — packer freely assigns across hatches every run
-                        'original_unit' => $unitName,
-                        'original_dims' => "{$bookingRow->length} × {$bookingRow->width} × {$bookingRow->height}",
-                    ];
+                $receiptId = $receipt->cargo_receipt_id;
+                $savedRows = $savedPlacements->get($receiptId);
+                $savedTotal = $savedRows ? $savedRows->sum('unit_count') : 0;
+
+                // Always expand to the full booking quantity so that previously-unpacked
+                // items are not silently dropped on page reload.
+                // Items with a saved hatch assignment are locked to that hatch (hatch_id set).
+                // Remaining items (quantity > savedTotal) are packed freely (hatch_id null).
+                $itemBase = [
+                    'receipt_id' => $receiptId,
+                    'booking_ref' => $receipt->booking_ref_no,
+                    'voyage_id' => $voyageId,
+                    'vessel_id' => $voyage->vessel_id,
+                    'width' => $widthM,
+                    'height' => $heightM,
+                    'depth' => $lengthM,
+                    'weight' => $weightPerItem,
+                    'quantity' => 1,
+                    'description' => $bookingRow->cargoItem->cargo_item_description ?? 'Cargo Item',
+                    'is_breakable' => (bool) ($bookingRow->cargoItem->is_breakable ?? false),
+                    'floor_only' => (bool) ($bookingRow->cargoItem->floor_only ?? false),
+                    'is_stackable' => (bool) ($bookingRow->cargoItem->is_stackable ?? true),
+                    'original_unit' => $unitName,
+                    'original_dims' => "{$bookingRow->length} × {$bookingRow->width} × {$bookingRow->height}",
+                ];
+
+                $itemIndex = 0;
+                // First: re-expand saved (placed) items with their locked hatch assignment.
+                if ($savedRows && $savedTotal > 0) {
+                    foreach ($savedRows as $savedRow) {
+                        for ($i = 0; $i < (int) $savedRow->unit_count; $i++) {
+                            $cargoData[] = array_merge($itemBase, [
+                                'id' => (string) $receiptId . '_' . $itemIndex++,
+                                'hatch_id' => $savedRow->hatch_id,
+                            ]);
+                        }
+                    }
+                }
+                // Then: append any remaining items (previously unpacked) as free-assign.
+                for ($i = $itemIndex; $i < $quantity; $i++) {
+                    $cargoData[] = array_merge($itemBase, [
+                        'id' => (string) $receiptId . '_' . $i,
+                        'hatch_id' => null,
+                    ]);
                 }
             }
         }
@@ -316,6 +349,9 @@ class CargoAutoPlacementController extends Controller
         \Log::info('Packing Data - Total Hatches: ' . count($hatchesData));
         \Log::info('Packing Data - Cargo Items Count: ' . count($cargoData));
 
+        // True when every item has a saved hatch assignment — no re-save needed.
+        $allSaved = count($cargoData) > 0 && collect($cargoData)->every(fn($item) => $item['hatch_id'] !== null);
+
         return response()->json([
             'voyage' => [
                 'id' => $voyage->voyage_id,
@@ -323,7 +359,8 @@ class CargoAutoPlacementController extends Controller
                 'vessel' => $voyage->vessel->vessel_name,
             ],
             'hatches' => $hatchesData,
-            'cargo' => $cargoData, // All cargo with hatch_id if assigned, null if not
+            'cargo' => $cargoData, // Items carry hatch_id when saved, null for new bookings
+            'allSaved' => $allSaved, // JS uses this to skip re-saving unchanged placements
         ])->header('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');
@@ -367,15 +404,51 @@ class CargoAutoPlacementController extends Controller
         }
 
         try {
+            // Aggregate per-unit placements → per-receipt per-hatch totals
+            // Each packed item carries weightPerItem; multiple items from the same receipt
+            // may land in different hatches when the booking is split.
+            $byReceiptHatch = []; // [receiptId][hatchId] => ['weight' => float, 'units' => int]
             foreach ($placements as $placement) {
                 $receiptId = $placement['receiptId'] ?? null;
                 $hatchId = $placement['hatchId'] ?? null;
+                $weight = (float) ($placement['weight'] ?? 0);
+                if (!$receiptId || !$hatchId)
+                    continue;
+                $byReceiptHatch[$receiptId][$hatchId]['weight'] = ($byReceiptHatch[$receiptId][$hatchId]['weight'] ?? 0) + $weight;
+                $byReceiptHatch[$receiptId][$hatchId]['units'] = ($byReceiptHatch[$receiptId][$hatchId]['units'] ?? 0) + 1;
+            }
 
-                if ($receiptId && $hatchId) {
-                    CargoReceipt::where('cargo_receipt_id', $receiptId)
-                        ->where('voyage_id', $voyageId)
-                        ->update(['hatch_id' => $hatchId]);
+            // Clear previous placement records for this voyage
+            $receiptIds = array_keys($byReceiptHatch);
+            \DB::table('cargo_hatch_placement')
+                ->where('voyage_id', $voyageId)
+                ->whereIn('cargo_receipt_id', $receiptIds)
+                ->delete();
+
+            // Write accurate split weights into cargo_hatch_placement
+            foreach ($byReceiptHatch as $receiptId => $hatches) {
+                // Primary hatch = highest unit count (for cargo_receipt.hatch_id)
+                $primaryHatch = array_key_first($hatches);
+                $maxUnits = 0;
+                foreach ($hatches as $hatchId => $data) {
+                    if ($data['units'] > $maxUnits) {
+                        $maxUnits = $data['units'];
+                        $primaryHatch = $hatchId;
+                    }
+                    \DB::table('cargo_hatch_placement')->insert([
+                        'voyage_id' => $voyageId,
+                        'hatch_id' => $hatchId,
+                        'cargo_receipt_id' => $receiptId,
+                        'weight_kg' => $data['weight'],
+                        'unit_count' => $data['units'],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
                 }
+                // Store majority hatch in cargo_receipt for reporting compatibility
+                CargoReceipt::where('cargo_receipt_id', $receiptId)
+                    ->where('voyage_id', $voyageId)
+                    ->update(['hatch_id' => $primaryHatch]);
             }
 
             return response()->json([

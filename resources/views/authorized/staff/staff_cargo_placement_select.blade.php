@@ -31,22 +31,13 @@
                             // Calculate cargo count first
                             $cargoCount = $voyage->cargoReceipts()->count();
 
-                            // Calculate combined available weight across all hatches
+                            // Per-hatch available weight
                             $hatches = $voyage->vessel->hatches ?? collect();
-                            $totalCapacityKg = $hatches->sum(fn($h) => ((float) $h->hatch_capacity_per_hold) * 1000);
-                            $totalCurrentWeight =
-                                \Illuminate\Support\Facades\DB::table('cargo_receipt')
-                                    ->join(
-                                        'cargo_booking',
-                                        'cargo_receipt.cargo_booking_id',
-                                        '=',
-                                        'cargo_booking.cargo_booking_id',
-                                    )
-                                    ->join('booking', 'cargo_receipt.booking_ref_no', '=', 'booking.booking_ref_no')
-                                    ->where('cargo_receipt.voyage_id', $voyage->voyage_id)
-                                    ->whereRaw("LOWER(booking.booking_status) = 'confirmed'")
-                                    ->sum('cargo_booking.weight') ?? 0;
-                            $totalAvailableWeight = max(0, $totalCapacityKg - $totalCurrentWeight);
+                            $hatchUsedWeights = \Illuminate\Support\Facades\DB::table('cargo_hatch_placement')
+                                ->where('voyage_id', $voyage->voyage_id)
+                                ->groupBy('hatch_id')
+                                ->selectRaw('hatch_id, SUM(weight_kg) as total_weight')
+                                ->pluck('total_weight', 'hatch_id');
                         @endphp
 
                         @if ($cargoCount === 0)
@@ -103,13 +94,23 @@
                                         </p>
                                     </div>
                                 @else
-                                    <div style="text-align: center;">
-                                        <p style="font-size: 0.85rem; color: #666; margin: 0.3rem 0;">
-                                            Available Weight
-                                        </p>
-                                        <p style="font-size: 1.5rem; color: #485b8c; font-weight: bold; margin: 0;">
-                                            {{ number_format($totalAvailableWeight, 2) }} kg
-                                        </p>
+                                    <div style="display: flex; gap: 1.25rem; align-items: flex-start;">
+                                        @foreach ($hatches as $hatch)
+                                            @php
+                                                $hCapKg = (float) $hatch->hatch_capacity_per_hold * 1000;
+                                                $hUsedKg = (float) ($hatchUsedWeights[$hatch->hatch_id] ?? 0);
+                                                $hAvailKg = max(0, $hCapKg - $hUsedKg);
+                                                $hPct = $hCapKg > 0 ? min(100, round(($hUsedKg / $hCapKg) * 100)) : 0;
+                                            @endphp
+                                            <div style="text-align: center;">
+                                                <p
+                                                    style="font-size: 0.9rem; color: #666; margin: 0 0 0.2rem; font-weight: 600;">
+                                                    Hatch {{ $hatch->hatch_label }}</p>
+                                                <p
+                                                    style="font-size: 1.1rem; font-weight: 700; margin: 0; color: {{ $hPct >= 90 ? '#dc3545' : ($hPct >= 70 ? '#fd7e14' : '#485b8c') }};">
+                                                    {{ number_format($hAvailKg, 0) }} kg</p>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 @endif
                             </div>

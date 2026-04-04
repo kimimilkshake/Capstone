@@ -261,59 +261,158 @@ class CargoAutoPlacementService
                 ];
             }
 
-            // ── Per-item weight check ─────────────────────────────────────
-            // The packer distributes items freely across all hatches, so check
-            // each item's weight_each against the TOTAL available weight across
-            // all hatches combined — not per individual hatch.
-            $itemsThatCantFit = [];
+            // ── Per-hatch greedy weight simulation ──────────────────────────
+            // Expand each booking line into individual physical items and
+            // simulate placing them into hatches in order (hatch 1 first, then 2,
+            // etc.), filling heaviest items first. This mirrors the JS packer's
+            // sequential fill and enforces each hatch's individual weight limit.
+            $physicalItems = [];
             foreach ($cargoItems as $item) {
-                if ($item['weight_each'] > $totalAvailableWeight) {
-                    $itemsThatCantFit[] = $item;
+                for ($i = 0; $i < $item['q']; $i++) {
+                    $physicalItems[] = [
+                        'name' => $item['item_name'],
+                        'weight' => $item['weight_each'],
+                    ];
+                }
+            }
+            usort($physicalItems, fn($a, $b) => $b['weight'] <=> $a['weight']); // heaviest first
+
+            // Build hatch available-weight map in hatch_id ascending order
+            // so iteration always starts from hatch 1 → hatch 2 → …
+            $hatchAvail = [];
+            ksort($hatchCapacities); // ensure hatch 1 is first
+            foreach ($hatchCapacities as $hatchId => $cap) {
+                $hatchAvail[$hatchId] = $cap['availableWeight'];
+            }
+
+            $weightOverflowNames = [];
+            foreach ($physicalItems as $physItem) {
+                // Always try hatches in their natural order (hatch 1 first, then 2, etc.)
+                // matching how the JS packer sequentially fills from the first hatch.
+                $placed = false;
+                foreach ($hatchAvail as $hatchId => $avail) {
+                    if ($physItem['weight'] <= $avail + 0.001) { // 1 g tolerance
+                        $hatchAvail[$hatchId] -= $physItem['weight'];
+                        $placed = true;
+                        break;
+                    }
+                }
+                if (!$placed) {
+                    $weightOverflowNames[] = $physItem['name'];
                 }
             }
 
-            if (!empty($itemsThatCantFit)) {
-                $names = implode(', ', array_map(fn($i) => $i['item_name'], $itemsThatCantFit));
+            if (!empty($weightOverflowNames)) {
+                $uniqueNames = implode(', ', array_unique($weightOverflowNames));
                 return [
                     'success' => false,
-                    'message' => "No single hatch has enough remaining weight for: {$names}. Reduce the booking quantity or bump to the next voyage.",
+                    'message' => "Weight capacity exceeded per hatch for: {$uniqueNames}. Each hatch has its own weight limit — these items cannot fit within any single hatch's remaining capacity. Reduce the quantity or move the booking to a different voyage.",
                     'packedItems' => [],
-                    'unpackedItems' => $itemsThatCantFit,
+                    'unpackedItems' => $cargoItems,
                     'hatchCapacities' => $hatchCapacities,
                 ];
             }
 
             // ── Floor area check (floor_only items) ───────────────────────
-            // floor_only items (vehicles, livestock, machinery) cannot be stacked — they
-            // need actual deck space (floor area), not just volumetric space.
-            // Check: sum of all floor_only item footprints ≤ total packable hatch floor area
-            // (after subtracting 0.6 m crew catwalks on all 4 walls per hatch).
+            // floor_only items cannot be stacked and must not land in the 0.6 m
+            // catwalks along all 4 hatch walls.
+            //
+            // Two checks run together:
+            //
+            // 1. ZONE-SLOT CHECK (grid capacity, always applies):
+            //    The packer splits each hatch into LEFT / RIGHT halves for weight
+            //    balance.  Real usable slots per hatch =
+            //      floor(packableW/2 / itemW) × floor(packableL / itemD) × 2 zones
+            //    Raw area maths is too loose and ignores wasted grid-edge space.
+            //
+            // 2. EXISTING-AREA CHECK (only when other bookings already occupy space):
+            //    Subtract the actual floor area used by confirmed floor_only receipts
+            //    on this voyage that are NOT in the current batch.  This correctly
+            //    handles mixed-item-size loads where slot approximation would be coarse.
             $floorOnlyItems = array_filter($cargoItems, fn($i) => $i['floor_only']);
             if (!empty($floorOnlyItems)) {
-                $catwalkW2 = 0.6;
-                // Packable floor area per hatch = (W-1.2) × (L-1.2)
-                $totalHatchFloorArea = array_sum(array_map(
-                    fn($h) => max(0, (float) $h->hatch_width - 2 * $catwalkW2)
-                    * max(0, (float) $h->hatch_length - 2 * $catwalkW2),
-                    $hatches->all()
-                ));
+                $cw = 0.6; // metres — catwalk on each of the 4 walls
 
-                // Sum footprint (w × d) × qty for each floor_only item
-                $neededFloorArea = array_sum(array_map(
-                    fn($i) => $i['w'] * $i['d'] * $i['q'],
-                    $floorOnlyItems
-                ));
+                // ── Gather existing floor_only area on this voyage ────────
+                $newBookingIds = $cargoBookingIds;
+                $existingFloorReceipts = CargoReceipt::where('voyage_id', $voyageId)
+                    ->whereNotIn('cargo_booking_id', $newBookingIds)
+                    ->with(['cargoBooking.measurementUnit', 'cargoBooking.cargoItem'])
+                    ->get();
 
-                if ($neededFloorArea > $totalHatchFloorArea + 0.01) {
-                    $shortfall = round($neededFloorArea - $totalHatchFloorArea, 2);
-                    $names = implode(', ', array_map(fn($i) => $i['item_name'], $floorOnlyItems));
-                    return [
-                        'success' => false,
-                        'message' => "Insufficient deck floor space for floor-only items ({$names}). Required: " . round($neededFloorArea, 2) . "m² — Available: " . round($totalHatchFloorArea, 2) . "m² — Shortfall: {$shortfall}m².",
-                        'packedItems' => [],
-                        'unpackedItems' => array_values($floorOnlyItems),
-                        'hatchCapacities' => $hatchCapacities,
-                    ];
+                $existingFloorArea = 0.0;
+                foreach ($existingFloorReceipts as $er) {
+                    $cb = $er->cargoBooking;
+                    if (!$cb || !$cb->cargoItem || !$cb->cargoItem->floor_only)
+                        continue;
+                    if (!$cb->length || !$cb->width)
+                        continue;
+                    $unit = $cb->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
+                    $wM   = self::convertToMeters($cb->width, $unit);
+                    $dM   = self::convertToMeters($cb->length, $unit);
+                    $qty  = max(1, (int) ($cb->quantity ?? 1));
+                    $existingFloorArea += $wM * $dM * $qty;
+                }
+
+                // Total packable floor area across all hatches
+                $totalPackableFloorArea = 0.0;
+                foreach ($hatches as $hatch) {
+                    $totalPackableFloorArea +=
+                        max(0, (float) $hatch->hatch_width  - 2 * $cw)
+                        * max(0, (float) $hatch->hatch_length - 2 * $cw);
+                }
+
+                foreach ($floorOnlyItems as $item) {
+                    if ($item['w'] <= 0 || $item['d'] <= 0) continue;
+
+                    $itemFootprint = $item['w'] * $item['d'];
+                    $neededArea    = $itemFootprint * $item['q'];
+
+                    // ── Check 1: zone-slot grid capacity ─────────────────
+                    $totalSlots = 0;
+                    foreach ($hatches as $hatch) {
+                        $packW = max(0, (float) $hatch->hatch_width  - 2 * $cw);
+                        $packL = max(0, (float) $hatch->hatch_length - 2 * $cw);
+                        $zoneW = $packW / 2;
+                        $cols  = $zoneW > 0 ? (int) floor($zoneW / $item['w']) : 0;
+                        $rows  = $packL > 0 ? (int) floor($packL  / $item['d']) : 0;
+                        $totalSlots += $cols * $rows * 2;
+                    }
+                    // Existing items occupy slots — use ceil to stay conservative
+                    $usedSlots      = $itemFootprint > 0 ? (int) ceil($existingFloorArea / $itemFootprint) : 0;
+                    $availableSlots = max(0, $totalSlots - $usedSlots);
+
+                    if ($item['q'] > $availableSlots) {
+                        return [
+                            'success' => false,
+                            'message' => "Insufficient deck space for floor-only item ({$item['item_name']}). "
+                                . "Requested: {$item['q']} — "
+                                . "Available grid slots: {$availableSlots} "
+                                . "(total: {$totalSlots}, occupied by existing cargo: {$usedSlots}). "
+                                . "Reduce the quantity or use a different voyage.",
+                            'packedItems' => [],
+                            'unpackedItems' => array_values($floorOnlyItems),
+                            'hatchCapacities' => $hatchCapacities,
+                        ];
+                    }
+
+                    // ── Check 2: raw remaining floor area ─────────────────
+                    // Catches mixed-load edge cases where grid-slot maths is coarse.
+                    $availableFloorArea = max(0, $totalPackableFloorArea - $existingFloorArea);
+                    if ($neededArea > $availableFloorArea + 0.01) {
+                        $shortfall = round($neededArea - $availableFloorArea, 2);
+                        return [
+                            'success' => false,
+                            'message' => "Insufficient deck floor area for floor-only item ({$item['item_name']}). "
+                                . "Required: " . round($neededArea, 2) . "m² — "
+                                . "Already used: " . round($existingFloorArea, 2) . "m² — "
+                                . "Remaining: " . round($availableFloorArea, 2) . "m² — "
+                                . "Shortfall: {$shortfall}m².",
+                            'packedItems' => [],
+                            'unpackedItems' => array_values($floorOnlyItems),
+                            'hatchCapacities' => $hatchCapacities,
+                        ];
+                    }
                 }
             }
 

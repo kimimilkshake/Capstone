@@ -39,10 +39,10 @@ class CargoItemController extends Controller
         $cargo_categories = CargoCategory::orderBy('cargo_category_name')->get();
 
         if (auth()->guard('admin')->check()) {
-            return view('authorized.admin.cargo_item_list', compact('cargo_items','route_categories', 'cargo_categories'));
+            return view('authorized.admin.cargo_item_list', compact('cargo_items', 'route_categories', 'cargo_categories'));
         }
 
-        return view('authorized.staff.scargo_item_list', compact('cargo_items','route_categories', 'cargo_categories'));
+        return view('authorized.staff.scargo_item_list', compact('cargo_items', 'route_categories', 'cargo_categories'));
     }
 
     public function create()
@@ -52,10 +52,38 @@ class CargoItemController extends Controller
         $cargo_categories = CargoCategory::orderBy('cargo_category_name')->get();
 
         if (auth()->guard('admin')->check()) {
-            return view('authorized.admin.create_cargo_item', compact('route_categories','measurement_units','cargo_categories'));
+            return view('authorized.admin.create_cargo_item', compact('route_categories', 'measurement_units', 'cargo_categories'));
         }
 
-        return view('authorized.staff.screate_cargo_item', compact('route_categories','measurement_units','cargo_categories'));
+        return view('authorized.staff.screate_cargo_item', compact('route_categories', 'measurement_units', 'cargo_categories'));
+    }
+
+    /**
+     * Derive packing behaviour flags from cargo category name AND item description.
+     * No manual input needed.
+     *
+     * is_breakable  → Fragile, Electronics, Appliances, Pharmaceuticals/Medicals category
+     *                 OR description contains: glass, mirror, ceramic, porcelain, crystal
+     * floor_only    → Animals/Livestock, Vehicle, Oversized/Heavy Cargo,
+     *                 Human Remains, Machinery, Hazardous/Dangerous Goods, Liquids
+     * is_stackable  → true unless floor_only or is_breakable
+     */
+    private function flagsFromCategory(int $categoryId, string $description = ''): array
+    {
+        $name = CargoCategory::find($categoryId)?->cargo_category_name ?? '';
+        $nameLower = strtolower($name);
+        $descLower = strtolower($description);
+
+        $isBreakable = (bool) preg_match('/fragile|electronic|appliance|pharmaceut|medical/', $nameLower)
+            || (bool) preg_match('/glass|mirror|ceramic|porcelain|crystal/', $descLower);
+        $floorOnly = (bool) preg_match('/animal|livestock|vehicle|oversized|heavy|human.remain|machinery|hazardous|dangerous|liquid/', $nameLower);
+        $isStackable = !$isBreakable && !$floorOnly;
+
+        return [
+            'is_breakable' => $isBreakable,
+            'floor_only' => $floorOnly,
+            'is_stackable' => $isStackable,
+        ];
     }
 
     public function store(Request $request)
@@ -63,28 +91,30 @@ class CargoItemController extends Controller
         $validated = $request->validate([
             'measurement_unit_id' => 'nullable|exists:measurement_unit,measurement_unit_id',
             'cargo_category_id' => 'required|exists:cargo_category,cargo_category_id',
-            'route_category_id'   => 'required|exists:route_category,route_category_id',
+            'route_category_id' => 'required|exists:route_category,route_category_id',
             'cargo_item_description' => 'required|string',
-            'cargo_item_freight'  => 'required|numeric',
+            'cargo_item_freight' => 'required|numeric',
             'cargo_item_measure_required' => 'required|in:Yes,No',
             'cargo_item_min_length' => 'nullable|numeric',
             'cargo_item_max_length' => 'nullable|numeric',
-            'cargo_item_min_width'  => 'nullable|numeric',
-            'cargo_item_max_width'  => 'nullable|numeric',
+            'cargo_item_min_width' => 'nullable|numeric',
+            'cargo_item_max_width' => 'nullable|numeric',
             'cargo_item_min_height' => 'nullable|numeric',
             'cargo_item_max_height' => 'nullable|numeric',
             'cargo_item_base_cbm' => 'nullable|numeric',
         ]);
 
+        $validated = array_merge($validated, $this->flagsFromCategory((int) $validated['cargo_category_id'], $validated['cargo_item_description'] ?? ''));
+
         CargoItem::create($validated);
 
         if (auth()->guard('admin')->check()) {
             return redirect()->route('admin.cargo_item_list')
-                ->with('success','Cargo item added successfully.');
+                ->with('success', 'Cargo item added successfully.');
         }
 
         return redirect()->route('staff.cargo_item_list')
-            ->with('success','Cargo item added successfully.');
+            ->with('success', 'Cargo item added successfully.');
 
     }
 
@@ -96,11 +126,11 @@ class CargoItemController extends Controller
         $cargo_categories = CargoCategory::orderBy('cargo_category_name')->get();
 
         if (auth()->guard('admin')->check()) {
-            return view('authorized.admin.cargo_item_edit', compact('cargo_item','route_categories', 'measurement_units', 'cargo_categories'));
+            return view('authorized.admin.cargo_item_edit', compact('cargo_item', 'route_categories', 'measurement_units', 'cargo_categories'));
         }
 
-        return view('authorized.staff.scargo_item_edit', compact('cargo_item','route_categories', 'measurement_units', 'cargo_categories'));
-        
+        return view('authorized.staff.scargo_item_edit', compact('cargo_item', 'route_categories', 'measurement_units', 'cargo_categories'));
+
     }
 
 
@@ -111,25 +141,27 @@ class CargoItemController extends Controller
         $validated = $request->validate([
             'measurement_unit_id' => 'nullable|exists:measurement_unit,measurement_unit_id',
             'cargo_category_id' => 'required|exists:cargo_category,cargo_category_id',
-            'route_category_id'   => 'required|exists:route_category,route_category_id',
+            'route_category_id' => 'required|exists:route_category,route_category_id',
             'cargo_item_description' => 'required|string',
-            'cargo_item_freight'  => 'required|numeric',
+            'cargo_item_freight' => 'required|numeric',
             'cargo_item_measure_required' => 'required|in:Yes,No',
             'cargo_item_min_length' => 'nullable|numeric',
             'cargo_item_max_length' => 'nullable|numeric',
-            'cargo_item_min_width'  => 'nullable|numeric',
-            'cargo_item_max_width'  => 'nullable|numeric',
+            'cargo_item_min_width' => 'nullable|numeric',
+            'cargo_item_max_width' => 'nullable|numeric',
             'cargo_item_min_height' => 'nullable|numeric',
             'cargo_item_max_height' => 'nullable|numeric',
             'cargo_item_base_cbm' => 'nullable|numeric',
         ]);
 
+        $validated = array_merge($validated, $this->flagsFromCategory((int) $validated['cargo_category_id'], $validated['cargo_item_description'] ?? ''));
+
         $cargo_item->update($validated);
 
         return redirect()->route(
             auth()->guard('staff')->check()
-                ? 'staff.cargo_item_list'
-                : 'admin.cargo_item_list'
+            ? 'staff.cargo_item_list'
+            : 'admin.cargo_item_list'
         )->with('success', 'Cargo item updated successfully.');
     }
 

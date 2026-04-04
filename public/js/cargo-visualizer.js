@@ -61,25 +61,43 @@ class SimpleBinPacker {
         let leftZoneWeight = 0;
         let rightZoneWeight = 0;
 
+        // Sort bookings by three priorities so new stackable cargo never steals floor
+        // space from existing or floor-only cargo:
+        //   1. Already-saved bookings (any item with hatch_id set) → always first.
+        //   2. Floor-only bookings (engines, machinery) → second.
+        //   3. Stackable / new bookings → last.
+        // Within each tier: heaviest booking first, then heaviest-per-item tiebreaker.
+        const sortedBookingRefs = [...bookingRefs].sort((a, b) => {
+            const aSaved = bookingGroups[a].some((i) => i.hatch_id != null);
+            const bSaved = bookingGroups[b].some((i) => i.hatch_id != null);
+            if (aSaved !== bSaved) return aSaved ? -1 : 1;
+
+            const aFloor = bookingGroups[a].some((i) => i.floor_only);
+            const bFloor = bookingGroups[b].some((i) => i.floor_only);
+            if (aFloor !== bFloor) return aFloor ? -1 : 1;
+
+            const wA = bookingGroups[a].reduce((s, i) => s + (i.weight || 0), 0);
+            const wB = bookingGroups[b].reduce((s, i) => s + (i.weight || 0), 0);
+            if (Math.abs(wA - wB) > 0.001) return wB - wA;
+            const maxA = Math.max(...bookingGroups[a].map((i) => i.weight || 0));
+            const maxB = Math.max(...bookingGroups[b].map((i) => i.weight || 0));
+            return maxB - maxA;
+        });
+
+        // Zone assignment uses the UNSORTED original booking order for L/R balance,
+        // so each booking gets assigned to whichever side is lighter at the time.
         bookingRefs.forEach((ref, idx) => {
             const bookingWeight = bookingWeights[ref];
-
-            // Check if zones are balanced (equal weight or first booking)
             if (leftZoneWeight === rightZoneWeight) {
-                // Zones balanced - use round-robin
                 bookingZones[ref] = idx % 2;
             } else {
-                // Zones imbalanced - assign to lighter zone
                 bookingZones[ref] = leftZoneWeight <= rightZoneWeight ? 0 : 1;
             }
-
-            // Update zone weight
             if (bookingZones[ref] === 0) {
                 leftZoneWeight += bookingWeight;
             } else {
                 rightZoneWeight += bookingWeight;
             }
-
             const zoneName = bookingZones[ref] === 0 ? "LEFT" : "RIGHT";
             console.log(
                 `   Booking ${ref}: ${zoneName} zone (${bookingGroups[ref].length} items, ${bookingWeights[ref]}kg) [LEFT: ${leftZoneWeight}kg, RIGHT: ${rightZoneWeight}kg]`,
@@ -99,27 +117,22 @@ class SimpleBinPacker {
         );
         console.log("");
 
-        // Sort bookings by total weight (heaviest first)
-        const sortedBookingRefs = [...bookingRefs].sort((a, b) => {
-            const wA = bookingGroups[a].reduce(
-                (s, i) => s + (i.weight || 0),
-                0,
-            );
-            const wB = bookingGroups[b].reduce(
-                (s, i) => s + (i.weight || 0),
-                0,
-            );
-            return wB - wA;
-        });
-
         // Track sticky bin per booking (first hatch where booking lands)
         const bookingBins = {};
 
-        // Process items booking-by-booking so all items from same booking are consecutive
+        // Process items booking-by-booking so all items from same booking are consecutive.
+        // Within each booking: stackable heavier items first, non-stackable items last.
+        // This ensures heavy stackable items land on the floor first so lighter items
+        // can stack on top of them; non-stackable items fill remaining floor space after.
         const orderedItems = sortedBookingRefs.flatMap((ref) =>
-            [...bookingGroups[ref]].sort(
-                (a, b) => (b.weight || 0) - (a.weight || 0),
-            ),
+            [...bookingGroups[ref]].sort((a, b) => {
+                // Non-stackable always after stackable (they go on floor last)
+                const aStack = a.is_stackable !== false ? 0 : 1;
+                const bStack = b.is_stackable !== false ? 0 : 1;
+                if (aStack !== bStack) return aStack - bStack;
+                // Among same stackability tier: heaviest first
+                return (b.weight || 0) - (a.weight || 0);
+            }),
         );
 
         for (const item of orderedItems) {
@@ -133,22 +146,26 @@ class SimpleBinPacker {
             );
 
             const stickyBinId = bookingBins[itemBookingRef];
-            // If item has hatch_id, ONLY try that hatch. Otherwise try all bins
-            const binsToTry = item.hatch_id
-                ? this.bins.filter(
-                      (bin) =>
-                          bin.id === item.hatch_id && this.canFit(item, bin),
-                  )
-                : this.bins
-                      .filter((bin) => this.canFit(item, bin))
-                      .sort((a, b) => {
-                          if (stickyBinId !== undefined) {
-                              if (a.id === stickyBinId) return -1;
-                              if (b.id === stickyBinId) return 1;
-                          }
-                          const weightDiff = b.usedWeight - a.usedWeight;
-                          return weightDiff !== 0 ? weightDiff : a.id - b.id;
-                      });
+            // If the item carries a saved hatch assignment (from the DB), force it into
+            // that bin only — this preserves the previously-saved layout and prevents
+            // newly-approved bookings from scrambling existing placements.
+            // For un-saved items (hatch_id == null): try sticky hatch first, then sequential.
+            const binsToTry =
+                item.hatch_id != null
+                    ? this.bins.filter(
+                          (bin) => String(bin.id) === String(item.hatch_id),
+                      )
+                    : this.bins
+                          .filter((bin) => this.canFit(item, bin))
+                          .sort((a, b) => {
+                              // Sticky hatch first — keeps all items of a booking in one hatch
+                              if (stickyBinId !== undefined) {
+                                  if (a.id === stickyBinId) return -1;
+                                  if (b.id === stickyBinId) return 1;
+                              }
+                              // Fallback: lowest hatch id first (sequential fill)
+                              return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+                          });
 
             for (const bin of binsToTry) {
                 const rotatedItem = this.autoRotateToFlatten(item);
@@ -238,7 +255,126 @@ class SimpleBinPacker {
         });
         console.log("🎯 PACKING COMPLETE (2-zone LEFT/RIGHT distribution)\n");
 
-        return { packed, unpacked };
+        // ===== CONSOLIDATION PASS =====
+        // Any booking whose items landed in more than one hatch gets a relocation attempt.
+        // Strategy: find the hatch that holds the most items from the booking (the "home" hatch),
+        // then try to move the minority items into that hatch.
+        // If a booking truly cannot fit into any single hatch, report it as a split error.
+        const splitBookings = []; // bookings that couldn't be consolidated
+
+        // Build a map: bookingRef → set of binIds used
+        const bookingBinMap = {};
+        packed.forEach((p) => {
+            const ref = p.booking_ref || "unassigned";
+            if (!bookingBinMap[ref]) bookingBinMap[ref] = {};
+            bookingBinMap[ref][p.binId] =
+                (bookingBinMap[ref][p.binId] || 0) + 1;
+        });
+
+        for (const [ref, binCounts] of Object.entries(bookingBinMap)) {
+            const binIds = Object.keys(binCounts);
+            if (binIds.length <= 1) continue; // already in one hatch — fine
+
+            // Skip consolidation for bookings that had pre-assigned hatch IDs.
+            // Those assignments came from the saved DB placement and are intentional
+            // (e.g. a split booking where some units were placed in different hatches).
+            const hasPreAssigned = packed.some(
+                (p) =>
+                    (p.booking_ref || "unassigned") === ref &&
+                    p.hatch_id != null,
+            );
+            if (hasPreAssigned) {
+                console.log(
+                    `ℹ️  Booking ${ref} split — skipping consolidation (pre-assigned from DB)`,
+                );
+                continue;
+            }
+
+            console.log(
+                `⚠️  Booking ${ref} split across hatches: ${binIds.join(", ")} — attempting consolidation`,
+            );
+
+            // Pick the hatch with the most items for this booking as the target
+            const targetBinId = binIds.sort(
+                (a, b) => binCounts[b] - binCounts[a],
+            )[0];
+            const targetBin = this.bins.find(
+                (bn) => String(bn.id) === String(targetBinId),
+            );
+
+            // Items that are NOT in the target hatch
+            const displaced = packed.filter(
+                (p) =>
+                    (p.booking_ref || "unassigned") === ref &&
+                    String(p.binId) !== String(targetBinId),
+            );
+
+            let allMoved = true;
+            for (const item of displaced) {
+                // Remove item from its current bin
+                const srcBin = this.bins.find(
+                    (bn) => String(bn.id) === String(item.binId),
+                );
+                if (srcBin) {
+                    srcBin.items = srcBin.items.filter(
+                        (i) =>
+                            !(
+                                i.x === item.x &&
+                                i.y === item.y &&
+                                i.z === item.z
+                            ),
+                    );
+                    srcBin.usedVolume -= this.getVolume(item);
+                    srcBin.usedWeight -= item.weight || 0;
+                }
+
+                // Try to place in target hatch — no zone constraint so the
+                // algorithm can stack on existing items regardless of which
+                // zone they landed in during initial packing (zone balance is
+                // only needed for the first-pass; consolidation just needs fit).
+                const rotated = this.autoRotateToFlatten(item);
+                let pos = this.findPosition(rotated, targetBin, undefined);
+
+                if (pos) {
+                    this.placeItem(rotated, targetBin, pos);
+                    // Update packed array in place — preserve original zone assignment
+                    const idx = packed.indexOf(item);
+                    packed[idx] = {
+                        ...rotated,
+                        binId: targetBin.id,
+                        zone: item.zone,
+                        x: pos.x,
+                        y: pos.y,
+                        z: pos.z,
+                    };
+                    console.log(
+                        `   ✓ Moved item ${item.id} → hatch ${targetBin.id}`,
+                    );
+                } else {
+                    // Put item back in its original bin
+                    if (srcBin) {
+                        srcBin.items.push({
+                            ...item,
+                            x: item.x,
+                            y: item.y,
+                            z: item.z,
+                        });
+                        srcBin.usedVolume += this.getVolume(item);
+                        srcBin.usedWeight += item.weight || 0;
+                    }
+                    allMoved = false;
+                    console.warn(
+                        `   ✗ Could not move item ${item.id} to hatch ${targetBin.id} — hatch full`,
+                    );
+                }
+            }
+
+            if (!allMoved) {
+                splitBookings.push(ref);
+            }
+        }
+
+        return { packed, unpacked, splitBookings };
     }
 
     canFit(item, bin) {
@@ -395,15 +531,19 @@ class SimpleBinPacker {
                             posZ >= existing.z + existing.depth
                         );
                         if (xOv && zOv) {
-                            // Sticky flags: breakable/floor_only block the entire column
+                            // Sticky flags: breakable/floor_only/non-stackable block the entire column
                             // regardless of which item happens to be the tallest.
-                            // A short breakable item beside a tall regular item must
-                            // still prevent anything being placed above the breakable
-                            // item's footprint (even if the new item lands at the taller
-                            // item's height — it would visually float over the breakable).
                             if (existing.is_breakable)
                                 stackedOnBreakable = true;
                             if (existing.floor_only) stackedOnFloorOnly = true;
+                            // Non-stackable: nothing may be placed on top of this item.
+                            // Breakable items are excluded here — they have their own
+                            // nuanced glass-on-glass exception via stackedOnBreakable above.
+                            if (
+                                existing.is_stackable === false &&
+                                !existing.is_breakable
+                            )
+                                stackedOnFloorOnly = true;
 
                             const top = existing.y + existing.height + this.gap;
                             if (top > stackHeight + 0.001) {
@@ -442,12 +582,91 @@ class SimpleBinPacker {
                     // Heavier items cannot be stacked on top of lighter ones
                     if (stackHeight > 0.001 && item.weight > stackTopWeight)
                         continue;
-                    // Support area check: at least 75% of the item's footprint must be
+                    // Stackable items (is_stackable === true) can stack freely up to bin height —
+                    // the support-area check below already ensures physical stability.
+                    // Only apply the 2-layer bracing rule to non-flat, non-stackable items
+                    // (e.g. something that ended up elevated via zone-spillover).
+                    const isIncomingFlat =
+                        !item.floor_only &&
+                        item.height / Math.min(item.width, item.depth) < 0.15;
+                    if (stackHeight > 0.001 && !isIncomingFlat && item.is_stackable !== true) {
+                        // Check if the base item is itself elevated (would make layer 3+)
+                        let baseIsElevated = false;
+                        for (const ex of bin.items) {
+                            const xOv2 = !(
+                                posX + item.width <= ex.x ||
+                                posX >= ex.x + ex.width
+                            );
+                            const zOv2 = !(
+                                posZ + item.depth <= ex.z ||
+                                posZ >= ex.z + ex.depth
+                            );
+                            if (
+                                xOv2 &&
+                                zOv2 &&
+                                Math.abs(
+                                    ex.y + ex.height + this.gap - stackHeight,
+                                ) < 0.002 &&
+                                ex.y > 0.001
+                            ) {
+                                baseIsElevated = true;
+                                break;
+                            }
+                        }
+                        if (baseIsElevated) {
+                            // Allow tall stacking if at least 2 sides have lateral neighbours
+                            // (surrounding items brace the column and prevent tipping).
+                            const sideTol = 0.05; // 5 cm — counts as "touching"
+                            let bracedSides = 0;
+                            for (const ex of bin.items) {
+                                // Neighbour must overlap in height with the proposed item
+                                if (ex.y + ex.height < stackHeight - 0.001)
+                                    continue;
+                                if (ex.y > stackHeight + item.height + 0.001)
+                                    continue;
+                                const zOvN = !(
+                                    posZ + item.depth <= ex.z ||
+                                    posZ >= ex.z + ex.depth
+                                );
+                                const xOvN = !(
+                                    posX + item.width <= ex.x ||
+                                    posX >= ex.x + ex.width
+                                );
+                                if (
+                                    Math.abs(posX - (ex.x + ex.width)) <
+                                        sideTol &&
+                                    zOvN
+                                )
+                                    bracedSides++; // left side
+                                if (
+                                    Math.abs(posX + item.width - ex.x) <
+                                        sideTol &&
+                                    zOvN
+                                )
+                                    bracedSides++; // right side
+                                if (
+                                    Math.abs(posZ - (ex.z + ex.depth)) <
+                                        sideTol &&
+                                    xOvN
+                                )
+                                    bracedSides++; // front side
+                                if (
+                                    Math.abs(posZ + item.depth - ex.z) <
+                                        sideTol &&
+                                    xOvN
+                                )
+                                    bracedSides++; // back side
+                            }
+                            if (bracedSides < 2) continue; // not braced enough — reject 3rd layer
+                        }
+                    }
+                    // Support area check: at least 50% of the item's footprint must be
                     // covered by items whose top surface IS the stack height level.
-                    // Prevents large items from being placed over a small base.
+                    // Also stored on the candidate so the sort can prefer tighter fits
+                    // (least gap/overhang between the item and its base).
+                    let supportedArea = 0;
                     if (stackHeight > 0.001) {
                         const itemArea = item.width * item.depth;
-                        let supportedArea = 0;
                         for (const ex of bin.items) {
                             if (
                                 Math.abs(
@@ -463,14 +682,19 @@ class SimpleBinPacker {
                                 Math.max(posZ, ex.z);
                             if (ox > 0 && oz > 0) supportedArea += ox * oz;
                         }
-                        if (supportedArea < itemArea * 0.75) continue;
+                        if (supportedArea < itemArea * 0.5) continue;
                     }
                     // 0.001m (1mm) tolerance absorbs floating-point accumulation from
                     // repeated gap additions — prevents the last item in a tall stack
                     // from being wrongly rejected and landing on the floor instead.
                     if (stackHeight + item.height > bin.height + 0.001)
                         continue;
-                    const pos = { x: posX, y: stackHeight, z: posZ };
+                    const pos = {
+                        x: posX,
+                        y: stackHeight,
+                        z: posZ,
+                        supportedArea,
+                    };
                     if (!this.collidesWith(item, pos, bin))
                         candidates.push(pos);
                 }
@@ -506,9 +730,16 @@ class SimpleBinPacker {
             const aScore = isFlat ? 1 - aFloor : aFloor;
             const bScore = isFlat ? 1 - bFloor : bFloor;
             if (aScore !== bScore) return aScore - bScore;
-            // Within the same tier (both floor or both stacked), prefer the LOWEST
-            // existing stack height — spreads items across multiple columns instead
-            // of piling everything into a single tower.
+            // For stacked positions: prefer the position with the MOST support area
+            // (least overhang/gap between item footprint and the items below it).
+            // Only compare support area when both candidates are stacked.
+            if (aFloor === 1 && bFloor === 1) {
+                const areaDiff =
+                    (b.supportedArea || 0) - (a.supportedArea || 0);
+                if (Math.abs(areaDiff) > 0.001) return areaDiff;
+            }
+            // Within the same tier: prefer the LOWEST existing stack height —
+            // spreads items across multiple columns instead of piling into one tower.
             if (Math.abs(a.y - b.y) > 0.001) return a.y - b.y;
             if (Math.abs(a.z - b.z) > 0.001) return a.z - b.z;
             return zoneConstraint === 0 ? b.x - a.x : a.x - b.x;
@@ -1485,13 +1716,13 @@ class CargoVisualizer {
         // Add hatches
         hatches.forEach((hatch) => this.addHatch(hatch));
 
-        // Normalize all cargo items: ensure booking_ref is a string
+        // Normalize all cargo items: always clear hatch_id (fresh pack every load),
+        // and ensure booking_ref is a string for grouping.
         cargo.forEach((item) => {
-            if (item.booking_ref) {
-                item.booking_ref = String(item.booking_ref);
-            } else {
-                item.booking_ref = "unassigned";
-            }
+            item.hatch_id = null; // force free-assignment every load
+            item.booking_ref = item.booking_ref
+                ? String(item.booking_ref)
+                : "unassigned";
         });
 
         // Separate items by booking reference
@@ -1584,6 +1815,7 @@ class CargoVisualizer {
                 receipt_id: c.receipt_id,
                 is_breakable: c.is_breakable === true || c.is_breakable === 1,
                 floor_only: c.floor_only === true || c.floor_only === 1,
+                is_stackable: c.is_stackable === false ? false : true,
                 hatch_id: null, // free to go to any hatch
             }));
 
@@ -1701,6 +1933,7 @@ class CargoVisualizer {
                         is_breakable:
                             c.is_breakable === true || c.is_breakable === 1,
                         floor_only: c.floor_only === true || c.floor_only === 1,
+                        is_stackable: c.is_stackable === false ? false : true,
                         hatch_id: hatch.id,
                     });
                 });
