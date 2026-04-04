@@ -268,23 +268,43 @@ class SimpleBinPacker {
         const minDim = Math.min(...dims);
         const aspectRatio = maxDim / minDim;
 
-        // Only rotate if it's significantly "tree-like" (aspect ratio > 1.3)
-        // AND height is the problematic dimension
-        if (aspectRatio > 1.3 && item.height === maxDim) {
-            // Rotate so height becomes depth (preferred for hatch length)
-            const rotated = {
-                ...item,
-                width: item.width, // Keep width same
-                height: item.depth, // New height = old depth (smallest)
-                depth: item.height, // New depth = old height (largest, now horizontal)
-                rotated: true,
-                originalDims: `${item.width}×${item.height}×${item.depth}`,
-                rotatedDims: `${item.width}×${item.depth}×${item.height}`,
-            };
-            console.log(
-                `      🔄 ROTATING: "${item.description}" (${item.width}×${item.height}×${item.depth}) → (${rotated.width}×${rotated.height}×${rotated.depth}) to lay flat`,
-            );
-            return rotated;
+        // Only rotate if aspect ratio is significant (> 1.3)
+        if (aspectRatio > 1.3) {
+            if (item.height === maxDim) {
+                // Tall/upright item — rotate so height becomes depth (lay it flat)
+                const rotated = {
+                    ...item,
+                    width: item.width,
+                    height: item.depth,
+                    depth: item.height,
+                    rotated: true,
+                    originalDims: `${item.width}×${item.height}×${item.depth}`,
+                    rotatedDims: `${item.width}×${item.depth}×${item.height}`,
+                };
+                console.log(
+                    `      🔄 ROTATING (tall→flat): "${item.description}" (${item.width}×${item.height}×${item.depth}) → (${rotated.width}×${rotated.height}×${rotated.depth})`,
+                );
+                return rotated;
+            }
+
+            if (item.width === maxDim) {
+                // Wide item (e.g. flat sheets) — swap width↔depth so the long dimension
+                // runs along the hatch's Z axis instead of spanning across its X axis.
+                // This prevents the item from exceeding the half-zone boundary.
+                const rotated = {
+                    ...item,
+                    width: item.depth,
+                    height: item.height,
+                    depth: item.width,
+                    rotated: true,
+                    originalDims: `${item.width}×${item.height}×${item.depth}`,
+                    rotatedDims: `${item.depth}×${item.height}×${item.width}`,
+                };
+                console.log(
+                    `      🔄 ROTATING (wide→long): "${item.description}" (${item.width}×${item.height}×${item.depth}) → (${rotated.width}×${rotated.height}×${rotated.depth})`,
+                );
+                return rotated;
+            }
         }
 
         return item; // No rotation needed
@@ -402,14 +422,54 @@ class SimpleBinPacker {
                     }
                     // floor_only items cannot have cargo stacked on top of them
                     if (stackHeight > 0.001 && stackedOnFloorOnly) continue;
-                    // Breakable items (TV, fridge, eggs…) — nothing may be placed on top
-                    if (stackHeight > 0.001 && stackedOnBreakable) continue;
+                    // Breakable items (TV, fridge, eggs…) — nothing may be placed on top,
+                    // EXCEPT another breakable flat sheet (e.g. glass on glass).
+                    // Glass sheets may only stack up to 0.5 m total to prevent towering.
+                    if (stackHeight > 0.001 && stackedOnBreakable) {
+                        const incomingIsBreakableFlat =
+                            item.is_breakable &&
+                            !item.floor_only &&
+                            item.height / Math.min(item.width, item.depth) <
+                                0.15;
+                        if (!incomingIsBreakableFlat) continue;
+                        // at least one sheet must be present as a base
+                        if (stackHeight < item.height - 0.001) continue;
+                        // cap: glass stacks must not exceed 0.5 m total height
+                        if (stackHeight >= 0.5) continue;
+                    }
                     // floor_only items must sit on the actual deck — cannot be elevated onto other cargo
                     if (item.floor_only && stackHeight > 0.001) continue;
                     // Heavier items cannot be stacked on top of lighter ones
                     if (stackHeight > 0.001 && item.weight > stackTopWeight)
                         continue;
-                    if (stackHeight + item.height > bin.height) continue;
+                    // Support area check: at least 75% of the item's footprint must be
+                    // covered by items whose top surface IS the stack height level.
+                    // Prevents large items from being placed over a small base.
+                    if (stackHeight > 0.001) {
+                        const itemArea = item.width * item.depth;
+                        let supportedArea = 0;
+                        for (const ex of bin.items) {
+                            if (
+                                Math.abs(
+                                    ex.y + ex.height + this.gap - stackHeight,
+                                ) > 0.002
+                            )
+                                continue;
+                            const ox =
+                                Math.min(posX + item.width, ex.x + ex.width) -
+                                Math.max(posX, ex.x);
+                            const oz =
+                                Math.min(posZ + item.depth, ex.z + ex.depth) -
+                                Math.max(posZ, ex.z);
+                            if (ox > 0 && oz > 0) supportedArea += ox * oz;
+                        }
+                        if (supportedArea < itemArea * 0.75) continue;
+                    }
+                    // 0.001m (1mm) tolerance absorbs floating-point accumulation from
+                    // repeated gap additions — prevents the last item in a tall stack
+                    // from being wrongly rejected and landing on the floor instead.
+                    if (stackHeight + item.height > bin.height + 0.001)
+                        continue;
                     const pos = { x: posX, y: stackHeight, z: posZ };
                     if (!this.collidesWith(item, pos, bin))
                         candidates.push(pos);
@@ -431,13 +491,25 @@ class SimpleBinPacker {
             return null;
         }
 
-        // Prefer floor (y===0) first, fill floor space before stacking.
-        // LEFT zone (0): fill right→left (from zone centre outward toward left catwalk).
-        // RIGHT zone (1) or FULL: fill left→right (from zone centre outward toward right catwalk).
+        // Flat stackable items (height < 15% of smallest footprint dimension) prefer
+        // stacking first for efficiency — e.g. corrugated sheets, boards, glass sheets.
+        // Breakable flat items (glass) are included: they stack like sheets.
+        // All other items (engines, boxes, barrels) prefer floor first (real-world behavior).
+        const isFlat =
+            !item.floor_only &&
+            item.height / Math.min(item.width, item.depth) < 0.15;
+
         candidates.sort((a, b) => {
             const aFloor = a.y < 0.001 ? 0 : 1;
             const bFloor = b.y < 0.001 ? 0 : 1;
-            if (aFloor !== bFloor) return aFloor - bFloor; // floor first
+            // flat items: stacked preferred; all others: floor preferred
+            const aScore = isFlat ? 1 - aFloor : aFloor;
+            const bScore = isFlat ? 1 - bFloor : bFloor;
+            if (aScore !== bScore) return aScore - bScore;
+            // Within the same tier (both floor or both stacked), prefer the LOWEST
+            // existing stack height — spreads items across multiple columns instead
+            // of piling everything into a single tower.
+            if (Math.abs(a.y - b.y) > 0.001) return a.y - b.y;
             if (Math.abs(a.z - b.z) > 0.001) return a.z - b.z;
             return zoneConstraint === 0 ? b.x - a.x : a.x - b.x;
         });
@@ -641,7 +713,7 @@ class CargoVisualizer {
         this.expectedWidth = 0; // Store expected width to prevent scroll-induced resizing
         this.expectedHeight = 0; // Store expected height to prevent scroll-induced resizing
         this.isVisible = true; // Track if canvas is visible in viewport
-        this.cargoGap = 0; // No subtraction - items render at actual size, real spacing from packing gap
+        this.cargoGap = 0.001; // 1mm shrink per side so stacked items have visible separation and edges show clearly
 
         this.initScene();
     }
