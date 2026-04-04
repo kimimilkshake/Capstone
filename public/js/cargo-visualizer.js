@@ -76,11 +76,21 @@ class SimpleBinPacker {
             const bFloor = bookingGroups[b].some((i) => i.floor_only);
             if (aFloor !== bFloor) return aFloor ? -1 : 1;
 
-            const wA = bookingGroups[a].reduce((s, i) => s + (i.weight || 0), 0);
-            const wB = bookingGroups[b].reduce((s, i) => s + (i.weight || 0), 0);
+            const wA = bookingGroups[a].reduce(
+                (s, i) => s + (i.weight || 0),
+                0,
+            );
+            const wB = bookingGroups[b].reduce(
+                (s, i) => s + (i.weight || 0),
+                0,
+            );
             if (Math.abs(wA - wB) > 0.001) return wB - wA;
-            const maxA = Math.max(...bookingGroups[a].map((i) => i.weight || 0));
-            const maxB = Math.max(...bookingGroups[b].map((i) => i.weight || 0));
+            const maxA = Math.max(
+                ...bookingGroups[a].map((i) => i.weight || 0),
+            );
+            const maxB = Math.max(
+                ...bookingGroups[b].map((i) => i.weight || 0),
+            );
             return maxB - maxA;
         });
 
@@ -589,7 +599,11 @@ class SimpleBinPacker {
                     const isIncomingFlat =
                         !item.floor_only &&
                         item.height / Math.min(item.width, item.depth) < 0.15;
-                    if (stackHeight > 0.001 && !isIncomingFlat && item.is_stackable !== true) {
+                    if (
+                        stackHeight > 0.001 &&
+                        !isIncomingFlat &&
+                        item.is_stackable !== true
+                    ) {
                         // Check if the base item is itself elevated (would make layer 3+)
                         let baseIsElevated = false;
                         for (const ex of bin.items) {

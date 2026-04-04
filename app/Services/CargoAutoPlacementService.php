@@ -348,9 +348,9 @@ class CargoAutoPlacementService
                     if (!$cb->length || !$cb->width)
                         continue;
                     $unit = $cb->measurementUnit?->measurement_unit_abbreviation ?? 'cm';
-                    $wM   = self::convertToMeters($cb->width, $unit);
-                    $dM   = self::convertToMeters($cb->length, $unit);
-                    $qty  = max(1, (int) ($cb->quantity ?? 1));
+                    $wM = self::convertToMeters($cb->width, $unit);
+                    $dM = self::convertToMeters($cb->length, $unit);
+                    $qty = max(1, (int) ($cb->quantity ?? 1));
                     $existingFloorArea += $wM * $dM * $qty;
                 }
 
@@ -358,28 +358,29 @@ class CargoAutoPlacementService
                 $totalPackableFloorArea = 0.0;
                 foreach ($hatches as $hatch) {
                     $totalPackableFloorArea +=
-                        max(0, (float) $hatch->hatch_width  - 2 * $cw)
+                        max(0, (float) $hatch->hatch_width - 2 * $cw)
                         * max(0, (float) $hatch->hatch_length - 2 * $cw);
                 }
 
                 foreach ($floorOnlyItems as $item) {
-                    if ($item['w'] <= 0 || $item['d'] <= 0) continue;
+                    if ($item['w'] <= 0 || $item['d'] <= 0)
+                        continue;
 
                     $itemFootprint = $item['w'] * $item['d'];
-                    $neededArea    = $itemFootprint * $item['q'];
+                    $neededArea = $itemFootprint * $item['q'];
 
                     // ── Check 1: zone-slot grid capacity ─────────────────
                     $totalSlots = 0;
                     foreach ($hatches as $hatch) {
-                        $packW = max(0, (float) $hatch->hatch_width  - 2 * $cw);
+                        $packW = max(0, (float) $hatch->hatch_width - 2 * $cw);
                         $packL = max(0, (float) $hatch->hatch_length - 2 * $cw);
                         $zoneW = $packW / 2;
-                        $cols  = $zoneW > 0 ? (int) floor($zoneW / $item['w']) : 0;
-                        $rows  = $packL > 0 ? (int) floor($packL  / $item['d']) : 0;
+                        $cols = $zoneW > 0 ? (int) floor($zoneW / $item['w']) : 0;
+                        $rows = $packL > 0 ? (int) floor($packL / $item['d']) : 0;
                         $totalSlots += $cols * $rows * 2;
                     }
                     // Existing items occupy slots — use ceil to stay conservative
-                    $usedSlots      = $itemFootprint > 0 ? (int) ceil($existingFloorArea / $itemFootprint) : 0;
+                    $usedSlots = $itemFootprint > 0 ? (int) ceil($existingFloorArea / $itemFootprint) : 0;
                     $availableSlots = max(0, $totalSlots - $usedSlots);
 
                     if ($item['q'] > $availableSlots) {

@@ -43,5 +43,5 @@ $hatches = DB::select("SELECT hatch_id, hatch_label, hatch_width, hatch_length, 
 foreach ($hatches as $h) {
     $packW = max(0, $h->hatch_width - 1.2);
     $packL = max(0, $h->hatch_length - 1.2);
-    echo "Hatch #{$h->hatch_id} [{$h->hatch_label}] {$h->hatch_width}x{$h->hatch_length}x{$h->hatch_height}m | cap={$h->hatch_capacity_per_hold}t | packable floor=" . round($packW*$packL,2) . "m2\n";
+    echo "Hatch #{$h->hatch_id} [{$h->hatch_label}] {$h->hatch_width}x{$h->hatch_length}x{$h->hatch_height}m | cap={$h->hatch_capacity_per_hold}t | packable floor=" . round($packW * $packL, 2) . "m2\n";
 }

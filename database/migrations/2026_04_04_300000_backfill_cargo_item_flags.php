@@ -29,7 +29,7 @@ return new class extends Migration {
     {
         // Reset all three flags to their column defaults
         DB::table('cargo_item')->update([
-            'floor_only'   => false,
+            'floor_only' => false,
             'is_stackable' => true,
             'is_breakable' => false,
         ]);

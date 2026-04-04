@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 $b = DB::table('cargo_booking')->where('booking_ref_no', 'CBBK26001')->first();
 if ($b) {
     echo 'Found in cargo_booking:' . PHP_EOL;
-    print_r((array)$b);
+    print_r((array) $b);
 } else {
     echo 'Not found in cargo_booking. All cargo bookings:' . PHP_EOL;
     $all = DB::table('cargo_booking')

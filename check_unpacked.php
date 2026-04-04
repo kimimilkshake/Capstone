@@ -57,7 +57,7 @@ foreach ($placements as $p) {
 }
 
 echo "\n=== HATCH DIMENSIONS ===\n";
-$hatches = DB::table('vessel_hatch')->select('hatch_id','hatch_label','hatch_width','hatch_length','hatch_height','hatch_capacity_per_hold')->get();
+$hatches = DB::table('vessel_hatch')->select('hatch_id', 'hatch_label', 'hatch_width', 'hatch_length', 'hatch_height', 'hatch_capacity_per_hold')->get();
 foreach ($hatches as $h) {
     $packW = max(0, $h->hatch_width - 1.2);
     $packL = max(0, $h->hatch_length - 1.2);

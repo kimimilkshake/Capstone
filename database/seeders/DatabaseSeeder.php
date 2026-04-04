@@ -557,12 +557,20 @@ class DatabaseSeeder extends Seeder
         // Backfill floor_only, is_stackable, is_breakable flags after items are seeded.
         // floor_only + is_stackable=false: engines, motorcycles, cadavers, tractors, etc.
         $floorOnlyKeywords = [
-            'Engine %', 'Engine:%', 'Engine block%',
-            'Motorcycle%', 'Hand tractor%', 'Cadaver%',
-            'Dog rottweiler%', 'Transformer%',
-            'Generator (denyo)%', 'Generator (250K)%',
-            'Hollow block machine%', 'Multicab cargo box%',
-            'Safety Vault%', 'Stainless tank%',
+            'Engine %',
+            'Engine:%',
+            'Engine block%',
+            'Motorcycle%',
+            'Hand tractor%',
+            'Cadaver%',
+            'Dog rottweiler%',
+            'Transformer%',
+            'Generator (denyo)%',
+            'Generator (250K)%',
+            'Hollow block machine%',
+            'Multicab cargo box%',
+            'Safety Vault%',
+            'Stainless tank%',
         ];
         foreach ($floorOnlyKeywords as $pattern) {
             DB::table('cargo_item')
@@ -572,8 +580,11 @@ class DatabaseSeeder extends Seeder
 
         // is_breakable = true: glass, TVs, fridges, monitors.
         $breakableKeywords = [
-            'Glass sheets%', 'Television%', 'Freezer%',
-            'Refrigerator%', 'CPU/LCD%',
+            'Glass sheets%',
+            'Television%',
+            'Freezer%',
+            'Refrigerator%',
+            'CPU/LCD%',
         ];
         foreach ($breakableKeywords as $pattern) {
             DB::table('cargo_item')
