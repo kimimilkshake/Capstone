@@ -133,6 +133,10 @@ Route::get('/paymongo/failed', function (Request $request) {
     return view('payments.failed', ['bookingRef' => $bookingRef]);
 })->name('paymongo.failed');
 
+// Cargo payment page (accessed via payment link in email)
+Route::get('/paymongo/payment/{booking_ref_no}', [PaymentController::class, 'showCargoPayment'])->name('paymongo.cargo_payment');
+Route::post('/paymongo/payment/{booking_ref_no}/process', [PaymentController::class, 'processCargoPayment'])->name('paymongo.process_cargo_payment');
+
 Route::get('/passenger/schedules', [ScheduleController::class, 'index'])->name('schedules');
 
 //About Us Page
@@ -483,3 +487,6 @@ Route::get('/files/{path}', [\App\Http\Controllers\StorageFileController::class,
 
 // QR Boarding API (moved to QrScannerController)
 Route::post('/qr/board-passenger', [QrScannerController::class, 'boardPassenger'])->name('qr.board_passenger');
+
+// QR Cargo Payment Verification API
+Route::post('/qr/verify-cargo-payment', [QrScannerController::class, 'verifyCargoPayment'])->name('qr.verify_cargo_payment');

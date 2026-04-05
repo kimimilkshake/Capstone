@@ -494,27 +494,69 @@ class StaffCargoController extends Controller
         $booking->booking_status = 'Confirmed';
         $booking->save();
 
-        // Calculate total cost
+        // Calculate total cost (matching the blade.php calculation logic)
         $staffId = auth()->guard('staff')->user()->staff_id ?? (auth()->guard('admin')->user()->admin_id ?? null);
         $totalCost = 0;
+
+        // Helper function to convert to meters (matches blade.php toMeters)
+        $toMeters = function($value, $unit) {
+            $unit = strtolower($unit);
+            return match ($unit) {
+                'm'   => $value,
+                'cm'  => $value / 100,
+                'in'  => $value * 0.0254,
+                'ft'  => $value * 0.3048,
+                default => $value
+            };
+        };
+
+        // Helper function to compute CBM (matches blade.php computeCBM)
+        $computeCBM = function($cargo) use ($toMeters) {
+            $unit = strtolower($cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm');
+            $length = $toMeters((float)$cargo->length, $unit);
+            $width  = $toMeters((float)$cargo->width, $unit);
+            $height = $toMeters((float)$cargo->height, $unit);
+            return $length * $width * $height;
+        };
+
+        // Helper function to compute subtotal (matches blade.php computeSubtotal)
+        $computeSubtotal = function($cargo) use ($computeCBM) {
+            $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
+            $qty = (float) ($cargo->quantity ?? 0);
+            $measureRequired = strtolower($cargo->cargoItem->cargo_item_measure_required ?? 'no');
+
+            if ($measureRequired === 'yes') {
+                return $freight * $qty;
+            }
+
+            $cbm = $computeCBM($cargo);
+            return $freight * $cbm * $qty;
+        };
+
         foreach ($booking->cargoBookings as $cargo) {
-            $freight = $cargo->cargoItem->cargo_item_freight;
-            $cbm = $cargo->cbm ?? (($cargo->length * $cargo->width * $cargo->height) / 1000000);
-            $subtotal = $freight * $cbm * $cargo->quantity;
+            $subtotal = $computeSubtotal($cargo);
             $totalCost += $subtotal;
 
             $cargo->approved_by_staff_id = $staffId;
             $cargo->save();
         }
 
-        // Create payment record with mode='Cash' and status='Completed'
+        // Add stamp duty (matches blade.php calculation)
+        $stamp = 20.00;
+        $totalCost += $stamp;
+
+        // Create payment record with status='Pending' (not 'Completed')
         $payment = Payment::create([
             'booking_ref_no' => $booking->booking_ref_no,
             'mode_of_payment' => 'Cash',
-            'payment_status' => 'Completed',
+            'payment_status' => 'Pending',
             'total_amount' => $totalCost,
             'payment_date' => now(),
         ]);
+
+        // Update the booking with the payment_id reference
+        $booking->payment_id = $payment->payment_id;
+        $booking->save();
 
         // Move cargo items to cargo_receipt and create bill of lading
         $cargoReceiptIds = [];
@@ -586,18 +628,22 @@ class StaffCargoController extends Controller
             'notification_created' => now(),
         ]);
 
-        // Send email with payment details
+        // Generate payment URL for the sender
+        $paymentUrl = url('/paymongo/payment/' . $booking->booking_ref_no);
+
+        // Send email with payment link only (no attachments)
         Mail::to($booking->sender->sender_email)
             ->send(new \App\Mail\CargoBookingApproved(
                 $booking,
                 $booking->sender,
                 $booking->consignee,
                 $booking->cargoBookings,
-                $payment
+                $payment,
+                $paymentUrl
             ));
 
         return redirect()->route('cargo.bookings.pending')
-            ->with('success', 'Booking approved! Cargo can fit in available hatches and has been added to auto-placement visualization.');
+            ->with('success', 'Booking approved! Cargo can fit in available hatches and has been added to auto-placement visualization. Payment link email sent to sender.');
     }
 
     /**

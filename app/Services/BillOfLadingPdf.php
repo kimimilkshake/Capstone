@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Booking;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 
@@ -21,6 +22,24 @@ class BillOfLadingPdf
     public static function generate(Booking $booking): ?string
     {
         try {
+            // Check if booking has required relationships
+            if (!$booking->exists) {
+                Log::error('BillOfLadingPdf: Invalid booking object');
+                return null;
+            }
+
+            // Ensure relationships are loaded
+            $booking->load([
+                'sender',
+                'consignee',
+                'voyage.routePort',
+                'voyage.vessel',
+                'cargoBookings.cargoItem',
+                'cargoBookings.cargoClassification',
+                'cargoBookings.measurementUnit',
+                'cargoBookings.approvedByStaff'
+            ]);
+
             // Use a PDF-specific Blade template with print-friendly styles for dompdf.
             $html = view('authorized.staff.bill_of_lading_pdf', ['booking' => $booking])->render();
 
@@ -34,9 +53,16 @@ class BillOfLadingPdf
 
             $pdf->loadHTML($html)->setPaper('A4', 'portrait');
 
-            return $pdf->output();
+            $output = $pdf->output();
+            
+            Log::info('BillOfLadingPdf: PDF generated successfully for booking ' . $booking->booking_ref_no);
+            
+            return $output;
         } catch (Throwable $e) {
-            report($e);
+            Log::error('BillOfLadingPdf: PDF generation failed for booking ' . ($booking->booking_ref_no ?? 'unknown'), [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return null;
         }
     }

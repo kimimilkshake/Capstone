@@ -1,317 +1,453 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Bill of Lading - {{ $booking->booking_ref_no }}</title>
 
-<style>
-@page { margin:25px; }
-body{
-    font-family: DejaVu Sans, Arial, sans-serif;
-    font-size:11px;
-    color:#111;
-}
-table{
-    width:100%;
-    border-collapse:collapse;
-}
-td,th{
-    padding:6px;
-}
-.border{
-    border:1px solid #111;
-}
-.header-table td{
-    border:none;
-}
-.center{
-    text-align:center;
-}
-.right{
-    text-align:right;
-}
-.section-title{
-    font-weight:bold;
-    padding:6px 0;
-    background:#e8eef7;
-    border:1px solid #111;
-    padding-left:6px;
-}
-.booking-info td{
-    vertical-align:top;
-}
-.cargo-header th{
-    border:1px solid #111;
-    background:#e8eef7;
-}
-.cargo-row td{
-    border:1px solid #111;
-}
-.signature{
-    text-align:center;
-    padding-top:40px;
-}
-.signature-line{
-    border-top:1px solid #111;
-    width:200px;
-    margin:auto;
-}
-.footer-note{
-    margin-top:25px;
-    text-align:center;
-    font-size:10px;
-}
-.page-number{
-    text-align:right;
-    font-size:9px;
-    margin-top:10px;
-}
-.charges-table td{
-    border:1px solid #fff;
-}
-</style>
+<head>
+    <meta charset="UTF-8">
+    <title>Freight Receipt for {{ $booking->booking_code }}</title>
+    <style>
+        @page {
+            margin: 18px;
+            size: A4;
+        }
+
+        body {
+            font-family: DejaVu Sans, Arial, sans-serif;
+            font-size: 10px;
+            color: #1a1a2e;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .document-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px 35px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ddd;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .company-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #fff;
+            letter-spacing: 1.5px;
+        }
+
+        .company-sub {
+            font-size: 9.5px;
+            color: rgba(255, 255, 255, 0.85);
+            margin-top: 5px;
+        }
+    </style>
 </head>
 
 <body>
+    <div class="document-container">
 
-@php
-$stamp = 20.00;
-$freight = 0.0;
-$totalPieces = 0;
-$totalWeight = 0.0;
+    @php
+        $printedBy =
+            optional(auth()->guard('staff')->user())->staff_name ??
+            (optional(auth()->guard('admin')->user())->admin_name ?? 'System');
 
-$cargoRows = [];
+        // Get cargo bookings
+        $cargoBookings = $booking->cargoBookings;
 
-foreach ($booking->cargoBookings as $cargo) {
+        // Calculate totals
+        $totalAmount = 0;
+        $totalCBM = 0;
+        $totalWeight = 0;
 
-    $qty = (float)($cargo->quantity ?? 0);
-    $weight = (float)($cargo->weight ?? 0);
-    $freightRate = (float)($cargo->cargoItem->cargo_item_freight ?? 0);
-    $measureRequired = strtolower($cargo->cargoItem->cargo_item_measure_required ?? 'no');
-    $cbm = (float)($cargo->cbm ?? 0);
+        // Unit conversion helper
+        function toMeters($value, $unit) {
+            $unit = strtolower($unit);
+            return match ($unit) {
+                'm'   => $value,
+                'cm'  => $value / 100,
+                'in'  => $value * 0.0254,
+                'ft'  => $value * 0.3048,
+                default => $value
+            };
+        }
 
-    // fallback CBM if not stored
-    if (!$cbm) {
-        $cbm = ($cargo->length * $cargo->width * $cargo->height) / 1000000;
-    }
+        // CBM calculation
+        function computeCBM($cargo) {
+            $unit = $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm';
+            $length = toMeters((float)$cargo->length, $unit);
+            $width  = toMeters((float)$cargo->width, $unit);
+            $height = toMeters((float)$cargo->height, $unit);
+            return $length * $width * $height;
+        }
 
-    // calculate subtotal based on measure_required
-    if ($measureRequired === 'yes') {
-        $lineSubtotal = $freightRate * $qty;
-    } else {
-        $lineSubtotal = $freightRate * $cbm * $qty;
-    }
+        // Subtotal calculation
+        function computeSubtotal($cargo) {
+            $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
+            $qty = (float) ($cargo->quantity ?? 0);
+            $measureRequired = strtolower($cargo->cargoItem->cargo_item_measure_required ?? 'no');
 
-    $freight += $lineSubtotal;
-    $totalPieces += $qty;
-    $totalWeight += $weight * $qty;
+            if ($measureRequired === 'yes') {
+                return $freight * $qty;
+            }
+            return $freight * computeCBM($cargo) * $qty;
+        }
 
-    $cargoRows[] = [
-        'cargo' => $cargo,
-        'subtotal' => $lineSubtotal
-    ];
-}
+        $cargoData = [];
+        foreach ($cargoBookings as $c) {
+            $cbm = computeCBM($c);
+            $subtotal = computeSubtotal($c);
+            $totalAmount += $subtotal;
+            $totalCBM += $cbm * $c->quantity;
+            $totalWeight += $c->weight * $c->quantity;
+            $cargoData[] = [
+                'cargo' => $c,
+                'cbm' => $cbm,
+                'subtotal' => $subtotal
+            ];
+        }
 
-$total = $freight + $stamp;
+        $stamp = 20.00;
+        $grandTotal = $totalAmount + $stamp;
 
-$printedBy = optional(auth()->guard('staff')->user())->staff_name
-    ?? optional(auth()->guard('admin')->user())->admin_name
-    ?? 'System';
-@endphp
+        $payment = \App\Models\Payment::where('booking_ref_no', $booking->booking_ref_no)->first();
+        $voyage = $booking->voyage;
+        $route = $voyage ? $voyage->routePort : null;
+        $vessel = $voyage ? $voyage->vessel : null;
+        $sender = $booking->sender;
+        $consignee = $booking->consignee;
 
-<!-- HEADER -->
-<table class="header-table">
-<tr>
-<td class="center">
-<strong style="font-size:16px">
-LAPULAPU SHIPPING LINES CORPORATION
-</strong>
-<br>
-872-876 M.J CUENCO AVENUE, CEBU CITY
-<br>
-TEL NO. 232-8864; 232-8865
-<br>
-TIN: 200-308-788-000-VAT
-</td>
-</tr>
-</table>
+        $processedBy = optional(optional($cargoBookings->first())->approvedByStaff)->staff_name;
+        $processedLabel = 'N/A';
+        if ($processedBy) {
+            if ($booking->booking_status === 'Confirmed') {
+                $processedLabel = 'Approved by ' . $processedBy;
+            } elseif ($booking->booking_status === 'Canceled') {
+                $processedLabel = 'Canceled by ' . $processedBy;
+            } else {
+                $processedLabel = $processedBy;
+            }
+        }
 
-<br>
+        $bookingYear = $booking->created_at ? $booking->created_at->format('y') : date('y');
+        $formattedBookingRef = 'LSLCBK' . $bookingYear . str_pad($booking->booking_ref_no, 6, '0', STR_PAD_LEFT);
+    @endphp
 
-<!-- BOOKING INFORMATION -->
-<table class="border booking-info">
-<tr>
-<td style="width:50%" class="border">
-<strong>Booking Information:</strong><br><br>
-Voyage No:
-{{ $booking->voyage->voyage_code ?? 'N/A' }}
-<br>
-Sailing Date:
-{{ $booking->voyage ? \Carbon\Carbon::parse($booking->voyage->voyage_departure_date)->format('F d, Y') : 'N/A' }}
-<br>
-Vessel:
-{{ $booking->voyage->vessel->vessel_name ?? 'N/A' }}
-</td>
+    {{-- ================================================================ --}}
+    {{-- ====================== MAIN TICKET AREA ======================== --}}
+    {{-- ================================================================ --}}
 
-<td class="border">
-<br>
-Booking Reference No:
-{{ $booking->booking_code ?? $booking->booking_ref_no}}
-<br>
-Confirmed On:
-{{ now()->format('F d, Y') }}
-<br>
-Confirmed By:
-{{ $printedBy }}
-</td>
-</tr>
-</table>
+    {{-- ---- HEADER ---- --}}
+    <table width="100%" cellpadding="0" cellspacing="0"
+        style="margin-bottom:18px; padding:26px 16px; border-radius:4px; background:#1a3a6b;">
+        <tr>
+            {{-- Logo --}}
+            <td style="width:160px; vertical-align:middle; text-align:center;">
+                <img src="{{ asset('images/logo_wo_name.png') }}" width="90" alt="Logo" />
+            </td>
+            {{-- Company Info --}}
+            <td style="vertical-align:middle; text-align:center; padding:6px 18px;">
+                <div class="company-name">LAPULAPU SHIPPING LINES CORPORATION</div>
+                <div class="company-sub">872-876 M.J CUENCO AVENUE, CEBU CITY, PHILIPPINES</div>
+                <div class="company-sub">Tel. No. 232-8864 / 232-8865 &nbsp;|&nbsp; TIN: 200-308-788-000-VAT</div>
+            </td>
+            {{-- Spacer to balance logo width --}}
+            <td style="width:160px;"></td>
 
-<br>
+        </tr>
+    </table>
 
-<!-- SENDER INFORMATION -->
-<div class="section-title">Sender Information</div>
-<table>
-<tr>
-<td>Name: {{ $booking->sender->sender_name ?? 'N/A' }}</td>
-</tr>
-<tr>
-<td>Contact No: {{ $booking->sender->sender_contactno ?? 'N/A' }}</td>
-</tr>
-</table>
+    {{-- ---- TITLE BANNER ---- --}}
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+        <tr>
+            <td
+                style="background:#fff; color:#1a3a6b; text-align:center; font-size:17px; font-weight:bold; padding:7px 0; letter-spacing:3px; word-spacing:4px;">
+                &#10004;&nbsp; CARGO &nbsp;&mdash;&nbsp; FREIGHT RECEIPT
+            </td>
+        </tr>
+    </table>
 
-<br>
+    {{-- ---- BOOKING REF + STATUS ---- --}}
+    <table width="100%" cellpadding="0" cellspacing="0"
+        style="background:#f0f4fa; padding:14px 18px; margin-bottom:18px;">
+        <tr>
+            <td style="font-size:10px; color:#555; vertical-align:top;">
+                BOOKING REFERENCE NO.
+                <br><strong style="font-size:18px; color:#1a3a6b;">{{ $formattedBookingRef }}</strong>
+            </td>
+            <td style="text-align:right; font-size:10px; color:#555; vertical-align:top;">
+                STATUS
+                <br><strong style="font-size:18px; color:#1a3a6b;">{{ $booking->booking_status ?? 'N/A' }}</strong>
+            </td>
+        </tr>
+    </table>
 
-<!-- CONSIGNEE INFORMATION -->
-<div class="section-title">Consignee Information</div>
-<table>
-<tr>
-<td>Name: {{ $booking->consignee->consignee_name ?? 'N/A' }}</td>
-</tr>
-<tr>
-<td>Contact No: {{ $booking->consignee->consignee_contactno ?? 'N/A' }}</td>
-</tr>
-</table>
+    {{-- ---- SECTION LABEL ---- --}}
+    <div
+        style="font-weight:bold; font-size:13px; color:#fff; background:#1a3a6b; padding:10px 12px; margin-bottom:12px; letter-spacing:1px;">
+        FREIGHT & CARGO DETAILS
+    </div>
 
-<br>
+    {{-- ---- SENDER + CONSIGNEE + VOYAGE DETAILS ---- --}}
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px; border:1px solid #dde6f4;">
+        <tr>
+            {{-- LEFT: Sender + Consignee --}}
+            <td width="48%" style="vertical-align:top; padding:16px 18px; border-right:1px dashed #b0c4de;">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                    {{-- Sender --}}
+                    <tr>
+                        <td colspan="2" style="font-size:11px; font-weight:bold; color:#1a3a6b; padding-bottom:8px; border-bottom:1px solid #dde6f4; margin-bottom:8px;">
+                            SHIPPER / SENDER
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-size:10px; color:#666; width:100px; padding-bottom:6px;">NAME :</td>
+                        <td style="font-size:11px; font-weight:bold; color:#1a1a2e; padding-bottom:6px;">
+                            {{ strtoupper($sender->sender_name ?? 'N/A') }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-size:10px; color:#666; padding-bottom:6px;">CONTACT :</td>
+                        <td style="font-size:11px; padding-bottom:6px;">
+                            {{ $sender->sender_contactno ?? 'N/A' }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-size:10px; color:#666; padding-bottom:12px;">EMAIL :</td>
+                        <td style="font-size:11px; padding-bottom:12px;">
+                            {{ $sender->sender_email ?? 'N/A' }}
+                        </td>
+                    </tr>
 
-<!-- PORTS -->
-<table class="border">
-<tr>
-<td class="border left" style="width:50%">
-<strong>Loading Port</strong>
-</td>
-<td class="border left">
-<strong>Unloading Port</strong>
-</td>
-</tr>
-<tr>
-<td class="border left">
-{{ $booking->voyage->routePort->port_origin_name ?? 'N/A' }}
-</td>
-<td class="border left">
-{{ $booking->voyage->routePort->port_destination_name ?? 'N/A' }}
-</td>
-</tr>
-</table>
+                    {{-- Consignee --}}
+                    <tr>
+                        <td colspan="2" style="font-size:11px; font-weight:bold; color:#1a3a6b; padding-bottom:8px; border-bottom:1px solid #dde6f4; margin-bottom:8px;">
+                            CONSIGNEE
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-size:10px; color:#666; width:100px; padding-bottom:6px;">NAME :</td>
+                        <td style="font: size 11px;px; font-weight:bold; color:#1a1a2e; padding-bottom:6px;">
+                            {{ strtoupper($consignee->consignee_name ?? 'N/A') }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-size:10px; color:#666; padding-bottom:6px;">CONTACT :</td>
+                        <td style="font-size:11px; padding-bottom:6px;">
+                            {{ $consignee->consignee_contactno ?? 'N/A' }}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            {{-- RIGHT: Voyage details --}}
+            <td width="52%" style="vertical-align:top; padding:16px 18px;">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td style="font-size:10px; color:#666; width:150px; padding-bottom:10px;">PORT OF ORIGIN :</td>
+                            <td style="font-size:14px; font-weight:bold; color:#1a3a6b; padding-bottom:10px;">
+                                {{ strtoupper($route->route_origin ?? 'N/A') }}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-size:10px; color:#666; padding-bottom:10px;">PORT OF DESTINATION :</td>
+                            <td style="font-size:14px; font-weight:bold; color:#1a3a6b; padding-bottom:10px;">
+                                {{ strtoupper($route->route_destination ?? 'N/A') }}</td>
+                        </tr>
+                    <tr>
+                        <td style="font-size:10px; color:#666; padding-bottom:10px;">VOYAGE NO. :</td>
+                        <td style="font-size:13px; font-weight:bold; padding-bottom:10px;">
+                            {{ $voyage->voyage_code ?? 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size:10px; color:#666; padding-bottom:10px;">DEPARTURE DATE :</td>
+                        <td style="font-size:13px; font-weight:bold; padding-bottom:10px;">
+                            {{ $voyage ? \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('F d, Y') : 'N/A' }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-size:10px; color:#666; padding-bottom:10px;">DEPARTURE TIME :</td>
+                        <td style="font-size:13px; font-weight:bold; padding-bottom:10px;">
+                            {{ $voyage ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:i A') : 'N/A' }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-size:10px; color:#666;">VESSEL :</td>
+                        <td style="font-size:13px; font-weight:bold;">{{ $vessel->vessel_name ?? 'N/A' }}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 
-<br>
+    {{-- ================================================================ --}}
+    {{-- ==================== CARGO ITEMS TABLE ======================== --}}
+    {{-- ================================================================ --}}
+    <div
+        style="font-weight:bold; font-size:12px; color:#fff; background:#1a3a6b; padding:8px 12px; margin-bottom:8px; letter-spacing:1px;">
+        CARGO ITEMS
+    </div>
 
-<!-- CARGO ITEMS -->
-<table>
-<tr>
-<th colspan="8" class="border" style="text-align:left;">
-Cargo Items Description
-</th>
-</tr>
+    <table width="100%" cellpadding="0" cellspacing="0"
+        style="margin-bottom:12px; border:1px solid #dde6f4; font-size:9px;">
+        <thead>
+            <tr style="background:#f0f4fa;">
+                <th style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4; font-weight:bold; color:#1a3a6b;">QTY</th>
+                <th style="padding:8px 6px; text-align:left; border-bottom:1px solid #dde6f4; font-weight:bold; color:#1a3a6b;">CLASSIFICATION</th>
+                <th style="padding:8px 6px; text-align:left; border-bottom:1px solid #dde6f4; font-weight:bold; color:#1a3a6b;">DESCRIPTION</th>
+                <th style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4; font-weight:bold; color:#1a3a6b;">L (cm)</th>
+                <th style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4; font-weight:bold; color:#1a3a6b;">W (cm)</th>
+                <th style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4; font-weight:bold; color:#1a3a6b;">H (cm)</th>
+                <th style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4; font-weight:bold; color:#1a3a6b;">CBM</th>
+                <th style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4; font-weight:bold; color:#1a3a6b;">WEIGHT (kg)</th>
+                <th style="padding:8px 6px; text-align:right; border-bottom:1px solid #dde6f4; font-weight:bold; color:#1a3a6b;">FREIGHT</th>
+                <th style="padding:8px 6px; text-align:right; border-bottom:1px solid #dde6f4; font-weight:bold; color:#1a3a6b;">SUBTOTAL</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($cargoData as $item)
+                @php
+                    $c = $item['cargo'];
+                @endphp
+                <tr>
+                    <td style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4;">{{ $c->quantity }}</td>
+                    <td style="padding:8px 6px; text-align:left; border-bottom:1px solid #dde6f4;">
+                        {{ $c->cargoClassification->cargo_classification_name ?? 'N/A' }}
+                    </td>
+                    <td style="padding:8px 6px; text-align:left; border-bottom:1px solid #dde6f4;">
+                        {{ $c->cargoItem->cargo_item_description ?? 'N/A' }}
+                    </td>
+                    <td style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4;">{{ number_format($c->length, 2) }}</td>
+                    <td style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4;">{{ number_format($c->width, 2) }}</td>
+                    <td style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4;">{{ number_format($c->height, 2) }}</td>
+                    <td style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4;">{{ number_format($item['cbm'], 4) }}</td>
+                    <td style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4;">{{ number_format($c->weight, 2) }}</td>
+                    <td style="padding:8px 6px; text-align:right; border-bottom:1px solid #dde6f4;">₱{{ number_format($c->cargoItem->cargo_item_freight ?? 0, 2) }}</td>
+                    <td style="padding:8px 6px; text-align:right; border-bottom:1px solid #dde6f4;">₱{{ number_format($item['subtotal'], 2) }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+        <tfoot>
+            <tr style="background:#f0f4fa;">
+                <td colspan="6" style="padding:10px 6px; text-align:right; font-weight:bold; color:#1a3a6b;"></td>
+                <td style="padding:10px 6px; text-align:center; font-weight:bold; color:#1a3a6b;"></td>
+                <td style="padding:10px 6px; text-align:center; font-weight:bold; color:#1a3a6b;"></td>
+                <td style="padding:10px 6px; text-align:right; font-weight:bold; color:#1a3a6b;">SUBTOTAL:</td>
+                <td style="padding:10px 6px; text-align:right; font-weight:bold; color:#1a3a6b;">₱{{ number_format($totalAmount, 2) }}</td>
+            </tr>
+            <tr>
+                <td colspan="9" style="padding:6px 6px; text-align:right; font-size:10px;">STAMP FEE:</td>
+                <td style="padding:6px 6px; text-align:right; font-size:10px;">₱{{ number_format($stamp, 2) }}</td>
+            </tr>
+            <tr style="background:#1a3a6b; color:#fff;">
+                <td colspan="9" style="padding:10px 6px; text-align:right; font-size:14px; font-weight:bold;">OVERALL TOTAL:</td>
+                <td style="padding:10px 6px; text-align:right; font-size:14px; font-weight:bold;">₱{{ number_format($grandTotal, 2) }}</td>
+            </tr>
+        </tfoot>
+    </table>
 
-<tr class="cargo-header">
-<th style="width:8%">QTY</th>
-<th style="width:18%">Classification</th>
-<th style="width:32%">Description</th>
-<th style="width:10%">Length</th>
-<th style="width:10%">Width</th>
-<th style="width:10%">Height</th>
-<th style="width:12%">Weight</th>
-<th style="width:12%">Subtotal</th>
-</tr>
+    {{-- ================================================================ --}}
+    {{-- ====================== SCISSOR CUT LINE ======================== --}}
+    {{-- ================================================================ --}}
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0 14px 0;">
+        <tr>
+            <td style="border-top:2px dashed #aaa;"></td>
+        </tr>
+    </table>
 
-@forelse($cargoRows as $row)
-@php
-$cargo = $row['cargo'];
-$subtotal = $row['subtotal'];
-$unit = $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm';
-@endphp
+    {{-- ================================================================ --}}
+    {{-- ============ BOTTOM: PAYMENT INFO (left) + SUMMARY (right) ======= --}}
+    {{-- ================================================================ --}}
+    <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
 
-<tr class="cargo-row">
-<td class="center">{{ $cargo->quantity }}</td>
-<td>
-{{ $cargo->cargoClassification->cargo_classification_name ?? 'General Cargo' }}
-</td>
-<td>
-{{ $cargo->cargoItem->cargo_item_description ?? 'N/A' }}
-</td>
-<td class="center">{{ $cargo->length }}{{ $unit }}</td>
-<td class="center">{{ $cargo->width }}{{ $unit }}</td>
-<td class="center">{{ $cargo->height }}{{ $unit }}</td>
-<td class="center">{{ $cargo->weight }}kg</td>
-<td class="right">₱{{ number_format($subtotal, 2) }}</td>
-</tr>
+            {{-- ---- LEFT: PAYMENT + PROCESSING INFO ---- --}}
+            <td width="60%" style="vertical-align:top; padding-right:14px; border-right:1px dashed #ccc;">
 
-@empty
-<tr class="cargo-row">
-<td colspan="8" class="center">
-No cargo items found.
-</td>
-</tr>
-@endforelse
-</table>
+                <div
+                    style="font-weight:bold; font-size:12px; background:#1a3a6b; color:#fff; padding:5px 8px; margin-bottom:6px; letter-spacing:1px;">
+                    PAYMENT & PROCESSING
+                </div>
 
-<br>
+                <table cellpadding="2" cellspacing="0" width="100%">
+                    <tr>
+                        <td style="font-size:10px; color:#666; width:130px;">MODE OF PAYMENT:</td>
+                        <td style="font-size:11px; font-weight:bold;">{{ $payment->mode_of_payment ?? 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size:10px; color:#666;">PAYMENT STATUS:</td>
+                        <td style="font-size:11px; font-weight:bold;">{{ $payment->payment_status ?? 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size:10px; color:#666;">AMOUNT PAID:</td>
+                        <td style="font-size:14px; font-weight:bold; color:#1a3a6b;">
+                            ₱{{ number_format($payment->total_amount ?? $grandTotal, 2) }}
+                        </td>
+                    </tr>
+                </table>
 
-<!-- CHARGES -->
-<table class="charges-table">
-<tr>
-<td style="width:80%">Freight Charges</td>
-<td class="right">₱ {{ number_format($freight,2) }}</td>
-</tr>
-<tr>
-<td>Stamp</td>
-<td class="right">₱ {{ number_format($stamp,2) }}</td>
-</tr>
-<tr>
-<td><strong>Total Transaction</strong></td>
-<td class="right"><strong>₱ {{ number_format($total,2) }}</strong></td>
-</tr>
-</table>
+                <div
+                    style="font-weight:bold; font-size:11px; background:#1a3a6b; color:#fff; padding:4px 8px; margin-top:10px; margin-bottom:5px; letter-spacing:1px;">
+                    TERMS & CONDITIONS
+                </div>
+                <div style="font-size:8.5px; line-height:1.55; color:#333;">
+                    <strong>1.</strong> Cargo must be claimed at the destination port upon presentation of this Bill of Lading.
+                    <strong>2.</strong> The company is not liable for loss or damage to cargo not claimed within 30 days of arrival.
+                    <strong>3.</strong> This document serves as proof of contract for freight services and is subject to the company's
+                    general terms and conditions.
+                    <strong>4.</strong> The company reserves the right to open and inspect any cargo for safety and customs compliance.
+                </div>
 
-<br><br><br>
+            </td>
 
-<!-- SIGNATURES -->
-<table>
-<tr>
-<td class="signature">
-<div class="signature-line"></div>
-Arrastre Payment
-</td>
-<td class="signature">
-<div class="signature-line"></div>
-Doc Stamp
-</td>
-<td class="signature">
-<div class="signature-line"></div>
-Quartermaster
-</td>
-</tr>
-</table>
+            {{-- ---- RIGHT: BOOKING SUMMARY ---- --}}
+            <td width="40%" style="vertical-align:top; padding-left:14px;">
 
-<div class="footer-note">
-Printing of the Bill of Lading, Arrastre Payment and Doc Stamp will be done in the office.
-</div>
+                <div style="font-weight:bold; font-size:15px; color:#1a3a6b; margin-bottom:8px; letter-spacing:2px;">
+                    BOOKING SUMMARY</div>
+                <div style="font-size:11px; color:#666; margin-bottom:16px;">{{ $formattedBookingRef }}</div>
 
-<div class="page-number">
-Page 1 of 1
-</div>
+                <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td style="font-size:10px; color:#666; padding-bottom:8px;">TOTAL ITEMS:</td>
+                        <td style="font-size:12px; font-weight:bold; padding-bottom:8px; text-align:right;">
+                            {{ $cargoBookings->sum('quantity') }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-size:10px; color:#666; padding-bottom:8px;">AMOUNT DUE:</td>
+                        <td style="font-size:16px; font-weight:bold; color:#1a3a6b; padding-bottom:8px; text-align:right;">
+                            ₱{{ number_format($grandTotal, 2) }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-size:10px; color:#666;">AMOUNT PAID:</td>
+                        <td style="font-size:16px; font-weight:bold; color:#27ae60; text-align:right;">
+                            ₱{{ number_format($payment->total_amount ?? $grandTotal, 2) }}
+                        </td>
+                    </tr>
+                </table>
+
+            </td>
+
+        </tr>
+    </table>
+
+    {{-- ---- FOOTER NOTE ---- --}}
+    <div
+        style="margin-top:16px; text-align:center; font-size:8px; color:#999; border-top:1px solid #dde6f4; padding-top:6px;">
+        This is an automatically generated Freight Receipt. Please keep this document for your records. &nbsp;|&nbsp; Page 1 of 1
+        <br>
+        Issued by {{ $printedBy }} &nbsp;|&nbsp; {{ now()->format('F d, Y h:i A') }}
+    </div>
+
+    </div>{{-- end document-container --}}
 
 </body>
+
 </html>
