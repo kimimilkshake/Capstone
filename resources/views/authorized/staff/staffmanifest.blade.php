@@ -121,7 +121,7 @@
                 <table id="passengerTable" class="manifest-table table text-start align-middle">
                     <thead>
                         <tr>
-                            <th>Ticket No.</th>
+                            <th>Booking Ref No.</th>
                             <th>Passenger Name</th>
                             <th>Age / Gender</th>
                             <th>Category</th>
