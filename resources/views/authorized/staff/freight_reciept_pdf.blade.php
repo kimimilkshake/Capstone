@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Freight Receipt for <?php echo e($booking->booking_code); ?></title>
+    <title>Freight Receipt for {{ $booking->booking_code }}</title>
     <style>
         @page {
             margin: 18px;
@@ -54,7 +54,7 @@
 <body>
     <div class="document-container">
 
-    <?php
+    @php
         $printedBy =
             optional(auth()->guard('staff')->user())->staff_name ??
             (optional(auth()->guard('admin')->user())->admin_name ?? 'System');
@@ -118,6 +118,15 @@
         $grandTotal = $totalAmount + $stamp;
 
         $payment = \App\Models\Payment::where('booking_ref_no', $booking->booking_ref_no)->first();
+        
+        // Get arrastre and total from cargo_receipt
+        $cargoReceipt = \App\Models\CargoReceipt::where('booking_ref_no', $booking->booking_ref_no)->first();
+        $arrastre = $cargoReceipt ? $cargoReceipt->arrastre : 0;
+        $receiptTotal = $cargoReceipt ? $cargoReceipt->total : 0;
+        
+        // If receipt total is available, use it; otherwise use grandTotal
+        $displayTotal = $receiptTotal > 0 ? $receiptTotal : $grandTotal;
+        
         $voyage = $booking->voyage;
         $route = $voyage ? $voyage->routePort : null;
         $vessel = $voyage ? $voyage->vessel : null;
@@ -138,33 +147,33 @@
 
         $bookingYear = $booking->created_at ? $booking->created_at->format('y') : date('y');
         $formattedBookingRef = 'LSLCBK' . $bookingYear . str_pad($booking->booking_ref_no, 6, '0', STR_PAD_LEFT);
-    ?>
+    @endphp
 
-    
-    
-    
+    {{-- ================================================================ --}}
+    {{-- ====================== MAIN TICKET AREA ======================== --}}
+    {{-- ================================================================ --}}
 
-    
+    {{-- ---- HEADER ---- --}}
     <table width="100%" cellpadding="0" cellspacing="0"
         style="margin-bottom:18px; padding:26px 16px; border-radius:4px; background:#1a3a6b;">
         <tr>
-            
+            {{-- Logo --}}
             <td style="width:160px; vertical-align:middle; text-align:center;">
-                <img src="<?php echo e(asset('images/logo_wo_name.png')); ?>" width="90" alt="Logo" />
+                <img src="{{ asset('images/logo_wo_name.png') }}" width="90" alt="Logo" />
             </td>
-            
+            {{-- Company Info --}}
             <td style="vertical-align:middle; text-align:center; padding:6px 18px;">
                 <div class="company-name">LAPULAPU SHIPPING LINES CORPORATION</div>
                 <div class="company-sub">872-876 M.J CUENCO AVENUE, CEBU CITY, PHILIPPINES</div>
                 <div class="company-sub">Tel. No. 232-8864 / 232-8865 &nbsp;|&nbsp; TIN: 200-308-788-000-VAT</div>
             </td>
-            
+            {{-- Spacer to balance logo width --}}
             <td style="width:160px;"></td>
 
         </tr>
     </table>
 
-    
+    {{-- ---- TITLE BANNER ---- --}}
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
         <tr>
             <td
@@ -174,34 +183,34 @@
         </tr>
     </table>
 
-    
+    {{-- ---- BOOKING REF + STATUS ---- --}}
     <table width="100%" cellpadding="0" cellspacing="0"
         style="background:#f0f4fa; padding:14px 18px; margin-bottom:18px;">
         <tr>
             <td style="font-size:10px; color:#555; vertical-align:top;">
                 BOOKING REFERENCE NO.
-                <br><strong style="font-size:18px; color:#1a3a6b;"><?php echo e($formattedBookingRef); ?></strong>
+                <br><strong style="font-size:18px; color:#1a3a6b;">{{ $formattedBookingRef }}</strong>
             </td>
             <td style="text-align:right; font-size:10px; color:#555; vertical-align:top;">
                 STATUS
-                <br><strong style="font-size:18px; color:#1a3a6b;"><?php echo e($booking->booking_status ?? 'N/A'); ?></strong>
+                <br><strong style="font-size:18px; color:#1a3a6b;">{{ $booking->booking_status ?? 'N/A' }}</strong>
             </td>
         </tr>
     </table>
 
-    
+    {{-- ---- SECTION LABEL ---- --}}
     <div
         style="font-weight:bold; font-size:13px; color:#fff; background:#1a3a6b; padding:10px 12px; margin-bottom:12px; letter-spacing:1px;">
         FREIGHT & CARGO DETAILS
     </div>
 
-    
+    {{-- ---- SENDER + CONSIGNEE + VOYAGE DETAILS ---- --}}
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px; border:1px solid #dde6f4;">
         <tr>
-            
+            {{-- LEFT: Sender + Consignee --}}
             <td width="48%" style="vertical-align:top; padding:16px 18px; border-right:1px dashed #b0c4de;">
                 <table width="100%" cellpadding="0" cellspacing="0">
-                    
+                    {{-- Sender --}}
                     <tr>
                         <td colspan="2" style="font-size:11px; font-weight:bold; color:#1a3a6b; padding-bottom:8px; border-bottom:1px solid #dde6f4; margin-bottom:8px;">
                             SHIPPER / SENDER
@@ -210,26 +219,23 @@
                     <tr>
                         <td style="font-size:10px; color:#666; width:100px; padding-bottom:6px;">NAME :</td>
                         <td style="font-size:11px; font-weight:bold; color:#1a1a2e; padding-bottom:6px;">
-                            <?php echo e(strtoupper($sender->sender_name ?? 'N/A')); ?>
-
+                            {{ strtoupper($sender->sender_name ?? 'N/A') }}
                         </td>
                     </tr>
                     <tr>
                         <td style="font-size:10px; color:#666; padding-bottom:6px;">CONTACT :</td>
                         <td style="font-size:11px; padding-bottom:6px;">
-                            <?php echo e($sender->sender_contactno ?? 'N/A'); ?>
-
+                            {{ $sender->sender_contactno ?? 'N/A' }}
                         </td>
                     </tr>
                     <tr>
                         <td style="font-size:10px; color:#666; padding-bottom:12px;">EMAIL :</td>
                         <td style="font-size:11px; padding-bottom:12px;">
-                            <?php echo e($sender->sender_email ?? 'N/A'); ?>
-
+                            {{ $sender->sender_email ?? 'N/A' }}
                         </td>
                     </tr>
 
-                    
+                    {{-- Consignee --}}
                     <tr>
                         <td colspan="2" style="font-size:11px; font-weight:bold; color:#1a3a6b; padding-bottom:8px; border-bottom:1px solid #dde6f4; margin-bottom:8px;">
                             CONSIGNEE
@@ -238,63 +244,59 @@
                     <tr>
                         <td style="font-size:10px; color:#666; width:100px; padding-bottom:6px;">NAME :</td>
                         <td style="font: size 11px;px; font-weight:bold; color:#1a1a2e; padding-bottom:6px;">
-                            <?php echo e(strtoupper($consignee->consignee_name ?? 'N/A')); ?>
-
+                            {{ strtoupper($consignee->consignee_name ?? 'N/A') }}
                         </td>
                     </tr>
                     <tr>
                         <td style="font-size:10px; color:#666; padding-bottom:6px;">CONTACT :</td>
                         <td style="font-size:11px; padding-bottom:6px;">
-                            <?php echo e($consignee->consignee_contactno ?? 'N/A'); ?>
-
+                            {{ $consignee->consignee_contactno ?? 'N/A' }}
                         </td>
                     </tr>
                 </table>
             </td>
-            
+            {{-- RIGHT: Voyage details --}}
             <td width="52%" style="vertical-align:top; padding:16px 18px;">
                 <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                             <td style="font-size:10px; color:#666; width:150px; padding-bottom:10px;">PORT OF ORIGIN :</td>
                             <td style="font-size:14px; font-weight:bold; color:#1a3a6b; padding-bottom:10px;">
-                                <?php echo e(strtoupper($route->route_origin ?? 'N/A')); ?></td>
+                                {{ strtoupper($route->route_origin ?? 'N/A') }}</td>
                         </tr>
                         <tr>
                             <td style="font-size:10px; color:#666; padding-bottom:10px;">PORT OF DESTINATION :</td>
                             <td style="font-size:14px; font-weight:bold; color:#1a3a6b; padding-bottom:10px;">
-                                <?php echo e(strtoupper($route->route_destination ?? 'N/A')); ?></td>
+                                {{ strtoupper($route->route_destination ?? 'N/A') }}</td>
                         </tr>
                     <tr>
                         <td style="font-size:10px; color:#666; padding-bottom:10px;">VOYAGE NO. :</td>
                         <td style="font-size:13px; font-weight:bold; padding-bottom:10px;">
-                            <?php echo e($voyage->voyage_code ?? 'N/A'); ?></td>
+                            {{ $voyage->voyage_code ?? 'N/A' }}</td>
                     </tr>
                     <tr>
                         <td style="font-size:10px; color:#666; padding-bottom:10px;">DEPARTURE DATE :</td>
                         <td style="font-size:13px; font-weight:bold; padding-bottom:10px;">
-                            <?php echo e($voyage ? \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('F d, Y') : 'N/A'); ?>
-
+                            {{ $voyage ? \Carbon\Carbon::parse($voyage->voyage_departure_date)->format('F d, Y') : 'N/A' }}
                         </td>
                     </tr>
                     <tr>
                         <td style="font-size:10px; color:#666; padding-bottom:10px;">DEPARTURE TIME :</td>
                         <td style="font-size:13px; font-weight:bold; padding-bottom:10px;">
-                            <?php echo e($voyage ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:i A') : 'N/A'); ?>
-
+                            {{ $voyage ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:i A') : 'N/A' }}
                         </td>
                     </tr>
                     <tr>
                         <td style="font-size:10px; color:#666;">VESSEL :</td>
-                        <td style="font-size:13px; font-weight:bold;"><?php echo e($vessel->vessel_name ?? 'N/A'); ?></td>
+                        <td style="font-size:13px; font-weight:bold;">{{ $vessel->vessel_name ?? 'N/A' }}</td>
                     </tr>
                 </table>
             </td>
         </tr>
     </table>
 
-    
-    
-    
+    {{-- ================================================================ --}}
+    {{-- ==================== CARGO ITEMS TABLE ======================== --}}
+    {{-- ================================================================ --}}
     <div
         style="font-weight:bold; font-size:12px; color:#fff; background:#1a3a6b; padding:8px 12px; margin-bottom:8px; letter-spacing:1px;">
         CARGO ITEMS
@@ -317,29 +319,27 @@
             </tr>
         </thead>
         <tbody>
-            <?php $__currentLoopData = $cargoData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <?php
+            @foreach ($cargoData as $item)
+                @php
                     $c = $item['cargo'];
-                ?>
+                @endphp
                 <tr>
-                    <td style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4;"><?php echo e($c->quantity); ?></td>
+                    <td style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4;">{{ $c->quantity }}</td>
                     <td style="padding:8px 6px; text-align:left; border-bottom:1px solid #dde6f4;">
-                        <?php echo e($c->cargoClassification->cargo_classification_name ?? 'N/A'); ?>
-
+                        {{ $c->cargoClassification->cargo_classification_name ?? 'N/A' }}
                     </td>
                     <td style="padding:8px 6px; text-align:left; border-bottom:1px solid #dde6f4;">
-                        <?php echo e($c->cargoItem->cargo_item_description ?? 'N/A'); ?>
-
+                        {{ $c->cargoItem->cargo_item_description ?? 'N/A' }}
                     </td>
-                    <td style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4;"><?php echo e(number_format($c->length, 2)); ?></td>
-                    <td style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4;"><?php echo e(number_format($c->width, 2)); ?></td>
-                    <td style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4;"><?php echo e(number_format($c->height, 2)); ?></td>
-                    <td style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4;"><?php echo e(number_format($item['cbm'], 4)); ?></td>
-                    <td style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4;"><?php echo e(number_format($c->weight, 2)); ?></td>
-                    <td style="padding:8px 6px; text-align:right; border-bottom:1px solid #dde6f4;">₱<?php echo e(number_format($c->cargoItem->cargo_item_freight ?? 0, 2)); ?></td>
-                    <td style="padding:8px 6px; text-align:right; border-bottom:1px solid #dde6f4;">₱<?php echo e(number_format($item['subtotal'], 2)); ?></td>
+                    <td style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4;">{{ number_format($c->length, 2) }}</td>
+                    <td style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4;">{{ number_format($c->width, 2) }}</td>
+                    <td style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4;">{{ number_format($c->height, 2) }}</td>
+                    <td style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4;">{{ number_format($item['cbm'], 4) }}</td>
+                    <td style="padding:8px 6px; text-align:center; border-bottom:1px solid #dde6f4;">{{ number_format($c->weight, 2) }}</td>
+                    <td style="padding:8px 6px; text-align:right; border-bottom:1px solid #dde6f4;">₱{{ number_format($c->cargoItem->cargo_item_freight ?? 0, 2) }}</td>
+                    <td style="padding:8px 6px; text-align:right; border-bottom:1px solid #dde6f4;">₱{{ number_format($item['subtotal'], 2) }}</td>
                 </tr>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            @endforeach
         </tbody>
         <tfoot>
             <tr style="background:#f0f4fa;">
@@ -347,35 +347,35 @@
                 <td style="padding:10px 6px; text-align:center; font-weight:bold; color:#1a3a6b;"></td>
                 <td style="padding:10px 6px; text-align:center; font-weight:bold; color:#1a3a6b;"></td>
                 <td style="padding:10px 6px; text-align:right; font-weight:bold; color:#1a3a6b;">SUBTOTAL:</td>
-                <td style="padding:10px 6px; text-align:right; font-weight:bold; color:#1a3a6b;">₱<?php echo e(number_format($totalAmount, 2)); ?></td>
+                <td style="padding:10px 6px; text-align:right; font-weight:bold; color:#1a3a6b;">₱{{ number_format($totalAmount, 2) }}</td>
             </tr>
             <tr>
                 <td colspan="9" style="padding:6px 6px; text-align:right; font-size:10px;">STAMP FEE:</td>
-                <td style="padding:6px 6px; text-align:right; font-size:10px;">₱<?php echo e(number_format($stamp, 2)); ?></td>
+                <td style="padding:6px 6px; text-align:right; font-size:10px;">₱{{ number_format($stamp, 2) }}</td>
             </tr>
             <tr style="background:#1a3a6b; color:#fff;">
                 <td colspan="9" style="padding:10px 6px; text-align:right; font-size:14px; font-weight:bold;">OVERALL TOTAL:</td>
-                <td style="padding:10px 6px; text-align:right; font-size:14px; font-weight:bold;">₱<?php echo e(number_format($grandTotal, 2)); ?></td>
+                <td style="padding:10px 6px; text-align:right; font-size:14px; font-weight:bold;">₱{{ number_format($grandTotal, 2) }}</td>
             </tr>
         </tfoot>
     </table>
 
-    
-    
-    
+    {{-- ================================================================ --}}
+    {{-- ====================== SCISSOR CUT LINE ======================== --}}
+    {{-- ================================================================ --}}
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0 14px 0;">
         <tr>
             <td style="border-top:2px dashed #aaa;"></td>
         </tr>
     </table>
 
-    
-    
-    
+    {{-- ================================================================ --}}
+    {{-- ============ BOTTOM: PAYMENT INFO (left) + SUMMARY (right) ======= --}}
+    {{-- ================================================================ --}}
     <table width="100%" cellpadding="0" cellspacing="0">
         <tr>
 
-            
+            {{-- ---- LEFT: PAYMENT + PROCESSING INFO ---- --}}
             <td width="60%" style="vertical-align:top; padding-right:14px; border-right:1px dashed #ccc;">
 
                 <div
@@ -386,19 +386,34 @@
                 <table cellpadding="2" cellspacing="0" width="100%">
                     <tr>
                         <td style="font-size:10px; color:#666; width:130px;">MODE OF PAYMENT:</td>
-                        <td style="font-size:11px; font-weight:bold;"><?php echo e($payment->mode_of_payment ?? 'N/A'); ?></td>
+                        <td style="font-size:11px; font-weight:bold;">{{ $payment->mode_of_payment ?? 'N/A' }}</td>
                     </tr>
                     <tr>
                         <td style="font-size:10px; color:#666;">PAYMENT STATUS:</td>
-                        <td style="font-size:11px; font-weight:bold;"><?php echo e($payment->payment_status ?? 'N/A'); ?></td>
+                        <td style="font-size:11px; font-weight:bold;">{{ $payment->payment_status ?? 'N/A' }}</td>
                     </tr>
                     <tr>
                         <td style="font-size:10px; color:#666;">AMOUNT PAID:</td>
                         <td style="font-size:14px; font-weight:bold; color:#1a3a6b;">
-                            ₱<?php echo e(number_format($payment->total_amount ?? $grandTotal, 2)); ?>
-
+                            ₱{{ number_format($payment->total_amount ?? $grandTotal, 2) }}
                         </td>
                     </tr>
+                    @if($arrastre > 0)
+                    <tr>
+                        <td style="font-size:10px; color:#666;">ARRASTRE:</td>
+                        <td style="font-size:11px; font-weight:bold; color:#1a3a6b;">
+                            ₱{{ number_format($arrastre, 2) }}
+                        </td>
+                    </tr>
+                    @endif
+                    @if($receiptTotal > 0)
+                    <tr>
+                        <td style="font-size:10px; color:#666;">TOTAL (W/ ARRASTRE):</td>
+                        <td style="font-size:14px; font-weight:bold; color:#1a3a6b;">
+                            ₱{{ number_format($receiptTotal, 2) }}
+                        </td>
+                    </tr>
+                    @endif
                 </table>
 
                 <div
@@ -406,7 +421,7 @@
                     TERMS & CONDITIONS
                 </div>
                 <div style="font-size:8.5px; line-height:1.55; color:#333;">
-                    <strong>1.</strong> Cargo must be claimed at the destination port upon presentation of this Bill of Lading.
+                    <strong>1.</strong> Cargo must be claimed at the destination port upon presentation of this Freight Receipt.
                     <strong>2.</strong> The company is not liable for loss or damage to cargo not claimed within 30 days of arrival.
                     <strong>3.</strong> This document serves as proof of contract for freight services and is subject to the company's
                     general terms and conditions.
@@ -415,35 +430,48 @@
 
             </td>
 
-            
+            {{-- ---- RIGHT: BOOKING SUMMARY ---- --}}
             <td width="40%" style="vertical-align:top; padding-left:14px;">
 
                 <div style="font-weight:bold; font-size:15px; color:#1a3a6b; margin-bottom:8px; letter-spacing:2px;">
                     BOOKING SUMMARY</div>
-                <div style="font-size:11px; color:#666; margin-bottom:16px;"><?php echo e($formattedBookingRef); ?></div>
+                <div style="font-size:11px; color:#666; margin-bottom:16px;">{{ $formattedBookingRef }}</div>
 
                 <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
                         <td style="font-size:10px; color:#666; padding-bottom:8px;">TOTAL ITEMS:</td>
                         <td style="font-size:12px; font-weight:bold; padding-bottom:8px; text-align:right;">
-                            <?php echo e($cargoBookings->sum('quantity')); ?>
-
+                            {{ $cargoBookings->sum('quantity') }}
                         </td>
                     </tr>
                     <tr>
                         <td style="font-size:10px; color:#666; padding-bottom:8px;">AMOUNT DUE:</td>
                         <td style="font-size:16px; font-weight:bold; color:#1a3a6b; padding-bottom:8px; text-align:right;">
-                            ₱<?php echo e(number_format($grandTotal, 2)); ?>
-
+                            ₱{{ number_format($grandTotal, 2) }}
                         </td>
                     </tr>
                     <tr>
                         <td style="font-size:10px; color:#666;">AMOUNT PAID:</td>
                         <td style="font-size:16px; font-weight:bold; color:#27ae60; text-align:right;">
-                            ₱<?php echo e(number_format($payment->total_amount ?? $grandTotal, 2)); ?>
-
+                            ₱{{ number_format($payment->total_amount ?? $displayTotal, 2) }}
                         </td>
                     </tr>
+                    @if($arrastre > 0)
+                    <tr>
+                        <td style="font-size:10px; color:#666;">ARRASTRE:</td>
+                        <td style="font-size:12px; font-weight:bold; color:#27ae60; text-align:right;">
+                            ₱{{ number_format($arrastre, 2) }}
+                        </td>
+                    </tr>
+                    @endif
+                    @if($receiptTotal > 0)
+                    <tr>
+                        <td style="font-size:10px; color:#666;">TOTAL:</td>
+                        <td style="font-size:16px; font-weight:bold; color:#27ae60; text-align:right;">
+                            ₱{{ number_format($receiptTotal, 2) }}
+                        </td>
+                    </tr>
+                    @endif
                 </table>
 
             </td>
@@ -451,18 +479,16 @@
         </tr>
     </table>
 
-    
+    {{-- ---- FOOTER NOTE ---- --}}
     <div
         style="margin-top:16px; text-align:center; font-size:8px; color:#999; border-top:1px solid #dde6f4; padding-top:6px;">
         This is an automatically generated Freight Receipt. Please keep this document for your records. &nbsp;|&nbsp; Page 1 of 1
         <br>
-        Issued by <?php echo e($printedBy); ?> &nbsp;|&nbsp; <?php echo e(now()->format('F d, Y h:i A')); ?>
-
+        Issued by {{ $printedBy }} &nbsp;|&nbsp; {{ now()->format('F d, Y h:i A') }}
     </div>
 
-    </div>
+    </div>{{-- end document-container --}}
 
 </body>
 
 </html>
-<?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/authorized/staff/bill_of_lading.blade.php ENDPATH**/ ?>

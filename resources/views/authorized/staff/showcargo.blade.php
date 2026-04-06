@@ -295,6 +295,14 @@
             </div>
         @endif
 
+        @if ($booking->booking_status === 'Confirmed' && ($payment->payment_status ?? null) === 'Pending')
+            <div class="text-center mt-3">
+                <button type="button" class="btn btn-success btn-lg px-4" onclick="showPaymentModal()">
+                    Pay Now
+                </button>
+            </div>
+        @endif
+
         <div class="text-center mt-4">
             <a href="{{ route('cargo.bookings.pending') }}" class="btn btn-outline-primary btn-lg px-4">
                 Back to Pending Bookings
@@ -485,6 +493,85 @@
                 }
                 
                 showLoadingAndSubmit();
+            }
+        }
+    </script>
+
+    <!-- Payment Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="paymentModalLabel">Process Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="transaction-summary mb-4">
+                        <h6>Transaction Summary</h6>
+                        <div class="row">
+                            <div class="col-6"><strong>Booking Reference:</strong></div>
+                            <div class="col-6">{{ $booking->booking_ref_no }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6"><strong>Sender:</strong></div>
+                            <div class="col-6">{{ $booking->sender->sender_name ?? 'N/A' }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6"><strong>Consignee:</strong></div>
+                            <div class="col-6">{{ $booking->consignee->consignee_name ?? 'N/A' }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6"><strong>Total Amount:</strong></div>
+                            <div class="col-6">₱{{ number_format($payment->total_amount ?? 0, 2) }}</div>
+                        </div>
+                    </div>
+
+                    <div class="payment-options">
+                        <h6>Select Payment Method</h6>
+                        <div class="d-flex gap-3">
+                            <button type="button" class="btn btn-outline-primary" onclick="processPayment('cash')">Pay with Cash</button>
+                            <button type="button" class="btn btn-outline-success" onclick="processPayment('gcash')">Pay with GCash</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showPaymentModal() {
+            const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            modal.show();
+        }
+
+        function processPayment(method) {
+            const bookingRef = '{{ $booking->booking_ref_no }}';
+            
+            if (confirm(`Confirm payment via ${method.toUpperCase()}?`)) {
+                fetch(`/authorized/staff/cargo-bookings/${bookingRef}/process-payment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ||
+                            document.querySelector('input[name="_token"]')?.value
+                    },
+                    body: JSON.stringify({
+                        payment_method: method
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Payment processed successfully via ${method.toUpperCase()}!`);
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while processing payment.');
+                });
             }
         }
     </script>

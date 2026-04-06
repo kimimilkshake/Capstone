@@ -98,13 +98,12 @@
     <div class="payment-info">
         <strong>Payment Details:</strong><br>
         <strong>Amount Paid:</strong> ₱{{ number_format($payment->total_amount ?? 0, 2) }}<br>
-        <strong>Payment Status:</strong> {{ $payment->payment_status ?? 'Completed' }}<br>
+        <strong>Payment Status:</strong> {{ $payment->payment_status ?? 'Initial' }}<br>
         <strong>Payment Date:</strong> {{ $payment->payment_date ? \Carbon\Carbon::parse($payment->payment_date)->format('M d, Y H:i') : 'N/A' }}
     </div>
     
     <p style="font-size: 14px; color: #666; text-align: center;">
-        <strong>Important:</strong> Please keep this email and present the QR code at the terminal for cargo verification.<br>
-        The Bill of Lading PDF is attached to this email for your records.
+        <strong>Important:</strong> The Freight Receipt PDF is attached to this email for your records.
     </p>
     
     <div class="footer">

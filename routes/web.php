@@ -398,6 +398,13 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
     // Approve booking
     Route::post('/cargo-bookings/{id}/approve', [StaffCargoController::class, 'approve'])->name('cargo.bookings.approve');
     Route::post('/cargo-bookings/{id}/reject', [StaffCargoController::class, 'reject'])->name('cargo.bookings.reject');
+    // Verify payment
+    Route::get('/cargo-bookings/{id}/verify', [StaffCargoController::class, 'verify'])->name('cargo.bookings.verify');
+    Route::post('/cargo-bookings/{id}/verify', [StaffCargoController::class, 'processVerification'])->name('cargo.bookings.process_verification');
+    // Pay for booking
+    Route::get('/cargo-bookings/{id}/pay', [StaffCargoController::class, 'pay'])->name('cargo.bookings.pay');
+    // Process payment
+    Route::post('/cargo-bookings/{id}/process-payment', [StaffCargoController::class, 'processPayment'])->name('cargo.bookings.process_payment');
     // Placement validation API endpoint
     Route::post('/api/cargo/placement/validate', [StaffCargoController::class, 'validatePlacement'])->name('cargo.placement.validate');
 

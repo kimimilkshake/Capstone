@@ -396,7 +396,7 @@
                     TERMS & CONDITIONS
                 </div>
                 <div style="font-size:8.5px; line-height:1.55; color:#333;">
-                    <strong>1.</strong> Cargo must be claimed at the destination port upon presentation of this Bill of Lading.
+                    <strong>1.</strong> Cargo must be claimed at the destination port upon presentation of this Freight Receipt.
                     <strong>2.</strong> The company is not liable for loss or damage to cargo not claimed within 30 days of arrival.
                     <strong>3.</strong> This document serves as proof of contract for freight services and is subject to the company's
                     general terms and conditions.

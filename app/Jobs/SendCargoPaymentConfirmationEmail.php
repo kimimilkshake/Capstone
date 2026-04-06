@@ -99,8 +99,8 @@ class SendCargoPaymentConfirmationEmail implements ShouldQueue
 
             // Check payment status
             $paymentStatus = strtolower($payment->payment_status ?? '');
-            if ($paymentStatus !== 'completed') {
-                Log::info("SendCargoPaymentConfirmationEmail: Payment for booking {$this->bookingRef} not completed (status: {$payment->payment_status}), skipping email");
+            if ($paymentStatus !== 'initial') {
+                Log::info("SendCargoPaymentConfirmationEmail: Payment for booking {$this->bookingRef} not initial (status: {$payment->payment_status}), skipping email");
                 return;
             }
 
@@ -134,38 +134,14 @@ class SendCargoPaymentConfirmationEmail implements ShouldQueue
                 return;
             }
 
-            // Generate QR code for payment verification
-            $qrCodeImage = null;
-            try {
-                // QR code contains booking reference and payment verification data
-                $qrData = json_encode([
-                    'booking_ref' => $this->bookingRef,
-                    'payment_id' => $payment->payment_id,
-                    'amount' => $payment->total_amount,
-                    'verified' => true,
-                    'type' => 'cargo_payment'
-                ]);
-
-                $options = new \chillerlan\QRCode\QROptions([
-                    'outputInterface' => \chillerlan\QRCode\Output\QRGdImagePNG::class,
-                    'scale' => 5,
-                ]);
-                $pngBlob = (new \chillerlan\QRCode\QRCode($options))->render($qrData);
-                $qrCodeImage = 'data:image/png;base64,' . base64_encode($pngBlob);
-                Log::info("SendCargoPaymentConfirmationEmail: QR code generated for booking {$this->bookingRef}");
-            } catch (\Exception $e) {
-                Log::warning("SendCargoPaymentConfirmationEmail: QR generation failed for booking {$this->bookingRef}: " . $e->getMessage());
-            }
-
-            // Send the confirmation email with QR code
+            // Send the confirmation email with Freight Receipt PDF
             try {
                 $email = new CargoPaymentConfirmation(
                     $booking,
                     $sender,
                     $consignee,
                     $cargoBookings,
-                    $payment,
-                    $qrCodeImage
+                    $payment
                 );
                 
                 Mail::to($sender->sender_email)->send($email);

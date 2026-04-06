@@ -152,8 +152,12 @@ class PaymentController extends Controller
                         $chargeStatus = $chargeJson['data']['attributes']['status'] ?? null;
                         Log::info('PayMongo charge success', ['status' => $chargeStatus]);
                         if ($chargeStatus === 'paid') {
+                            // Check if this is a cargo or passenger booking
+                            $booking = DB::table('booking')->where('booking_ref_no', $payment->booking_ref_no)->first();
+                            $isCargo = $booking && strtolower($booking->booking_type ?? '') === 'cargo';
+                            
                             DB::table('payment')->where('payment_id', $payment->payment_id)->update([
-                                'payment_status' => 'Completed',
+                                'payment_status' => $isCargo ? 'Initial' : 'Completed',
                                 'updated_at' => now(),
                             ]);
                             DB::table('booking')->where('booking_ref_no', $payment->booking_ref_no)->update([
@@ -161,10 +165,8 @@ class PaymentController extends Controller
                                 'updated_at' => now(),
                             ]);
 
-                            // Check if this is a cargo or passenger booking
-                            $booking = DB::table('booking')->where('booking_ref_no', $payment->booking_ref_no)->first();
-                            if ($booking && strtolower($booking->booking_type ?? '') === 'cargo') {
-                                // Send cargo payment confirmation with QR code
+                            if ($isCargo) {
+                                // Send cargo payment confirmation with Freight Receipt PDF
                                 SendCargoPaymentConfirmationEmail::dispatch($payment->booking_ref_no);
                                 Log::info('CargoPaymentConfirmationEmail dispatched for booking: ' . $payment->booking_ref_no);
                             } else {
@@ -189,8 +191,12 @@ class PaymentController extends Controller
                 $payment = DB::table('payment')->where('transaction_code', $sourceId)->first();
                 if ($payment && $status) {
                     if (in_array($status, ['paid', 'succeeded'])) {
+                        // Check if this is a cargo or passenger booking
+                        $booking = DB::table('booking')->where('booking_ref_no', $payment->booking_ref_no)->first();
+                        $isCargo = $booking && strtolower($booking->booking_type ?? '') === 'cargo';
+                        
                         DB::table('payment')->where('payment_id', $payment->payment_id)->update([
-                            'payment_status' => 'Completed',
+                            'payment_status' => $isCargo ? 'Initial' : 'Completed',
                             'updated_at' => now(),
                         ]);
                         DB::table('booking')->where('booking_ref_no', $payment->booking_ref_no)->update([
@@ -198,10 +204,8 @@ class PaymentController extends Controller
                             'updated_at' => now(),
                         ]);
 
-                        // Check if this is a cargo or passenger booking
-                        $booking = DB::table('booking')->where('booking_ref_no', $payment->booking_ref_no)->first();
-                        if ($booking && strtolower($booking->booking_type ?? '') === 'cargo') {
-                            // Send cargo payment confirmation with QR code
+                        if ($isCargo) {
+                            // Send cargo payment confirmation with Freight Receipt PDF
                             SendCargoPaymentConfirmationEmail::dispatch($payment->booking_ref_no);
                             Log::info('CargoPaymentConfirmationEmail dispatched for booking: ' . $payment->booking_ref_no);
                         } else {
@@ -278,7 +282,7 @@ class PaymentController extends Controller
                     // If PayMongo reports a paid/succeeded status, mark completed
                     if (in_array($status, ['paid', 'succeeded'])) {
                         DB::table('payment')->where('payment_id', $payment->payment_id)->update([
-                            'payment_status' => 'Completed',
+                            'payment_status' => 'Initial',
                             'updated_at' => now(),
                         ]);
                         DB::table('booking')->where('booking_ref_no', $bookingRef)->update([
@@ -289,9 +293,13 @@ class PaymentController extends Controller
                         // Check if this is a cargo or passenger booking
                         $booking = DB::table('booking')->where('booking_ref_no', $bookingRef)->first();
                         if ($booking && strtolower($booking->booking_type ?? '') === 'cargo') {
-                            // Send cargo payment confirmation with QR code
-                            SendCargoPaymentConfirmationEmail::dispatch($bookingRef);
-                            Log::info('CargoPaymentConfirmationEmail dispatched for booking: ' . $bookingRef);
+                            // For staff-approved cargo bookings (booking_status already 'Confirmed'), don't send payment confirmation
+                            // For user cargo bookings (booking_status was 'Pending'), send the confirmation
+                            if (strtolower($booking->booking_status ?? '') !== 'confirmed') {
+                                // Send cargo payment confirmation with Freight Receipt PDF
+                                SendCargoPaymentConfirmationEmail::dispatch($bookingRef);
+                                Log::info('CargoPaymentConfirmationEmail dispatched for booking: ' . $bookingRef);
+                            }
                         } else {
                             // Send passenger ticket email
                             SendTicketEmail::dispatch($bookingRef);
@@ -349,9 +357,13 @@ class PaymentController extends Controller
         if (!empty($status) && $status === 'chargeable') {
             Log::info('Payment chargeable - waiting for webhook to charge', ['booking_ref_no' => $bookingRef]);
 
+            // Check if cargo booking
+            $booking = DB::table('booking')->where('booking_ref_no', $bookingRef)->first();
+            $isCargo = $booking && strtolower($booking->booking_type ?? '') === 'cargo';
+
             // Update both payment and booking to mark as confirmed/completed
             DB::table('payment')->where('payment_id', $payment->payment_id)->update([
-                'payment_status' => 'Completed',
+                'payment_status' => $isCargo ? 'Initial' : 'Completed',
                 'updated_at' => now(),
             ]);
             DB::table('booking')->where('booking_ref_no', $bookingRef)->update([

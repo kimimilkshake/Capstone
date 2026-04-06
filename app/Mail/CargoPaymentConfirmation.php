@@ -21,22 +21,20 @@ class CargoPaymentConfirmation extends Mailable
     public $consignee;
     public $cargoItems;
     public $payment;
-    public $qrCodeImage;
 
-    public function __construct($booking, $sender, $consignee, $cargoItems, $payment, $qrCodeImage = null)
+    public function __construct($booking, $sender, $consignee, $cargoItems, $payment)
     {
         $this->booking = $booking;
         $this->sender = $sender;
         $this->consignee = $consignee;
         $this->cargoItems = $cargoItems;
         $this->payment = $payment;
-        $this->qrCodeImage = $qrCodeImage;
     }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Cargo Payment Confirmed - Bill of Lading for #' . ($this->booking->booking_ref_no ?? ''),
+            subject: 'Cargo Payment Confirmed - Freight Receipt for #' . ($this->booking->booking_ref_no ?? ''),
         );
     }
 
@@ -50,7 +48,6 @@ class CargoPaymentConfirmation extends Mailable
                 'consignee' => $this->consignee,
                 'cargoItems' => $this->cargoItems,
                 'payment' => $this->payment,
-                'qrCodeImage' => $this->qrCodeImage,
             ],
         );
     }
@@ -69,7 +66,7 @@ class CargoPaymentConfirmation extends Mailable
                 return [];
             }
 
-            $filename = 'bill_of_lading_' . ($this->booking->booking_ref_no ?? 'unknown') . '.pdf';
+            $filename = 'freight_receipt_' . ($this->booking->booking_ref_no ?? 'unknown') . '.pdf';
             
             Log::info('CargoPaymentConfirmation: PDF generated successfully, attaching to email');
             
