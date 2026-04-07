@@ -118,6 +118,15 @@
         $grandTotal = $totalAmount + $stamp;
 
         $payment = \App\Models\Payment::where('booking_ref_no', $booking->booking_ref_no)->first();
+        
+        // Get arrastre and total from cargo_receipt
+        $cargoReceipt = \App\Models\CargoReceipt::where('booking_ref_no', $booking->booking_ref_no)->first();
+        $arrastre = $cargoReceipt ? $cargoReceipt->arrastre : 0;
+        $receiptTotal = $cargoReceipt ? $cargoReceipt->total : 0;
+        
+        // If receipt total is available, use it; otherwise use grandTotal
+        $displayTotal = $receiptTotal > 0 ? $receiptTotal : $grandTotal;
+        
         $voyage = $booking->voyage;
         $route = $voyage ? $voyage->routePort : null;
         $vessel = $voyage ? $voyage->vessel : null;
@@ -148,10 +157,6 @@
     <table width="100%" cellpadding="0" cellspacing="0"
         style="margin-bottom:18px; padding:26px 16px; border-radius:4px; background:#1a3a6b;">
         <tr>
-            {{-- Logo --}}
-            <td style="width:160px; vertical-align:middle; text-align:center;">
-                <img src="{{ asset('images/logo_wo_name.png') }}" width="90" alt="Logo" />
-            </td>
             {{-- Company Info --}}
             <td style="vertical-align:middle; text-align:center; padding:6px 18px;">
                 <div class="company-name">LAPULAPU SHIPPING LINES CORPORATION</div>
@@ -389,6 +394,22 @@
                             ₱{{ number_format($payment->total_amount ?? $grandTotal, 2) }}
                         </td>
                     </tr>
+                    @if($arrastre > 0)
+                    <tr>
+                        <td style="font-size:10px; color:#666;">ARRASTRE:</td>
+                        <td style="font-size:11px; font-weight:bold; color:#1a3a6b;">
+                            ₱{{ number_format($arrastre, 2) }}
+                        </td>
+                    </tr>
+                    @endif
+                    @if($receiptTotal > 0)
+                    <tr>
+                        <td style="font-size:10px; color:#666;">TOTAL (W/ ARRASTRE):</td>
+                        <td style="font-size:14px; font-weight:bold; color:#1a3a6b;">
+                            ₱{{ number_format($receiptTotal, 2) }}
+                        </td>
+                    </tr>
+                    @endif
                 </table>
 
                 <div
@@ -428,9 +449,25 @@
                     <tr>
                         <td style="font-size:10px; color:#666;">AMOUNT PAID:</td>
                         <td style="font-size:16px; font-weight:bold; color:#27ae60; text-align:right;">
-                            ₱{{ number_format($payment->total_amount ?? $grandTotal, 2) }}
+                            ₱{{ number_format($payment->total_amount ?? $displayTotal, 2) }}
                         </td>
                     </tr>
+                    @if($arrastre > 0)
+                    <tr>
+                        <td style="font-size:10px; color:#666;">ARRASTRE:</td>
+                        <td style="font-size:12px; font-weight:bold; color:#27ae60; text-align:right;">
+                            ₱{{ number_format($arrastre, 2) }}
+                        </td>
+                    </tr>
+                    @endif
+                    @if($receiptTotal > 0)
+                    <tr>
+                        <td style="font-size:10px; color:#666;">TOTAL:</td>
+                        <td style="font-size:16px; font-weight:bold; color:#27ae60; text-align:right;">
+                            ₱{{ number_format($receiptTotal, 2) }}
+                        </td>
+                    </tr>
+                    @endif
                 </table>
 
             </td>

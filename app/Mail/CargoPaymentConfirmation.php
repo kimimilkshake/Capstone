@@ -8,7 +8,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Queue\SerializesModels;
-use App\Services\BillOfLadingPdf;
+use App\Services\FreightReceiptPdf;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -21,6 +21,7 @@ class CargoPaymentConfirmation extends Mailable
     public $consignee;
     public $cargoItems;
     public $payment;
+    public $pdf;
 
     public function __construct($booking, $sender, $consignee, $cargoItems, $payment)
     {
@@ -29,6 +30,23 @@ class CargoPaymentConfirmation extends Mailable
         $this->consignee = $consignee;
         $this->cargoItems = $cargoItems;
         $this->payment = $payment;
+
+        // Generate PDF in constructor
+        try {
+            Log::info('CargoPaymentConfirmation: Generating PDF for booking ' . ($booking->booking_ref_no ?? 'unknown'));
+            $this->pdf = FreightReceiptPdf::generate($booking);
+            if ($this->pdf) {
+                Log::info('CargoPaymentConfirmation: PDF generated successfully');
+            } else {
+                Log::warning('CargoPaymentConfirmation: PDF generation returned null');
+            }
+        } catch (Throwable $e) {
+            Log::error('CargoPaymentConfirmation: PDF generation failed in constructor', [
+                'booking_ref' => $booking->booking_ref_no ?? 'unknown',
+                'error' => $e->getMessage()
+            ]);
+            $this->pdf = null;
+        }
     }
 
     public function envelope(): Envelope
@@ -48,6 +66,7 @@ class CargoPaymentConfirmation extends Mailable
                 'consignee' => $this->consignee,
                 'cargoItems' => $this->cargoItems,
                 'payment' => $this->payment,
+                'pdfAttached' => $this->pdf !== null,
             ],
         );
     }
@@ -56,33 +75,19 @@ class CargoPaymentConfirmation extends Mailable
     {
         $attachments = [];
         
-        try {
-            Log::info('CargoPaymentConfirmation: Starting PDF generation for booking ' . ($this->booking->booking_ref_no ?? 'unknown'));
-            
-            $pdf = BillOfLadingPdf::generate($this->booking);
-
-            if ($pdf === null) {
-                Log::warning('CargoPaymentConfirmation: PDF generation returned null for booking ' . ($this->booking->booking_ref_no ?? 'unknown'));
-                return [];
-            }
-
+        if ($this->pdf) {
             $filename = 'freight_receipt_' . ($this->booking->booking_ref_no ?? 'unknown') . '.pdf';
             
-            Log::info('CargoPaymentConfirmation: PDF generated successfully, attaching to email');
+            Log::info('CargoPaymentConfirmation: Attaching PDF to email');
             
-            // Attach generated PDF of the Bill of Lading
-            $attachments[] = Attachment::fromData(function () use ($pdf) {
-                return $pdf;
+            // Attach generated PDF of the Freight Receipt
+            $attachments[] = Attachment::fromData(function () {
+                return $this->pdf;
             }, $filename)->withMime('application/pdf');
-            
-            return $attachments;
-        } catch (Throwable $e) {
-            Log::error('CargoPaymentConfirmation: PDF attachment failed', [
-                'booking_ref' => $this->booking->booking_ref_no ?? 'unknown',
-                'error' => $e->getMessage()
-            ]);
-            report($e);
-            return [];
+        } else {
+            Log::warning('CargoPaymentConfirmation: No PDF to attach');
         }
+        
+        return $attachments;
     }
 }

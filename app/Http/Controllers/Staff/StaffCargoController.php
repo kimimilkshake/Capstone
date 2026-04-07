@@ -17,10 +17,12 @@ use App\Models\Consignee;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Mail\CargoBookingApproved;
+use App\Mail\CargoBookingStaffApproved;
 use App\Mail\CargoBookingRejected;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
 use App\Services\CargoAutoPlacementService;
-use App\Services\BillOfLadingPdf;
+use App\Services\FreightReceiptPdf;
 use App\Models\BillOfLading;
 use App\Http\Controllers\Traits\StaffGuard;
 use Illuminate\Validation\Rule;
@@ -579,7 +581,7 @@ class StaffCargoController extends Controller
         $booking->payment_id = $payment->payment_id;
         $booking->save();
 
-        // Move cargo items to cargo_receipt and create bill of lading
+        // Move cargo items to cargo_receipt and create freight receipt
         $cargoReceiptIds = [];
         $firstCargoReceipt = null;
         foreach ($booking->cargoBookings as $cargo) {
@@ -636,16 +638,27 @@ class StaffCargoController extends Controller
             $payment->save();
         }
 
-        // Create bill of lading records with voyage details (vessel name, loading port, unloading port)
+        // Create freight receipt records with voyage details (vessel name, loading port, unloading port)
         $voyage = $booking->voyage;
+        
+        // Extract port information from routePort relationships
+        $originPort = $voyage->routePort?->portOrigin;
+        $originPortDisplay = $originPort 
+            ? trim(($originPort->terminal_name ?? '') . ' ' . ($originPort->port_name ?? '') . ', ' . ($originPort->city ?? ''))
+            : 'Not specified';
+        
+        $destPort = $voyage->routePort?->portDestination;
+        $destPortDisplay = $destPort 
+            ? trim(($destPort->terminal_name ?? '') . ' ' . ($destPort->port_name ?? '') . ', ' . ($destPort->city ?? ''))
+            : 'Not specified';
 
         foreach ($cargoReceiptIds as $receiptId) {
             BillOfLading::create([
                 'cargo_receipt_id' => $receiptId,
                 'staff_id' => $staffId,
                 'bl_date_issued' => now()->toDateString(),
-                'bl_loading_port' => $voyage->loading_port ?? 'Not specified',
-                'bl_unloading_port' => $voyage->unloading_port ?? 'Not specified',
+                'bl_loading_port' => $originPortDisplay,
+                'bl_unloading_port' => $destPortDisplay,
             ]);
         }
 
@@ -664,16 +677,33 @@ class StaffCargoController extends Controller
         // Generate payment URL for the sender
         $paymentUrl = url('/paymongo/payment/' . $booking->booking_ref_no);
 
-        // Send email with payment link only (no attachments)
-        Mail::to($booking->sender->sender_email)
-            ->send(new \App\Mail\CargoBookingApproved(
-                $booking,
-                $booking->sender,
-                $booking->consignee,
-                $booking->cargoBookings,
-                $payment,
-                $paymentUrl
-            ));
+        // Check if any cargo has a picture (indicates user booking)
+        $hasUserUploadedPicture = $booking->cargoBookings->some(function($cargo) {
+            return !empty($cargo->cargo_picture);
+        });
+
+        // Send appropriate email based on booking source
+        if ($hasUserUploadedPicture) {
+            // User booking - send email with payment link
+            Mail::to($booking->sender->sender_email)
+                ->send(new \App\Mail\CargoBookingApproved(
+                    $booking,
+                    $booking->sender,
+                    $booking->consignee,
+                    $booking->cargoBookings,
+                    $payment,
+                    $paymentUrl
+                ));
+        } else {
+            // Staff booking - send approval notification without payment details
+            Mail::to($booking->sender->sender_email)
+                ->send(new \App\Mail\CargoBookingStaffApproved(
+                    $booking,
+                    $booking->sender,
+                    $booking->consignee,
+                    $booking->cargoBookings
+                ));
+        }
 
         return redirect()->route('cargo.bookings.pending')
             ->with('success', 'Booking approved! Cargo can fit in available hatches and has been added to auto-placement visualization. Payment link email sent to sender.');
@@ -760,7 +790,7 @@ class StaffCargoController extends Controller
 
 
     /**
-     * Return the Bill of Lading PDF for a booking (inline view)
+     * Return the Freight Receipt PDF for a booking (inline view)
      */
     public function bolPdf($id)
     {
@@ -780,19 +810,19 @@ class StaffCargoController extends Controller
             ->where('booking_ref_no', $id)
             ->firstOrFail();
 
-        $pdf = BillOfLadingPdf::generate($booking);
+        $pdf = FreightReceiptPdf::generate($booking);
 
         if ($pdf === null) {
-            return response()->view('authorized.staff.bill_of_lading_pdf', compact('booking'));
+            return response()->view('authorized.staff.freight_receipt_pdf', compact('booking'));
         }
 
         return response($pdf, 200)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="bill_of_lading_' . $id . '.pdf"');
+            ->header('Content-Disposition', 'inline; filename="freight_receipt_' . $id . '.pdf"');
     }
 
     /**
-     * Display the Bill of Lading in a formatted HTML view (printable)
+     * Display the Freight Receipt in a formatted HTML view (printable)
      */
     public function bolView($id)
     {
@@ -812,7 +842,7 @@ class StaffCargoController extends Controller
             ->where('booking_ref_no', $id)
             ->firstOrFail();
 
-        return view('authorized.staff.bill_of_lading', compact('booking'));
+        return view('authorized.staff.freight_receipt_pdf', compact('booking'));
     }
 
     /**
@@ -915,6 +945,7 @@ class StaffCargoController extends Controller
 
     /**
      * Show payment form for cargo booking
+     * Only accessible for STAFF-CREATED cargo bookings (those WITHOUT cargo_pictures)
      */
     public function pay($id)
     {
@@ -927,6 +958,17 @@ class StaffCargoController extends Controller
             ->where('booking_ref_no', $id)
             ->firstOrFail();
 
+        // CRITICAL: Block if this is a USER-CREATED booking (has cargo_pictures)
+        $hasCargoWithPictures = DB::table('cargo_booking')
+            ->where('booking_ref_no', $id)
+            ->whereNotNull('cargo_picture')
+            ->where('cargo_picture', '!=', '')
+            ->count() > 0;
+        
+        if ($hasCargoWithPictures) {
+            abort(403, 'User-created cargo bookings must be paid online through the payment link sent via email.');
+        }
+
         if ($booking->booking_status !== 'Confirmed' || optional($booking->payment)->payment_status !== 'Pending') {
             abort(403, 'Booking is not eligible for payment processing');
         }
@@ -936,6 +978,7 @@ class StaffCargoController extends Controller
 
     /**
      * Process payment for staff cargo booking
+     * Only accessible for STAFF-CREATED cargo bookings (those WITHOUT cargo_pictures)
      */
     public function processPayment(Request $request, $id)
     {
@@ -949,6 +992,20 @@ class StaffCargoController extends Controller
         ]);
 
         $booking = Booking::with('payment')->where('booking_ref_no', $id)->firstOrFail();
+
+        // CRITICAL: Block if this is a USER-CREATED booking (has cargo_pictures)
+        $hasCargoWithPictures = DB::table('cargo_booking')
+            ->where('booking_ref_no', $id)
+            ->whereNotNull('cargo_picture')
+            ->where('cargo_picture', '!=', '')
+            ->count() > 0;
+        
+        if ($hasCargoWithPictures) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Cannot process payment for user-created cargo bookings. They must be paid online.'
+            ], 403);
+        }
 
         if ($booking->booking_status !== 'Confirmed' || optional($booking->payment)->payment_status !== 'Pending') {
             return response()->json(['success' => false, 'message' => 'Booking is not eligible for payment processing']);

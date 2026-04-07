@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\SendTicketEmail;
 use App\Jobs\SendCargoPaymentConfirmationEmail;
+use App\Models\Voyage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -399,6 +400,7 @@ class PaymentController extends Controller
 
     /**
      * Show cargo payment page
+     * Only accessible for USER-CREATED cargo bookings (those with cargo_pictures populated)
      */
     public function showCargoPayment($bookingRef)
     {
@@ -414,6 +416,18 @@ class PaymentController extends Controller
             return redirect()->route('homepage')->with('error', 'This payment page is for cargo bookings only.');
         }
 
+        // CRITICAL: Verify this is a USER-CREATED booking (has cargo_pictures)
+        $hasCargoWithPictures = DB::table('cargo_booking')
+            ->where('booking_ref_no', $bookingRef)
+            ->whereNotNull('cargo_picture')
+            ->where('cargo_picture', '!=', '')
+            ->count() > 0;
+        
+        if (!$hasCargoWithPictures) {
+            return redirect()->route('homepage')
+                ->with('error', 'This payment link is not valid for this booking type. Staff-created cargo must be paid through the authorized staff system.');
+        }
+
         // Get payment record
         $payment = DB::table('payment')->where('booking_ref_no', $bookingRef)->first();
         
@@ -424,8 +438,8 @@ class PaymentController extends Controller
         // Get sender info
         $sender = DB::table('sender')->where('sender_id', $booking->sender_id)->first();
         
-        // Get voyage info
-        $voyage = DB::table('voyage')->where('voyage_id', $booking->voyage_id)->first();
+        // Get voyage info with routePort relationship
+        $voyage = Voyage::with('routePort')->where('voyage_id', $booking->voyage_id)->first();
 
         return view('payments.cargo_payment', [
             'booking' => $booking,
@@ -437,6 +451,7 @@ class PaymentController extends Controller
 
     /**
      * Process cargo payment via PayMongo
+     * Only accessible for USER-CREATED cargo bookings (those with cargo_pictures populated)
      */
     public function processCargoPayment(Request $request, $bookingRef)
     {
@@ -444,6 +459,20 @@ class PaymentController extends Controller
         
         if (!$payment) {
             return response()->json(['success' => false, 'message' => 'Payment record not found'], 404);
+        }
+
+        // CRITICAL: Verify this is a USER-CREATED booking (has cargo_pictures)
+        $hasCargoWithPictures = DB::table('cargo_booking')
+            ->where('booking_ref_no', $bookingRef)
+            ->whereNotNull('cargo_picture')
+            ->where('cargo_picture', '!=', '')
+            ->count() > 0;
+        
+        if (!$hasCargoWithPictures) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Payment can only be processed through the authorized staff channel for this booking type.'
+            ], 403);
         }
 
         // Check if payment is already completed

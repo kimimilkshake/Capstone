@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cargo Payment - #{{ $booking->booking_ref_no }}</title>
+    <title>Cargo Payment - #<?php echo e($booking->booking_ref_no); ?></title>
     <style>
         * {
             margin: 0;
@@ -210,69 +210,71 @@
                 <p>Your payment has already been processed. Please check your email for the Freight Receipt.</p>
             </div>
 
-            @if(strtolower($payment->payment_status ?? '') === 'initial' || strtolower($payment->payment_status ?? '') === 'completed')
+            <?php if(strtolower($payment->payment_status ?? '') === 'initial' || strtolower($payment->payment_status ?? '') === 'completed'): ?>
                 <script>
                     document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('successMessage').style.display = 'block';
                     });
                 </script>
-            @else
+            <?php else: ?>
                 <!-- Booking Information -->
                 <div class="info-section">
                     <h3>📋 Booking Details</h3>
                     <div class="info-row">
                         <span class="info-label">Booking Type</span>
-                        <span class="info-value">{{ ucfirst($booking->booking_type ?? 'Cargo') }}</span>
+                        <span class="info-value"><?php echo e(ucfirst($booking->booking_type ?? 'Cargo')); ?></span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Status</span>
                         <span class="info-value">
-                            <span class="status-badge status-{{ strtolower($booking->booking_status ?? 'pending') }}">
-                                {{ $booking->booking_status ?? 'Pending' }}
+                            <span class="status-badge status-<?php echo e(strtolower($booking->booking_status ?? 'pending')); ?>">
+                                <?php echo e($booking->booking_status ?? 'Pending'); ?>
+
                             </span>
                         </span>
                     </div>
-                    @if($voyage)
-                    @php
+                    <?php if($voyage): ?>
+                    <?php
                         $originPort = $voyage->routePort?->portOrigin;
                         $originDisplay = $originPort ? ($originPort->terminal_name ?? '') . ' ' . ($originPort->port_name ?? '') . ', ' . ($originPort->city ?? '') : 'N/A';
                         $destPort = $voyage->routePort?->portDestination;
                         $destDisplay = $destPort ? ($destPort->terminal_name ?? '') . ' ' . ($destPort->port_name ?? '') . ', ' . ($destPort->city ?? '') : 'N/A';
-                    @endphp
+                    ?>
                     <div class="info-row">
                         <span class="info-label">Port of Origin</span>
-                        <span class="info-value">{{ trim($originDisplay) }}</span>
+                        <span class="info-value"><?php echo e(trim($originDisplay)); ?></span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Port of Destination</span>
-                        <span class="info-value">{{ trim($destDisplay) }}</span>
+                        <span class="info-value"><?php echo e(trim($destDisplay)); ?></span>
                     </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
 
                 <!-- Sender Information -->
-                @if($sender)
+                <?php if($sender): ?>
                 <div class="info-section">
                     <h3>👤 Sender Information</h3>
                     <div class="info-row">
                         <span class="info-label">Name</span>
-                        <span class="info-value">{{ $sender->sender_name ?? 'N/A' }}</span>
+                        <span class="info-value"><?php echo e($sender->sender_name ?? 'N/A'); ?></span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Contact Number</span>
-                        <span class="info-value">{{ $sender->sender_contactno ?? 'N/A' }}</span>
+                        <span class="info-value"><?php echo e($sender->sender_contactno ?? 'N/A'); ?></span>
                     </div>
                 </div>
-                @endif
+                <?php endif; ?>
 
                 <!-- Payment Information -->
                 <div class="payment-section">
                     <p class="amount-label">Amount to Pay</p>
-                    <p class="amount">₱{{ number_format($payment->total_amount ?? 0, 2) }}</p>
+                    <p class="amount">₱<?php echo e(number_format($payment->total_amount ?? 0, 2)); ?></p>
                     <p style="color: #666; font-size: 13px;">
                         Payment Status: 
-                        <span class="status-badge status-{{ strtolower($payment->payment_status ?? 'pending') }}">
-                            {{ $payment->payment_status ?? 'Pending' }}
+                        <span class="status-badge status-<?php echo e(strtolower($payment->payment_status ?? 'pending')); ?>">
+                            <?php echo e($payment->payment_status ?? 'Pending'); ?>
+
                         </span>
                     </p>
                 </div>
@@ -294,7 +296,7 @@
                     <strong>📌 Important Notice:</strong>
                     After successful payment, you will receive an email with the Freight Receipt for your records. Arrastre and other fees will be paid upon arrival at the office. Please ensure to bring a copy of your booking reference and payment confirmation when you approach the office for your cargo booking.
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
 
         <div class="footer">
@@ -313,11 +315,11 @@
             loading.style.display = 'block';
 
             try {
-                const response = await fetch('/paymongo/payment/{{ $booking->booking_ref_no }}/process', {
+                const response = await fetch('/paymongo/payment/<?php echo e($booking->booking_ref_no); ?>/process', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>'
                     }
                 });
 
@@ -343,3 +345,4 @@
     </script>
 </body>
 </html>
+<?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/payments/cargo_payment.blade.php ENDPATH**/ ?>

@@ -1,31 +1,31 @@
 <div class="payment-form">
-        {{-- Validation Check: Block if user-created cargo --}}
-        @php
+        
+        <?php
             $hasCargoWithPictures = $booking->cargoBookings()
                 ->whereNotNull('cargo_picture')
                 ->where('cargo_picture', '!=', '')
                 ->count() > 0;
-        @endphp
+        ?>
 
-        @if($hasCargoWithPictures)
+        <?php if($hasCargoWithPictures): ?>
             <div class="alert alert-danger" style="margin-bottom: 20px;">
                 <strong>⚠️ Invalid Access</strong>
                 <p>This is a user-submitted cargo booking. It must be paid online through the payment link sent to the customer's email address. Staff cannot process payment for user-created bookings through this interface.</p>
             </div>
             <script>
                 setTimeout(() => {
-                    window.location.href = "{{ route('homepage') }}";
+                    window.location.href = "<?php echo e(route('homepage')); ?>";
                 }, 3000);
             </script>
-        @else
-            <p><strong>Booking Reference:</strong> {{ $booking->booking_code }}</p>
-            <p><strong>Sender:</strong> {{ $booking->sender->sender_name ?? 'N/A' }}</p>
-            <p><strong>Consignee:</strong> {{ $booking->consignee->consignee_name ?? 'N/A' }}</p>
-            <p><strong>Total Amount:</strong> ₱{{ number_format($booking->payment->total_amount ?? 0, 2) }}</p>
+        <?php else: ?>
+            <p><strong>Booking Reference:</strong> <?php echo e($booking->booking_code); ?></p>
+            <p><strong>Sender:</strong> <?php echo e($booking->sender->sender_name ?? 'N/A'); ?></p>
+            <p><strong>Consignee:</strong> <?php echo e($booking->consignee->consignee_name ?? 'N/A'); ?></p>
+            <p><strong>Total Amount:</strong> ₱<?php echo e(number_format($booking->payment->total_amount ?? 0, 2)); ?></p>
         </div>
 
         <form id="paymentForm">
-            @csrf
+            <?php echo csrf_field(); ?>
             <div class="payment-options">
                 <h6>Select Payment Method</h6>
                 <div class="d-flex gap-3">
@@ -34,10 +34,10 @@
                 </div>
             </div>
         </form>
-        @endif
+        <?php endif; ?>
     </div>
 
-{{-- Loading Modal --}}
+
 <div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0">
@@ -67,4 +67,4 @@
             document.getElementById('paymentForm').submit();
         }, 1000);
     }
-</script>
+</script><?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/authorized/staff/pay_cargo_booking.blade.php ENDPATH**/ ?>

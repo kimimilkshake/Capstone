@@ -1,8 +1,26 @@
 <div class="verification-form">
-    <h4>Cargo Payment Verification</h4>
+    
+    <?php
+        $hasCargoWithPictures = $booking->cargoBookings()
+            ->whereNotNull('cargo_picture')
+            ->where('cargo_picture', '!=', '')
+            ->count() > 0;
+    ?>
+
+    <?php if($hasCargoWithPictures): ?>
+        <div class="user-submitted-cargo mb-4">
+            <strong>ℹ️ User-Submitted Cargo</strong>
+            <p>This booking was submitted and paid online by the customer. Please verify the payment details and add any applicable arrastre fees.</p>
+        </div>
+    <?php else: ?>
+        <div class="staff-created-cargo mb-4">
+            <strong>ℹ️ Staff-Created Cargo</strong>
+            <p>This booking was created by staff and payment has been recorded. Please verify the payment and add any applicable arrastre fees.</p>
+        </div>
+    <?php endif; ?>
+
     <div class="booking-summary mb-4">
-        <h5>Booking Details</h5>
-        <p><strong>Booking Reference:</strong> <?php echo e($booking->booking_ref_no); ?></p>
+        <p><strong>Booking Reference:</strong> <?php echo e($booking->booking_code); ?></p>
         <p><strong>Sender:</strong> <?php echo e($booking->sender->sender_name); ?></p>
         <p><strong>Consignee:</strong> <?php echo e($booking->consignee->consignee_name); ?></p>
         <p><strong>Initial Payment Amount:</strong> ₱<?php echo e(number_format($booking->payment->total_amount, 2)); ?></p>
