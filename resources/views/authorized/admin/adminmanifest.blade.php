@@ -158,7 +158,8 @@
                                     <td>{{ $p->pt_cot_no ?? '-' }}</td>
                                     <td>{{ $voyage->voyage_departure_date ?? '-' }}</td>
                                     <td class="text-end">{{ $p->pt_ticket_price ?? '-' }}</td>
-                                    <td>{{ !empty($p->pt_boarded_at) ? 'Boarded' : (\Illuminate\Support\Facades\DB::table('booking')->where('booking_ref_no', $p->booking_ref)->value('booking_status') ?? '-') }}</td>
+                                    @php $__status = !empty($p->pt_boarded_at) ? 'Boarded' : (\Illuminate\Support\Facades\DB::table('booking')->where('booking_ref_no', $p->booking_ref)->value('booking_status') ?? '-'); @endphp
+                                    <td>{{ $__status === 'Confirmed' ? 'Not Boarded' : $__status }}</td>
                                 </tr>
                             @endforeach
                         @endif

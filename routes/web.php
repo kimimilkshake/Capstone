@@ -483,3 +483,4 @@ Route::get('/files/{path}', [\App\Http\Controllers\StorageFileController::class,
 
 // QR Boarding API (moved to QrScannerController)
 Route::post('/qr/board-passenger', [QrScannerController::class, 'boardPassenger'])->name('qr.board_passenger');
+Route::post('/qr/board-by-ticket', [QrScannerController::class, 'boardByTicket'])->name('qr.board_by_ticket');
