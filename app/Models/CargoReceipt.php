@@ -20,6 +20,7 @@ class CargoReceipt extends Model
         'cargo_item_id',
         'voyage_id',
         'cargo_item_qty',
+        'arrastre',
         'total'
     ];
 

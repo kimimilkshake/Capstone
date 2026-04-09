@@ -10,15 +10,22 @@
 	<div class="search-filter-row mb-4" style="display:flex; gap:10px;">
 		<form class="search-bar d-flex gap-2 align-items-stretch" action="{{ route('admin.cargo.bookings.pending') }}" method="GET" style="flex:1;">
 			<input type="text" name="search" class="form-control" style="height: 46px; border-radius: 0;" placeholder="Search by Ref No., Sender, or Consignee..." value="{{ request('search') }}">
-			<select name="booking_status" class="form-select" style="max-width: 220px; height: 46px; border-radius: 0;">
+			<select name="booking_status" class="form-select" style="max-width: 180px; height: 46px; border-radius: 0;">
 				@foreach($allowedStatuses as $status)
 					<option value="{{ $status }}" {{ $selectedStatus === $status ? 'selected' : '' }}>
 						{{ in_array($status, ['Canceled', 'Cancelled']) ? 'Rejected' : $status }}
 					</option>
 				@endforeach
 			</select>
+			<select name="payment_status" class="form-select" style="max-width: 180px; height: 46px; border-radius: 0;">
+				@foreach($allowedPaymentStatuses as $status)
+					<option value="{{ $status }}" {{ ($selectedPaymentStatus ?? 'All') === $status ? 'selected' : '' }}>
+						{{ $status }}
+					</option>
+				@endforeach
+			</select>
 			<button type="submit" class="btn btn-primary">Search</button>
-			@if(request('search') || request('booking_status'))
+			@if(request('search') || request('booking_status') || request('payment_status'))
 				<a href="{{ route('admin.cargo.bookings.pending') }}" class="btn btn-outline-secondary">Clear</a>
 			@endif
 		</form>

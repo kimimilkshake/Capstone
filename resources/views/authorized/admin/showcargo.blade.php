@@ -207,7 +207,7 @@
 
 			<a href="{{ route('admin.cargo.bookings.bol', $booking->booking_ref_no) }}" target="_blank"
 				class="btn btn-secondary btn-lg px-4 ms-3">
-				Bill of Lading
+				Freight Receipt
 			</a>
 		</div>
 	</div>
