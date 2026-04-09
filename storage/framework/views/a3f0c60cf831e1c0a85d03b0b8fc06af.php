@@ -181,6 +181,7 @@
         const isPassengerNotification = notificationType.includes('passenger');
         const isPendingReview = isCargoNotification && notificationMsg.includes('pending review');
         const isApprovedCargo = isCargoNotification && notificationMsg.includes('has been approved');
+        const isRejectedCargo = isCargoNotification && notificationMsg.includes('has been rejected');
         const needsVerification = isCargoVerificationNotification && notificationStatus !== 'verified';
         const typeIcon = isCargoPaymentNotification
           ? 'fa-money-bill-wave'
@@ -197,7 +198,9 @@
           ? 'pending'
           : isApprovedCargo
             ? 'payment'
-            : needsVerification
+            : isRejectedCargo
+              ? 'rejected'
+              : needsVerification
             ? 'pending'
             : isCargoPaymentNotification
               ? 'payment'
