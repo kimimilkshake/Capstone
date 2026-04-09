@@ -65,4 +65,8 @@
         </div>
     </div>
 </footer>
+<<<<<<<< HEAD:storage/framework/views/4421bae0396c738c4ef1f6979081ff91.php
+<?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/components/footer.blade.php ENDPATH**/ ?>
+========
 <?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/components/footer.blade.php ENDPATH**/ ?>
+>>>>>>>> Cargo-Booking:storage/framework/views/479cb61124d06d9e326c839e788bbb82.php

@@ -344,4 +344,8 @@
   });
 </script>
 
+<<<<<<<< HEAD:storage/framework/views/a3f0c60cf831e1c0a85d03b0b8fc06af.php
 <?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/components/authHeader.blade.php ENDPATH**/ ?>
+========
+<?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/components/authHeader.blade.php ENDPATH**/ ?>
+>>>>>>>> Cargo-Booking:storage/framework/views/756ae268e13ad6a84055129f1add8a62.php

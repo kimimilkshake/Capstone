@@ -100,4 +100,8 @@
         });
     }
 </script>
+<<<<<<<< HEAD:storage/framework/views/a44000df6eccd1328af7e5c6113ecdc1.php
 <?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/components/toast.blade.php ENDPATH**/ ?>
+========
+<?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/components/toast.blade.php ENDPATH**/ ?>
+>>>>>>>> Cargo-Booking:storage/framework/views/3f173fcdb461b372494b5bc5e07f45f4.php

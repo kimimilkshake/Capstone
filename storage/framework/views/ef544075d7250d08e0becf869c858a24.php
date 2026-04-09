@@ -94,4 +94,8 @@
     <?php endif; ?>
 <?php $__env->stopSection(); ?>
 
+<<<<<<<< HEAD:storage/framework/views/e8b6d416290c2922f5100fff371d21b6.php
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/authorized/staff/dashboard.blade.php ENDPATH**/ ?>
+========
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/authorized/staff/dashboard.blade.php ENDPATH**/ ?>
+>>>>>>>> Cargo-Booking:storage/framework/views/ef544075d7250d08e0becf869c858a24.php

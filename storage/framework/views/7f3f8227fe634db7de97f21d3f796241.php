@@ -27,4 +27,8 @@
     <?php echo $__env->make('components.footer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <?php $__env->stopSection(); ?>
 
+<<<<<<<< HEAD:storage/framework/views/7f3f8227fe634db7de97f21d3f796241.php
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/passenger/homepage.blade.php ENDPATH**/ ?>
+========
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/passenger/homepage.blade.php ENDPATH**/ ?>
+>>>>>>>> Cargo-Booking:storage/framework/views/84737b119857ab0dc4d3b9c4528ef5c8.php

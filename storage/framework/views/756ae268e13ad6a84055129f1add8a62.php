@@ -23,6 +23,11 @@
             Mark all as read
           </button>
         </div>
+        <div class="notification-tabs" id="notificationTabs">
+          <button class="notification-tab active" data-filter="all">All</button>
+          <button class="notification-tab" data-filter="unread">Unread</button>
+          <button class="notification-tab" data-filter="read">Read</button>
+        </div>
         <div class="notification-list" id="notificationList">
           <div class="notification-empty">
             <div class="notification-empty-icon">
@@ -80,6 +85,8 @@
     const notificationBadge = document.getElementById('notificationBadge');
     const notificationList = document.getElementById('notificationList');
     const markAllReadBtn = document.getElementById('markAllReadBtn');
+    let currentFilter = 'all';
+    let allNotifications = [];
 
     // Toggle notification dropdown
     notificationToggle.addEventListener('click', (e) => {
@@ -106,7 +113,8 @@
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            renderNotifications(data.notifications);
+            allNotifications = data.notifications;
+            renderNotifications(filterNotifications(allNotifications, currentFilter));
             updateBadge(data.unread_count);
           }
         })
@@ -124,6 +132,28 @@
         });
     }
 
+    // Filter notifications by tab
+    function filterNotifications(notifications, filter) {
+      if (filter === 'unread') {
+        return notifications.filter(n => !['read', 'archived', 'Read', 'Archived'].includes(n.notification_status));
+      }
+      if (filter === 'read') {
+        return notifications.filter(n => ['read', 'Read'].includes(n.notification_status));
+      }
+      return notifications;
+    }
+
+    // Tab click handlers
+    document.querySelectorAll('.notification-tab').forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.notification-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentFilter = tab.dataset.filter;
+        renderNotifications(filterNotifications(allNotifications, currentFilter));
+      });
+    });
+
     // Render notifications
     function renderNotifications(notifications) {
       if (notifications.length === 0) {
@@ -140,7 +170,7 @@
       }
 
       notificationList.innerHTML = notifications.map(notification => {
-        const isUnread = !['read', 'archived'].includes(notification.notification_status);
+        const isUnread = !['read', 'archived', 'Read', 'Archived'].includes(notification.notification_status);
         const notificationType = (notification.notification_type || '').toLowerCase();
         const isPaymentNotification = notificationType.includes('payment');
         const isCargoNotification = notificationType.includes('cargo');
@@ -169,16 +199,13 @@
         // Make cargo notifications clickable if they have a booking reference
         // Check case-insensitively for cargo booking approval
         const clickHandler = bookingRef && isCargoNotification
-          ? `onclick="navigateToCargo(${bookingRef})"` 
-          : '';
-        const cursorStyle = bookingRef ? 'cursor: pointer;' : '';
+          ? `onclick="markAsRead(${notification.notification_id}); navigateToCargo(${bookingRef})"` 
+          : (isUnread ? `onclick="markAsRead(${notification.notification_id})"` : '');
+        const cursorStyle = (bookingRef || isUnread) ? 'cursor: pointer;' : '';
         const unreadMarker = isUnread ? '<span class="notification-unread-dot"></span>' : '';
 
         return `
           <div class="notification-item ${isUnread ? 'unread' : ''}" data-id="${notification.notification_id}" ${clickHandler} style="${cursorStyle}">
-            <div class="notification-icon ${typeClass}">
-              <i class="fa-solid ${typeIcon}"></i>
-            </div>
             <div class="notification-content">
               <div class="notification-meta-row">
                 <span class="notification-type-pill ${typeClass}">${typeLabel}</span>
@@ -187,6 +214,9 @@
               <p class="notification-message">${notification.notification_message}</p>
             </div>
             ${unreadMarker}
+            <button class="btn-archive-notification" onclick="event.stopPropagation(); archiveNotification(${notification.notification_id})" aria-label="Archive" title="Remove">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
           </div>
         `;
       }).join('');
@@ -220,6 +250,14 @@
 
     // Mark as read
     window.markAsRead = function(id) {
+      // Immediately remove dot and unread styling so user sees instant feedback
+      const item = document.querySelector(`.notification-item[data-id="${id}"]`);
+      if (item) {
+        item.classList.remove('unread');
+        const dot = item.querySelector('.notification-unread-dot');
+        if (dot) dot.remove();
+      }
+
       fetch(`/api/notifications/${id}/read`, { 
         method: 'POST',
         headers: {
@@ -306,4 +344,8 @@
   });
 </script>
 
+<<<<<<<< HEAD:storage/framework/views/a3f0c60cf831e1c0a85d03b0b8fc06af.php
+<?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/components/authHeader.blade.php ENDPATH**/ ?>
+========
 <?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/components/authHeader.blade.php ENDPATH**/ ?>
+>>>>>>>> Cargo-Booking:storage/framework/views/756ae268e13ad6a84055129f1add8a62.php

@@ -86,4 +86,8 @@
 
     </ul>
 </nav>
+<<<<<<<< HEAD:storage/framework/views/2c126ef639ed46fecdc1a74626f3dd9c.php
+<?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/components/staff_nav.blade.php ENDPATH**/ ?>
+========
 <?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/components/staff_nav.blade.php ENDPATH**/ ?>
+>>>>>>>> Cargo-Booking:storage/framework/views/0ba6ec6bdfe8e11058596e8c00a0101c.php

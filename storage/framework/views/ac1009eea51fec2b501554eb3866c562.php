@@ -62,4 +62,8 @@
         }
     });
 </script>
+<<<<<<<< HEAD:storage/framework/views/5fd685e68313f35fa9d61ee9c7789028.php
+<?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/components/hero.blade.php ENDPATH**/ ?>
+========
 <?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/components/hero.blade.php ENDPATH**/ ?>
+>>>>>>>> Cargo-Booking:storage/framework/views/ac1009eea51fec2b501554eb3866c562.php

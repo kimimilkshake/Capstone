@@ -29,7 +29,7 @@
                 <p>Cargo Bookings</p>
             </div>
             <div class="astat-boxes-col">
-                <span class="anumberStat">PHP <?php echo e(number_format($totalSales, 2)); ?></span>
+                <span class="anumberStat">₱<?php echo e(number_format($totalSales, 2)); ?></span>
                 <p>Total Sales</p>
             </div>
         </div>
@@ -63,7 +63,9 @@
                             <td><?php echo e(\Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('g:iA')); ?></td>
                             <td><?php echo e(\Carbon\Carbon::parse($voyage->voyage_arrival_date)->format('M j, Y, D')); ?></td>
                             <td><?php echo e(\Carbon\Carbon::parse($voyage->voyage_estimated_TA)->format('g:iA')); ?></td>
-                            <td><?php echo e($voyage->passenger_tickets_count); ?>/<?php echo e($voyage->vessel->vessel_total_passenger_capacity); ?></td>
+                            <td><?php echo e($voyage->passenger_tickets_count); ?>/<?php echo e($voyage->vessel->vessel_total_passenger_capacity); ?>
+
+                            </td>
                             <td><?php echo e($voyage->vessel->vessel_name); ?></td>
                             <td><?php echo e($voyage->voyage_status); ?></td>
                         </tr>
@@ -92,4 +94,8 @@
     <?php endif; ?>
 <?php $__env->stopSection(); ?>
 
+<<<<<<<< HEAD:storage/framework/views/e8b6d416290c2922f5100fff371d21b6.php
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/authorized/staff/dashboard.blade.php ENDPATH**/ ?>
+========
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/authorized/staff/dashboard.blade.php ENDPATH**/ ?>
+>>>>>>>> Cargo-Booking:storage/framework/views/ef544075d7250d08e0becf869c858a24.php
