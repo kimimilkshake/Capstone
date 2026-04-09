@@ -5,25 +5,39 @@
   @include('components.staff_nav')
   
   <div class="staff-body">
-    <h2 class="sms-header">SMS Message for Cancellation of Trips</h2>
-
-    <div class="sms-container">
-      <form method="POST" action="{{ route('staff.semaphore.send') }}" id="smsForm">
-        @csrf
-        <input type="hidden" name="voyage_id" value="{{ $voyage_id }}">
-
-        <div class="sms-template-row">
-          <span class="sms-template-label">Quick Templates:</span>
-          <button type="button" class="sms-template-button template-typhoon" data-template="Dear Valued Passengers and Cargo Senders,\n\nDue to the impending arrival of Typhoon [Name] and the corresponding safety advisories issued by local authorities, we regret to inform you that the voyage from {{ optional($voyage->routePort)->route_origin ?? '-' }} to {{ optional($voyage->routePort)->route_destination ?? '-' }} scheduled for {{$voyage->voyage_departure_date}} at {{ $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('h:i A') : '-' }} has been cancelled in the interest of ensuring the safety and well-being of our passengers, cargo, and staff." title="Typhoon Template" aria-label="Use typhoon template"><i class="fas fa-cloud-showers-heavy"></i></button>
-          <button type="button" class="sms-template-button template-technical" data-template="Dear Valued Passengers and Cargo Senders,\n\nDue to an unexpected technical issue affecting our vessel, we regret to inform you that the voyage from {{ optional($voyage->routePort)->route_origin ?? '-' }} to {{ optional($voyage->routePort)->route_destination ?? '-' }} scheduled for {{$voyage->voyage_departure_date}} at {{ $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('h:i A') : '-' }} has been cancelled until the issue is fully resolved. We sincerely apologize for any inconvenience caused and will provide updates as they become available." title="Technical Template" aria-label="Use technical issue template"><i class="fas fa-wrench"></i></button>
+    <div class="sms-page-wrapper">
+      <div class="sms-card">
+        <div class="sms-card-header">
+          <div class="sms-card-header-icon">
+            <i class="fas fa-sms"></i>
+          </div>
+          <div>
+            <h2 class="sms-card-title">SMS Cancellation Notice</h2>
+            <p class="sms-card-subtitle">Send a cancellation message to all passengers and cargo senders for this voyage.</p>
+          </div>
         </div>
 
-        <label for="message" class="sms-label">Message:</label>
-        <textarea id="message" name="message" class="sms-textarea" rows="5" required>{{ old('message') }}</textarea>
-        <button type="submit" class="sms-button">Send Message</button>
-      </form>
+        <div class="sms-card-body">
+          <form method="POST" action="{{ route('staff.semaphore.send') }}" id="smsForm">
+            @csrf
+            <input type="hidden" name="voyage_id" value="{{ $voyage_id }}">
+
+            <div class="sms-template-row">
+              <span class="sms-template-label">Quick Templates:</span>
+              <button type="button" class="sms-template-button template-typhoon" data-template="Dear Valued Passengers and Cargo Senders,\nDue to the impending arrival of Typhoon [Name] and the corresponding safety advisories issued by local authorities, we regret to inform you that the voyage from {{ optional($voyage->routePort)->route_origin ?? '-' }} to {{ optional($voyage->routePort)->route_destination ?? '-' }} scheduled for {{$voyage->voyage_departure_date}} at {{ $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('h:i A') : '-' }} has been cancelled in the interest of ensuring the safety and well-being of our passengers, cargo, and staff." title="Typhoon Template" aria-label="Use typhoon template"><i class="fas fa-cloud-showers-heavy"></i></button>
+              <button type="button" class="sms-template-button template-technical" data-template="Dear Valued Passengers and Cargo Senders,\nDue to an unexpected technical issue affecting our vessel, we regret to inform you that the voyage from {{ optional($voyage->routePort)->route_origin ?? '-' }} to {{ optional($voyage->routePort)->route_destination ?? '-' }} scheduled for {{$voyage->voyage_departure_date}} at {{ $voyage->voyage_estimated_TD ? \Carbon\Carbon::parse($voyage->voyage_estimated_TD)->format('h:i A') : '-' }} has been cancelled until the issue is fully resolved. We sincerely apologize for any inconvenience caused and will provide updates as they become available." title="Technical Template" aria-label="Use technical issue template"><i class="fas fa-wrench"></i></button>
+            </div>
+
+            <label for="message" class="sms-label">Message:</label>
+            <textarea id="message" name="message" class="sms-textarea" rows="6" required>{{ old('message') }}</textarea>
+            <button type="submit" class="sms-button"><i class="fas fa-paper-plane me-2"></i>Send Message</button>
+          </form>
+        </div>
+      </div>
+    </div>
 
       <div id="smsConfirmModal" class="confirm-dialog-overlay" aria-hidden="true">
+        <div class="confirm-dialog-bg" id="smsConfirmBg"></div>
         <div class="confirm-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="smsConfirmModalLabel">
           <div class="confirm-dialog-header">
             <h5 class="confirm-dialog-title" id="smsConfirmModalLabel">Confirm Message Send</h5>
@@ -40,6 +54,7 @@
       </div>
 
       <div id="smsLoadingOverlay" class="confirm-dialog-overlay" aria-hidden="true">
+        <div class="confirm-dialog-bg"></div>
         <div class="confirm-dialog-panel loading-dialog-panel" role="status" aria-live="polite">
           <div class="loading-spinner" aria-hidden="true"></div>
           <div class="confirm-dialog-title">Sending messages...</div>
@@ -56,7 +71,7 @@
       align-items: center;
       gap: 10px;
       flex-wrap: wrap;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
 
     .sms-template-label {
@@ -112,13 +127,23 @@
       display: none;
       align-items: center;
       justify-content: center;
-      background: rgba(15, 23, 42, 0.35);
       z-index: 3000;
       padding: 16px;
     }
 
+    .confirm-dialog-overlay .confirm-dialog-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0);
+      transition: background-color 0.2s ease-out;
+    }
+
     .confirm-dialog-overlay.is-open {
       display: flex;
+    }
+
+    .confirm-dialog-overlay.is-open .confirm-dialog-bg {
+      background: rgba(0, 0, 0, 0.6);
     }
 
     .confirm-dialog-panel {
@@ -127,8 +152,19 @@
       color: inherit;
       border: 1px solid #d9dee8;
       border-radius: 14px;
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
       pointer-events: auto;
+      position: relative;
+      z-index: 1;
+      opacity: 0;
+      transform: scale(0.9);
+      transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+      overflow: hidden;
+    }
+
+    .confirm-dialog-overlay.is-open .confirm-dialog-panel {
+      opacity: 1;
+      transform: scale(1);
     }
 
     .confirm-dialog-header,
@@ -141,7 +177,23 @@
     }
 
     .confirm-dialog-header {
-      border-bottom: 1px solid #d9dee8;
+      border-bottom: none;
+      background: #1E2541;
+      color: #ffffff;
+    }
+
+    .confirm-dialog-header .confirm-dialog-title {
+      color: #ffffff;
+    }
+
+    .confirm-dialog-header .confirm-dialog-close {
+      color: #ffffff;
+      opacity: 0.7;
+      transition: opacity 0.15s ease;
+    }
+
+    .confirm-dialog-header .confirm-dialog-close:hover {
+      opacity: 1;
     }
 
     .confirm-dialog-footer {
@@ -231,6 +283,8 @@
     const smsLoadingOverlay = document.getElementById('smsLoadingOverlay');
 
     function showSmsConfirmModal() {
+      smsConfirmModalElement.style.display = 'flex';
+      smsConfirmModalElement.offsetHeight;
       smsConfirmModalElement.classList.add('is-open');
       smsConfirmModalElement.setAttribute('aria-hidden', 'false');
     }
@@ -238,9 +292,12 @@
     function hideSmsConfirmModal() {
       smsConfirmModalElement.classList.remove('is-open');
       smsConfirmModalElement.setAttribute('aria-hidden', 'true');
+      setTimeout(() => { smsConfirmModalElement.style.display = 'none'; }, 200);
     }
 
     function showSmsLoadingOverlay() {
+      smsLoadingOverlay.style.display = 'flex';
+      smsLoadingOverlay.offsetHeight;
       smsLoadingOverlay.classList.add('is-open');
       smsLoadingOverlay.setAttribute('aria-hidden', 'false');
       confirmSmsSendButton.disabled = true;
@@ -281,10 +338,8 @@
     cancelSmsSendButton.addEventListener('click', hideSmsConfirmModal);
     closeSmsConfirmModal.addEventListener('click', hideSmsConfirmModal);
 
-    smsConfirmModalElement.addEventListener('click', function(e) {
-      if (e.target === smsConfirmModalElement) {
-        hideSmsConfirmModal();
-      }
+    smsConfirmModalElement.querySelector('.confirm-dialog-bg').addEventListener('click', function() {
+      hideSmsConfirmModal();
     });
 
     document.addEventListener('keydown', function(e) {

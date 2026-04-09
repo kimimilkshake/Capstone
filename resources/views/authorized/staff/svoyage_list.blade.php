@@ -190,19 +190,19 @@
             visibility: visible;
         }
 
-        .sms-modal-panel {
-            position: relative;
-            width: min(100%, 650px);
-            max-height: 90vh;
-            overflow-y: auto;
-            background: #f9f9f9;
-            border: 1px solid #ccc;
-            border-radius: 12px;
-            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.22);
-            transform: scale(0.85) translateY(30px);
-            opacity: 0;
-            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
-        }
+    .sms-modal-panel {
+      position: relative;
+      width: min(100%, 650px);
+      max-height: 90vh;
+      background: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.22);
+      transform: scale(0.85) translateY(30px);
+      opacity: 0;
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+      overflow: hidden;
+    }
 
         .sms-modal-overlay.is-open .sms-modal-panel {
             transform: scale(1) translateY(0);
