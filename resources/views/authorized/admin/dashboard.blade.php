@@ -3,25 +3,14 @@
 @section('content')
     @include('components.authHeader')
     @include('components.admin_nav') {{-- NAVBAR --}}
+
     <div class="admin-body">
         <div class="dashbord-titles">
             <h3 id="dashboard-datetoday">{{ \Carbon\Carbon::now()->format('F d, Y, l') }}</h3>
         </div>
-        <div class="astat-boxes-row">
-            <div class="astat-boxes-col">
-                <span class="anumberStat">{{ $passengerBookings }}</span>
-                <p>Passenger Bookings</p>
-            </div>
-            <div class="astat-boxes-col">
-                <span class="anumberStat">{{ $cargoBookings }}</span>
-                <p>Cargo Bookings</p>
-            </div>
-            <div class="astat-boxes-col">
-                <span class="anumberStat">₱{{ number_format($totalSales, 2) }}</span>
-                <p>Total Sales</p>
-            </div>
-        </div>
+
         <br>
+        
         <div class="astat-voyage">
             <h4>Today's Voyages</h4>
             <table class="voyage-table">
@@ -62,6 +51,9 @@
                     @endforelse
                 </tbody>
             </table>
+            <div class="mt-3">
+                {{ $voyages->links('pagination::bootstrap-5') }}
+            </div>
         </div>
     </div>
 

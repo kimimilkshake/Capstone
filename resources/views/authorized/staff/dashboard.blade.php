@@ -4,18 +4,6 @@
     @include('components.authHeader')
     @include('components.staff_nav')
 
-    <!-- Centered Dropdown Success Alert -->
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show text-center" role="alert"
-            style="position: fixed; z-index: 9999; top: 80px; left: 0; right: 0; margin-left: auto; margin-right: auto; width: 90%; max-width: 800px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); font-size: 1.1rem; padding: 1.5rem;">
-            <button type="button" class="btn-close position-absolute top-0 end-0 m-2" data-bs-dismiss="alert"
-                aria-label="Close"></button>
-            <i class="fas fa-check-circle mb-2" style="font-size: 3rem; color: #198754;"></i>
-            <h5 class="mb-2"><strong>Success!</strong></h5>
-            <p class="mb-0">{{ session('success') }}</p>
-        </div>
-    @endif
-
     <div class="staff-body">
         <div class="dashbord-titles">
             <h3 id="dashboard-datetoday">{{ \Carbon\Carbon::now()->format('F d, Y, l') }}</h3>
@@ -30,8 +18,34 @@
                 <p>Cargo Bookings</p>
             </div>
             <div class="astat-boxes-col">
+                <span class="anumberStat">₱ XX,XXX.XX</span>
+                <p>Passenger Revenue</p>
+            </div>
+            <div class="astat-boxes-col">
+                <span class="anumberStat">₱ XX,XXX.XX</span>
+                <p>Cargo Revenue</p>
+            </div>
+            <div class="astat-boxes-col">
                 <span class="anumberStat">₱{{ number_format($totalSales, 2) }}</span>
-                <p>Total Sales</p>
+                <p>Total Revenue</p>
+            </div>
+        </div>
+        <div class="astat-boxes-row">
+            <div class="astat-boxes-col">
+                <ul>
+                    <li>the pie chart of the payment methods will go here</li>
+                    <li>it will be multicolored, with each color representing a different payment method</li>
+                    <li>green for cash and orange for gcash</li>
+                    <li>this portion will also show amount received in cash and amount received in gcash and the total amount</li>
+                </ul>
+            </div>
+            <div class="astat-boxes-col">
+                <ul>
+                    <li>the bar chart showing the total number of bookings per route will go here</li>
+                    <li>x-axis will be the routes, per route so one red and blue for CEBBAY, another red and blue for another route, etc.</li>
+                    <li>y-axis will be for the total number of bookings</li>
+                    <li>it will be multicolored, red for cargo bookings and blue for passenger bookings</li>
+                </ul>
             </div>
         </div>
         <br>
