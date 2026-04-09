@@ -133,7 +133,7 @@ class NotificationController extends Controller
             'cargo_receipt_id' => 'nullable|exists:cargo_receipt,cargo_receipt_id',
             'payment_id' => 'nullable|exists:payment,payment_id',
             'notification_message' => 'required|string|max:255',
-            'notification_type' => 'required|in:cargo booking approval,payment received',
+            'notification_type' => 'required|in:cargo booking approval,payment received,Cargo Payment,Cargo Payment Verification',
         ]);
 
         $notification = Notification::create([

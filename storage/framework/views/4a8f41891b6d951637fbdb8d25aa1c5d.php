@@ -11,34 +11,37 @@
             <div class="col-lg-6">
                 <div class="card shadow-sm p-4 mb-4">
                     <h5 class="mb-2">Booking Information</h5>
-                    
+
                     <?php
                         // ✅ UNIT CONVERSION TO METERS
-                        function toMeters($value, $unit) {
+                        function toMeters($value, $unit)
+                        {
                             $unit = strtolower($unit);
 
                             return match ($unit) {
-                                'm'   => $value,
-                                'cm'  => $value / 100,
-                                'in'  => $value * 0.0254,
-                                'ft'  => $value * 0.3048,
-                                default => $value
+                                'm' => $value,
+                                'cm' => $value / 100,
+                                'in' => $value * 0.0254,
+                                'ft' => $value * 0.3048,
+                                default => $value,
                             };
                         }
 
                         // ✅ CBM CALCULATION (NOW UNIT-CONSISTENT)
-                        function computeCBM($cargo) {
+                        function computeCBM($cargo)
+                        {
                             $unit = $cargo->measurementUnit->measurement_unit_abbreviation ?? 'cm';
 
-                            $length = toMeters((float)$cargo->length, $unit);
-                            $width  = toMeters((float)$cargo->width, $unit);
-                            $height = toMeters((float)$cargo->height, $unit);
+                            $length = toMeters((float) $cargo->length, $unit);
+                            $width = toMeters((float) $cargo->width, $unit);
+                            $height = toMeters((float) $cargo->height, $unit);
 
                             return $length * $width * $height;
                         }
 
                         // ✅ CENTRALIZED SUBTOTAL CALCULATION
-                        function computeSubtotal($cargo) {
+                        function computeSubtotal($cargo)
+                        {
                             $freight = $cargo->cargoItem->cargo_item_freight ?? 0;
                             $qty = (float) ($cargo->quantity ?? 0);
 
@@ -93,7 +96,7 @@
                                 $calculatedTotal += computeSubtotal($c);
                             }
 
-                            $stamp = 20.00;
+                            $stamp = 20.0;
                             $calculatedTotal += $stamp;
                         ?>
 
@@ -228,7 +231,7 @@
                     </thead>
 
                     <tbody>
-                       <?php $total = 0; ?>
+                        <?php $total = 0; ?>
 
                         <?php $__currentLoopData = $booking->cargoBookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <?php
@@ -268,7 +271,7 @@
                                         $total += computeSubtotal($c);
                                     }
 
-                                    $stamp = 20.00;
+                                    $stamp = 20.0;
                                     $totalTransaction = $total + $stamp;
                                 ?>
 
@@ -295,6 +298,14 @@
             </div>
         <?php endif; ?>
 
+        <?php if($booking->booking_status === 'Confirmed' && ($payment->payment_status ?? null) === 'Pending'): ?>
+            <div class="text-center mt-3">
+                <button type="button" class="btn btn-success btn-lg px-4" onclick="showPaymentModal()">
+                    Pay Now
+                </button>
+            </div>
+        <?php endif; ?>
+
         <div class="text-center mt-4">
             <a href="<?php echo e(route('cargo.bookings.pending')); ?>" class="btn btn-outline-primary btn-lg px-4">
                 Back to Pending Bookings
@@ -302,7 +313,7 @@
 
             <a href="<?php echo e(route('cargo.bookings.bol', $booking->booking_ref_no)); ?>" target="_blank"
                 class="btn btn-secondary btn-lg px-4 ms-3">
-                Bill of Lading
+                Freight Receipt
             </a>
         </div>
     </div>
@@ -355,15 +366,35 @@
     </div>
 
     
-    <div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+        data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0">
                 <div class="modal-body text-center p-5">
                     <div class="spinner-border text-primary mb-3" role="status" style="width: 60px; height: 60px;">
                         <span class="visually-hidden">Loading...</span>
                     </div>
-                    <h5 class="mt-3">Loading... Please Wait</h5>
-                    <p class="text-muted mt-2">Processing your request</p>
+                    <h5 class="mt-3">Processing Payment...</h5>
+                    <p class="text-muted mt-2">Please wait while we confirm your payment</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="modal fade" id="paymentConfirmModal" tabindex="-1" aria-labelledby="paymentConfirmLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="paymentConfirmLabel">Confirm Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Would you like to pay with <strong id="confirmMethod">CASH</strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                    <button type="button" class="btn btn-success" id="confirmPaymentBtn">Yes</button>
                 </div>
             </div>
         </div>
@@ -386,7 +417,7 @@
             event.preventDefault();
             const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
             modal.show();
-            
+
             // Submit the form after showing the modal
             setTimeout(() => {
                 event.target.submit();
@@ -445,12 +476,16 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
+                    console.error('Validation error:', error);
                     btn.innerHTML = originalText;
                     btn.disabled = false;
 
-                    // If error, still allow to proceed (fail-open policy)
-                    showLoadingAndSubmit();
+                    // Fail-closed: if validation API errors, block acceptance
+                    showToast(
+                        '<strong>\u26a0 Validation Error</strong><br>Could not reach the placement validation service. Please try again before accepting.',
+                        'danger',
+                        true
+                    );
                 });
         }
 
@@ -460,17 +495,17 @@
         function showLoadingAndSubmit() {
             const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
             modal.show();
-            
+
             setTimeout(() => {
                 document.getElementById('acceptForm').submit();
             }, 500);
         }
 
         /**
-         * Show placement validation warning as browser alert
+         * Show placement validation warning as toast
          */
         function showPlacementWarning(data) {
-            alert(data.message);
+            showToast(data.message, 'danger', true);
         }
 
         /**
@@ -483,9 +518,112 @@
                 if (modal) {
                     modal.hide();
                 }
-                
+
                 showLoadingAndSubmit();
             }
+        }
+    </script>
+
+    <!-- Payment Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="paymentModalLabel">Process Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="transaction-summary mb-4">
+                        <h6>Transaction Summary</h6>
+                        <div class="row">
+                            <div class="col-6"><strong>Booking Reference:</strong></div>
+                            <div class="col-6"><?php echo e($booking->booking_code); ?></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6"><strong>Sender:</strong></div>
+                            <div class="col-6"><?php echo e($booking->sender->sender_name ?? 'N/A'); ?></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6"><strong>Consignee:</strong></div>
+                            <div class="col-6"><?php echo e($booking->consignee->consignee_name ?? 'N/A'); ?></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6"><strong>Total Amount:</strong></div>
+                            <div class="col-6">₱<?php echo e(number_format($payment->total_amount ?? 0, 2)); ?></div>
+                        </div>
+                    </div>
+
+                    <div class="payment-options">
+                        <h6>Select Payment Method</h6>
+                        <div class="d-flex gap-3">
+                            <button type="button" class="btn btn-outline-primary" onclick="processPayment('cash')">Pay with Cash</button>
+                            <button type="button" class="btn btn-outline-success" onclick="processPayment('gcash')">Pay with GCash</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showPaymentModal() {
+            const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            modal.show();
+        }
+
+        function processPayment(method) {
+            // Show confirmation modal
+            document.getElementById('confirmMethod').textContent = method.toUpperCase();
+            const modal = new bootstrap.Modal(document.getElementById('paymentConfirmModal'));
+            modal.show();
+
+            // Handle confirmation
+            const confirmBtn = document.getElementById('confirmPaymentBtn');
+            const handleConfirm = function() {
+                modal.hide();
+                showLoadingAndExecute(method);
+                confirmBtn.removeEventListener('click', handleConfirm);
+            };
+            confirmBtn.addEventListener('click', handleConfirm);
+        }
+
+        function showLoadingAndExecute(method) {
+            const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+            loadingModal.show();
+
+            // Execute payment after showing loading modal
+            setTimeout(() => {
+                executePayment(method);
+            }, 500);
+        }
+
+        function executePayment(method) {
+            const bookingRef = '<?php echo e($booking->booking_ref_no); ?>';
+            
+            fetch(`/authorized/staff/cargo-bookings/${bookingRef}/process-payment`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ||
+                        document.querySelector('input[name="_token"]')?.value
+                },
+                body: JSON.stringify({
+                    payment_method: method
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(`Payment processed successfully via ${method.toUpperCase()}!`, 'success');
+                    window.location.reload();
+                } else {
+                    showToast('Error: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred while processing payment.', 'danger');
+            });
         }
     </script>
 <?php $__env->stopSection(); ?>
@@ -507,13 +645,13 @@
         }
 
         .carousel-item {
-            height: 500px;
+            aspect-ratio: 1 / 1;
         }
 
         .carousel-image-container {
             position: relative;
             width: 100%;
-            height: 100%;
+            aspect-ratio: 1 / 1;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -674,7 +812,7 @@
             }
 
             .carousel-item {
-                height: 400px;
+                aspect-ratio: 1 / 1;
             }
 
             .carousel-img {
@@ -704,7 +842,7 @@
             }
 
             .carousel-item {
-                height: 320px;
+                aspect-ratio: 1 / 1;
             }
 
             .carousel-img {
@@ -747,7 +885,7 @@
             }
 
             .carousel-item {
-                height: 250px;
+                aspect-ratio: 1 / 1;
             }
 
             .carousel-img {
@@ -845,4 +983,5 @@
         });
     </script>
 <?php $__env->stopSection(); ?>
+
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/authorized/staff/showcargo.blade.php ENDPATH**/ ?>

@@ -172,24 +172,46 @@
       notificationList.innerHTML = notifications.map(notification => {
         const isUnread = !['read', 'archived', 'Read', 'Archived'].includes(notification.notification_status);
         const notificationType = (notification.notification_type || '').toLowerCase();
-        const isPaymentNotification = notificationType.includes('payment');
-        const isCargoNotification = notificationType.includes('cargo');
+        const notificationMsg = (notification.notification_message || '').toLowerCase();
+        const notificationStatus = (notification.notification_status || '').toLowerCase();
+        const isPaymentNotification = notificationType.includes('payment') && !notificationType.includes('cargo payment');
+        const isCargoPaymentNotification = notificationType === 'cargo payment';
+        const isCargoVerificationNotification = notificationType === 'cargo payment verification';
+        const isCargoNotification = notificationType.includes('cargo') && !isCargoPaymentNotification && !isCargoVerificationNotification;  
         const isPassengerNotification = notificationType.includes('passenger');
-        const typeIcon = isPaymentNotification
+        const isPendingReview = isCargoNotification && notificationMsg.includes('pending review');
+        const isApprovedCargo = isCargoNotification && notificationMsg.includes('has been approved');
+        const needsVerification = isCargoVerificationNotification && notificationStatus !== 'verified';
+        const typeIcon = isCargoPaymentNotification
           ? 'fa-money-bill-wave'
-          : isCargoNotification
-            ? 'fa-box-archive'
-            : isPassengerNotification
-              ? 'fa-user-check'
-              : 'fa-bell';
-        const typeClass = isPaymentNotification
-          ? 'payment'
-          : isCargoNotification
-            ? 'cargo'
-            : isPassengerNotification
-              ? 'passenger'
-              : 'general';
-        const typeLabel = notification.notification_type || 'Update';
+          : isCargoVerificationNotification
+            ? 'fa-clipboard-check'
+            : isPaymentNotification
+              ? 'fa-money-bill-wave'
+              : isCargoNotification
+                ? 'fa-box-archive'
+                : isPassengerNotification
+                  ? 'fa-user-check'
+                  : 'fa-bell';
+        const typeClass = isPendingReview
+          ? 'pending'
+          : isApprovedCargo
+            ? 'payment'
+            : needsVerification
+            ? 'pending'
+            : isCargoPaymentNotification
+              ? 'payment'
+              : isCargoVerificationNotification
+                ? 'payment'
+                : isPaymentNotification
+                  ? 'payment'
+                  : isCargoNotification
+                    ? 'cargo'
+                    : isPassengerNotification
+                      ? 'passenger'
+                      : 'general';
+        let typeLabel = notification.notification_type || 'Update';
+        if (isCargoVerificationNotification) typeLabel = 'Cargo Payment';
         const timeAgo = formatTimeAgo(notification.notification_created);
         
         // Get booking reference from the field
@@ -197,8 +219,9 @@
         console.log('Notification:', notification.notification_id, 'Booking Ref:', bookingRef, 'Type:', notification.notification_type);
         
         // Make cargo notifications clickable if they have a booking reference
-        // Check case-insensitively for cargo booking approval
-        const clickHandler = bookingRef && isCargoNotification
+        // Check case-insensitively for cargo booking approval, payment, and verification
+        const isAnyCargo = isCargoNotification || isCargoPaymentNotification || isCargoVerificationNotification;
+        const clickHandler = bookingRef && isAnyCargo
           ? `onclick="markAsRead(${notification.notification_id}); navigateToCargo(${bookingRef})"` 
           : (isUnread ? `onclick="markAsRead(${notification.notification_id})"` : '');
         const cursorStyle = (bookingRef || isUnread) ? 'cursor: pointer;' : '';
@@ -344,8 +367,4 @@
   });
 </script>
 
-<<<<<<<< HEAD:storage/framework/views/a3f0c60cf831e1c0a85d03b0b8fc06af.php
 <?php /**PATH C:\Users\clint\Desktop\Capstone\resources\views/components/authHeader.blade.php ENDPATH**/ ?>
-========
-<?php /**PATH C:\Users\kirzt\Documents\GitHub\Capstone\resources\views/components/authHeader.blade.php ENDPATH**/ ?>
->>>>>>>> Cargo-Booking:storage/framework/views/756ae268e13ad6a84055129f1add8a62.php
