@@ -9,6 +9,47 @@
             <h3 id="dashboard-datetoday">{{ \Carbon\Carbon::now()->format('F d, Y, l') }}</h3>
         </div>
 
+        <div class="astat-boxes-row">
+            <div class="astat-boxes-col">
+                <span class="anumberStat">{{ $passengerBookings }}</span>
+                <p>Passenger Bookings</p>
+            </div>
+            <div class="astat-boxes-col">
+                <span class="anumberStat">{{ $cargoBookings }}</span>
+                <p>Cargo Bookings</p>
+            </div>
+            <div class="astat-boxes-col">
+                <span class="anumberStat">₱ XX,XXX.XX</span>
+                <p>Passenger Revenue</p>
+            </div>
+            <div class="astat-boxes-col">
+                <span class="anumberStat">₱ XX,XXX.XX</span>
+                <p>Cargo Revenue</p>
+            </div>
+            <div class="astat-boxes-col">
+                <span class="anumberStat">₱{{ number_format($totalSales, 2) }}</span>
+                <p>Total Revenue</p>
+            </div>
+        </div>
+        <div class="astat-boxes-row">
+            <div class="astat-boxes-col">
+                <ul>
+                    <li>the pie chart of the payment methods will go here</li>
+                    <li>it will be multicolored, with each color representing a different payment method</li>
+                    <li>green for cash and orange for gcash</li>
+                    <li>this portion will also show amount received in cash and amount received in gcash and the total amount</li>
+                </ul>
+            </div>
+            <div class="astat-boxes-col">
+                <ul>
+                    <li>the bar chart showing the total number of bookings per route will go here</li>
+                    <li>x-axis will be the routes, per route so one red and blue for CEBBAY, another red and blue for another route, etc.</li>
+                    <li>y-axis will be for the total number of bookings</li>
+                    <li>it will be multicolored, red for cargo bookings and blue for passenger bookings</li>
+                </ul>
+            </div>
+        </div>
+
         <br>
         
         <div class="astat-voyage">
