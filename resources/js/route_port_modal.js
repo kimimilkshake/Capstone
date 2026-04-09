@@ -4,14 +4,12 @@ const PASSENGER_TYPES = [
     "3 to 11 years old",
     "Below 3 years old",
     "PWD",
-    "Regular",
     "Senior Citizen",
     "Student",
     "Uniformed Personnel",
 ];
 
 const DEFAULT_DISCOUNT_RATES = {
-    Regular: 0,
     "Senior Citizen": 20,
     PWD: 20,
     Student: 20,
@@ -86,7 +84,7 @@ function buildDiscountRow(containerEl, type = "", rate = null, addBtn = null) {
     inp.step = 0.01;
     inp.value = actualRate;
     inp.style.cssText =
-        "width:110px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;";
+        "width:140px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;";
 
     sel.addEventListener("change", function () {
         inp.value = DEFAULT_DISCOUNT_RATES[this.value] ?? 20;
@@ -334,14 +332,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 discounts.sort((a, b) =>
                     a.passenger_type.localeCompare(b.passenger_type),
                 );
-                discounts.forEach((d) =>
-                    buildDiscountRow(
-                        editRCDiscountsContainer,
-                        d.passenger_type,
-                        d.discount_rate,
-                        editRCDiscountRowBtn,
-                    ),
-                );
+                discounts
+                    .filter((d) => PASSENGER_TYPES.includes(d.passenger_type))
+                    .forEach((d) =>
+                        buildDiscountRow(
+                            editRCDiscountsContainer,
+                            d.passenger_type,
+                            d.discount_rate,
+                            editRCDiscountRowBtn,
+                        ),
+                    );
                 refreshDiscountSelects(
                     editRCDiscountsContainer,
                     editRCDiscountRowBtn,

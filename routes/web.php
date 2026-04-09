@@ -133,6 +133,10 @@ Route::get('/paymongo/failed', function (Request $request) {
     return view('payments.failed', ['bookingRef' => $bookingRef]);
 })->name('paymongo.failed');
 
+// Cargo payment page (accessed via payment link in email)
+Route::get('/paymongo/payment/{booking_ref_no}', [PaymentController::class, 'showCargoPayment'])->name('paymongo.cargo_payment');
+Route::post('/paymongo/payment/{booking_ref_no}/process', [PaymentController::class, 'processCargoPayment'])->name('paymongo.process_cargo_payment');
+
 Route::get('/passenger/schedules', [ScheduleController::class, 'index'])->name('schedules');
 
 //About Us Page
@@ -386,14 +390,21 @@ Route::prefix('authorized/staff')->middleware('auth:staff')->group(function () {
 
     // View booking details
     Route::get('/cargo-bookings/{id}', [StaffCargoController::class, 'show'])->name('cargo.bookings.show');
-    // Bill of Lading formatted view (HTML/printable)
+    // Freight Receipt formatted view (HTML/printable)
     Route::get('/cargo-bookings/{id}/bol', [StaffCargoController::class, 'bolView'])->name('cargo.bookings.bol');
-    // Bill of Lading PDF (for download/inline view)
+    // Freight Receipt PDF (for download/inline view)
     Route::get('/cargo-bookings/{id}/bol.pdf', [StaffCargoController::class, 'bolPdf'])->name('cargo.bookings.bol.pdf');
     Route::get('/cargo-items/voyage/{id}', [StaffCargoController::class, 'getCargoItemsByVoyage']);
     // Approve booking
     Route::post('/cargo-bookings/{id}/approve', [StaffCargoController::class, 'approve'])->name('cargo.bookings.approve');
     Route::post('/cargo-bookings/{id}/reject', [StaffCargoController::class, 'reject'])->name('cargo.bookings.reject');
+    // Verify payment
+    Route::get('/cargo-bookings/{id}/verify', [StaffCargoController::class, 'verify'])->name('cargo.bookings.verify');
+    Route::post('/cargo-bookings/{id}/verify', [StaffCargoController::class, 'processVerification'])->name('cargo.bookings.process_verification');
+    // Pay for booking
+    Route::get('/cargo-bookings/{id}/pay', [StaffCargoController::class, 'pay'])->name('cargo.bookings.pay');
+    // Process payment
+    Route::post('/cargo-bookings/{id}/process-payment', [StaffCargoController::class, 'processPayment'])->name('cargo.bookings.process_payment');
     // Placement validation API endpoint
     Route::post('/api/cargo/placement/validate', [StaffCargoController::class, 'validatePlacement'])->name('cargo.placement.validate');
 

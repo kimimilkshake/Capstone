@@ -7,8 +7,6 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Mail\Mailables\Attachment;
-use App\Services\BillOfLadingPdf;
 use Throwable;
 
 class CargoBookingApproved extends Mailable
@@ -20,20 +18,22 @@ class CargoBookingApproved extends Mailable
     public $consignee;
     public $cargoItems;
     public $payment;
+    public $paymentUrl;
 
-    public function __construct($booking, $sender, $consignee, $cargoItems, $payment = null)
+    public function __construct($booking, $sender, $consignee, $cargoItems, $payment = null, $paymentUrl = null)
     {
         $this->booking = $booking;
         $this->sender = $sender;
         $this->consignee = $consignee;
         $this->cargoItems = $cargoItems;
         $this->payment = $payment;
+        $this->paymentUrl = $paymentUrl;
     }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Cargo Booking Approved - #' . ($this->booking->booking_ref_no ?? ''),
+            subject: 'Cargo Booking Approved - #' . ($this->booking->booking_ref_no ?? '') . ' - Please Complete Payment',
         );
     }
 
@@ -47,28 +47,14 @@ class CargoBookingApproved extends Mailable
                 'consignee' => $this->consignee,
                 'cargoItems' => $this->cargoItems,
                 'payment' => $this->payment,
+                'paymentUrl' => $this->paymentUrl,
             ],
         );
     }
 
     public function attachments(): array
     {
-        try {
-            $pdf = BillOfLadingPdf::generate($this->booking);
-
-            if ($pdf === null) {
-                return [];
-            }
-
-            // Attach generated PDF of the Bill of Lading.
-            return [
-                Attachment::fromData(function () use ($pdf) {
-                    return $pdf;
-                }, 'bill_of_lading.pdf')->withMime('application/pdf')
-            ];
-        } catch (Throwable $e) {
-            report($e);
-            return [];
-        }
+        // No attachments for this email - just payment link
+        return [];
     }
 }

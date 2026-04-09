@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const loader = document.getElementById("ocrLoader");
     let accommodationsWithCots = []; // Will store accommodation data with available cots
     let currentPromo = null; // Store current promo info
-    let passengerDiscounts = {}; // passenger_type => discount_rate from route category
+    let passengerDiscounts = null; // null = not yet fetched; {} = fetched but empty
 
     // Get accommodations data from the page (basic info)
     let accommodations = [];
@@ -32,14 +32,21 @@ document.addEventListener("DOMContentLoaded", function () {
     ];
 
     function buildPassengerTypeOptions() {
+        // null means voyage discounts haven't been fetched yet — show all as fallback
+        if (passengerDiscounts === null) {
+            return ALL_PASSENGER_TYPES.map(
+                (t) =>
+                    `<option value="${t.value}"${t.value === "Regular" ? " selected" : ""}>${t.label}</option>`,
+            ).join("");
+        }
+        // Regular always shows; others only if configured with discount > 0
         const configuredTypes = Object.keys(passengerDiscounts);
-        // If no discount config fetched, show all types without labels
-        const types =
-            configuredTypes.length > 0
-                ? ALL_PASSENGER_TYPES.filter((t) =>
-                      configuredTypes.includes(t.value),
-                  )
-                : ALL_PASSENGER_TYPES;
+        const types = ALL_PASSENGER_TYPES.filter(
+            (t) =>
+                t.value === "Regular" ||
+                (configuredTypes.includes(t.value) &&
+                    (passengerDiscounts[t.value] ?? 0) > 0),
+        );
 
         return types
             .map((t) => {
@@ -48,7 +55,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     rate !== undefined && rate > 0
                         ? `${t.label} (-${rate}%)`
                         : t.label;
-                return `<option value="${t.value}">${label}</option>`;
+                return `<option value="${t.value}"${t.value === "Regular" ? " selected" : ""}>${label}</option>`;
             })
             .join("");
     }
@@ -74,7 +81,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     <div class="col-md-8">
                         <label class="form-label">Passenger Type <span class="text-danger">*</span></label>
                         <select class="form-select passenger-type" name="type" required>
-                            <option value="">Select Type</option>
                             ${buildPassengerTypeOptions()}
                         </select>
                     </div>

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\SendTicketEmail;
+use App\Jobs\SendCargoPaymentConfirmationEmail;
+use App\Models\Voyage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -84,9 +86,11 @@ class PaymentController extends Controller
             $checkoutUrl = $body['data']['attributes']['redirect']['checkout_url'] ?? null;
 
             // Store source id in payment.transaction_code for later matching by webhook
+            // Also update mode_of_payment to GCash for online payments
             if ($sourceId) {
                 DB::table('payment')->where('payment_id', $payment->payment_id)->update([
                     'transaction_code' => $sourceId,
+                    'mode_of_payment' => 'Gcash',
                     'updated_at' => now(),
                 ]);
             }
@@ -149,8 +153,12 @@ class PaymentController extends Controller
                         $chargeStatus = $chargeJson['data']['attributes']['status'] ?? null;
                         Log::info('PayMongo charge success', ['status' => $chargeStatus]);
                         if ($chargeStatus === 'paid') {
+                            // Check if this is a cargo or passenger booking
+                            $booking = DB::table('booking')->where('booking_ref_no', $payment->booking_ref_no)->first();
+                            $isCargo = $booking && strtolower($booking->booking_type ?? '') === 'cargo';
+                            
                             DB::table('payment')->where('payment_id', $payment->payment_id)->update([
-                                'payment_status' => 'Completed',
+                                'payment_status' => $isCargo ? 'Initial' : 'Completed',
                                 'updated_at' => now(),
                             ]);
                             DB::table('booking')->where('booking_ref_no', $payment->booking_ref_no)->update([
@@ -158,8 +166,14 @@ class PaymentController extends Controller
                                 'updated_at' => now(),
                             ]);
 
-                            // Send ticket email
-                            SendTicketEmail::dispatch($payment->booking_ref_no);
+                            if ($isCargo) {
+                                // Send cargo payment confirmation with Freight Receipt PDF
+                                SendCargoPaymentConfirmationEmail::dispatch($payment->booking_ref_no);
+                                Log::info('CargoPaymentConfirmationEmail dispatched for booking: ' . $payment->booking_ref_no);
+                            } else {
+                                // Send passenger ticket email
+                                SendTicketEmail::dispatch($payment->booking_ref_no);
+                            }
                         }
                     } else {
                         Log::error('PayMongo charge failure', ['status' => $chargeResp->status(), 'body' => $chargeResp->body()]);
@@ -178,8 +192,12 @@ class PaymentController extends Controller
                 $payment = DB::table('payment')->where('transaction_code', $sourceId)->first();
                 if ($payment && $status) {
                     if (in_array($status, ['paid', 'succeeded'])) {
+                        // Check if this is a cargo or passenger booking
+                        $booking = DB::table('booking')->where('booking_ref_no', $payment->booking_ref_no)->first();
+                        $isCargo = $booking && strtolower($booking->booking_type ?? '') === 'cargo';
+                        
                         DB::table('payment')->where('payment_id', $payment->payment_id)->update([
-                            'payment_status' => 'Completed',
+                            'payment_status' => $isCargo ? 'Initial' : 'Completed',
                             'updated_at' => now(),
                         ]);
                         DB::table('booking')->where('booking_ref_no', $payment->booking_ref_no)->update([
@@ -187,8 +205,14 @@ class PaymentController extends Controller
                             'updated_at' => now(),
                         ]);
 
-                        // Send ticket email
-                        SendTicketEmail::dispatch($payment->booking_ref_no);
+                        if ($isCargo) {
+                            // Send cargo payment confirmation with Freight Receipt PDF
+                            SendCargoPaymentConfirmationEmail::dispatch($payment->booking_ref_no);
+                            Log::info('CargoPaymentConfirmationEmail dispatched for booking: ' . $payment->booking_ref_no);
+                        } else {
+                            // Send passenger ticket email
+                            SendTicketEmail::dispatch($payment->booking_ref_no);
+                        }
                     } elseif (in_array($status, ['failed', 'canceled'])) {
                         DB::table('payment')->where('payment_id', $payment->payment_id)->update([
                             'payment_status' => 'Canceled',
@@ -199,26 +223,30 @@ class PaymentController extends Controller
                             'updated_at' => now(),
                         ]);
 
-                        // Get all passengers for this booking
-                        $passengerIds = DB::table('passenger_ticket')
-                            ->where('booking_ref_no', $payment->booking_ref_no)
-                            ->pluck('passenger_id')
-                            ->toArray();
+                        // Check if this is a passenger booking
+                        $booking = DB::table('booking')->where('booking_ref_no', $payment->booking_ref_no)->first();
+                        if ($booking && strtolower($booking->booking_type ?? '') !== 'cargo') {
+                            // Get all passengers for this booking
+                            $passengerIds = DB::table('passenger_ticket')
+                                ->where('booking_ref_no', $payment->booking_ref_no)
+                                ->pluck('passenger_id')
+                                ->toArray();
 
-                        // Delete passengers if they only belong to this booking
-                        foreach ($passengerIds as $passengerId) {
-                            $otherBookings = DB::table('passenger_ticket')
-                                ->where('passenger_id', $passengerId)
-                                ->where('booking_ref_no', '!=', $payment->booking_ref_no)
-                                ->count();
+                            // Delete passengers if they only belong to this booking
+                            foreach ($passengerIds as $passengerId) {
+                                $otherBookings = DB::table('passenger_ticket')
+                                    ->where('passenger_id', $passengerId)
+                                    ->where('booking_ref_no', '!=', $payment->booking_ref_no)
+                                    ->count();
 
-                            if ($otherBookings == 0) {
-                                DB::table('passenger')->where('passenger_id', $passengerId)->delete();
+                                if ($otherBookings == 0) {
+                                    DB::table('passenger')->where('passenger_id', $passengerId)->delete();
+                                }
                             }
-                        }
 
-                        // Delete passenger tickets when payment fails
-                        DB::table('passenger_ticket')->where('booking_ref_no', $payment->booking_ref_no)->delete();
+                            // Delete passenger tickets when payment fails
+                            DB::table('passenger_ticket')->where('booking_ref_no', $payment->booking_ref_no)->delete();
+                        }
                     }
                 }
             }
@@ -255,7 +283,7 @@ class PaymentController extends Controller
                     // If PayMongo reports a paid/succeeded status, mark completed
                     if (in_array($status, ['paid', 'succeeded'])) {
                         DB::table('payment')->where('payment_id', $payment->payment_id)->update([
-                            'payment_status' => 'Completed',
+                            'payment_status' => 'Initial',
                             'updated_at' => now(),
                         ]);
                         DB::table('booking')->where('booking_ref_no', $bookingRef)->update([
@@ -263,8 +291,20 @@ class PaymentController extends Controller
                             'updated_at' => now(),
                         ]);
 
-                        // Send ticket email
-                        SendTicketEmail::dispatch($bookingRef);
+                        // Check if this is a cargo or passenger booking
+                        $booking = DB::table('booking')->where('booking_ref_no', $bookingRef)->first();
+                        if ($booking && strtolower($booking->booking_type ?? '') === 'cargo') {
+                            // For staff-approved cargo bookings (booking_status already 'Confirmed'), don't send payment confirmation
+                            // For user cargo bookings (booking_status was 'Pending'), send the confirmation
+                            if (strtolower($booking->booking_status ?? '') !== 'confirmed') {
+                                // Send cargo payment confirmation with Freight Receipt PDF
+                                SendCargoPaymentConfirmationEmail::dispatch($bookingRef);
+                                Log::info('CargoPaymentConfirmationEmail dispatched for booking: ' . $bookingRef);
+                            }
+                        } else {
+                            // Send passenger ticket email
+                            SendTicketEmail::dispatch($bookingRef);
+                        }
                     } elseif (in_array($status, ['failed', 'canceled'])) {
                         // If payment failed or was canceled, update booking status
                         DB::table('payment')->where('payment_id', $payment->payment_id)->update([
@@ -318,9 +358,13 @@ class PaymentController extends Controller
         if (!empty($status) && $status === 'chargeable') {
             Log::info('Payment chargeable - waiting for webhook to charge', ['booking_ref_no' => $bookingRef]);
 
+            // Check if cargo booking
+            $booking = DB::table('booking')->where('booking_ref_no', $bookingRef)->first();
+            $isCargo = $booking && strtolower($booking->booking_type ?? '') === 'cargo';
+
             // Update both payment and booking to mark as confirmed/completed
             DB::table('payment')->where('payment_id', $payment->payment_id)->update([
-                'payment_status' => 'Completed',
+                'payment_status' => $isCargo ? 'Initial' : 'Completed',
                 'updated_at' => now(),
             ]);
             DB::table('booking')->where('booking_ref_no', $bookingRef)->update([
@@ -337,8 +381,166 @@ class PaymentController extends Controller
             return $response;
         }
 
+        // Fallback: check DB in case the webhook already processed the payment
+        // (source status becomes 'consumed' after webhook charges it, which falls through above)
+        $freshPayment = DB::table('payment')->where('booking_ref_no', $bookingRef)->first();
+        $freshBooking = DB::table('booking')->where('booking_ref_no', $bookingRef)->first();
+        if (
+            $freshPayment && strtolower($freshPayment->payment_status) === 'completed' &&
+            $freshBooking && strtolower($freshBooking->booking_status) === 'confirmed'
+        ) {
+            Log::info('redirectReturn: payment already confirmed by webhook', ['booking_ref_no' => $bookingRef]);
+            return redirect()->route('homepage')->with('success', "Your booking is confirmed! Booking Reference: {$bookingRef}. Please check your email (including spam folder) for your ticket details.");
+        }
+
         // If payment failed or status unknown, redirect to homepage with error
         Log::info('Redirecting to homepage with error message', ['status' => $status, 'booking_ref_no' => $bookingRef]);
         return redirect()->route('homepage')->with('error', 'Payment could not be completed. Please try again.');
+    }
+
+    /**
+     * Show cargo payment page
+     * Only accessible for USER-CREATED cargo bookings (those with cargo_pictures populated)
+     */
+    public function showCargoPayment($bookingRef)
+    {
+        // Get booking details
+        $booking = DB::table('booking')->where('booking_ref_no', $bookingRef)->first();
+        
+        if (!$booking) {
+            return redirect()->route('homepage')->with('error', 'Booking not found.');
+        }
+
+        // Check if it's a cargo booking
+        if (strtolower($booking->booking_type ?? '') !== 'cargo') {
+            return redirect()->route('homepage')->with('error', 'This payment page is for cargo bookings only.');
+        }
+
+        // CRITICAL: Verify this is a USER-CREATED booking (has cargo_pictures)
+        $hasCargoWithPictures = DB::table('cargo_booking')
+            ->where('booking_ref_no', $bookingRef)
+            ->whereNotNull('cargo_picture')
+            ->where('cargo_picture', '!=', '')
+            ->count() > 0;
+        
+        if (!$hasCargoWithPictures) {
+            return redirect()->route('homepage')
+                ->with('error', 'This payment link is not valid for this booking type. Staff-created cargo must be paid through the authorized staff system.');
+        }
+
+        // Get payment record
+        $payment = DB::table('payment')->where('booking_ref_no', $bookingRef)->first();
+        
+        if (!$payment) {
+            return redirect()->route('homepage')->with('error', 'Payment record not found.');
+        }
+
+        // Get sender info
+        $sender = DB::table('sender')->where('sender_id', $booking->sender_id)->first();
+        
+        // Get voyage info with routePort relationship
+        $voyage = Voyage::with('routePort')->where('voyage_id', $booking->voyage_id)->first();
+
+        return view('payments.cargo_payment', [
+            'booking' => $booking,
+            'payment' => $payment,
+            'sender' => $sender,
+            'voyage' => $voyage,
+        ]);
+    }
+
+    /**
+     * Process cargo payment via PayMongo
+     * Only accessible for USER-CREATED cargo bookings (those with cargo_pictures populated)
+     */
+    public function processCargoPayment(Request $request, $bookingRef)
+    {
+        $payment = DB::table('payment')->where('booking_ref_no', $bookingRef)->first();
+        
+        if (!$payment) {
+            return response()->json(['success' => false, 'message' => 'Payment record not found'], 404);
+        }
+
+        // CRITICAL: Verify this is a USER-CREATED booking (has cargo_pictures)
+        $hasCargoWithPictures = DB::table('cargo_booking')
+            ->where('booking_ref_no', $bookingRef)
+            ->whereNotNull('cargo_picture')
+            ->where('cargo_picture', '!=', '')
+            ->count() > 0;
+        
+        if (!$hasCargoWithPictures) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Payment can only be processed through the authorized staff channel for this booking type.'
+            ], 403);
+        }
+
+        // Check if payment is already completed
+        if (strtolower($payment->payment_status) === 'completed') {
+            return response()->json(['success' => false, 'message' => 'Payment already completed'], 400);
+        }
+
+        $amountPhp = (float) $payment->total_amount;
+        $amount = (int) round($amountPhp * 100); // cents/centavos
+
+        $successUrl = url('/paymongo/return?booking_ref_no=' . $bookingRef);
+        $failedUrl = url('/paymongo/failed?booking_ref_no=' . $bookingRef);
+
+        // Get sender info for billing
+        $booking = DB::table('booking')->where('booking_ref_no', $bookingRef)->first();
+        $sender = DB::table('sender')->where('sender_id', $booking->sender_id ?? null)->first();
+
+        $billingName = $sender->sender_name ?? 'Customer';
+        $billingEmail = $sender->sender_email ?? 'no-reply+' . $bookingRef . '@example.invalid';
+
+        $payload = [
+            'data' => [
+                'attributes' => [
+                    'type' => 'gcash',
+                    'amount' => $amount,
+                    'currency' => 'PHP',
+                    'redirect' => [
+                        'success' => $successUrl,
+                        'failed' => $failedUrl,
+                    ],
+                    'billing' => [
+                        'email' => $billingEmail,
+                        'name' => $billingName,
+                    ],
+                ],
+            ],
+        ];
+
+        $secret = env('PAYMONGO_SECRET');
+        if (!$secret) {
+            return response()->json(['success' => false, 'message' => 'PayMongo secret not configured'], 500);
+        }
+
+        try {
+            $response = Http::withBasicAuth($secret, '')->timeout(10)->post('https://api.paymongo.com/v1/sources', $payload);
+            if ($response->failed()) {
+                Log::error('PayMongo create source failed for cargo payment', ['status' => $response->status(), 'body' => $response->body()]);
+                return response()->json(['success' => false, 'message' => 'Failed to create payment source'], 500);
+            }
+
+            $body = $response->json();
+            $sourceId = $body['data']['id'] ?? null;
+            $checkoutUrl = $body['data']['attributes']['redirect']['checkout_url'] ?? null;
+
+            // Store source id in payment.transaction_code for later matching by webhook
+            // Also update mode_of_payment to GCash for online payments
+            if ($sourceId) {
+                DB::table('payment')->where('payment_id', $payment->payment_id)->update([
+                    'transaction_code' => $sourceId,
+                    'mode_of_payment' => 'Gcash',
+                    'updated_at' => now(),
+                ]);
+            }
+
+            return response()->json(['success' => true, 'checkout_url' => $checkoutUrl]);
+        } catch (\Exception $e) {
+            Log::error('PayMongo create exception for cargo payment: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Exception creating payment source'], 500);
+        }
     }
 }

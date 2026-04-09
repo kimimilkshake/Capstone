@@ -28,6 +28,7 @@ class Booking extends Model
         'consignee_id',
         'cargo_item_id',
         'cargo_item_qty',
+        'payment_id',
     ];
     // Booking.php
     public function cargoBookings()

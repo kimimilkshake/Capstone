@@ -91,7 +91,9 @@
                     </div>
                     <div class="card-body">
 
-                        <h6>Booking Reference: #{{ $booking->booking_ref_no }}</h6>
+                        <h6>Booking Reference:
+                            {{ 'LSLCBK' . \Carbon\Carbon::parse($booking->created_at)->format('y') . str_pad($booking->booking_ref_no, 6, '0', STR_PAD_LEFT) }}
+                        </h6>
                         <p>Status: <strong>{{ $booking->booking_status }}</strong></p>
 
                         <hr>
@@ -127,25 +129,30 @@
                                             {{ $item['passenger']->passenger_suffix }}
                                         @endif
                                     </div>
-                                    {{-- Info row: spread edge to edge, each item left-aligned --}}
-                                    <div class="d-flex justify-content-between small mb-0">
-                                        <div style="white-space: nowrap;"><span class="text-muted">Type: </span><strong
-                                                class="text-dark">{{ $item['passenger']->passenger_type }}</strong></div>
-                                        <div style="white-space: nowrap;"><span class="text-muted">Cot: </span><strong
-                                                class="text-dark">{{ $item['ticket']->pt_cot_no }}</strong></div>
-                                        <div style="white-space: nowrap;">
-                                            @if ($item['accommodation_name'])
+                                    {{-- Info row: wraps on mobile --}}
+                                    <div class="d-sm-flex justify-content-sm-between small mb-0"
+                                        style="gap: 0.25rem 0.75rem;">
+                                        <div class="d-flex d-sm-block justify-content-between">
+                                            <span class="text-muted">Type: </span><strong
+                                                class="text-dark">{{ $item['passenger']->passenger_type }}</strong>
+                                        </div>
+                                        @if ($item['accommodation_name'])
+                                            <div class="d-flex d-sm-block justify-content-between">
                                                 <span class="text-muted">Accommodation: </span><strong
                                                     class="text-dark">{{ $item['accommodation_name'] }}</strong>
-                                            @endif
+                                            </div>
+                                        @endif
+                                        <div class="d-flex d-sm-block justify-content-between">
+                                            <span class="text-muted">Cot: </span><strong
+                                                class="text-dark">{{ $item['ticket']->pt_cot_no }}</strong>
                                         </div>
-                                        <div style="white-space: nowrap;">
+                                        <div class="d-flex d-sm-block justify-content-between">
                                             @if ($basePrice !== null && ($routeRate > 0 || $typeDiscountPct > 0 || $item['ticket']->promo))
                                                 <span class="text-muted">Accommodation Price: </span><strong
-                                                    class="text-dark">PHP {{ number_format($basePrice, 2) }}</strong>
+                                                    class="text-dark">₱{{ number_format($basePrice, 2) }}</strong>
                                             @else
-                                                <span class="text-muted">Price: </span><strong class="text-dark">PHP
-                                                    {{ number_format($ticketPrice, 2) }}</strong>
+                                                <span class="text-muted">Price: </span><strong
+                                                    class="text-dark">₱{{ number_format($ticketPrice, 2) }}</strong>
                                             @endif
                                         </div>
                                     </div>
@@ -177,8 +184,8 @@
                                             <div class="d-flex align-items-center mt-1">
                                                 <span class="fw-semibold" style="white-space:nowrap;">Total</span>
                                                 <span style="flex:1;border-bottom:2px dotted #888;margin:0 8px;"></span>
-                                                <span class="fw-semibold" style="white-space:nowrap;">PHP
-                                                    {{ number_format($ticketPrice, 2) }}</span>
+                                                <span class="fw-semibold"
+                                                    style="white-space:nowrap;">₱{{ number_format($ticketPrice, 2) }}</span>
                                             </div>
                                         </div>
                                     @endif
@@ -189,7 +196,7 @@
                             @if (count($passengers) > 1)
                                 <div class="border rounded p-3 bg-dark text-white d-flex justify-content-between">
                                     <span class="fw-bold">Grand Total</span>
-                                    <span class="fw-bold">PHP {{ number_format($grandTotal, 2) }}</span>
+                                    <span class="fw-bold">₱{{ number_format($grandTotal, 2) }}</span>
                                 </div>
                             @endif
                         </div>

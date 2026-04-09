@@ -295,6 +295,14 @@
             </div>
         @endif
 
+        @if ($booking->booking_status === 'Confirmed' && ($payment->payment_status ?? null) === 'Pending')
+            <div class="text-center mt-3">
+                <button type="button" class="btn btn-success btn-lg px-4" onclick="showPaymentModal()">
+                    Pay Now
+                </button>
+            </div>
+        @endif
+
         <div class="text-center mt-4">
             <a href="{{ route('cargo.bookings.pending') }}" class="btn btn-outline-primary btn-lg px-4">
                 Back to Pending Bookings
@@ -302,7 +310,7 @@
 
             <a href="{{ route('cargo.bookings.bol', $booking->booking_ref_no) }}" target="_blank"
                 class="btn btn-secondary btn-lg px-4 ms-3">
-                Bill of Lading
+                Freight Receipt
             </a>
         </div>
     </div>
@@ -362,8 +370,27 @@
                     <div class="spinner-border text-primary mb-3" role="status" style="width: 60px; height: 60px;">
                         <span class="visually-hidden">Loading...</span>
                     </div>
-                    <h5 class="mt-3">Loading... Please Wait</h5>
-                    <p class="text-muted mt-2">Processing your request</p>
+                    <h5 class="mt-3">Processing Payment...</h5>
+                    <p class="text-muted mt-2">Please wait while we confirm your payment</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Payment Confirmation Modal --}}
+    <div class="modal fade" id="paymentConfirmModal" tabindex="-1" aria-labelledby="paymentConfirmLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="paymentConfirmLabel">Confirm Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Would you like to pay with <strong id="confirmMethod">CASH</strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                    <button type="button" class="btn btn-success" id="confirmPaymentBtn">Yes</button>
                 </div>
             </div>
         </div>
@@ -467,10 +494,10 @@
         }
 
         /**
-         * Show placement validation warning as browser alert
+         * Show placement validation warning as toast
          */
         function showPlacementWarning(data) {
-            alert(data.message);
+            showToast(data.message, 'danger', true);
         }
 
         /**
@@ -486,6 +513,109 @@
                 
                 showLoadingAndSubmit();
             }
+        }
+    </script>
+
+    <!-- Payment Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="paymentModalLabel">Process Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="transaction-summary mb-4">
+                        <h6>Transaction Summary</h6>
+                        <div class="row">
+                            <div class="col-6"><strong>Booking Reference:</strong></div>
+                            <div class="col-6">{{ $booking->booking_code }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6"><strong>Sender:</strong></div>
+                            <div class="col-6">{{ $booking->sender->sender_name ?? 'N/A' }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6"><strong>Consignee:</strong></div>
+                            <div class="col-6">{{ $booking->consignee->consignee_name ?? 'N/A' }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6"><strong>Total Amount:</strong></div>
+                            <div class="col-6">₱{{ number_format($payment->total_amount ?? 0, 2) }}</div>
+                        </div>
+                    </div>
+
+                    <div class="payment-options">
+                        <h6>Select Payment Method</h6>
+                        <div class="d-flex gap-3">
+                            <button type="button" class="btn btn-outline-primary" onclick="processPayment('cash')">Pay with Cash</button>
+                            <button type="button" class="btn btn-outline-success" onclick="processPayment('gcash')">Pay with GCash</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showPaymentModal() {
+            const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            modal.show();
+        }
+
+        function processPayment(method) {
+            // Show confirmation modal
+            document.getElementById('confirmMethod').textContent = method.toUpperCase();
+            const modal = new bootstrap.Modal(document.getElementById('paymentConfirmModal'));
+            modal.show();
+
+            // Handle confirmation
+            const confirmBtn = document.getElementById('confirmPaymentBtn');
+            const handleConfirm = function() {
+                modal.hide();
+                showLoadingAndExecute(method);
+                confirmBtn.removeEventListener('click', handleConfirm);
+            };
+            confirmBtn.addEventListener('click', handleConfirm);
+        }
+
+        function showLoadingAndExecute(method) {
+            const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+            loadingModal.show();
+
+            // Execute payment after showing loading modal
+            setTimeout(() => {
+                executePayment(method);
+            }, 500);
+        }
+
+        function executePayment(method) {
+            const bookingRef = '{{ $booking->booking_ref_no }}';
+            
+            fetch(`/authorized/staff/cargo-bookings/${bookingRef}/process-payment`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ||
+                        document.querySelector('input[name="_token"]')?.value
+                },
+                body: JSON.stringify({
+                    payment_method: method
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(`Payment processed successfully via ${method.toUpperCase()}!`, 'success');
+                    window.location.reload();
+                } else {
+                    showToast('Error: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred while processing payment.', 'danger');
+            });
         }
     </script>
 @endsection
@@ -507,13 +637,13 @@
         }
 
         .carousel-item {
-            height: 500px;
+            aspect-ratio: 1 / 1;
         }
 
         .carousel-image-container {
             position: relative;
             width: 100%;
-            height: 100%;
+            aspect-ratio: 1 / 1;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -674,7 +804,7 @@
             }
 
             .carousel-item {
-                height: 400px;
+                aspect-ratio: 1 / 1;
             }
 
             .carousel-img {
@@ -704,7 +834,7 @@
             }
 
             .carousel-item {
-                height: 320px;
+                aspect-ratio: 1 / 1;
             }
 
             .carousel-img {
@@ -747,7 +877,7 @@
             }
 
             .carousel-item {
-                height: 250px;
+                aspect-ratio: 1 / 1;
             }
 
             .carousel-img {

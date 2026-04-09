@@ -36,8 +36,7 @@ class VoyageController extends Controller
 
                 if ($now->greaterThanOrEqualTo($arrival)) {
                     $voyage->update(['voyage_status' => 'Completed']);
-                }
-                elseif ($now->greaterThanOrEqualTo($departure)) {
+                } elseif ($now->greaterThanOrEqualTo($departure)) {
                     $voyage->update(['voyage_status' => 'At Sea']);
                 }
             });
@@ -47,7 +46,7 @@ class VoyageController extends Controller
     private function hasConflict($vesselId, $departureDate, $departureTime, $arrivalDate, $arrivalTime, $ignoreVoyageId = null)
     {
         $newDeparture = Carbon::parse($departureDate . ' ' . $departureTime);
-        $newArrival   = Carbon::parse($arrivalDate . ' ' . $arrivalTime);
+        $newArrival = Carbon::parse($arrivalDate . ' ' . $arrivalTime);
 
         $existingVoyages = Voyage::where('vessel_id', $vesselId)
             ->whereNotIn('voyage_status', ['Cancelled', 'Archived'])
@@ -67,11 +66,11 @@ class VoyageController extends Controller
             );
 
             if ($newDeparture < $existingArrival && $newArrival > $existingDeparture) {
-                return true;
+                return $voyage;
             }
         }
 
-        return false;
+        return null;
     }
 
     //INDEX
@@ -88,30 +87,32 @@ class VoyageController extends Controller
         */
 
         $this->autoUpdateVoyageStatus();
-        
+
         $search = $request->input('search');
         $start_date = $request->input('start_date');
-        $end_date   = $request->input('end_date');
+        $end_date = $request->input('end_date');
 
         $voyages = Voyage::with(['vessel', 'routePort'])
             ->withCount([
                 'passengerTickets as passenger_tickets_count' => function ($query) {
                     $query->whereIn('booking_ref_no', function ($q) {
                         $q->select('booking_ref_no')
-                        ->from('booking')
-                        ->where('booking_status', 'Confirmed');
+                            ->from('booking')
+                            ->where('booking_status', 'Confirmed');
                     });
                 }
             ])
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('voyage_code', 'like', "%{$search}%")
-                    ->orWhere('voyage_status', 'like', "%{$search}%")
-                    ->orWhereHas('vessel', fn($v) => $v->where('vessel_name', 'like', "%{$search}%"))
-                    ->orWhereHas('routePort', fn($r) =>
-                        $r->where('route_origin', 'like', "%{$search}%")
-                            ->orWhere('route_destination', 'like', "%{$search}%")
-                    );
+                        ->orWhere('voyage_status', 'like', "%{$search}%")
+                        ->orWhereHas('vessel', fn($v) => $v->where('vessel_name', 'like', "%{$search}%"))
+                        ->orWhereHas(
+                            'routePort',
+                            fn($r) =>
+                            $r->where('route_origin', 'like', "%{$search}%")
+                                ->orWhere('route_destination', 'like', "%{$search}%")
+                        );
                 });
             })
             ->when($start_date && $end_date, function ($query) use ($start_date, $end_date) {
@@ -122,22 +123,22 @@ class VoyageController extends Controller
             ->paginate(10);
 
         if (auth()->guard('admin')->check()) {
-            return view('authorized.admin.voyage_list', compact('voyages','search'));
+            return view('authorized.admin.voyage_list', compact('voyages', 'search'));
         }
 
-        return view('authorized.staff.svoyage_list', compact('voyages','search'));
+        return view('authorized.staff.svoyage_list', compact('voyages', 'search'));
     }
 
     public function create()
     {
         $vessels = Vessel::where('vessel_status', 'Active')
-                        ->orderBy('vessel_name')
-                        ->get();
-         // Load route_port along with portOrigin and portDestination relationships
+            ->orderBy('vessel_name')
+            ->get();
+        // Load route_port along with portOrigin and portDestination relationships
         $route_port = RoutePort::with(['portOrigin', 'portDestination'])
-                        ->orderBy('route_origin')
-                        ->orderBy('route_destination')
-                        ->get();
+            ->orderBy('route_origin')
+            ->orderBy('route_destination')
+            ->get();
 
         if (auth()->guard('admin')->check()) {
             return view('authorized.admin.create_voyage', compact('vessels', 'route_port'));
@@ -170,15 +171,20 @@ class VoyageController extends Controller
             ])->withInput();
         }
 
-        if ($this->hasConflict(
+        $conflicting = $this->hasConflict(
             $request->vessel_id,
             $request->voyage_departure_date,
             $request->voyage_estimated_TD,
             $request->voyage_arrival_date,
             $request->voyage_estimated_TA
-        )) {
+        );
+
+        if ($conflicting) {
             return back()->withErrors([
-                'voyage_conflict' => 'This vessel already has a voyage scheduled during this time.'
+                'voyage_conflict' => 'This vessel already has a voyage scheduled during this time. Conflicts with: '
+                    . $conflicting->voyage_code . ' (' . $conflicting->voyage_status . ') — '
+                    . $conflicting->voyage_departure_date . ' ' . $conflicting->voyage_estimated_TD
+                    . ' to ' . $conflicting->voyage_arrival_date . ' ' . $conflicting->voyage_estimated_TA
             ])->withInput();
         }
 
@@ -213,12 +219,12 @@ class VoyageController extends Controller
             'voyage_code' => $voyageCode,
         ]);
 
-        if (auth()->guard('admin')->check()) {
-            return redirect()->route('admin.voyage_list')
-                ->with('success','Voyage added successfully.');
+        if (request()->is('authorized/staff*')) {
+            return redirect()->route('staff.voyage_list')
+                ->with('success', 'Voyage added successfully.');
         }
-        return redirect()->route('staff.voyage_list')
-            ->with('success','Voyage added successfully.');
+        return redirect()->route('admin.voyage_list')
+            ->with('success', 'Voyage added successfully.');
 
     }
 
@@ -227,11 +233,11 @@ class VoyageController extends Controller
         $voyage = Voyage::findOrFail($id);
 
         $vessels = Vessel::where('vessel_status', 'Active')
-                        ->orderBy('vessel_name')
-                        ->get();
+            ->orderBy('vessel_name')
+            ->get();
         $route_port = RoutePort::orderBy('route_origin')
-                        ->orderBy('route_destination')
-                        ->get();
+            ->orderBy('route_destination')
+            ->get();
 
         // Flag for blade to know if voyage is completed
         $isCompleted = $voyage->voyage_status === 'Completed';
@@ -239,7 +245,7 @@ class VoyageController extends Controller
         // Only allow editing if scheduled OR completed
         if (!in_array($voyage->voyage_status, ['Scheduled', 'Completed', 'Cancelled'])) {
             return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
-                            ->with('error', 'Voyages that are "At Sea" cannot be edited at the moment.');
+                ->with('error', 'Voyages that are "At Sea" cannot be edited at the moment.');
         }
 
         if (auth()->guard('admin')->check()) {
@@ -308,7 +314,7 @@ class VoyageController extends Controller
         // Scheduled → full edit, including schedule validation
         if ($voyage->voyage_status === 'Scheduled') {
             $departure = Carbon::parse($request->voyage_departure_date . ' ' . $request->voyage_estimated_TD);
-            $arrival   = Carbon::parse($request->voyage_arrival_date . ' ' . $request->voyage_estimated_TA);
+            $arrival = Carbon::parse($request->voyage_arrival_date . ' ' . $request->voyage_estimated_TA);
 
             if ($arrival->lessThanOrEqualTo($departure)) {
                 return back()->withErrors([
@@ -316,14 +322,16 @@ class VoyageController extends Controller
                 ])->withInput();
             }
 
-            if ($this->hasConflict(
-                $request->vessel_id,
-                $request->voyage_departure_date,
-                $request->voyage_estimated_TD,
-                $request->voyage_arrival_date,
-                $request->voyage_estimated_TA,
-                $voyage->voyage_id
-            )) {
+            if (
+                $this->hasConflict(
+                    $request->vessel_id,
+                    $request->voyage_departure_date,
+                    $request->voyage_estimated_TD,
+                    $request->voyage_arrival_date,
+                    $request->voyage_estimated_TA,
+                    $voyage->voyage_id
+                )
+            ) {
                 return back()->withErrors([
                     'voyage_conflict' => 'This vessel already has a voyage scheduled during this time.'
                 ])->withInput();
@@ -386,7 +394,7 @@ class VoyageController extends Controller
         $voyage->update($updateData);
 
         return redirect()->route(
-            auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list'
+            request()->is('authorized/staff*') ? 'staff.voyage_list' : 'admin.voyage_list'
         )->with('success', 'Voyage updated successfully.');
     }
 
@@ -397,13 +405,13 @@ class VoyageController extends Controller
 
         if ($voyage->voyage_status !== 'Scheduled') {
             return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
-                             ->with('error', 'Only scheduled voyages can be deleted.');
+                ->with('error', 'Only scheduled voyages can be deleted.');
         }
 
         $voyage->delete();
 
         return redirect()->route(auth()->guard('staff')->check() ? 'staff.voyage_list' : 'admin.voyage_list')
-                        ->with('success', 'Voyage deleted.');
-        
+            ->with('success', 'Voyage deleted.');
+
     }
 }
