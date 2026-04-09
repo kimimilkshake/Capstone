@@ -31,29 +31,13 @@
                             // Calculate cargo count first
                             $cargoCount = $voyage->cargoReceipts()->count();
 
-                            // Get hatches and calculate available weight
+                            // Per-hatch available weight
                             $hatches = $voyage->vessel->hatches ?? collect();
-                            $hatchInfo = [];
-                            foreach ($hatches->take(2) as $hatch) {
-                                $currentWeight =
-                                    \Illuminate\Support\Facades\DB::table('cargo_receipt')
-                                        ->join(
-                                            'cargo_booking',
-                                            'cargo_receipt.cargo_booking_id',
-                                            '=',
-                                            'cargo_booking.cargo_booking_id',
-                                        )
-                                        ->where('cargo_receipt.hatch_id', $hatch->hatch_id)
-                                        ->where('cargo_receipt.voyage_id', $voyage->voyage_id)
-                                        ->sum('cargo_booking.weight') ?? 0;
-
-                                $maxCapacity = ((float) $hatch->hatch_capacity_per_hold) * 1000;
-                                $availableWeight = $maxCapacity - $currentWeight;
-                                $hatchInfo[] = [
-                                    'label' => $hatch->hatch_label,
-                                    'available' => number_format($availableWeight, 2),
-                                ];
-                            }
+                            $hatchUsedWeights = \Illuminate\Support\Facades\DB::table('cargo_hatch_placement')
+                                ->where('voyage_id', $voyage->voyage_id)
+                                ->groupBy('hatch_id')
+                                ->selectRaw('hatch_id, SUM(weight_kg) as total_weight')
+                                ->pluck('total_weight', 'hatch_id');
                         @endphp
 
                         @if ($cargoCount === 0)
@@ -110,20 +94,24 @@
                                         </p>
                                     </div>
                                 @else
-                                    @foreach ($hatchInfo as $hatch)
-                                        <div style="text-align: center;">
-                                            <p class="mb-1"
-                                                style="font-size: 1.5rem; color: #485b8c; font-weight: bold; margin-bottom: 0.5rem;">
-                                                Hatch {{ $hatch['label'] }}
-                                            </p>
-                                            <p style="font-size: 0.85rem; color: #666; margin: 0.3rem 0;">
-                                                Available Weight
-                                            </p>
-                                            <p style="font-size: 1rem; color: #485b8c; font-weight: bold; margin: 0;">
-                                                {{ $hatch['available'] }} kg
-                                            </p>
-                                        </div>
-                                    @endforeach
+                                    <div style="display: flex; gap: 1.25rem; align-items: flex-start;">
+                                        @foreach ($hatches as $hatch)
+                                            @php
+                                                $hCapKg = (float) $hatch->hatch_capacity_per_hold * 1000;
+                                                $hUsedKg = (float) ($hatchUsedWeights[$hatch->hatch_id] ?? 0);
+                                                $hAvailKg = max(0, $hCapKg - $hUsedKg);
+                                                $hPct = $hCapKg > 0 ? min(100, round(($hUsedKg / $hCapKg) * 100)) : 0;
+                                            @endphp
+                                            <div style="text-align: center;">
+                                                <p
+                                                    style="font-size: 0.9rem; color: #666; margin: 0 0 0.2rem; font-weight: 600;">
+                                                    Hatch {{ $hatch->hatch_label }}</p>
+                                                <p
+                                                    style="font-size: 1.1rem; font-weight: 700; margin: 0; color: {{ $hPct >= 90 ? '#dc3545' : ($hPct >= 70 ? '#fd7e14' : '#485b8c') }};">
+                                                    {{ number_format($hAvailKg, 0) }} kg</p>
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 @endif
                             </div>
                         </div>
