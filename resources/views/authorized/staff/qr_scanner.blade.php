@@ -263,6 +263,26 @@
                 </div>
                 <div id="reader"></div>
 
+                <!-- Manual boarding fallback -->
+                <hr style="margin:2rem 0 1.5rem; border-color:rgba(72,91,140,0.15);">
+                <p class="text-muted scanner-intro" style="margin-bottom:1rem;">
+                    QR code blurred? Enter the details manually.
+                </p>
+                <form id="manual-board-form" autocomplete="off" style="max-width:420px;margin:0 auto;">
+                    <div style="margin-bottom:1rem;">
+                        <label for="manual-ticket-id" style="display:block;font-size:0.88rem;font-weight:700;color:#485B8C;margin-bottom:4px;">E-TICKET NO. </label>
+                        <input type="text" id="manual-ticket-id" placeholder="e.g. LSLCTKT26000005" required
+                               style="width:100%;padding:0.55rem 0.75rem;border:1px solid rgba(72,91,140,0.25);border-radius:8px;font-size:0.95rem;">
+                    </div>
+                    <div style="text-align:center;">
+                        <button type="submit" id="manual-board-btn" class="scanner-header-logout"
+                                style="background:#485B8C;color:#fff;border-color:#485B8C;width:100%;max-width:280px;">
+                            Board Passenger
+                        </button>
+                    </div>
+                    <div id="manual-board-message" class="scanner-message" style="margin-top:0.75rem;"></div>
+                </form>
+
             </div>
         </div>
     </div>
@@ -518,6 +538,67 @@ document.addEventListener('DOMContentLoaded', function() {
             isStartingCamera = false;
         }
     }
+
+    // Manual boarding form handler
+    const manualForm = document.getElementById('manual-board-form');
+    const manualMsg  = document.getElementById('manual-board-message');
+    const manualBtn  = document.getElementById('manual-board-btn');
+
+    manualForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const rawTicketId = document.getElementById('manual-ticket-id').value.trim();
+
+        if (!rawTicketId) {
+            manualMsg.textContent = 'Please enter a Passenger Ticket ID.';
+            manualMsg.style.color = 'red';
+            return;
+        }
+
+        // Extract last 6 digits and strip leading zeros (e.g. LSLCTKT26000005 → 5)
+        let passenger_ticket_id = rawTicketId;
+        const digits = rawTicketId.match(/(\d{6})$/);
+        if (digits) {
+            passenger_ticket_id = String(parseInt(digits[1], 10));
+        } else if (/^\d+$/.test(rawTicketId)) {
+            passenger_ticket_id = String(parseInt(rawTicketId, 10));
+        }
+
+        manualBtn.disabled = true;
+        manualBtn.textContent = 'Processing...';
+        manualMsg.textContent = '';
+
+        fetch('/qr/board-by-ticket', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ passenger_ticket_id })
+        })
+        .then(async response => {
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'An error occurred.');
+            }
+            return data;
+        })
+        .then(data => {
+            manualMsg.textContent = data.message;
+            manualMsg.style.color = data.success ? 'green' : 'red';
+            if (data.success) {
+                manualForm.reset();
+            }
+        })
+        .catch(error => {
+            manualMsg.textContent = error.message || 'An error occurred.';
+            manualMsg.style.color = 'red';
+        })
+        .finally(() => {
+            manualBtn.disabled = false;
+            manualBtn.textContent = 'Board Passenger';
+        });
+    });
 
     // Wait for Html5Qrcode to be available, then start camera
     const waitForLibrary = setInterval(function(){

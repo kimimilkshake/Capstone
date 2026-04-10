@@ -45,7 +45,7 @@ class Notification extends Model
     // Scopes
     public function scopeUnread($query)
     {
-        return $query->whereNotIn('notification_status', ['read', 'archived']);
+        return $query->whereNotIn('notification_status', ['Read', 'Archived']);
     }
 
     public function scopeRecent($query, $limit = 10)

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\SendTicketEmail;
 use App\Jobs\SendCargoPaymentConfirmationEmail;
+use App\Models\Notification;
 use App\Models\Voyage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -170,6 +171,31 @@ class PaymentController extends Controller
                                 // Send cargo payment confirmation with Freight Receipt PDF
                                 SendCargoPaymentConfirmationEmail::dispatch($payment->booking_ref_no);
                                 Log::info('CargoPaymentConfirmationEmail dispatched for booking: ' . $payment->booking_ref_no);
+
+                                // Create "paid" notification
+                                $senderName = DB::table('sender')
+                                    ->where('sender_id', $booking->sender_id)
+                                    ->value('sender_name') ?? 'Customer';
+                                Notification::create([
+                                    'cargo_receipt_id' => null,
+                                    'payment_id' => $payment->payment_id,
+                                    'booking_ref_no' => $payment->booking_ref_no,
+                                    'notification_message' => "Cargo booking #{$payment->booking_ref_no} from {$senderName} has been paid via GCash",
+                                    'notification_type' => 'Cargo Payment',
+                                    'notification_status' => 'Paid',
+                                    'notification_created' => now(),
+                                ]);
+
+                                // Create "needs verification" notification
+                                Notification::create([
+                                    'cargo_receipt_id' => null,
+                                    'payment_id' => $payment->payment_id,
+                                    'booking_ref_no' => $payment->booking_ref_no,
+                                    'notification_message' => "Cargo booking #{$payment->booking_ref_no} from {$senderName} needs payment verification",
+                                    'notification_type' => 'Cargo Payment Verification',
+                                    'notification_status' => 'Approved',
+                                    'notification_created' => now(),
+                                ]);
                             } else {
                                 // Send passenger ticket email
                                 SendTicketEmail::dispatch($payment->booking_ref_no);
@@ -209,6 +235,31 @@ class PaymentController extends Controller
                             // Send cargo payment confirmation with Freight Receipt PDF
                             SendCargoPaymentConfirmationEmail::dispatch($payment->booking_ref_no);
                             Log::info('CargoPaymentConfirmationEmail dispatched for booking: ' . $payment->booking_ref_no);
+
+                            // Create "paid" notification
+                            $senderName = DB::table('sender')
+                                ->where('sender_id', $booking->sender_id)
+                                ->value('sender_name') ?? 'Customer';
+                            Notification::create([
+                                'cargo_receipt_id' => null,
+                                'payment_id' => $payment->payment_id,
+                                'booking_ref_no' => $payment->booking_ref_no,
+                                'notification_message' => "Cargo booking #{$payment->booking_ref_no} from {$senderName} has been paid via GCash",
+                                'notification_type' => 'Cargo Payment',
+                                'notification_status' => 'Paid',
+                                'notification_created' => now(),
+                            ]);
+
+                            // Create "needs verification" notification
+                            Notification::create([
+                                'cargo_receipt_id' => null,
+                                'payment_id' => $payment->payment_id,
+                                'booking_ref_no' => $payment->booking_ref_no,
+                                'notification_message' => "Cargo booking #{$payment->booking_ref_no} from {$senderName} needs payment verification",
+                                'notification_type' => 'Cargo Payment Verification',
+                                'notification_status' => 'Approved',
+                                'notification_created' => now(),
+                            ]);
                         } else {
                             // Send passenger ticket email
                             SendTicketEmail::dispatch($payment->booking_ref_no);

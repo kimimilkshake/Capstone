@@ -947,9 +947,21 @@ class StaffCargoController extends Controller
             // Booking status remains 'Confirmed' - don't change it to 'Completed'
             // as 'Completed' is not a valid enum value
 
+            // Create "verified" notification
+            $booking->load(['sender', 'consignee', 'cargoBookings']);
+            $senderName = $booking->sender ? $booking->sender->sender_name : 'Customer';
+            Notification::create([
+                'cargo_receipt_id' => null,
+                'payment_id' => $booking->payment->payment_id,
+                'booking_ref_no' => $booking->booking_ref_no,
+                'notification_message' => "Cargo booking #{$booking->booking_ref_no} from {$senderName} has been verified",
+                'notification_type' => 'Cargo Payment Verification',
+                'notification_status' => 'Verified',
+                'notification_created' => now(),
+            ]);
+
             // Send cargo payment confirmation email
             try {
-                $booking->load(['sender', 'consignee', 'cargoBookings']);
                 \Mail::to($booking->sender->sender_email)
                     ->send(new \App\Mail\CargoPaymentConfirmation(
                         $booking,
@@ -1042,9 +1054,33 @@ class StaffCargoController extends Controller
         $booking->payment->payment_date = now();
         $booking->payment->save();
 
+        // Create "paid" notification
+        $booking->load(['sender', 'consignee', 'cargoBookings']);
+        $senderName = $booking->sender ? $booking->sender->sender_name : 'Customer';
+        $paymentMethod = $request->payment_method === 'cash' ? 'Cash' : 'GCash';
+        Notification::create([
+            'cargo_receipt_id' => null,
+            'payment_id' => $booking->payment->payment_id,
+            'booking_ref_no' => $booking->booking_ref_no,
+            'notification_message' => "Cargo booking #{$booking->booking_ref_no} from {$senderName} has been paid via {$paymentMethod}",
+            'notification_type' => 'Cargo Payment',
+            'notification_status' => 'Paid',
+            'notification_created' => now(),
+        ]);
+
+        // Create "needs verification" notification
+        Notification::create([
+            'cargo_receipt_id' => null,
+            'payment_id' => $booking->payment->payment_id,
+            'booking_ref_no' => $booking->booking_ref_no,
+            'notification_message' => "Cargo booking #{$booking->booking_ref_no} from {$senderName} needs payment verification",
+            'notification_type' => 'Cargo Payment Verification',
+            'notification_status' => 'Approved',
+            'notification_created' => now(),
+        ]);
+
         // Send cargo payment confirmation email (when payment_status is 'Initial' and booking_status is 'Confirmed')
         try {
-            $booking->load(['sender', 'consignee', 'cargoBookings']);
             \Mail::to($booking->sender->sender_email)
                 ->send(new \App\Mail\CargoPaymentConfirmation(
                     $booking,

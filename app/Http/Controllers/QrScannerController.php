@@ -95,6 +95,35 @@ class QrScannerController extends Controller
         }
     }
 
+    public function boardByTicket(Request $request)
+    {
+        if (!auth()->guard('staff')->check()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $ticketId = trim((string) $request->input('passenger_ticket_id'));
+
+        if (!$ticketId) {
+            return response()->json(['success' => false, 'message' => 'Please enter a Passenger Ticket ID.'], 400);
+        }
+
+        $ticket = DB::table('passenger_ticket')
+            ->where('passenger_ticket_id', $ticketId)
+            ->first();
+
+        if (!$ticket) {
+            return response()->json(['success' => false, 'message' => 'No passenger ticket found with that ID.'], 404);
+        }
+
+        // Delegate to existing boardPassenger logic
+        $request->merge([
+            'booking_ref_no' => (string) $ticket->booking_ref_no,
+            'passenger_id'   => (string) $ticket->passenger_id,
+        ]);
+
+        return $this->boardPassenger($request);
+    }
+
     /**
      * Verify cargo payment using QR code data
      * QR code contains: booking_ref, payment_id, amount, verified, type

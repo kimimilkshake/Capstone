@@ -15,6 +15,7 @@ use App\Http\Controllers\ScheduleController;
 
 // ADMIN CONTROLLERS
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\GenerateReportsController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\PromoController;
 use App\Http\Controllers\Admin\VesselController;
@@ -221,9 +222,9 @@ Route::prefix('authorized/admin')->middleware('auth:admin')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
-    Route::get('/generate_reports', function () {
-        return view('authorized.admin.generate_reports');
-    })->name('admin.generate_reports');
+
+    // Generate Reports
+    Route::get('/generate_reports', [GenerateReportsController::class, 'index'])->name('admin.generate_reports');
 
     // Staff
     Route::get('/create_staff', [StaffController::class, 'create'])->name('admin.create_staff');
@@ -494,6 +495,4 @@ Route::get('/files/{path}', [\App\Http\Controllers\StorageFileController::class,
 
 // QR Boarding API (moved to QrScannerController)
 Route::post('/qr/board-passenger', [QrScannerController::class, 'boardPassenger'])->name('qr.board_passenger');
-
-// QR Cargo Payment Verification API
-Route::post('/qr/verify-cargo-payment', [QrScannerController::class, 'verifyCargoPayment'])->name('qr.verify_cargo_payment');
+Route::post('/qr/board-by-ticket', [QrScannerController::class, 'boardByTicket'])->name('qr.board_by_ticket');

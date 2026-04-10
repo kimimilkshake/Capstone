@@ -51,7 +51,7 @@ class DashboardController extends Controller
             ])
             ->whereDate('voyage_departure_date', $today)
             ->orderBy('voyage_departure_date', 'asc')
-            ->get();
+            ->paginate(5);
 
         return view(
             'authorized.admin.dashboard',

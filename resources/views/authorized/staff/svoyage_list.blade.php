@@ -130,11 +130,19 @@
                                 class="fas fa-wrench"></i></button>
                     </div>
 
-                    <label for="message" class="sms-label">Message:</label>
-                    <textarea id="message" name="message" class="sms-textarea" rows="5" required>{{ old('message') }}</textarea>
-                    <button type="submit" class="sms-button">Send Message</button>
-                </form>
-            </div>
+    .sms-modal-panel {
+      position: relative;
+      width: min(100%, 650px);
+      max-height: 90vh;
+      background: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.22);
+      transform: scale(0git.85) translateY(30px);
+      opacity: 0;
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+      overflow: hidden;
+    }
 
             {{-- Confirm dialog --}}
             <div id="smsConfirmModal" class="confirm-dialog-overlay" aria-hidden="true">

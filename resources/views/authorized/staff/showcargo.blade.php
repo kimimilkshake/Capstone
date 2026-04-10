@@ -293,8 +293,8 @@
                         onclick="validateAndAccept(event)">Accept</button>
                 </form>
 
-                <button type="button" class="btn btn-danger btn-lg px-4" id="rejectBtn" onclick="showRejectModal(event)"
-                    style="width: 200px;">Reject</button>
+                <button type="button" class="btn btn-danger btn-lg px-4" id="rejectBtn"
+                    onclick="showRejectModal(event)" style="width: 200px;">Reject</button>
             </div>
         @endif
 
@@ -504,6 +504,7 @@
         }
 
         /**
+<<<<<<< HEAD
          * Show placement validation warning as a persistent danger toast
          */
         function showPlacementWarning(data) {
@@ -528,6 +529,12 @@
             }
 
             showToast(msg, 'danger', true); // persist=true so it stays until dismissed
+=======
+         * Show placement validation warning as toast
+         */
+        function showPlacementWarning(data) {
+            showToast(data.message, 'danger', true);
+>>>>>>> staff
         }
 
         /**

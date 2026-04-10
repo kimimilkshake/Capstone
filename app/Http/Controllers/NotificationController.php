@@ -23,7 +23,7 @@ class NotificationController extends Controller
 
     public function index()
     {
-        $notifications = Notification::whereNotIn('notification_status', ['archived'])
+        $notifications = Notification::whereNotIn('notification_status', ['Archived'])
             ->orderBy('notification_created', 'desc')
             ->limit(20)
             ->get();
@@ -62,7 +62,7 @@ class NotificationController extends Controller
             ], 404);
         }
 
-        $notification->notification_status = 'read';
+        $notification->notification_status = 'Read';
         $notification->save();
 
         return response()->json([
@@ -77,7 +77,7 @@ class NotificationController extends Controller
     public function markAllAsRead()
     {
         Notification::unread()->update([
-            'notification_status' => 'read'
+            'notification_status' => 'Read'
         ]);
 
         return response()->json([
@@ -91,8 +91,8 @@ class NotificationController extends Controller
      */
     public function clearAll()
     {
-        Notification::whereNotIn('notification_status', ['archived'])->update([
-            'notification_status' => 'archived'
+        Notification::whereNotIn('notification_status', ['Archived'])->update([
+            'notification_status' => 'Archived'
         ]);
 
         return response()->json([
@@ -115,7 +115,7 @@ class NotificationController extends Controller
             ], 404);
         }
 
-        $notification->notification_status = 'archived';
+        $notification->notification_status = 'Archived';
         $notification->save();
 
         return response()->json([
@@ -133,7 +133,7 @@ class NotificationController extends Controller
             'cargo_receipt_id' => 'nullable|exists:cargo_receipt,cargo_receipt_id',
             'payment_id' => 'nullable|exists:payment,payment_id',
             'notification_message' => 'required|string|max:255',
-            'notification_type' => 'required|in:cargo booking approval,payment received',
+            'notification_type' => 'required|in:cargo booking approval,payment received,Cargo Payment,Cargo Payment Verification',
         ]);
 
         $notification = Notification::create([
