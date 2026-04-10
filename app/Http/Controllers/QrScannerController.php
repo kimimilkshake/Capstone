@@ -118,7 +118,7 @@ class QrScannerController extends Controller
         // Delegate to existing boardPassenger logic
         $request->merge([
             'booking_ref_no' => (string) $ticket->booking_ref_no,
-            'passenger_id'   => (string) $ticket->passenger_id,
+            'passenger_id' => (string) $ticket->passenger_id,
         ]);
 
         return $this->boardPassenger($request);
@@ -143,7 +143,7 @@ class QrScannerController extends Controller
         try {
             // Try to decode QR data as JSON
             $data = json_decode($qrData, true);
-            
+
             // If not JSON, treat as booking reference
             if (!$data) {
                 $bookingRefNo = $qrData;
@@ -182,7 +182,7 @@ class QrScannerController extends Controller
             // Check if payment is completed
             if (strtolower($payment->payment_status) !== 'completed') {
                 return response()->json([
-                    'success' => false, 
+                    'success' => false,
                     'message' => 'Payment not completed. Status: ' . ($payment->payment_status ?? 'Unknown')
                 ], 400);
             }
