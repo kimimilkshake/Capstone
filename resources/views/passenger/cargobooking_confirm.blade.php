@@ -9,10 +9,54 @@
             </div>
 
             <div class="card-body">
-                <h6>Booking Reference:
-                    <strong>{{ $booking->booking_code }}</strong>
-                </h6>
-                <p>Status: <strong>{{ $booking->booking_status }}</strong></p>
+                <div class="row">
+                    <div class="col-md-12">
+                        <h6>Booking Reference: <strong>{{ $booking->booking_code }}</strong></h6>
+                    </div>
+                </div>
+
+                @if($booking->voyage)
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Voyage Code:</strong> {{ $booking->voyage->voyage_code }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Status:</strong> {{ $booking->booking_status }}</p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Departure:</strong> {{ \Carbon\Carbon::parse($booking->voyage->voyage_departure_date)->format('M d, Y') }}</p>
+                        @php
+                            $originPort = $booking->voyage->routePort?->portOrigin;
+                            $originDisplay = $originPort ? ($originPort->terminal_name ?? '') . ' ' . ($originPort->port_name ?? '') . ', ' . ($originPort->city ?? '') : 'N/A';
+                        @endphp
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Port of Origin:</strong> {{ trim($originDisplay) }}</p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Arrival:</strong> {{ \Carbon\Carbon::parse($booking->voyage->voyage_arrival_date)->format('M d, Y') }}</p>
+                        @php
+                            $destPort = $booking->voyage->routePort?->portDestination;
+                            $destDisplay = $destPort ? ($destPort->terminal_name ?? '') . ' ' . ($destPort->port_name ?? '') . ', ' . ($destPort->city ?? '') : 'N/A';
+                        @endphp
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Port of Destination:</strong> {{ trim($destDisplay) }}</p>
+                    </div>
+                </div>
+                @else
+                <div class="row">
+                    <div class="col-md-12">
+                        <p>Voyage information not available.</p>
+                    </div>
+                </div>
+                @endif
 
                 <hr>
 
@@ -35,7 +79,6 @@
 
                 <hr>
 
-
                 <h6>Cargo Items</h6>
                 <table class="table table-bordered">
                     <thead class="table-dark">
@@ -43,11 +86,11 @@
                             <th>Quantity</th>
                             <th>Classification</th>
                             <th>Description</th>
-                            <th>Length</th>
-                            <th>Width</th>
-                            <th>Height</th>
-                            <th>Freight Rate</th>
-                            <th>Subtotal</th>
+                            <th style="text-align: right;">Length</th>
+                            <th style="text-align: right;">Width</th>
+                            <th style="text-align: right;">Height</th>
+                            <th style="text-align: right;">Freight Rate</th>
+                            <th style="text-align: right;">Subtotal</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -76,21 +119,18 @@
                                 <td>{{ $item->quantity }}</td>
                                 <td>{{ $item->cargo_classification_name ?? 'N/A' }}</td>
                                 <td>{{ $item->cargo_item_description }}</td>
-                                <td>{{ number_format((float) $item->length, 2) }} {{ $item->display_measurement_unit }}
-                                </td>
-                                <td>{{ number_format((float) $item->width, 2) }} {{ $item->display_measurement_unit }}
-                                </td>
-                                <td>{{ number_format((float) $item->height, 2) }} {{ $item->display_measurement_unit }}
-                                </td>
-                                <td>₱{{ number_format($item->freight, 2) }}</td>
-                                <td>₱{{ number_format($subtotal, 2) }}</td>
+                                <td style="text-align: right;">{{ number_format((float) $item->length, 2) }} {{ $item->display_measurement_unit }}</td>
+                                <td style="text-align: right;">{{ number_format((float) $item->width, 2) }} {{ $item->display_measurement_unit }}</td>
+                                <td style="text-align: right;">{{ number_format((float) $item->height, 2) }} {{ $item->display_measurement_unit }}</td>
+                                <td style="text-align: right;">₱{{ number_format($item->freight, 2) }}</td>
+                                <td style="text-align: right;">₱{{ number_format($subtotal, 2) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                     <tfoot>
                         <tr>
                             <th colspan="7" class="text-end">Total Expense:</th>
-                            <th>₱{{ number_format($totalExpense, 2) }}</th>
+                            <th style="text-align: right;">₱{{ number_format($totalExpense, 2) }}</th>
                         </tr>
                     </tfoot>
                 </table>

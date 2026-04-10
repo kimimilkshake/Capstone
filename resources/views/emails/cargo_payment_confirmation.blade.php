@@ -2,58 +2,58 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Cargo Booking Approved - #{{ $booking->booking_code }}</title>
+    <title>Cargo Payment Confirmed - Freight Receipt for #{{ $booking->booking_ref_no }}</title>
     <style>
         body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
-        .container { max-width: 700px; margin: auto; background: #fff; border-radius: 10px; padding: 20px; }
-        h2 { color: #28a745; }
+        .container { max-width: 700px; margin: auto; background: #fff; border-radius: 10px; padding: 30px; }
+        h2 { color: #28a745; text-align: center; }
+        .booking-ref { font-size: 24px; font-weight: bold; text-align: center; margin: 20px 0; color: #333; }
+        .success-badge { background: #28a745; color: white; padding: 10px 20px; border-radius: 5px; text-align: center; font-weight: bold; margin: 15px 0; }
+        .payment-info { background: #e8f5e9; padding: 15px; border-radius: 5px; margin: 15px 0; }
         .section { margin-bottom: 20px; }
-        .section-title { font-weight: bold; margin-bottom: 10px; }
+        .section-title { font-weight: bold; margin-bottom: 10px; color: #333; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 8px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background: #f0f0f0; }
-        .payment-section { background: #e8f5e9; border: 2px solid #28a745; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center; }
-        .payment-amount { font-size: 24px; font-weight: bold; color: #28a745; margin: 10px 0; }
-        .payment-button { display: inline-block; background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold; margin: 10px 0; }
-        .payment-button:hover { background: #218838; }
         .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #999; }
     </style>
 </head>
 <body>
 <div class="container">
-    <h2>✅ Cargo Booking Approved</h2>
-    <p>Booking Reference: <strong>#{{ $booking->booking_code }}</strong></p>
-    <p>Status: <strong>{{ $booking->booking_status }}</strong></p>
-    <p><strong>Note:</strong> Arrastre payment and printing will be done in the office.</p>
-
+    <h2>✅ Payment Confirmed!</h2>
+    
+    <div class="booking-ref">Booking Reference: #{{ $booking->booking_ref_no }}</div>
+    
+    <div class="success-badge">
+        Your payment of ₱{{ number_format($payment->total_amount ?? 0, 2) }} has been confirmed.
+    </div>
+    
     <!-- Voyage Information -->
+    @if($booking->voyage)
     <div class="section">
         <div class="section-title">🚢 Voyage Information</div>
-        @if($booking->voyage)
-            <p>Voyage Code: {{ $booking->voyage->voyage_code }}</p>
-            <p>Departure: {{ \Carbon\Carbon::parse($booking->voyage->voyage_departure_date)->format('M d, Y (D)') }}</p>
-            <p>Arrival: {{ \Carbon\Carbon::parse($booking->voyage->voyage_arrival_date)->format('M d, Y (D)') }}</p>
-            @php
-                $originPort = $booking->voyage->routePort?->portOrigin;
-                $originDisplay = $originPort ? ($originPort->terminal_name ?? '') . ' ' . ($originPort->port_name ?? '') . ', ' . ($originPort->city ?? '') : 'N/A';
-                $destPort = $booking->voyage->routePort?->portDestination;
-                $destDisplay = $destPort ? ($destPort->terminal_name ?? '') . ' ' . ($destPort->port_name ?? '') . ', ' . ($destPort->city ?? '') : 'N/A';
-            @endphp
-            <p>Port of Origin: {{ trim($originDisplay) }}</p>
-            <p>Port of Destination: {{ trim($destDisplay) }}</p>
-        @else
-            <p>Voyage information not available.</p>
-        @endif
+        <p><strong>Voyage Code:</strong> {{ $booking->voyage->voyage_code }}</p>
+        <p><strong>Departure:</strong> {{ \Carbon\Carbon::parse($booking->voyage->voyage_departure_date)->format('M d, Y (D)') }}</p>
+        <p><strong>Arrival:</strong> {{ \Carbon\Carbon::parse($booking->voyage->voyage_arrival_date)->format('M d, Y (D)') }}</p>
+        @php
+            $originPort = $booking->voyage->routePort?->portOrigin;
+            $originDisplay = $originPort ? ($originPort->terminal_name ?? '') . ' ' . ($originPort->port_name ?? '') . ', ' . ($originPort->city ?? '') : 'N/A';
+            $destPort = $booking->voyage->routePort?->portDestination;
+            $destDisplay = $destPort ? ($destPort->terminal_name ?? '') . ' ' . ($destPort->port_name ?? '') . ', ' . ($destPort->city ?? '') : 'N/A';
+        @endphp
+        <p><strong>Loading Port:</strong> {{ trim($originDisplay) }}</p>
+        <p><strong>Unloading Port:</strong> {{ trim($destDisplay) }}</p>
     </div>
-
+    @endif
+    
     <!-- Sender & Consignee -->
     <div class="section">
         <div class="section-title">📦 Sender & Consignee</div>
         <p><strong>Sender:</strong> {{ $sender->sender_name }} ({{ $sender->sender_contactno }})</p>
         <p><strong>Consignee:</strong> {{ $consignee->consignee_name }} ({{ $consignee->consignee_contactno }})</p>
     </div>
-
-    <!-- Cargo Items -->
+    
+     <!-- Cargo Items -->
     <div class="section">
         <div class="section-title">📋 Cargo Items</div>
         <table>
@@ -122,25 +122,22 @@
             </tbody>
         </table>
     </div>
-    
-    <!-- Payment Section -->
-    <div class="payment-section">
-        <p style="margin: 0; font-size: 14px;">Please complete your payment to proceed.</p>
-        
-        <div class="payment-amount">₱{{ number_format($payment->total_amount ?? ($total + $stampFee), 2) }}</div>
-        
-        <a href="{{ $paymentUrl }}" class="payment-button">Pay Now with GCash</a>
-        
-        <p style="font-size: 12px; color: #666; margin-top: 10px;">
-            Once payment is completed, you will receive the Freight Receipt with QR code for verification.
-        </p>
-    </div>
 
-    <p>Thank you for booking with LAPULAPU SHIPPING LINES. Your cargo booking has been confirmed.</p>
+    <!-- Payment Information -->
+    <div class="payment-info">
+        <strong>Payment Details:</strong><br>
+        <strong>Amount Paid:</strong> ₱{{ number_format($payment->total_amount ?? 0, 2) }}<br>
+        <strong>Payment Status:</strong> {{ $payment->payment_status ?? 'Initial' }}<br>
+        <strong>Payment Date:</strong> {{ $payment->payment_date ? \Carbon\Carbon::parse($payment->payment_date)->format('M d, Y H:i') : 'N/A' }}
+    </div>
+    
+    <p style="font-size: 14px; color: #666; text-align: center;">
+        <strong>Important:</strong> @if($pdfAttached) The Freight Receipt PDF is attached to this email for your records. @else We apologize, but the Freight Receipt PDF could not be generated at this time. Please contact support for a copy. @endif
+    </p>
     
     <div class="footer">
         <p>LAPULAPU SHIPPING LINES</p>
-        <p>If you did not request this booking, please ignore this email.</p>
+        <p>This is an automated message. Please do not reply to this email.</p>
     </div>
 </div>
 </body>
